@@ -1,0 +1,2200 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Pytocs.Syntax
+{
+    /// <summary>
+    /// Parses the Python language grammar
+    /// </summary>
+    ///
+    public class Parser
+    {
+        #region Python 3.4 grammar
+        /*
+# Grammar for Python
+
+# Note:  Changing the grammar specified in this file will most likely
+#        require corresponding changes in the parser module
+#        (../Modules/parsermodule.c).  If you can't make the changes to
+#        that module yourself, please co-ordinate the required changes
+#        with someone who can; ask around on python-dev for help.  Fred
+#        Drake <fdrake@acm.org> will probably be listening there.
+
+# NOTE WELL: You should also follow all the steps listed in PEP 306,
+# "How to Change Python's Grammar"
+
+# Start symbols for the grammar:
+#       single_input is a single interactive statement;
+#       file_input is a module or sequence of commands read from an input file;
+#       eval_input is the input for the eval() functions.
+# NB: compound_stmt in single_input is followed by extra NEWLINE!
+single_input: NEWLINE | simple_stmt | compound_stmt NEWLINE
+file_input: (NEWLINE | stmt)* ENDMARKER
+eval_input: testlist NEWLINE* ENDMARKER
+
+decorator: '@' dotted_name [ '(' [arglist] ')' ] NEWLINE
+decorators: decorator+
+decorated: decorators (classdef | funcdef)
+funcdef: 'def' NAME parameters ['->' test] ':' suite
+parameters: '(' [typedargslist] ')'
+typedargslist: (tfpdef ['=' test] (',' tfpdef ['=' test])* [','
+       ['*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef]]
+     |  '*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef)
+tfpdef: NAME [':' test]
+varargslist: (vfpdef ['=' test] (',' vfpdef ['=' test])* [','
+       ['*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] | '**' vfpdef]]
+     |  '*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] | '**' vfpdef)
+vfpdef: NAME
+
+stmt: simple_stmt | compound_stmt
+simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
+small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt |
+             import_stmt | global_stmt | nonlocal_stmt | assert_stmt)
+expr_stmt: testlist_star_expr (augassign (yield_expr|testlist) |
+                     ('=' (yield_expr|testlist_star_expr))*)
+testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
+augassign: ('+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' |
+            '<<=' | '>>=' | '**=' | '//=')
+# For normal assignments, additional restrictions enforced by the interpreter
+del_stmt: 'del' exprlist
+pass_stmt: 'pass'
+flow_stmt: break_stmt | continue_stmt | return_stmt | raise_stmt | yield_stmt
+break_stmt: 'break'
+continue_stmt: 'continue'
+return_stmt: 'return' [testlist]
+yield_stmt: yield_expr
+raise_stmt: 'raise' [test ['from' test]]
+import_stmt: import_name | import_from
+import_name: 'import' dotted_as_names
+# note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
+import_from: ('from' (('.' | '...')* dotted_name | ('.' | '...')+)
+              'import' ('*' | '(' import_as_names ')' | import_as_names))
+import_as_name: NAME ['as' NAME]
+dotted_as_name: dotted_name ['as' NAME]
+import_as_names: import_as_name (',' import_as_name)* [',']
+dotted_as_names: dotted_as_name (',' dotted_as_name)*
+dotted_name: NAME ('.' NAME)*
+global_stmt: 'global' NAME (',' NAME)*
+nonlocal_stmt: 'nonlocal' NAME (',' NAME)*
+assert_stmt: 'assert' test [',' test]
+
+compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated
+if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
+while_stmt: 'while' test ':' suite ['else' ':' suite]
+for_stmt: 'for' exprlist 'in' testlist ':' suite ['else' ':' suite]
+try_stmt: ('try' ':' suite
+           ((except_clause ':' suite)+
+            ['else' ':' suite]
+            ['finally' ':' suite] |
+           'finally' ':' suite))
+with_stmt: 'with' with_item (',' with_item)*  ':' suite
+with_item: test ['as' expr]
+# NB compile.c makes sure that the default except clause is last
+except_clause: 'except' [test ['as' NAME]]
+suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT
+
+test: or_test ['if' or_test 'else' test] | lambdef
+test_nocond: or_test | lambdef_nocond
+lambdef: 'lambda' [varargslist] ':' test
+lambdef_nocond: 'lambda' [varargslist] ':' test_nocond
+or_test: and_test ('or' and_test)*
+and_test: not_test ('and' not_test)*
+not_test: 'not' not_test | comparison
+comparison: expr (comp_op expr)*
+# <> isn't actually a valid comparison operator in Python. It's here for the
+# sake of a __future__ import described in PEP 401
+comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+star_expr: '*' expr
+expr: xor_expr ('|' xor_expr)*
+xor_expr: and_expr ('^' and_expr)*
+and_expr: shift_expr ('&' shift_expr)*
+shift_expr: arith_expr (('<<'|'>>') arith_expr)*
+arith_expr: term (('+'|'-') term)*
+term: factor (('*'|'/'|'%'|'//') factor)*
+factor: ('+'|'-'|'~') factor | power
+power: atom trailer* ['**' factor]
+atom: ('(' [yield_expr|testlist_comp] ')' |
+       '[' [testlist_comp] ']' |
+       '{' [dictorsetmaker] '}' |
+       NAME | NUMBER | STRING+ | '...' | 'None' | 'True' | 'False')
+testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
+trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
+subscriptlist: subscript (',' subscript)* [',']
+subscript: test | [test] ':' [test] [sliceop]
+sliceop: ':' [test]
+exprlist: (expr|star_expr) (',' (expr|star_expr))* [',']
+testlist: test (',' test)* [',']
+dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
+                  (test (comp_for | (',' test)* [','])) )
+
+classdef: 'class' NAME ['(' [arglist] ')'] ':' suite
+
+arglist: (argument ',')* (argument [',']
+                         |'*' test (',' argument)* [',' '**' test] 
+                         |'**' test)
+# The reason that keywords are test nodes instead of NAME is that using NAME
+# results in an ambiguity. ast.c makes sure it's a NAME.
+argument: test [comp_for] | test '=' test  # Really [keyword '='] test
+comp_iter: comp_for | comp_if
+comp_for: 'for' exprlist 'in' or_test [comp_iter]
+comp_if: 'if' test_nocond [comp_iter]
+
+# not used in grammar, but may appear in "node" passed from Parser to Compiler
+encoding_decl: NAME
+
+yield_expr: 'yield' [yield_arg]
+yield_arg: 'from' test | testlist
+         */
+        #endregion
+
+        #region Python 2.7.6 grammar
+        /*
+# Grammar for Python
+
+# Note:  Changing the grammar specified in this file will most likely
+#        require corresponding changes in the parser module
+#        (../Modules/parsermodule.c).  If you can't make the changes to
+#        that module yourself, please co-ordinate the required changes
+#        with someone who can; ask around on python-dev for help.  Fred
+#        Drake <fdrake@acm.org> will probably be listening there.
+
+# NOTE WELL: You should also follow all the steps listed in PEP 306,
+# "How to Change Python's Grammar"
+
+# Start symbols for the grammar:
+#       single_input is a single interactive statement;
+#       file_input is a module or sequence of commands read from an input file;
+#       eval_input is the input for the eval() and input() functions.
+# NB: compound_stmt in single_input is followed by extra NEWLINE!
+single_input: NEWLINE | simple_stmt | compound_stmt NEWLINE
+file_input: (NEWLINE | stmt)* ENDMARKER
+eval_input: testlist NEWLINE* ENDMARKER
+
+decorator: '@' dotted_name [ '(' [arglist] ')' ] NEWLINE
+decorators: decorator+
+decorated: decorators (classdef | funcdef)
+funcdef: 'def' NAME parameters ':' suite
+parameters: '(' [varargslist] ')'
+varargslist: ((fpdef ['=' test] ',')*
+              ('*' NAME [',' '**' NAME] | '**' NAME) |
+              fpdef ['=' test] (',' fpdef ['=' test])* [','])
+fpdef: NAME | '(' fplist ')'
+fplist: fpdef (',' fpdef)* [',']
+
+stmt: simple_stmt | compound_stmt
+simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
+small_stmt: (expr_stmt | print_stmt  | del_stmt | pass_stmt | flow_stmt |
+             import_stmt | global_stmt | exec_stmt | assert_stmt)
+expr_stmt: testlist (augassign (yield_expr|testlist) |
+                     ('=' (yield_expr|testlist))*)
+augassign: ('+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' |
+            '<<=' | '>>=' | '**=' | '//=')
+# For normal assignments, additional restrictions enforced by the interpreter
+print_stmt: 'print' ( [ test (',' test)* [','] ] |
+                      '>>' test [ (',' test)+ [','] ] )
+del_stmt: 'del' exprlist
+pass_stmt: 'pass'
+flow_stmt: break_stmt | continue_stmt | return_stmt | raise_stmt | yield_stmt
+break_stmt: 'break'
+continue_stmt: 'continue'
+return_stmt: 'return' [testlist]
+yield_stmt: yield_expr
+raise_stmt: 'raise' [test [',' test [',' test]]]
+import_stmt: import_name | import_from
+import_name: 'import' dotted_as_names
+import_from: ('from' ('.'* dotted_name | '.'+)
+              'import' ('*' | '(' import_as_names ')' | import_as_names))
+import_as_name: NAME ['as' NAME]
+dotted_as_name: dotted_name ['as' NAME]
+import_as_names: import_as_name (',' import_as_name)* [',']
+dotted_as_names: dotted_as_name (',' dotted_as_name)*
+dotted_name: NAME ('.' NAME)*
+global_stmt: 'global' NAME (',' NAME)*
+exec_stmt: 'exec' expr ['in' test [',' test]]
+assert_stmt: 'assert' test [',' test]
+
+compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated
+if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
+while_stmt: 'while' test ':' suite ['else' ':' suite]
+for_stmt: 'for' exprlist 'in' testlist ':' suite ['else' ':' suite]
+try_stmt: ('try' ':' suite
+           ((except_clause ':' suite)+
+            ['else' ':' suite]
+            ['finally' ':' suite] |
+           'finally' ':' suite))
+with_stmt: 'with' with_item (',' with_item)*  ':' suite
+with_item: test ['as' expr]
+# NB compile.c makes sure that the default except clause is last
+except_clause: 'except' [test [('as' | ',') test]]
+suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT
+
+# Backward compatibility cruft to support:
+# [ x for x in lambda: True, lambda: False if x() ]
+# even while also allowing:
+# lambda x: 5 if x else 2
+# (But not a mix of the two)
+testlist_safe: old_test [(',' old_test)+ [',']]
+old_test: or_test | old_lambdef
+old_lambdef: 'lambda' [varargslist] ':' old_test
+
+test: or_test ['if' or_test 'else' test] | lambdef
+or_test: and_test ('or' and_test)*
+and_test: not_test ('and' not_test)*
+not_test: 'not' not_test | comparison
+comparison: expr (comp_op expr)*
+comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+expr: xor_expr ('|' xor_expr)*
+xor_expr: and_expr ('^' and_expr)*
+and_expr: shift_expr ('&' shift_expr)*
+shift_expr: arith_expr (('<<'|'>>') arith_expr)*
+arith_expr: term (('+'|'-') term)*
+term: factor (('*'|'/'|'%'|'//') factor)*
+factor: ('+'|'-'|'~') factor | power
+power: atom trailer* ['**' factor]
+atom: ('(' [yield_expr|testlist_comp] ')' |
+       '[' [listmaker] ']' |
+       '{' [dictorsetmaker] '}' |
+       '`' testlist1 '`' |
+       NAME | NUMBER | STRING+)
+listmaker: test ( list_for | (',' test)* [','] )
+testlist_comp: test ( comp_for | (',' test)* [','] )
+lambdef: 'lambda' [varargslist] ':' test
+trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
+subscriptlist: subscript (',' subscript)* [',']
+subscript: '.' '.' '.' | test | [test] ':' [test] [sliceop]
+sliceop: ':' [test]
+exprlist: expr (',' expr)* [',']
+testlist: test (',' test)* [',']
+dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
+                  (test (comp_for | (',' test)* [','])) )
+
+classdef: 'class' NAME ['(' [testlist] ')'] ':' suite
+
+arglist: (argument ',')* (argument [',']
+                         |'*' test (',' argument)* [',' '**' test] 
+                         |'**' test)
+# The reason that keywords are test nodes instead of NAME is that using NAME
+# results in an ambiguity. ast.c makes sure it's a NAME.
+argument: test [comp_for] | test '=' test
+
+list_iter: list_for | list_if
+list_for: 'for' exprlist 'in' testlist_safe [list_iter]
+list_if: 'if' old_test [list_iter]
+
+comp_iter: comp_for | comp_if
+comp_for: 'for' exprlist 'in' or_test [comp_iter]
+comp_if: 'if' old_test [comp_iter]
+
+testlist1: test (',' test)*
+
+# not used in grammar, but may appear in "node" passed from Parser to Compiler
+encoding_decl: NAME
+
+yield_expr: 'yield' [testlist]
+        */
+        #endregion
+
+        private string filename;
+        private Lexer lexer;
+
+        public Parser(string filename, Lexer lexer)
+        {
+            this.filename = filename;
+            this.lexer = lexer;
+        }
+
+        public void ParseSingleStatement()
+        {
+        }
+
+        public IEnumerable<Statement> Parse()
+        {
+            while (!Peek(TokenType.EOF))
+            {
+                if (PeekAndDiscard(TokenType.NEWLINE))
+                    continue;
+                yield return stmt();
+            }
+        }
+
+        public void ParseEval()
+        {
+        }
+
+        private bool PeekAndDiscard(TokenType tok)
+        {
+            if (lexer.Peek().Type != tok)
+                return false;
+
+            lexer.Get();
+            return true;
+        }
+
+        private bool PeekAndDiscard(TokenType tok, out Token token)
+        {
+            if (!Peek(tok, out token))
+            {
+                return false;
+            }
+
+            token = lexer.Get();
+            return true;
+        }
+
+        private void Error(string str)
+        {
+            throw new InvalidOperationException(str);
+        }
+
+        private Exception Unexpected()
+        {
+            return Unexpected(lexer.Peek());
+        }
+
+        private Exception Unexpected(Token token)
+        {
+            throw new FormatException(string.Format("Unexpected token {0} on line {1}.", token, token.LineNumber));
+        }
+
+#if NEVER
+// Grammar for Python
+//
+// Note:  Changing the grammar specified in this file will most likely
+//        require corresponding changes in the parser module
+//        (../Modules/parsermodule.c).  If you can't make the changes to
+//        that module yourself, please co-ordinate the required changes
+//        with someone who can; ask around on python-dev for help.  Fred
+//        Drake <fdrake@acm.org> will probably be listening there.
+//
+// NOTE WELL: You should also follow all the steps listed in PEP 306,
+// "How to Change Python's Grammar"
+//
+// Start symbols for the grammar:
+//       single_input is a single interactive statement;
+//       file_input is a module or sequence of commands read from an input file;
+//       eval_input is the input for the eval() functions.
+// NB: compound_stmt in single_input is followed by extra NEWLINE!
+single_input: NEWLINE | simple_stmt | compound_stmt NEWLINE
+file_input: (NEWLINE | stmt)* ENDMARKER
+eval_input: testlist NEWLINE* ENDMARKER
+#endif
+        //decorator: '@' dotted_name [ '(' [arglist] ')' ] NEWLINE
+        Decorator decorator()
+        {
+            var posStart = Expect(TokenType.AT).Start;
+            var dn = dotted_name();
+            List<Argument> args = new List<Argument>();
+            Token token;
+            if (PeekAndDiscard(TokenType.LPAREN, out token))
+            {
+                if (!Peek(TokenType.RPAREN))
+                {
+                    args = arglist(dn, token.Start).args;
+                }
+                Expect(TokenType.RPAREN);
+            }
+            var posEnd = Expect(TokenType.NEWLINE).Start;
+            return new Decorator(dn, args,filename, posStart, posEnd);
+        }
+
+        private bool Peek(TokenType tokenType)
+        {
+            return lexer.Peek().Type == tokenType;
+        }
+
+        private bool Peek(TokenType tokenType, out Token token)
+        {
+            token = lexer.Peek();
+            return token.Type == tokenType;
+        }
+
+        private bool Peek(TokenType tokenType, object value)
+        {
+            var token = lexer.Peek();
+            return 
+                (token.Type == tokenType &&
+                value.Equals(token.Value));
+        }
+
+        private bool Peek(params TokenType[] tokenTypes)
+        {
+            var type = lexer.Peek().Type;
+            foreach (var t in tokenTypes)
+                if (t == type) return true;
+            return false;
+        }
+
+        private bool Peek(ISet<TokenType> tokentypes)
+        {
+            return tokentypes.Contains(lexer.Peek().Type);
+        }
+
+        private Token Expect(TokenType tokenType)
+        {
+            var t = lexer.Peek();
+            if (t.Type != tokenType)
+                throw new FormatException(string.Format("Expected token type {0}, but saw {1} on line {2}.", tokenType, t.Type, t.LineNumber));
+            return lexer.Get();
+        }
+
+        //decorators: decorator+
+        public List<Decorator> decorators()
+        {
+            var decs = new List<Decorator>();
+            decs.Add(decorator());
+            while (Peek(TokenType.AT))
+            {
+                decs.Add(decorator());
+            }
+            return decs;
+        }
+
+        //decorated: decorators (classdef | funcdef)
+
+        public Decorated decorated()
+        {
+            var decs = decorators();
+            Statement d = null;
+            if (Peek(TokenType.Def))
+            {
+                d = funcdef();
+            }
+            else if (Peek(TokenType.Class))
+            {
+                d = classdef();
+            }
+            else
+                Error("Expected function or class defnition.");
+            return new Decorated(d, decs, filename, decs[0].Start, d.End);
+        }
+
+        // funcdef: 'def' NAME parameters ['->' test] ':' suite
+        public FunctionDef funcdef()
+        {
+            var start = Expect(TokenType.Def).Start;
+            var token = Expect(TokenType.ID);
+            var fnName = new Identifier((string) token.Value, filename, token.Start, token.End);
+            Debug.Print("  Parsing {0}", fnName.Name);
+            List<Parameter> parms = parameters();
+            Exp t = null;
+            if (PeekAndDiscard(TokenType.LARROW))
+            {
+                t = test();
+            }
+            Expect(TokenType.COLON);
+            var s = suite();
+            var vararg = parms.Where(p => p.vararg).SingleOrDefault();
+            var kwarg = parms.Where(p => p.keyarg).SingleOrDefault();
+            return new FunctionDef(
+                fnName, 
+                parms,
+                vararg!= null? vararg.Id : null, 
+                kwarg != null ? kwarg.Id : null,
+                t,
+                s, 
+                filename, start, s.End);
+        }
+
+        // parameters: '(' [typedargslist] ')'
+
+        public List<Parameter> parameters()
+        {
+            Expect(TokenType.LPAREN);
+            List<Parameter> args;
+            if (Peek(TokenType.RPAREN))
+            {
+                args = new List<Parameter>();
+            }
+            else
+            {
+                args = typedargslist();
+            }
+            Expect(TokenType.RPAREN);
+            return args;
+        }
+
+
+        //typedargslist: 
+        // (tfpdef ['=' test] (',' tfpdef ['=' test])* [','  ['*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef]]
+        //  |  '*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef]
+        //  | '**' tfpdef)
+        public List<Parameter> typedargslist()
+        {
+            var args = new List<Parameter>();
+            while (!Peek(TokenType.RPAREN))
+            {
+                switch (lexer.Peek().Type)
+                {
+                case TokenType.OP_STAR:
+                    lexer.Get();
+                    if (Peek(TokenType.ID))
+                        tfpdef();
+                    while (PeekAndDiscard(TokenType.COMMA))
+                    {
+                        if (PeekAndDiscard(TokenType.OP_STARSTAR))
+                        {
+                            tfpdef();
+                            return args;
+                        }
+                        tfpdef();
+                        if (PeekAndDiscard(TokenType.EQ))
+                            test();
+                    }
+                    return args;
+                case TokenType.OP_STARSTAR:
+                    lexer.Get();
+                    tfpdef();
+                    return args;
+                default:
+                    // (tfpdef ['=' test] (',' tfpdef ['=' test])* [','  ['*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef]]
+                    var arg = tfpdef();
+                    args.Add(arg);
+                    if (PeekAndDiscard(TokenType.EQ))
+                        arg.test = test();
+                    while (PeekAndDiscard(TokenType.COMMA))
+                    {
+                        if (Peek(TokenType.RPAREN))
+                            break;      // Skip trailing comma
+                        if (PeekAndDiscard(TokenType.OP_STARSTAR))
+                        {
+                            arg = tfpdef();
+                            arg.keyarg = true;
+                            args.Add(arg);
+                        }
+                        else if (PeekAndDiscard(TokenType.OP_STAR))
+                        {
+                            arg = tfpdef();
+                            arg.vararg = true;
+                            args.Add(arg);
+                        }
+                        else
+                        {
+                            arg = tfpdef();
+                            args.Add(arg);
+                            if (PeekAndDiscard(TokenType.EQ))
+                                arg.test = test();
+                        }
+                    }
+                    return args;
+                }
+            }
+            throw new NotFiniteNumberException();
+        }
+
+        public List<Parameter> typedarglist()
+        {
+            List<Parameter> args = new List<Parameter>();
+            while (Peek(TokenType.ID))
+            {
+                Parameter t = tfpdef();
+                if (PeekAndDiscard(TokenType.EQ))
+                {
+                    t.test = test();
+                }
+                args.Add(t);
+                if (!PeekAndDiscard(TokenType.COMMA))
+                    return args;
+            }
+            while (PeekAndDiscard(TokenType.OP_STAR))
+            {
+                Parameter t = null;
+                if (Peek(TokenType.ID))
+                    t = tfpdef();
+                args.Add(t);
+                if (!PeekAndDiscard(TokenType.COMMA))
+                    return args;
+            }
+            if (PeekAndDiscard(TokenType.OP_STARSTAR))
+            {
+                args.Add(tfpdef());
+            }
+            return args;
+        }
+
+        // tfpdef: NAME [':' test]
+        Parameter tfpdef()
+        {
+            var name = id();
+            Exp t = null;
+            if (PeekAndDiscard(TokenType.COLON))
+                t = test();
+            return new Parameter
+            {
+                Id = name,
+                test = t,
+            };
+        }
+
+//varargslist: 
+//        (vfpdef ['=' test] (',' vfpdef ['=' test])* [',' ['*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] | '**' vfpdef]]
+//        |  '*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] 
+//        | '**' vfpdef)
+        public List<VarArg> varargslist()
+        {
+            var args = new List<VarArg>();
+            switch (lexer.Peek().Type)
+            {
+            case TokenType.ID:
+                do
+                {
+                    var id = new Identifier(vfpdef(), filename, 0, 0);
+                    Exp init = null;
+                    if (PeekAndDiscard(TokenType.EQ))
+                    {
+                        init = test();
+                    }
+                    args.Add(new VarArg { name = id, test = init });
+                } while (PeekAndDiscard(TokenType.COMMA));
+                break;
+            case TokenType.OP_STAR:
+                throw new NotImplementedException();
+            case TokenType.OP_STARSTAR:
+                args.Add(VarArg.Keyword(vfpdef()));
+                break;
+            }
+            return args;
+        }
+//vfpdef: NAME
+        public string vfpdef()
+        {
+            return (string) Expect(TokenType.ID).Value;
+        }
+
+
+        static HashSet<TokenType> compoundStatement_first = new HashSet<TokenType>() {
+            TokenType.If, TokenType.While, TokenType.For, TokenType.Try, TokenType.With, 
+            TokenType.Def, TokenType.Class, TokenType.AT
+        };
+
+        static HashSet<TokenType> augassign_set = new HashSet<TokenType>() {
+            TokenType.ADDEQ, TokenType.SUBEQ, TokenType.MULEQ, TokenType.DIVEQ, TokenType.MODEQ,
+            TokenType.ANDEQ, TokenType.OREQ, TokenType.XOREQ, TokenType.SHLEQ, TokenType.SHREQ,
+            TokenType.EXPEQ, TokenType.IDIVEQ
+        };
+
+        static HashSet<TokenType> stmt_follow = new HashSet<TokenType>() {
+            TokenType.SEMI, TokenType.NEWLINE, TokenType.EOF
+        };
+
+        static HashSet<TokenType> trailer_first = new HashSet<TokenType>
+        { TokenType.LPAREN, TokenType.LBRACKET, TokenType.DOT };
+
+
+        // stmt: simple_stmt | compound_stmt
+        public Statement stmt()
+        {
+            if (Peek(compoundStatement_first))
+            {
+                return compound_stmt();
+            }
+            else
+            {
+                return simple_stmt();
+            }
+        }
+
+        //simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
+        public Statement simple_stmt()
+        {
+            List<Statement> stmts = new List<Statement>();
+            var s = small_stmt();
+            stmts.Add(s);
+            while (PeekAndDiscard(TokenType.SEMI))
+            {
+                if (Peek(TokenType.EOF))
+                    break;
+                if (PeekAndDiscard(TokenType.NEWLINE))
+                {
+                    return new SuiteStatement(stmts, filename, stmts[0].Start, stmts.Last().End);
+                }
+                s = small_stmt();
+                stmts.Add(s);
+            }
+            string comment = null;
+            if (!Peek(TokenType.EOF))
+            {
+                if (Peek(TokenType.COMMENT))
+                {
+                    comment = (string) Expect(TokenType.COMMENT).Value;
+                }
+                Expect(TokenType.NEWLINE);
+            }
+            return new SuiteStatement(stmts, filename, stmts[0].Start, stmts.Last().End) { comment = comment };
+        }
+
+        //small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt |
+        //             import_stmt | global_stmt | nonlocal_stmt | assert_stmt)
+        public Statement small_stmt()
+        {
+            switch (lexer.Peek().Type)
+            {
+            case TokenType.Del: return del_stmt();
+            case TokenType.Pass: return pass_stmt();
+            case TokenType.Break: return break_stmt();
+            case TokenType.Continue: return continue_stmt();
+            case TokenType.Return: return return_stmt();
+            case TokenType.Raise: return raise_stmt();
+            case TokenType.Yield: return yield_stmt();
+            case TokenType.Import: return import_stmt();
+            case TokenType.From: return import_stmt();
+            case TokenType.Global: return global_stmt();
+            case TokenType.Nonlocal: return nonlocal_stmt();
+            case TokenType.Assert: return assert_stmt();
+            case TokenType.Exec: return exec_stmt();
+            case TokenType.COMMENT: return comment_stmt();
+            case TokenType.INDENT:
+                Expect(TokenType.INDENT);
+                var c = Expect(TokenType.COMMENT);
+                return new CommentStatement(filename, c.Start, c.End) { comment = (string) c.Value };
+            case TokenType.DEDENT:
+                Expect(TokenType.DEDENT);
+                var cc = Expect(TokenType.COMMENT);
+                return new CommentStatement(filename, cc.Start, cc.End) { comment = (string)cc.Value };
+            default: return expr_stmt();
+            }
+        }
+
+        //expr_stmt: testlist_star_expr (augassign (yield_expr|testlist)) |
+        //                     ('=' (yield_expr|testlist_star_expr))*)
+        public Statement expr_stmt()
+        {
+            // Hack to deal with print statement from python 2.*
+            if (Peek(TokenType.ID, "print"))
+            {
+                return print_stmt();
+            }
+            var lhs = testlist_star_expr();
+            if (Peek(augassign_set))
+            {
+                var op = augassign();
+                Exp e2;
+                if (Peek(TokenType.Yield))
+                    e2 = yield_expr();
+                else 
+                    e2 = testlist();
+                lhs = new AssignExp(lhs, op, e2, filename, lhs.Start, e2.End);
+            }
+            else 
+            {
+                Exp rhs = null;
+                while (PeekAndDiscard(TokenType.EQ))
+                {
+                    if (Peek(TokenType.Yield))
+                        rhs = yield_expr();
+                    else 
+                        rhs = testlist_star_expr();
+                }
+                if (rhs != null)
+                    lhs = new AssignExp(lhs, Op.Assign, rhs, filename, lhs.Start, rhs.End);
+            }
+            return new ExpStatement(lhs, filename, lhs.Start, lhs.End);
+        }
+
+        //print_stmt: 'print' ( [ test (',' test)* [','] ] |
+        //                      '>>' test [ (',' test)+ [','] ] )
+        public Statement print_stmt()
+        {
+            var args = new List<Argument>();
+            Exp outputStream = null;    // default to stdout.
+            bool trailing_comma = false;
+
+            Token token = Expect(TokenType.ID);
+            int posEnd = token.End;
+            if (!Peek(TokenType.NEWLINE))
+            {
+                if (PeekAndDiscard(TokenType.OP_SHR))
+                {
+                    outputStream = test();
+                    if (PeekAndDiscard(TokenType.COMMA))
+                    {
+                        var e = test();
+                        args.Add(new Argument(null, e, filename, e.Start, e.End));
+                        while (PeekAndDiscard(TokenType.COMMA))
+                        {
+                            var d = test();
+                            args.Add(new Argument(null, d, filename, e.Start, d.End));
+                        }
+                        posEnd = args.Last().End;
+                    }
+                }
+                else
+                {
+                    for (; ; )
+                    {
+                        var tok = lexer.Peek();
+                        if (tok.Type == TokenType.EOF &&
+                            tok.Type == TokenType.NEWLINE &&
+                            tok.Type == TokenType.SEMI)
+                            break;
+                        var a = test();
+                        args.Add(new Argument(null, a, filename, a.Start, a.End));
+                        posEnd = a.End;
+                        if (!PeekAndDiscard(TokenType.COMMA))
+                            break;
+                        if (Peek(stmt_follow))
+                        {
+                            trailing_comma = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            return new PrintStatement(outputStream, args, trailing_comma, filename, token.Start, posEnd );
+        }
+
+        //testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
+        public Exp testlist_star_expr()
+        {
+            List<Exp> exprs = new List<Exp>();
+            for (; ; )
+            {
+                Exp e;
+                if (Peek(TokenType.OP_STAR))
+                    e = star_expr();
+                else
+                    e = test();
+                exprs.Add(e);
+                if (!PeekAndDiscard(TokenType.COMMA))
+                    break;
+                if (Peek(stmt_follow))
+                    break;
+            }
+            return exprs.Count == 1 ? exprs[0] : new ExpList(exprs, filename, 0, 0);
+        }
+//augassign: ('+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' |
+        //            '<<=' | '>>=' | '**=' | '//=')
+        public Op augassign()
+        {
+            switch (lexer.Get().Type)
+            {
+            case TokenType.ADDEQ: return Op.AugAdd;
+            case TokenType.SUBEQ: return Op.AugSub;
+            case TokenType.MULEQ: return Op.AugMul;
+            case TokenType.DIVEQ: return Op.AugDiv;
+            case TokenType.MODEQ: return Op.AugMod;
+            case TokenType.ANDEQ: return Op.AugAnd;
+            case TokenType.OREQ: return Op.AugOr;
+            case TokenType.XOREQ: return Op.AugXor;
+            case TokenType.SHLEQ: return Op.AugShl;
+            case TokenType.SHREQ: return Op.AugShr;
+            case TokenType.EXPEQ: return Op.AugExp;
+            case TokenType.IDIVEQ: return Op.AugIDiv;
+            default: throw new InvalidOperationException();
+            }
+        }
+
+// For normal assignments, additional restrictions enforced by the interpreter
+// del_stmt: 'del' exprlist
+        public Statement del_stmt()
+        {
+            var posStart = Expect(TokenType.Del).Start;
+            var e = exprlist();
+            return new DelStatement(e, filename, posStart, e.End);
+        }
+
+        //pass_stmt: 'pass'
+        public Statement pass_stmt()
+        {
+            var token = Expect(TokenType.Pass);
+            return new PassStatement(filename, token.Start, token.End);
+        }
+
+        //flow_stmt: break_stmt | continue_stmt | return_stmt | raise_stmt | yield_stmt
+        //break_stmt: 'break'
+        public Statement break_stmt()
+        {
+            var token = Expect(TokenType.Break);
+            return new BreakStatement(filename, token.Start, token.End);
+        }
+
+        //continue_stmt: 'continue'
+        public Statement continue_stmt()
+        {
+            var token = Expect(TokenType.Continue);
+            return new ContinueStatement(filename, token.Start, token.End);
+        }
+
+        //return_stmt: 'return' [testlist]
+        public Statement return_stmt()
+        {
+            var token = Expect(TokenType.Return);
+            var posStart = token.Start;
+            var posEnd = token.End;
+            Exp e = null;
+            if (!Peek(stmt_follow))
+            {
+                e = testlist();
+                posEnd = e.End;
+            }
+            return new ReturnStatement(e, filename, posStart, posEnd);
+        }
+//yield_stmt: yield_expr
+        public Statement yield_stmt()
+        {
+            var e =  yield_expr();
+            return new YieldStatement(e, filename, e.Start, e.End);
+        }
+
+//raise_stmt: 'raise' [test ['from' test]]
+//raise_stmt: 'raise' [test [',' test [',' Test]]]
+        public Statement raise_stmt()
+        {
+            Exp exToRaise = null;
+            Exp exOriginal = null;
+            var token = Expect(TokenType.Raise);
+            var posStart = token.Start;
+            var posEnd = token.End;
+            if (!Peek(stmt_follow))
+            {
+                exToRaise = test();
+                posEnd = exToRaise.End;
+                if (PeekAndDiscard(TokenType.From))
+                {
+                    exOriginal = test();
+                    posEnd = exOriginal.End;
+                }
+                else if (PeekAndDiscard(TokenType.COMMA))
+                {
+                    Exp ex2 = test();
+                    Exp ex3 = new NoneExp(filename, ex2.End, ex2.End);
+                    if (PeekAndDiscard(TokenType.COMMA))
+                    {
+                        ex3 = test();
+                    }
+                    exOriginal = new PyTuple(new List<Exp> { ex2, ex3 }, filename, posStart, (ex3 ?? ex2).End);
+                    posEnd = exOriginal.End;
+                }
+            }
+            return new RaiseStatement(exToRaise, exOriginal, filename, posStart, posEnd);
+        }
+
+        //import_stmt: import_name | import_from
+        public Statement import_stmt()
+        {
+            if (Peek(TokenType.Import))
+                return import_name();
+            else
+                return import_from();
+        }
+
+        //import_name: 'import' dotted_as_names
+        public Statement import_name()
+        {
+            var posStart = Expect(TokenType.Import).Start;
+            var names = dotted_as_names();
+            return new ImportStatement(names, filename, posStart, names.Last().End);
+        }
+
+// note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
+//import_from: ('from' (('.' | '...')* dotted_name | ('.' | '...')+)
+        //              'import' ('*' | '(' import_as_names ')' | import_as_names))
+        public Statement import_from()
+        {
+            var posStart = Expect(TokenType.From).Start;
+            DottedName name = null;
+            if (Peek(TokenType.DOT, TokenType.ELLIPSIS))
+            {
+                lexer.Get();
+                while (Peek(TokenType.DOT, TokenType.ELLIPSIS))
+                {
+                    lexer.Get();
+                }
+                if (Peek(TokenType.ID))
+                    name = dotted_name();
+            }
+            else
+            {
+                name = dotted_name();
+            }
+            Expect(TokenType.Import);
+            int posEnd;
+            List<AliasedName> aliasNames = null;
+            Token token;
+            if (PeekAndDiscard(TokenType.OP_STAR, out token))
+            {
+                aliasNames = new List<AliasedName>();
+                posEnd = token.End;
+            }
+            else if (PeekAndDiscard(TokenType.LPAREN))
+            {
+                aliasNames = import_as_names();
+                posEnd = Expect(TokenType.RPAREN).End;
+            }
+            else
+            {
+                aliasNames = import_as_names();
+                posEnd = aliasNames.Last().End;
+            }
+            return new FromStatement(name, aliasNames, filename, posStart, posEnd);
+        }
+
+//import_as_name: NAME ['as' NAME]
+        public AliasedName import_as_name()
+        {
+            var orig = id();
+            var alias = orig;
+            if (PeekAndDiscard(TokenType.As))
+                alias = id();
+            return new AliasedName(orig,  alias, filename, orig.Start, alias.End);
+        }
+
+//dotted_as_name: dotted_name ['as' NAME]
+        public AliasedName dotted_as_name()
+        {
+            var orig = dotted_name();
+            if (PeekAndDiscard(TokenType.As))
+            {
+                var alias = id();
+                return new AliasedName(orig, alias, filename, orig.Start, alias.End);
+            }
+            else
+            {
+                return new AliasedName(orig, null, filename, orig.Start, orig.End);
+            }
+        }
+
+//import_as_names: import_as_name (',' import_as_name)* [',']
+        public List<AliasedName> import_as_names()
+        {
+            var aliases = new List<AliasedName>();
+            aliases.Add(import_as_name());
+            while (PeekAndDiscard(TokenType.COMMA))
+            {
+                if (!Peek(TokenType.ID))
+                    break;
+                aliases.Add(import_as_name());
+            }
+            return aliases;
+        }
+//dotted_as_names: dotted_as_name (',' dotted_as_name)*
+        public List<AliasedName> dotted_as_names()
+        {
+            var aliases = new List<AliasedName>();
+            aliases.Add(dotted_as_name());
+            while (PeekAndDiscard(TokenType.COMMA))
+            {
+                aliases.Add(dotted_as_name());
+            }
+            return aliases;
+        }
+
+//dotted_name: NAME ('.' NAME)*
+        public DottedName dotted_name()
+        {
+            var segs = new List<Identifier>();
+            var name = id();
+            var posStart = name.Start;
+            var posEnd = name.End;
+            segs.Add(name);
+            while (PeekAndDiscard(TokenType.DOT))
+            {
+                name = id();
+                posEnd = name.End;
+                segs.Add(name);
+            }
+            return new DottedName(segs, filename, posStart, posEnd);
+        }
+
+//global_stmt: 'global' NAME (',' NAME)*
+        public Statement global_stmt()
+        {
+            var posStart = Expect(TokenType.Global).Start;
+            var names = new List<Identifier>();
+            var name = id();
+            var posEnd = name.End;
+            names.Add(name);
+            while (PeekAndDiscard(TokenType.COMMA))
+            {
+                name = id();
+                posEnd = name.End;
+                names.Add(name);
+            }
+            return new GlobalStatement(names, filename, posStart, posEnd);
+        }
+
+//nonlocal_stmt: 'nonlocal' NAME (',' NAME)*
+        public Statement nonlocal_stmt()
+        {
+            var posStart = Expect(TokenType.Nonlocal).Start;
+            var names = new List<Identifier>();
+            var name = id();
+            var posEnd = name.End;
+            names.Add(name);
+            while (PeekAndDiscard(TokenType.COMMA))
+            {
+                name = id();
+                posEnd = name.End;
+                names.Add(name);
+            }
+            return new NonlocalStatement(names, filename, posStart, posEnd);
+        }
+//assert_stmt: 'assert' test [',' test]
+        public Statement assert_stmt()
+        {
+            var posStart = Expect(TokenType.Assert).Start;
+            var tests = new List<Exp>();
+            tests.Add(test());
+            while (PeekAndDiscard(TokenType.COMMA))
+            {
+                tests.Add(test());
+            }
+            return new AssertStatement(tests, filename, posStart, tests.Last().End);
+        }
+
+//exec_stmt: 'exec' expr ['in' test [',' test]]
+        public ExecStatement exec_stmt()
+        {
+            var posStart = Expect(TokenType.Exec).Start;
+            Exp e = expr();
+            var posEnd = e.End;
+            Exp g = null;
+            Exp l = null;
+            if (PeekAndDiscard(TokenType.In))
+            {
+                g = test();
+                posEnd = g.End;
+                if (PeekAndDiscard(TokenType.COMMA))
+                {
+                    l = test();
+                    posEnd = l.End;
+                }
+            }
+            return new ExecStatement(e, g, l, filename, posStart, posEnd);
+        }
+
+        public CommentStatement comment_stmt()
+        {
+            var token = Expect(TokenType.COMMENT);
+            return new CommentStatement(filename, token.Start, token.End)
+            {
+                comment = (string) token.Value
+            };
+        }
+
+        //compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated
+        public Statement compound_stmt()
+        {
+            switch (lexer.Peek().Type)
+            {
+            case TokenType.If: return if_stmt();
+            case TokenType.While: return while_stmt();
+            case TokenType.For: return for_stmt();
+            case TokenType.Try: return try_stmt();
+            case TokenType.With: return with_stmt();
+            case TokenType.Def: return funcdef();
+            case TokenType.Class: return classdef();
+            case TokenType.AT: return decorated();
+            default: throw new InvalidOperationException();
+            }
+        }
+
+        //if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
+        public IfStatement if_stmt()
+        {
+            var posStart = Expect(TokenType.If).Start;
+            var t = test();
+            Expect(TokenType.COLON);
+            var ts = suite();
+            var stack = new Stack<Tuple<int, Exp, SuiteStatement>>();
+            stack.Push(Tuple.Create(posStart, t, ts));
+            Token token;
+            while (PeekAndDiscard(TokenType.Elif, out token))
+            {
+                t = test();
+                Expect(TokenType.COLON);
+                ts = suite();
+                stack.Push(Tuple.Create(token.Start, t, ts));
+            }
+            if (PeekAndDiscard(TokenType.Else, out token))
+            {
+                Expect(TokenType.COLON);
+                ts = suite();
+                stack.Push(new Tuple<int, Exp, SuiteStatement>(token.Start, null, ts));
+            }
+
+            SuiteStatement es = null;
+            if (stack.Peek().Item2 == null)
+            {
+                es = stack.Pop().Item3;
+            }
+            IfStatement ifStmt;
+            do
+            {
+                var item = stack.Pop();
+                ifStmt = new IfStatement(
+                    item.Item2, 
+                    item.Item3,
+                    es,
+                    filename, item.Item1, item.Item3.End);
+                es = new SuiteStatement(new List<Statement> { ifStmt }, filename, ifStmt.Start, ifStmt.End);
+            } while (stack.Count > 0);
+            return ifStmt;
+        }
+
+        //while_stmt: 'while' test ':' suite ['else' ':' suite]
+        public WhileStatement while_stmt()
+        {
+            var posStart = Expect(TokenType.While).Start;
+            var t = test();
+            Expect(TokenType.COLON);
+            var s = suite();
+            var posEnd = s.End;
+            SuiteStatement es = null;
+            if (PeekAndDiscard(TokenType.Else))
+            {
+                Expect(TokenType.COLON);
+                es = suite();
+                posEnd = es.End;
+            }
+            return new WhileStatement(filename, posStart, posEnd)
+            {
+                Test = t,
+                Body = s,
+                Else = es,
+            };
+        }
+        //for_stmt: 'for' exprlist 'in' testlist ':' suite ['else' ':' suite]
+        public ForStatement for_stmt()
+        {
+            var posStart = Expect(TokenType.For).Start;
+            var ell = exprlist();
+            Expect(TokenType.In);
+            var tl = testlist();
+            Expect(TokenType.COLON);
+            var body = suite();
+            var posEnd = body.End;
+            SuiteStatement es = null;
+            if (PeekAndDiscard(TokenType.Else))
+            {
+                Expect(TokenType.COLON);
+                es = suite();
+                posEnd = es.End;
+            }
+            return new ForStatement(ell, tl, body, es, filename, posStart, posEnd);
+        }
+
+        //try_stmt: ('try' ':' suite
+        //           ((except_clause ':' suite)+
+        //            ['else' ':' suite]
+        //            ['finally' ':' suite] |
+        //           'finally' ':' suite))
+        public TryStatement try_stmt()
+        {
+            var posStart = Expect(TokenType.Try).Start;
+            Expect(TokenType.COLON);
+            string c = null;
+            if (Peek(TokenType.COMMENT))
+            {
+                c = comment_stmt().comment;
+            }
+            var body = suite();
+            body.comment = c;
+            int posEnd = body.End;
+            var exHandlers = new List<ExceptHandler>();
+            Statement elseHandler = null;
+            Statement finallyHandler = null;
+            Token token;
+            while (Peek(TokenType.Except, out token))
+            {
+                var ec = except_clause();
+                Expect(TokenType.COLON);
+                var handler = suite();
+                posEnd = handler.End;
+                exHandlers.Add(new ExceptHandler(ec.exp, ec.alias, handler, filename, token.Start, posEnd));
+                if (PeekAndDiscard(TokenType.Else))
+                {
+                    Expect(TokenType.COLON);
+                    elseHandler = suite();
+                    posEnd = elseHandler.End;
+                }
+            }
+            if (PeekAndDiscard(TokenType.Finally))
+            {
+                Expect(TokenType.COLON);
+                finallyHandler = suite();
+                posEnd = finallyHandler.End;
+            }
+            if (exHandlers.Count == 0 && finallyHandler == null)
+                throw new InvalidOperationException("Expected at least one except clause or a finally clause.");
+            return new TryStatement(body, exHandlers, elseHandler, finallyHandler, filename, posStart, posEnd);
+        }
+        //with_stmt: 'with' with_item (',' with_item)*  ':' suite
+        public WithStatement with_stmt()
+        {
+            var posStart = Expect(TokenType.With).Start;
+            var ws = new List<WithItem>();
+            ws.Add( with_item());
+            while (PeekAndDiscard(TokenType.COMMA))
+                ws.Add(with_item());
+            Expect(TokenType.COLON);
+            var s = suite();
+            return new WithStatement(ws, s, filename, posStart, s.End);
+        }
+        //with_item: test ['as' expr]
+        public WithItem with_item()
+        {
+            var t = test();
+            Exp e = null;
+            if (PeekAndDiscard(TokenType.As))
+                e = expr();
+            return new WithItem(t, e, filename, t.Start, (e ?? t).End);
+        }
+        
+        // NB compile.c makes sure that the default except clause is last
+        //except_clause: 'except' [test ['as' NAME]]
+        public AliasedExp except_clause()
+        {
+            var token = Expect(TokenType.Except);
+            var posStart = token.Start;
+            var posEnd = token.End;
+            Exp t = null;
+            Identifier alias = null;
+            if (!Peek(TokenType.COLON))
+            {
+                t = test();
+                posEnd = t.End;
+                if (PeekAndDiscard(TokenType.As))
+                {
+                    alias = id();
+                    posEnd = alias.End;
+                }
+                else if (PeekAndDiscard(TokenType.COMMA))
+                {
+                    alias = id();
+                    posEnd = token.End;
+                }
+            }
+            return new AliasedExp(t, alias, filename, posStart, posEnd);
+        }
+
+        //suite: simple_stmt | NEWLINE INDENT stmt+ DEDENT
+        public SuiteStatement suite()
+        {
+            List<Statement> stmts = new List<Statement>();
+            if (Peek(TokenType.COMMENT))
+            {
+                stmts.Add(comment_stmt());
+            }
+            if (PeekAndDiscard(TokenType.NEWLINE))
+            {
+                while (!Peek(TokenType.INDENT))
+                {
+                    var token = Expect(TokenType.COMMENT);
+                    stmts.Add(new CommentStatement(filename, token.Start, token.End) { comment = (string) token.Value });
+                    Expect(TokenType.NEWLINE);
+                }
+                Expect(TokenType.INDENT);
+                while (!Peek(TokenType.EOF) && !PeekAndDiscard(TokenType.DEDENT))
+                {
+                    stmts.Add(stmt());
+                }
+            }
+            else
+            {
+                var stmt = simple_stmt();
+                stmts.Add(stmt);
+            }
+            return new SuiteStatement(stmts, filename, stmts[0].Start, stmts.Last().End);
+        }
+
+        //test: or_test ['if' or_test 'else' test] | lambdef
+        public Exp test()
+        {
+            if (Peek(TokenType.Lambda))
+                return lambdef();
+            var o = or_test();
+            if (o == null)
+                return o;
+            if (!PeekAndDiscard(TokenType.If))
+                return o;
+            var o2 = or_test();
+            Expect(TokenType.Else);
+            var o3 = test();
+            return new Test(filename, o.Start, o3.End)
+            {
+                Consequent = o,
+                Condition = o2,
+                Alternative = o3
+            };
+        }
+
+        //test_nocond: or_test | lambdef_nocond
+        public Exp test_nocond()
+        {
+            if (Peek(TokenType.Lambda))
+                return lambdef_nocond();
+            return or_test();
+        }
+
+        //lambdef: 'lambda' [varargslist] ':' test
+        public Lambda lambdef()
+        {
+            var posStart = Expect(TokenType.Lambda).Start;
+            var argsList = new List<VarArg>();
+            if (!Peek(TokenType.COLON))
+                argsList = varargslist();
+            Expect(TokenType.COLON);
+            var t = test();
+            return new Lambda(filename, posStart, t.End)
+            {
+                args = argsList,
+                body = t,
+            };
+        }
+        //lambdef_nocond: 'lambda' [varargslist] ':' test_nocond
+        public Lambda lambdef_nocond()
+        {
+            var posStart = Expect(TokenType.Lambda).Start;
+            var argsList = new List<VarArg>();
+            if (!Peek(TokenType.COLON))
+                argsList = varargslist();
+            Expect(TokenType.COLON);
+            var t = test_nocond();
+            return new Lambda(filename, posStart, t.End)
+            {
+                args = argsList,
+                body = t,
+            };
+        }
+
+        //or_test: and_test ('or' and_test)*
+        public Exp or_test()
+        {
+            Exp e = and_test();
+            if (e == null)
+                return e;
+            while (PeekAndDiscard(TokenType.Or))
+            {
+                var r = and_test();
+                if (r == null)
+                    Unexpected();
+                e = new BinExp(Op.LogOr, e, r, filename, e.Start, r.End);
+            }
+            return e;
+        }
+
+        //and_test: not_test ('and' not_test)*
+        public Exp and_test()
+        {
+            Exp e = not_test();
+            if (e == null)
+                return e;
+            while (PeekAndDiscard(TokenType.And))
+            {
+                var r = not_test();
+                if (r == null)
+                    Unexpected();
+                e = new BinExp( Op.LogAnd, e,  r, filename, e.Start, r.End );
+            }
+            return e;
+        }
+
+        //not_test: 'not' not_test | comparison
+        public Exp not_test()
+        {
+            Token token = default(Token);
+            if (PeekAndDiscard(TokenType.Not, out token))
+            {
+                var test = not_test();
+                return new UnaryExp ( Op.Not, test, filename, token.Start, test.End);
+            }
+            else
+            {
+                return comparison();
+            }
+        }
+
+        //comparison: expr (comp_op expr)*
+        public Exp comparison()
+        {
+            var e = expr();
+            if (e == null)
+                return e;
+            int posStart = e.Start;
+            Exp inner;
+            for (; ; )
+            {
+                Op op;
+                //'<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+                switch (lexer.Peek().Type)
+                {
+                case TokenType.OP_LT: op = Op.Lt; break;
+                case TokenType.OP_LE: op = Op.Le; break;
+                case TokenType.OP_GE: op = Op.Ge; break;
+                case TokenType.OP_GT: op = Op.Gt; break;
+                case TokenType.OP_EQ: op = Op.Eq; break;
+                case TokenType.OP_NE: op = Op.Ne; break;
+                case TokenType.In: op = Op.In; break;
+                case TokenType.Not:
+                    Expect(TokenType.Not);
+                    Expect(TokenType.In);
+                    inner = expr();
+                    e = new BinExp(Op.NotIn, e, inner, filename, posStart, inner.End);
+                    continue;
+                case TokenType.Is:
+                    Expect(TokenType.Is);
+                    op = PeekAndDiscard(TokenType.Not) ? Op.IsNot : Op.Is;
+                    inner = expr();
+                    e = new BinExp(op, e, inner, filename, posStart, inner.End);
+                    continue;
+
+                default: return e;
+                }
+                lexer.Get();
+                inner = expr();
+                e = new BinExp(op, e, inner, filename, posStart, inner.End);
+            }
+        }
+
+        // <> isn't actually a valid comparison operator in Python. It's here for the
+        // sake of a __future__ import described in PEP 401
+        //comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
+        //star_expr: '*' expr
+        public Exp star_expr()
+        {
+            var posStart = Expect(TokenType.OP_STAR).Start;
+            var e = expr();
+            return new StarExp(filename, posStart, e.End) { e = e };
+        }
+
+        //expr: xor_expr ('|' xor_expr)*
+        public Exp expr()
+        {
+            var e = xor_expr();
+            if (e == null)
+                return e;
+            while (PeekAndDiscard(TokenType.OP_BAR))
+            {
+                var r = xor_expr();
+                if (r == null)
+                    Unexpected();
+                e = new BinExp (Op.BitOr, e, r, filename, e.Start, r.End);
+            }
+            return e;
+        }
+
+        //xor_expr: and_expr ('^' and_expr)*
+        public Exp xor_expr()
+        {
+            var e = and_expr();
+            if (e == null)
+                return null;
+            while (PeekAndDiscard(TokenType.OP_CARET))
+            {
+                var r = and_expr();
+                if (r == null)
+                    Unexpected();
+                e = new BinExp(Op.Xor, e, r, filename, e.Start, r.End);
+            }
+            return e;
+        }
+
+        //and_expr: shift_expr ('&' shift_expr)*
+        public Exp and_expr()
+        {
+            var e = shift_expr();
+            if (e == null)
+                return null;
+            while (PeekAndDiscard(TokenType.OP_AMP))
+            {
+                var r = shift_expr();
+                if (r == null)
+                    Unexpected();
+                e = new BinExp(Op.BitAnd, e, r, filename, e.Start, r.End);
+            }
+            return e;
+        }
+
+        //shift_expr: arith_expr (('<<'|'>>') arith_expr)*
+        public Exp shift_expr()
+        {
+            var e = arith_expr();
+            if (e == null)
+                return null;
+            for (; ; )
+            {
+                Op op;
+                switch (lexer.Peek().Type)
+                {
+                case TokenType.OP_SHL: lexer.Get(); op = Op.Shl; break;
+                case TokenType.OP_SHR: lexer.Get(); op = Op.Shr; break;
+                default: return e;
+                }
+                var r = arith_expr();
+                if (r == null)
+                    Unexpected();
+                e = new BinExp(op, e, r, filename, e.Start, r.End);
+            }
+        }
+
+        //arith_expr: term (('+'|'-') term)*
+        public Exp arith_expr()
+        {
+            var e = term();
+            if (e == null)
+                return null;
+            for (; ; )
+            {
+                Op op;
+                switch (lexer.Peek().Type)
+                {
+                case TokenType.OP_PLUS: op = Op.Add; break;
+                case TokenType.OP_MINUS: op = Op.Sub; break;
+                default: return e;
+                }
+                lexer.Get();
+                var r = term();
+                if (r == null)
+                    Unexpected();
+                e = new BinExp(op, e, r, filename, e.Start, r.End);
+            }
+        }
+
+        //term: factor (('*'|'/'|'%'|'//') factor)*
+        public Exp term()
+        {
+            var e = factor();
+            if (e == null)
+                return null;
+            for (; ; )
+            {
+                Op op;
+                switch (lexer.Peek().Type)
+                {
+                case TokenType.OP_STAR: op = Op.Mul; break;
+                case TokenType.OP_SLASH: op = Op.Div; break;
+                case TokenType.OP_SLASHSLASH: op = Op.IDiv; break;
+                case TokenType.OP_PERCENT: op = Op.Mod; break;
+                default: return e;
+                }
+                lexer.Get();
+                var r = factor();
+                if (r == null)
+                    Unexpected();
+                e = new BinExp(op, e, r, filename, e.Start, r.End);
+            }
+        }
+
+        //factor: ('+'|'-'|'~') factor | power
+        public Exp factor()
+        {
+            Op op;
+            int posStart;
+            switch (lexer.Peek().Type)
+            {
+            case TokenType.OP_PLUS:  posStart = lexer.Get().Start; op = Op.Add; break;
+            case TokenType.OP_MINUS: posStart = lexer.Get().Start; op = Op.Sub; break;
+            case TokenType.OP_TILDE: posStart = lexer.Get().Start; op = Op.Complement; break;
+            default: return power();
+            }
+            var e = factor();
+            if (e == null)
+                Unexpected();
+            return new UnaryExp(op, e, filename, posStart, e.End);
+        }
+
+        //power: atom trailer* ['**' factor]
+        public Exp power()
+        {
+            var e = atom();
+            if (e == null)
+                return null;
+            while (Peek(trailer_first))
+            {
+                e = trailer(e);
+            }
+            if (PeekAndDiscard(TokenType.OP_STARSTAR))
+            {
+                var r = factor();
+                if (r == null)
+                    Unexpected();
+                e = new BinExp(Op.Exp, e, r, filename, e.Start, r.End);
+            }
+            return e;
+        }
+        //atom: ('(' [yield_expr|testlist_comp] ')' |
+        //       '[' [testlist_comp] ']' |
+        //       '{' [dictorsetmaker] '}' |
+        //       NAME | NUMBER | STRING+ | '...' | 'None' | 'True' | 'False')
+        public Exp atom()
+        {
+            Exp e;
+            Token t;
+            while (PeekAndDiscard(TokenType.COMMENT))
+                ;
+            switch (lexer.Peek().Type)
+            {
+            case TokenType.LPAREN:
+                lexer.Get();
+                if (Peek(TokenType.Yield))
+                {
+                    e = yield_expr();
+                }
+                else
+                {
+                    e = testlist_comp(true);
+                }
+                Expect(TokenType.RPAREN);
+                return e;
+            case TokenType.LBRACKET:
+                lexer.Get();
+                e = testlist_comp(false);
+                Expect(TokenType.RBRACKET);
+                return e;
+            case TokenType.LBRACE:
+                t = lexer.Get();
+                e = dictorsetmaker(t.Start);
+                Expect(TokenType.RBRACE);
+                return e;
+            case TokenType.ID:
+                t = lexer.Get();
+                return new Identifier((string)t.Value, filename, t.Start, t.End);
+            case TokenType.STRING:
+                t = lexer.Get();
+                var start = t.Start;
+                var str = (Str) t.Value;
+                while (Peek(TokenType.STRING))
+                {
+                    t = lexer.Get();
+                    str = new Str(str.s + t.Value, filename, start, t.End);
+                }
+                return str;
+            case TokenType.INTEGER:
+                t = lexer.Get();
+                return new IntLiteral((int) t.Value, filename, t.Start, t.End);
+            case TokenType.LONGINTEGER:
+                t = lexer.Get();
+                return new LongLiteral((long) t.Value, filename, t.Start, t.End);
+            case TokenType.REAL:
+                t = lexer.Get();
+                return new RealLiteral((double) t.Value, filename, t.Start, t.End);
+            case TokenType.IMAG:
+                t = lexer.Get();
+                return new ImaginaryLiteral((double) t.Value, filename, t.Start, t.End);
+            case TokenType.ELLIPSIS:
+                t = lexer.Get();
+                return new Ellipsis(filename, t.Start, t.End);
+            case TokenType.None:
+                t = lexer.Get();
+                return new NoneExp(filename, t.Start, t.End);
+            case TokenType.False:
+                t = lexer.Get();
+                return new BooleanLiteral(false, filename, t.Start, t.End);
+            case TokenType.True:
+                t = lexer.Get();
+                return new BooleanLiteral(true, filename, t.Start, t.End);
+            default:
+                return null;
+            }
+        }
+
+        //testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
+        public Exp testlist_comp(bool tuple)
+        {
+            Exp e;
+            Token token;
+            if (Peek(TokenType.RBRACKET, TokenType.RPAREN))
+            {
+                token = lexer.Peek();
+                var empty = new List<Exp>();
+                if (tuple)
+                    return new PyTuple(empty, filename, token.Start, token.End);
+                else
+                    return new PyList(empty, filename, token.Start, token.End);
+            }
+
+            if (Peek(TokenType.OP_STAR))
+                e = star_expr();
+            else
+                e = test();
+            Exp e2;
+            if (Peek(TokenType.For))
+            {
+                e2 = comp_for();
+                return new ListComprehension(e, e2, filename, e.Start, e2.End);
+            }
+            else
+            {
+                bool forceTuple = false;
+                var exprs = new List<Exp> { e };
+                while (PeekAndDiscard(TokenType.COMMA))
+                {
+                    // Trailing comma forces a tuple.
+                    if (Peek(TokenType.RBRACKET, TokenType.RPAREN))
+                    {
+                        forceTuple = true;
+                        break;
+                    }
+                    if (Peek(TokenType.OP_STAR))
+                        e2 = star_expr();
+                    else
+                        exprs.Add(test());
+                }
+                if (tuple)
+                {
+                    if (exprs.Count == 1 && !forceTuple)
+                    {
+                        return exprs[0];
+                    }
+                    else
+                    {
+                        return new PyTuple(exprs, filename, exprs[0].Start, exprs.Last().End);
+                    }
+                }
+                else
+                {
+                    return new PyList(exprs, filename, exprs[0].Start, exprs.Last().End);
+                }
+            }
+        }
+
+        //trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
+        public Exp trailer(Exp core)
+        {
+            Token tok;
+            switch (lexer.Peek().Type)
+            {
+            case TokenType.LPAREN:
+                tok = lexer.Get();
+                var args = arglist(core, tok.Start);
+                Expect(TokenType.RPAREN);
+                return args;
+            case TokenType.LBRACKET:
+                lexer.Get();
+                var subs = subscriptlist();
+                tok = Expect(TokenType.RBRACKET);
+                return new ArrayRef(core, subs, filename, core.Start, tok.End);
+            case TokenType.DOT:
+                lexer.Get();
+                tok = Expect(TokenType.ID);
+                var id = new Identifier((string) tok.Value, filename, core.Start, tok.End);
+                return new AttributeAccess(core, id, filename, core.Start, tok.End);
+            default: throw new InvalidOperationException();
+            }
+        }
+        //subscriptlist: subscript (',' subscript)* [',']
+        public List<Slice> subscriptlist()
+        {
+            var subs = new List<Slice>();
+            subs.Add(subscript());
+            while (PeekAndDiscard(TokenType.COMMA))
+            {
+                if (Peek(TokenType.RBRACKET))
+                    break;
+                subs.Add(subscript());
+            }
+            return subs;
+        }
+        //subscript: test | [test] ':' [test] [sliceop]
+        public Slice subscript()
+        {
+            Exp start = null;
+            Exp end = null;
+            Exp slice = null;
+            if (!Peek(TokenType.COLON))
+            {
+                start = test();
+            }
+            if (PeekAndDiscard(TokenType.COLON))
+            {
+                if (!Peek(TokenType.COLON, TokenType.RBRACKET))
+                {
+                    end = test();
+                }
+                if (Peek(TokenType.COLON))
+                {
+                    slice = sliceop();
+                }
+            }
+            //$REVIEW: fix this [2:]
+            return new Slice(start, end, slice, 
+                filename,
+                (start ?? end ?? slice).Start,
+                (slice ?? end ?? start).End);
+        }
+
+        //sliceop: ':' [test]
+        public Exp sliceop()
+        {
+            Expect(TokenType.COLON);
+            return test();
+        }
+        //exprlist: (expr|star_expr) (',' (expr|star_expr))* [',']
+        public Exp exprlist()
+        {
+            var exprs = new List<Exp>();
+            for (; ; )
+            {
+                if (Peek(TokenType.OP_STAR))
+                    exprs.Add(star_expr());
+                else
+                    exprs.Add(expr());
+                if (!PeekAndDiscard(TokenType.COMMA))
+                    break;
+                if (Peek(TokenType.In, TokenType.NEWLINE))
+                    break;
+            }
+            if (exprs.Count == 1)
+                return exprs[0];
+            else
+                return new ExpList(exprs, filename, exprs[0].Start, exprs.Last().End);
+        }
+
+        //testlist: test (',' test)* [',']
+        public Exp testlist()
+        {
+            var exprs = new List<Exp>();
+            for (; ; )
+            {
+                exprs.Add(test());
+                if (!PeekAndDiscard(TokenType.COMMA))
+                    break;
+                if (Peek(TokenType.COLON, TokenType.NEWLINE))
+                    break;
+            }
+            return exprs.Count != 1 ? new ExpList(exprs, filename, exprs[0].Start, exprs.Last().End) : exprs[0];
+        }
+
+        //dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
+        //                  (test (comp_for | (',' test)* [','])) )
+        public Exp dictorsetmaker(int posStart)
+        {
+            Token token;
+            var kvs = new List<KeyValuePair<Exp, Exp>>();
+            if (Peek(TokenType.RBRACE, out token))
+                return new DictInitializer(kvs, filename, posStart, token.End);
+
+            var k = test();
+            if (PeekAndDiscard(TokenType.COLON))
+            {
+                // dict comprenension
+                var v = test();
+                if (Peek(TokenType.For))
+                {
+                    var f = comp_for();
+                    throw new NotImplementedException();
+                }
+                else
+                {
+                    kvs.Add(new KeyValuePair<Exp, Exp>(k, v));
+                    while (PeekAndDiscard(TokenType.COMMA))
+                    {
+                        if (Peek(TokenType.RBRACE))
+                            break;
+                        k = test();
+                        if (k != null)
+                        {
+                            Expect(TokenType.COLON);
+                            v = test();
+                            kvs.Add(new KeyValuePair<Exp, Exp>(k, v));
+                        }
+                    }
+                    return new DictInitializer(kvs, filename, posStart, (v ?? k).End);
+                }
+            }
+            else
+            {
+                // set comprehension
+                throw new NotImplementedException();
+                if (Peek(TokenType.For))
+                {
+                    var f = comp_for();
+                }
+                else
+                {
+                    while (PeekAndDiscard(TokenType.COMMA))
+                    {
+                        if (Peek(TokenType.RBRACE))
+                            break;
+                        k = test();
+                    }
+                }
+                return new SetComprehension(k, null, filename, k.Start, k.End);
+            }
+            return new DictMaker(null, 0, 0);
+        }
+
+        //classdef: 'class' NAME ['(' [arglist] ')'] ':' suite
+        public ClassDef classdef()
+        {
+            var posStart = Expect(TokenType.Class).Start;
+            var name = id();
+            Debug.Print("Parsing class {0}", name.Name);
+            var args = new List<Exp>();
+            if (!Peek(TokenType.COLON))
+            {
+                var token = Expect(TokenType.LPAREN);
+                args = dotted_name_list();
+                Expect(TokenType.RPAREN);
+            }
+            Expect(TokenType.COLON);
+            var body = suite();
+            return new ClassDef(name, args, body, filename, posStart, body.End);
+        }
+
+        public List<Exp> dotted_name_list()
+        {
+            var list = new List<Exp>();
+            list.Add(test());
+            while (PeekAndDiscard(TokenType.COMMA))
+            {
+                if (Peek(TokenType.RPAREN))
+                    break;
+                list.Add(test());
+            }
+            return list;
+        }
+
+        public Identifier id()
+        {
+            var token = Expect(TokenType.ID);
+            return new Identifier((string) token.Value, filename, token.Start, token.End);
+        }
+
+        //arglist: (argument ',')* (argument [',']
+        //                         |'*' test (',' argument)* [',' '**' test] 
+        //                         |'**' test)
+        public Application arglist(Exp core, int posStart)
+        {
+            var args = new List<Argument>();
+            var keywords = new List<Argument>();
+            Exp stargs = null;
+            Exp kwargs = null;
+            Token token;
+            if (Peek(TokenType.RPAREN, out token))
+                return new Application(core, args, keywords, stargs, kwargs, filename, core.Start, token.End);
+            for (;;)
+            {
+                if (PeekAndDiscard(TokenType.OP_STAR))
+                {
+                    if (stargs != null)
+                        throw new NotSupportedException("More than one stargs.");
+                    stargs = test();
+                }
+                else if (PeekAndDiscard(TokenType.OP_STARSTAR))
+                {
+                    if (kwargs != null)
+                        throw new NotSupportedException("More than one kwargs.");
+                    kwargs = test();
+                }
+                else 
+                {
+                    var arg = argument();
+                    if (arg != null)
+                        args.Add(arg);
+                }
+
+                if (!PeekAndDiscard(TokenType.COMMA, out token))
+                    break;
+                if (Peek(TokenType.RPAREN, out token))
+                    break;
+            }
+            return new Application(core, args, keywords, stargs, kwargs, filename, posStart, token.End);
+        }
+        // The reason that keywords are test nodes instead of NAME is that using NAME
+        // results in an ambiguity. ast.c makes sure it's a NAME.
+
+        //argument: test [comp_for] | test '=' test  # Really [keyword '='] test
+        public Argument argument()
+        {
+            var name = test();
+            if (name == null)
+                return null;
+            var posStart = name.Start;
+            var posEnd = name.End;
+            CompFor f;
+            Exp defval = null;
+            if (Peek(TokenType.For))
+            {
+                f = comp_for();
+                return new Argument(name, f, filename, posStart, f.End);
+            }
+            else if (PeekAndDiscard(TokenType.EQ))
+            {
+                defval = test();
+                posEnd = defval.End;
+            }
+            else
+            {
+                defval = name;
+                name = null;
+            }
+            return new Argument(name, defval, filename, posStart, posEnd);
+        }
+
+        //comp_iter: comp_for | comp_if
+        public CompIter comp_iter()
+        {
+            if (Peek(TokenType.For))
+                return comp_for();
+            else
+                return comp_if();
+        }
+        //comp_for: 'for' exprlist 'in' or_test [comp_iter]
+        public CompFor comp_for()
+        {
+            var start = Expect(TokenType.For).Start;
+            var exprs = exprlist();
+            Expect(TokenType.In);
+            var collection = or_test();
+            CompIter next = null;
+            if (Peek(TokenType.For, TokenType.If))
+            {
+                next = comp_iter();
+            }
+            return new CompFor(filename, start, (next ?? collection).End)
+            {
+                variable = exprs,
+                collection = collection,
+                next = next,
+            };
+        }
+
+        //comp_if: 'if' test_nocond [comp_iter]
+        public CompIf comp_if()
+        {
+            var start = Expect(TokenType.If).Start;
+            var test = test_nocond();
+            CompIter next = null;
+            if (Peek(TokenType.For | TokenType.If))
+                next = comp_iter();
+            return new CompIf(filename, start, (next ?? test).End) { test = test, next = next };
+        }
+
+        // not used in grammar, but may appear in "node" passed from Parser to Compiler
+        //encoding_decl: NAME
+
+        //yield_expr: 'yield' [yield_arg]
+        public Exp yield_expr()
+        {
+            var token = Expect(TokenType.Yield);
+            if (!Peek(stmt_follow))
+            {
+                return yield_arg(token.Start);
+            }
+            else
+            {
+                return new YieldExp(null, filename, token.Start, token.End);
+            }
+        }
+
+        //yield_arg: 'from' test | testlist
+        public Exp yield_arg(int posStart)
+        {
+            if (PeekAndDiscard(TokenType.From))
+            {
+                var t = test();
+                return new YieldFromExp(t, filename, posStart, t.End);
+            }
+            else 
+            {
+                var tl = testlist();
+                return new YieldExp(tl, filename, posStart, tl.End);
+            }
+        }
+    }
+}

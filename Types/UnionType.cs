@@ -1,0 +1,197 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace Pytocs.Types
+{
+    public class UnionType : DataType
+    {
+        public ISet<DataType> types;
+
+        public UnionType()
+        {
+            this.types = new HashSet<DataType>();
+        }
+
+        public UnionType(params DataType[] initialTypes) :
+            this()
+        {
+            foreach (DataType nt in initialTypes)
+            {
+                addType(nt);
+            }
+        }
+
+        public override T Accept<T>(IDataTypeVisitor<T> visitor)
+        {
+            return visitor.VisitUnion(this);
+        }
+
+        public bool isEmpty()
+        {
+            return types.Count == 0;
+        }
+
+
+        /**
+         * Returns true if t1 == t2 or t1 is a union type that contains t2.
+         */
+        static public bool contains(DataType t1, DataType t2)
+        {
+            if (t1 is UnionType)
+            {
+                return ((UnionType) t1).contains(t2);
+            }
+            else
+            {
+                return t1.Equals(t2);
+            }
+        }
+
+
+        static public DataType remove(DataType t1, DataType t2)
+        {
+            if (t1 is UnionType)
+            {
+                ISet<DataType> types = new HashSet<DataType>(((UnionType) t1).types);
+                types.Remove(t2);
+                return UnionType.newUnion(types);
+            }
+            else if (t1 != DataType.Cont && t1 == t2)
+            {
+                return DataType.Unknown;
+            }
+            else
+            {
+                return t1;
+            }
+        }
+
+        static public DataType newUnion(IEnumerable<DataType> types)
+        {
+            DataType t = DataType.Unknown;
+            foreach (DataType nt in types)
+            {
+                t = union(t, nt);
+            }
+            return t;
+        }
+
+        public void setTypes(ISet<DataType> types)
+        {
+            this.types = types;
+        }
+
+        public void addType(DataType t)
+        {
+            if (t is UnionType)
+            {
+                types.UnionWith(((UnionType) t).types);
+            }
+            else
+            {
+                types.Add(t);
+            }
+        }
+
+        public bool contains(DataType t)
+        {
+            return types.Contains(t);
+        }
+
+        /// <summary>
+        /// Make the a union of two types
+        /// with preference: other > None > Cont > unknown
+        /// </summary>
+        public static DataType union(DataType u, DataType v)
+        {
+            if (u.Equals(v))
+            {
+                return u;
+            }
+            else if (u != DataType.Unknown && v == DataType.Unknown)
+            {
+                return u;
+            }
+            else if (v != DataType.Unknown && u == DataType.Unknown)
+            {
+                return v;
+            }
+            else if (u != DataType.None && v == DataType.None)
+            {
+                return u;
+            }
+            else if (v != DataType.None && v == DataType.None)
+            {
+                return v;
+            }
+            else
+            {
+                return new UnionType(u, v);
+            }
+        }
+
+
+        /// <summary>
+        /// Returns the first alternate whose type is not unknown and
+        /// is not {@link org.yinwang.pysonar.Analyzer.idx.builtins.None}.
+        /// 
+        /// @return the first non-unknown, non-{@code None} alternate, or {@code null} if none found
+        /// </summary>
+        public DataType firstUseful()
+        {
+            return types
+                .Where(type => (!type.isUnknownType() && type != DataType.None))
+                .FirstOrDefault();
+        }
+
+        public override bool Equals(object other)
+        {
+            if (typeStack.contains(this, other))
+            {
+                return true;
+            }
+            else if (other is UnionType)
+            {
+                ISet<DataType> types1 = types;
+                ISet<DataType> types2 = ((UnionType) other).types;
+                if (types1.Count != types2.Count)
+                {
+                    return false;
+                }
+                else
+                {
+                    typeStack.push(this, other);
+                    foreach (DataType t in types2)
+                    {
+                        if (!types1.Contains(t))
+                        {
+                            typeStack.pop(this, other);
+                            return false;
+                        }
+                    }
+                    foreach (DataType t in types1)
+                    {
+                        if (!types2.Contains(t))
+                        {
+                            typeStack.pop(this, other);
+                            return false;
+                        }
+                    }
+                    typeStack.pop(this, other);
+                    return true;
+                }
+            }
+            else
+            {
+                return false;
+            }
+        }
+
+        public override int GetHashCode()
+        {
+            return "UnionType".GetHashCode();
+        }
+    }
+}

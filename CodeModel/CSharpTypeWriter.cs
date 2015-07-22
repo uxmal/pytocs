@@ -1,0 +1,265 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+
+namespace Pytocs.CodeModel
+{
+    public class CSharpTypeWriter : ICodeMemberVisitor<int>
+    {
+        private CodeTypeDeclaration type;
+        private IndentingTextWriter writer;
+        private CSharpExpressionWriter expWriter;
+
+        public CSharpTypeWriter(CodeTypeDeclaration type, IndentingTextWriter writer)
+        {
+            this.type = type;
+            this.writer = writer;
+            this.expWriter = new CSharpExpressionWriter(writer);
+        }
+
+        public int VisitField(CodeMemberField field)
+        {
+            RenderMemberFieldAttributes(field.Attributes);
+            var expWriter = new CSharpExpressionWriter(writer);
+            expWriter.VisitTypeReference(field.FieldType);
+            writer.Write(" ");
+            writer.WriteName(field.FieldName);
+            if (field.InitExpression != null)
+            {
+                writer.Write(" = ");
+                field.InitExpression.Accept(expWriter);
+            }
+            writer.Write(";");
+            writer.WriteLine();
+            return 0;
+        }
+
+        public int VisitMethod(CodeMemberMethod method)
+        {
+            RenderCustomAttributes(method);
+            RenderMethodAttributes(method.Attributes);
+            var expWriter = new CSharpExpressionWriter(writer);
+            expWriter.VisitTypeReference(method.ReturnType);
+            writer.Write(" ");
+            writer.WriteName(method.Name);
+            WriteMethodParameters(method);
+
+            var stmWriter = new CSharpStatementWriter(writer);
+            stmWriter.WriteStatements(method.Statements); 
+            writer.WriteLine();
+            return 0;
+        }
+
+        private void WriteMethodParameters(CodeMemberMethod method)
+        {
+            writer.Write("(");
+            var sep = "";
+            foreach (var param in method.Parameters)
+            {
+                writer.Write(sep);
+                sep = ", ";
+                WriteParameter(param);
+            }
+            writer.WriteName(")");
+        }
+
+        public int VisitConstructor(CodeConstructor cons)
+        {
+            RenderCustomAttributes(cons);
+            RenderMethodAttributes(cons.Attributes);
+            writer.WriteName(type.Name);
+            WriteMethodParameters(cons);
+            if (cons.BaseConstructorArgs.Count > 0)
+            {
+                writer.WriteLine();
+                ++writer.IndentLevel;
+                writer.Write(": ");
+                writer.Write("base");
+                writer.Write("(");
+                var sep = "";
+                foreach (var e in cons.BaseConstructorArgs)
+                {
+                    writer.Write(sep);
+                    sep = ", ";
+                    e.Accept(expWriter);
+                }
+                writer.Write(")");
+                --writer.IndentLevel;
+            }
+            if (cons.ChainedConstructorArgs.Count > 0)
+            {
+                writer.WriteLine();
+                ++writer.IndentLevel;
+                writer.Write(": ");
+                writer.Write("this");
+                writer.Write("(");
+                var sep = "";
+                foreach (var e in cons.ChainedConstructorArgs)
+                {
+                    writer.Write(sep);
+                    sep = ", ";
+                    e.Accept(expWriter);
+                }
+                writer.Write(")");
+                --writer.IndentLevel;
+            }
+
+            var stmWriter = new CSharpStatementWriter(writer);
+            stmWriter.WriteStatements(cons.Statements);
+            writer.WriteLine();
+            return 0;
+        }
+
+        private void WriteParameter(CodeParameterDeclarationExpression param)
+        {
+            var expType = new CSharpExpressionWriter(writer);
+            if (param.IsVarargs)
+            {
+                writer.Write("params");
+                writer.Write(" ");
+                writer.Write("object");
+                writer.Write(" [] ");
+                writer.WriteName(param.ParameterName);
+            }
+            else
+            {
+                expType.VisitTypeReference(param.ParameterType);
+                writer.Write(" ");
+                writer.WriteName(param.ParameterName);
+                if (param.DefaultValue != null)
+                {
+                    writer.Write(" = ");
+                    param.DefaultValue.Accept(expType);
+                }
+            }
+        }
+
+        public int VisitTypeDefinition(CodeTypeDeclaration type)
+        {
+            var oldType = this.type;
+            this.type = type;
+            var expWriter = new CSharpExpressionWriter(writer);
+            foreach (var stm in type.Comments)
+            {
+                writer.Write("//");
+                writer.WriteLine(stm.Comment);
+            }
+            RenderTypeMemberAttributes(type.Attributes);
+            writer.Write("class");
+            writer.Write(" ");
+            writer.WriteName(type.Name);
+
+            if (type.BaseTypes.Count > 0)
+            {
+                writer.WriteLine();
+                ++writer.IndentLevel;
+                writer.Write(": ");
+                var sepStr = "";
+                foreach (var bt in type.BaseTypes)
+                {
+                    writer.Write(sepStr);
+                    sepStr = ", ";
+                    expWriter.VisitTypeReference(bt);
+                }
+                --writer.IndentLevel;
+            }
+            writer.Write(" ");
+            writer.Write("{");
+            writer.WriteLine();
+            ++writer.IndentLevel;
+            bool sep = true;
+            foreach (var m in type.Members)
+            {
+                if (sep) writer.WriteLine();
+                sep = true;
+                m.Accept(this);
+            }
+            --writer.IndentLevel;
+            writer.Write("}");
+            writer.WriteLine();
+            this.type = oldType;
+            return 0;
+        }
+
+        private void RenderMethodAttributes(MemberAttributes attrs)
+        {
+            RenderAccessAttributes(attrs);
+            switch (attrs & MemberAttributes.ScopeMask)
+            {
+            case 0: writer.Write("virtual"); writer.Write(" "); break;
+            case MemberAttributes.Abstract: writer.Write("abstract"); writer.Write(" "); break;
+            case MemberAttributes.Final: break;
+            case MemberAttributes.Static: writer.Write("static"); writer.Write(" "); break;
+            case MemberAttributes.Override: writer.Write("override"); writer.Write(" "); break;
+            case MemberAttributes.Const: writer.Write("const"); writer.Write(" "); break;
+            }
+        }
+
+        private void RenderCustomAttributes(CodeMember member)
+        {
+            foreach (var attr in member.CustomAttributes)
+            {
+                writer.Write("[");
+                writer.Write(attr.AttributeType.TypeName);
+                if (attr.Arguments.Count > 0)
+                {
+                    writer.Write("(");
+                    var sep = "";
+                    foreach (var arg in attr.Arguments)
+                    {
+                        writer.Write(sep);
+                        sep = ",";
+                        WriteAttrArgument(arg);
+                    }
+                    writer.Write(")");
+                }
+                writer.WriteLine("]");
+            }
+        }
+
+        private void WriteAttrArgument(CodeAttributeArgument arg)
+        {
+            if (arg.Name != null)
+            {
+                writer.Write(arg.Name);
+                writer.Write("=");
+            }
+            arg.Value.Accept(expWriter);
+        }
+
+        private void RenderMemberFieldAttributes(MemberAttributes attrs)
+        {
+            RenderAccessAttributes(attrs);
+            switch (attrs & MemberAttributes.ScopeMask)
+            {
+            case MemberAttributes.Final: break;
+            case MemberAttributes.Static: writer.Write("static"); writer.Write(" "); break;
+            case MemberAttributes.Const: writer.Write("const"); writer.Write(" "); break;
+            }
+        }
+
+        private void RenderAccessAttributes(MemberAttributes attrs)
+        {
+            switch (attrs & MemberAttributes.AccessMask)
+            {
+            case MemberAttributes.Private: writer.Write("private"); break;
+            case MemberAttributes.Family: writer.Write("protected"); break;
+            case MemberAttributes.Assembly: writer.Write("internal"); break;
+            case MemberAttributes.Public: writer.Write("public"); break;
+            default: return;
+            }
+            writer.Write(" ");
+        }
+
+        private void RenderTypeMemberAttributes(MemberAttributes attrs)
+        {
+            RenderAccessAttributes(attrs);
+            switch (attrs & MemberAttributes.ScopeMask)
+            {
+            case MemberAttributes.Final: break;
+            case MemberAttributes.Static: writer.Write("static"); writer.Write(" "); break;
+            }
+        }
+    }
+}
