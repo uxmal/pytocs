@@ -47,7 +47,6 @@ namespace Pytocs.TypeInference
 
     public class AnalyzerImpl : Analyzer
     {
-
         public const string MODEL_LOCATION = "org/yinwang/pysonar/models";
 
         // global static instance of the analyzer itself
@@ -160,7 +159,6 @@ namespace Pytocs.TypeInference
             }
         }
 
-
         public void addPath(string p)
         {
             path.Add(FileSystem.GetFullPath(p));
@@ -205,7 +203,6 @@ namespace Pytocs.TypeInference
 #endif
         }
 
-
         public List<string> getLoadPath()
         {
             List<string> loadPath = new List<string>();
@@ -221,24 +218,20 @@ namespace Pytocs.TypeInference
             return loadPath;
         }
 
-
         public bool inStack(object f)
         {
             return callStack.Contains(f);
         }
-
 
         public void pushStack(object f)
         {
             callStack.Add(f);
         }
 
-
         public void popStack(object f)
         {
             callStack.Remove(f);
         }
-
 
         public bool inImportStack(object f)
         {
@@ -707,9 +700,6 @@ namespace Pytocs.TypeInference
             }
         }
 
-
-
-
         public void msg_(string m)
         {
             if (hasOption("quiet"))
@@ -717,7 +707,6 @@ namespace Pytocs.TypeInference
                 Console.Write(m);
             }
         }
-
 
         public void addUncalled(FunType cl)
         {

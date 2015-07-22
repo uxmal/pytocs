@@ -49,13 +49,13 @@ namespace Pytocs
                      .Select(d => new EnumerationState
                      {
                          DirectoryName = d,
-                         Namespace = GenerateNamesapce(state, d),
+                         Namespace = GenerateNamespace(state, d),
                      })).GetEnumerator();
                 stack.Push(e);
             }
         }
 
-        private static string GenerateNamesapce(EnumerationState state, string dirname)
+        private static string GenerateNamespace(EnumerationState state, string dirname)
         {
             dirname = Path.GetFileName(dirname)
                 .Replace('-', '_')

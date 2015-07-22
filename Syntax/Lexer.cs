@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 
 namespace Pytocs.Syntax
 {
+    /// <summary>
+    /// Lexer for Python.
+    /// </summary>
     public class Lexer
     {
         private string filename;

@@ -30,7 +30,7 @@ namespace Pytocs.Types
 
         public override int GetHashCode()
         {
-            return "ModuleType".GetHashCode();
+            return GetType().Name.GetHashCode();
         }
 
         public override bool Equals(object other)

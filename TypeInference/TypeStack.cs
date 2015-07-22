@@ -3,7 +3,6 @@ using System;
 
 namespace Pytocs.TypeInference
 {
-
     public class TypeStack
     {
         class Pair

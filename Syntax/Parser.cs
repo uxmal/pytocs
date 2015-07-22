@@ -10,7 +10,6 @@ namespace Pytocs.Syntax
     /// <summary>
     /// Parses the Python language grammar
     /// </summary>
-    ///
     public class Parser
     {
         #region Python 3.4 grammar

@@ -6,6 +6,9 @@ using Pytocs.Types;
 namespace Pytocs.TypeInference
 {
     //$REVIEW: This file is messy. Should clean up.
+    /// <summary>
+    /// Metadata for all Python builtin functions.
+    /// </summary>
     public class Builtins
     {
         public const string LIBRARY_URL = "http://docs.python.org/library/";

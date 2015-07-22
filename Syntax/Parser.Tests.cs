@@ -9,8 +9,10 @@ using System.Threading.Tasks;
 namespace Pytocs.Syntax
 {
     [TestFixture]
-    class ParserTests
+    public class ParserTests
     {
+        private static readonly string nl = Environment.NewLine;
+
         private Lexer Lex(string input)
         {
             return new Lexer("foo.py", new StringReader(input));
@@ -64,13 +66,14 @@ namespace Pytocs.Syntax
         public void Parse_PrintStatement()
         {
             var stmt = ParseStmt("print \"Hello\"\n");
-            Assert.AreEqual("print \"Hello\"\r\n", stmt.ToString());
+            Assert.AreEqual("print \"Hello\"" + nl, stmt.ToString());
         }
 
+        [Test]
         public void Parse_EmptyPrintStatement()
         {
             var stmt = ParseStmt("print\n");
-            Assert.AreEqual("print\n", stmt.ToString());
+            Assert.AreEqual("print" + nl, stmt.ToString());
         }
 
         [Test]
@@ -137,7 +140,7 @@ baz(),
         public void Parse_print_to_stderr()
         {
             var pyStm = ParseStmt("print >> sys.stderr,\"Hello\"\r\n");
-            Assert.AreEqual("print >> sys.stderr, \"Hello\"\r\n", pyStm.ToString());
+            Assert.AreEqual("print >> sys.stderr, \"Hello\""+nl, pyStm.ToString());
         }
 
         [Test]

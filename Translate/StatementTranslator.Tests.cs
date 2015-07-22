@@ -14,6 +14,8 @@ namespace Pytocs.Translate
     [TestFixture]
     public class StatementTranslatorTests
     {
+        private static readonly string nl = Environment.NewLine;
+
         private string XlatStmts(string pyStmt)
         {
             var rdr = new StringReader(pyStmt);
@@ -54,7 +56,7 @@ namespace Pytocs.Translate
             {
                 foreach (CodeNamespaceImport imp in ns.Imports)
                 {
-                    writer.WriteLine("using {0};", imp.Namespace);
+                    writer.WriteLine("using {0};", SanitizeNamespace(imp.Namespace, gen));
                 }
                 foreach (CodeTypeDeclaration type in ns.Types)
                 {
@@ -67,6 +69,18 @@ namespace Pytocs.Translate
                 }
             }
             return writer.ToString();
+        }
+
+        /// <summary>
+        /// Ensures no component of the namespace is a C# keyword.
+        /// </summary>
+        /// <param name="p"></param>
+        /// <returns></returns>
+        private string SanitizeNamespace(string nmspace, CodeGenerator gen)
+        {
+            return string.Join(".", 
+                nmspace.Split('.')
+                .Select(n => gen.EscapeKeywordName(n)));
         }
 
         private string XlatMember(string pyModule)
@@ -774,7 +788,7 @@ except:
         public void Stmt_YieldExpr()
         {
             var pyStm = "yield 3\n";
-            var sExp = "yield return 3;\r\n";
+            var sExp = "yield return 3;" + nl;
             Assert.AreEqual(sExp, XlatStmts(pyStm));
         }
 
@@ -782,7 +796,7 @@ except:
         public void Stmt_YieldNoExpr()
         {
             var pyStm = "yield\n";
-            var sExp = "yield return null;\r\n";
+            var sExp = "yield return null;"+ nl;
             Assert.AreEqual(sExp, XlatStmts(pyStm));
         }
 
