@@ -32,7 +32,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="nunit.framework, Version=2.5.10.11092, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL" />
+    <Reference Include="nunit.framework, Version=2.6.3.13283, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
@@ -162,24 +164,15 @@
     <Compile Include="TypeInference\AstCache.cs" />
     <Compile Include="TypeInference\Binding.cs" />
     <Compile Include="TypeInference\Builtins.cs" />
-    <Compile Include="TypeInference\demos\Demo.cs" />
-    <Compile Include="TypeInference\demos\HtmlOutline.cs" />
-    <Compile Include="TypeInference\demos\Linker.cs" />
-    <Compile Include="TypeInference\demos\Style.cs" />
-    <Compile Include="TypeInference\demos\StyleApplier.cs" />
     <Compile Include="TypeInference\Diagnostic.cs" />
     <Compile Include="TypeInference\FakeFileSystem.cs" />
-    <Compile Include="TypeInference\demos\Gson.cs" />
     <Compile Include="TypeInference\IFileSystem.cs" />
     <Compile Include="TypeInference\ILogger.cs" />
-    <Compile Include="TypeInference\demos\JSONDump.cs" />
     <Compile Include="TypeInference\JsonTools.cs" />
     <Compile Include="TypeInference\Options.cs" />
-    <Compile Include="TypeInference\demos\Outliner.cs" />
     <Compile Include="TypeInference\Progress.cs" />
     <Compile Include="TypeInference\State.cs" />
     <Compile Include="TypeInference\Statistics.cs" />
-    <Compile Include="TypeInference\demos\Test.cs" />
     <Compile Include="TypeInference\TypeStack.cs" />
     <Compile Include="Types\BoolType.cs" />
     <Compile Include="Types\ClassType.cs" />
@@ -204,7 +197,9 @@
   <ItemGroup>
     <None Include="App.config" />
   </ItemGroup>
-  <ItemGroup />
+  <ItemGroup>
+    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

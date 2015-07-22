@@ -1,13 +1,9 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2012
+# Visual Studio 2013
+VisualStudioVersion = 12.0.31101.0
+MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pytocs", "pytocs.csproj", "{89D2BF67-423A-4C7D-B4E8-C34BA9E83152}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "idc-orig", "idc-0.2\idc-orig.csproj", "{C80F9009-6876-4FB5-B803-CA19FA8AC5F1}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "idc", "idc\idc.csproj", "{ECA3DB5E-4076-414D-8F38-983C48A9ECC0}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "cself", "..\ports\pyelftools-0.22\pyelftools-0.22\cself.csproj", "{19BA2B31-7509-47A1-A200-0B74AF672E93}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -19,15 +15,6 @@ Global
 		{89D2BF67-423A-4C7D-B4E8-C34BA9E83152}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89D2BF67-423A-4C7D-B4E8-C34BA9E83152}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89D2BF67-423A-4C7D-B4E8-C34BA9E83152}.Release|Any CPU.Build.0 = Release|Any CPU
-		{C80F9009-6876-4FB5-B803-CA19FA8AC5F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{C80F9009-6876-4FB5-B803-CA19FA8AC5F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{C80F9009-6876-4FB5-B803-CA19FA8AC5F1}.Release|Any CPU.Build.0 = Release|Any CPU
-		{ECA3DB5E-4076-414D-8F38-983C48A9ECC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{ECA3DB5E-4076-414D-8F38-983C48A9ECC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{ECA3DB5E-4076-414D-8F38-983C48A9ECC0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{19BA2B31-7509-47A1-A200-0B74AF672E93}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{19BA2B31-7509-47A1-A200-0B74AF672E93}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{19BA2B31-7509-47A1-A200-0B74AF672E93}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

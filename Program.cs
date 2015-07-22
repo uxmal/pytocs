@@ -22,7 +22,7 @@ namespace Pytocs
 
             if (args[0].ToLower() == "-d")
             {
-                org.yinwang.pysonar.demos.Demo.DemoMain(args);
+   //             org.yinwang.pysonar.demos.Demo.DemoMain(args);
                 return;
             }
 
