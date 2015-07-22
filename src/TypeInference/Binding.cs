@@ -7,7 +7,7 @@ using Pytocs.Types;
 
 namespace Pytocs.TypeInference
 {
-    public class Binding : IComparable<object>
+    public class Binding : IComparable<Binding>
     {
         public enum Kind
         {
@@ -193,9 +193,9 @@ namespace Pytocs.TypeInference
         /// <summary>
         /// Bindings can be sorted by their location for outlining purposes.
         /// </summary>
-        public int CompareTo(object o)
+        public int CompareTo(Binding o)
         {
-            return start - ((Binding) o).start;
+            return start - o.start;
         }
 
         public override string ToString()
@@ -207,17 +207,14 @@ namespace Pytocs.TypeInference
             sb.Append(":type=").Append(type);
             sb.Append(":qname=").Append(qname);
             sb.Append(":refs=");
+            sb.Append("[");
             if (refs.Count > 10)
             {
-                sb.Append("[");
                 sb.Append(refs.First());
-                sb.Append(", ...(");
-                sb.Append(refs.Count - 1);
-                sb.Append(" more)]");
+                sb.AppendFormat(", ...({0} more)]", refs.Count - 1);
             }
             else
             {
-                sb.Append("[");
                 var sep = "";
                 foreach (var r in refs)
                 {

@@ -14,7 +14,6 @@ namespace Pytocs.TypeInference
         void Error(Exception ex, string p);
         void Inform(string p);
         void Verbose(string p);
-
     }
 
     public class Logger : ILogger

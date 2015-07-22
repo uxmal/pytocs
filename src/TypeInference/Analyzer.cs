@@ -13,7 +13,7 @@ namespace Pytocs.TypeInference
     {
         IFileSystem FileSystem { get; }
 
-        DataType loadFile(string path);
+        DataType LoadFile(string path);
         DataType loadModule(List<Name> name, State state);
         Module getAstForFile(string file);
         string moduleQname(string file);
@@ -365,7 +365,7 @@ namespace Pytocs.TypeInference
         }
 
 
-        void addFileErr(String file, int begin, int end, String msg)
+        void addFileErr(string file, int begin, int end, String msg)
         {
             Diagnostic d = new Diagnostic(file, Diagnostic.Category.ERROR, begin, end, msg);
             getFileErrs(file, semanticErrors).Add(d);
@@ -383,7 +383,7 @@ namespace Pytocs.TypeInference
             return msgs;
         }
 
-        public DataType loadFile(string path)
+        public DataType LoadFile(string path)
         {
             path = FileSystem.GetFullPath(path);
 
@@ -405,7 +405,7 @@ namespace Pytocs.TypeInference
             }
 
             // set new CWD and save the old one on stack
-            String oldcwd = cwd;
+            string oldcwd = cwd;
             setCWD(FileSystem.GetDirectoryName(path));
 
             pushImportStack(path);
@@ -563,7 +563,7 @@ namespace Pytocs.TypeInference
                 string initFile = FileSystem.CombinePath(path, "__init__.py");
                 if (FileSystem.FileExists(initFile))
                 {
-                    DataType mod = loadFile(initFile);
+                    DataType mod = LoadFile(initFile);
                     if (mod == null)
                     {
                         return null;
@@ -586,7 +586,7 @@ namespace Pytocs.TypeInference
                     string startFile = path + suffix;
                     if (FileSystem.FileExists( startFile))
                     {
-                        DataType mod = loadFile(startFile);
+                        DataType mod = LoadFile(startFile);
                         if (mod == null)
                         {
                             return null;
@@ -636,7 +636,7 @@ namespace Pytocs.TypeInference
             {
                 if (file_or_dir.EndsWith(suffix))
                 {
-                    loadFile(file_or_dir);
+                    LoadFile(file_or_dir);
                 }
             }
         }

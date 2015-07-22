@@ -3,12 +3,10 @@ using System.Collections.Generic;
 
 namespace org.yinwang.pysonar
 {
-
     public class Options
     {
         private Dictionary<string, object> optionsMap = new Dictionary<string, object>();
         private List<string> args = new List<string>();
-
 
         public Options(params string[] args)
         {

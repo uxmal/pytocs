@@ -11,7 +11,7 @@ namespace Pytocs.TypeInference
         IExpVisitor<DataType>
     {
         private State scope;
-        public Analyzer analyzer;
+        private Analyzer analyzer;
 
         public TypeTransformer(State s, Analyzer analyzer)
         {
@@ -812,15 +812,15 @@ namespace Pytocs.TypeInference
             if (cont1 && cont2)
             {
                 s1.merge(s2);
-                scope.overwrite(s1);
+                scope.Overwrite(s1);
             }
             else if (cont1)
             {
-                scope.overwrite(s1);
+                scope.Overwrite(s1);
             }
             else if (cont2)
             {
-                scope.overwrite(s2);
+                scope.Overwrite(s2);
             }
             return UnionType.union(type1, type2);
         }

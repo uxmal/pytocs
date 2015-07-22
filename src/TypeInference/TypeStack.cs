@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System;
+using Pytocs.Types;
 
 namespace Pytocs.TypeInference
 {
@@ -7,10 +8,10 @@ namespace Pytocs.TypeInference
     {
         class Pair
         {
-            public object first;
-            public object second;
+            public DataType first;
+            public DataType second;
 
-            public Pair(object first, object second)
+            public Pair(DataType first, DataType second)
             {
                 this.first = first;
                 this.second = second;
@@ -19,7 +20,7 @@ namespace Pytocs.TypeInference
 
         private List<Pair> stack = new List<Pair>();
 
-        public void push(object first, object second)
+        public void push(DataType first, DataType second)
         {
             stack.Add(new Pair(first, second));
         }
@@ -29,12 +30,14 @@ namespace Pytocs.TypeInference
             stack.RemoveAt(stack.Count - 1);
         }
 
-        public bool contains(object first, object second)
+        public bool contains(DataType first, DataType second)
         {
             foreach (Pair p in stack)
             {
-                if (p.first == first && p.second == second ||
-                        p.first == second && p.second == first)
+                if (object.ReferenceEquals(p.first, first) && 
+                    object.ReferenceEquals(p.second, second) ||
+                    object.ReferenceEquals(p.first, second) &&
+                    object.ReferenceEquals(p.second, first))
                 {
                     return true;
                 }

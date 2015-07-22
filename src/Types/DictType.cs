@@ -36,13 +36,16 @@ namespace Pytocs.Types
 
         public override bool Equals(object other)
         {
-            if (typeStack.contains(this, other))
+            var dtOther = other as DataType;
+            if (dtOther == null)
+                return false;
+            if (typeStack.contains(this, dtOther))
             {
                 return true;
             }
             else if (other is DictType)
             {
-                typeStack.push(this, other);
+                typeStack.push(this, dtOther);
                 DictType co = (DictType) other;
                 bool ret = (co.keyType.Equals(keyType) &&
                         co.valueType.Equals(valueType));

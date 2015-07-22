@@ -14,7 +14,7 @@ namespace Pytocs.Types
 
         public override int GetHashCode()
         {
-            return "FloatType".GetHashCode();
+            return GetType().Name.GetHashCode();
         }
     }
 }

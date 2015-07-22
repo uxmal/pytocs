@@ -7,16 +7,16 @@ namespace Pytocs.TypeInference
         private const int MAX_SPEED_DIGITS = 5;
 
         private Analyzer analyzer;
-        DateTime startTime;
-        DateTime lastTickTime;
-        long lastCount;
-        int lastRate;
-        int lastAvgRate;
-        long total;
-        long count;
-        long width;
-        long segSize;
-        bool quiet;
+        private DateTime startTime;
+        private DateTime lastTickTime;
+        private long lastCount;
+        private int lastRate;
+        private int lastAvgRate;
+        private long total;
+        private long count;
+        private long width;
+        private long segSize;
+        private bool quiet;
 
         public Progress(Analyzer analyzer, long total, long width, bool quiet)
         {

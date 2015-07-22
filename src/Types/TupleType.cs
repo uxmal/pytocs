@@ -71,7 +71,10 @@ namespace Pytocs.Types
 
         public override bool Equals(object other)
         {
-            if (typeStack.contains(this, other))
+            var dtOther = other as DataType;
+            if (dtOther == null)
+                return false;
+            if (typeStack.contains(this, dtOther))
             {
                 return true;
             }
@@ -82,7 +85,7 @@ namespace Pytocs.Types
 
                 if (types1.Count != types2.Count)
                     return false;
-                typeStack.push(this, other);
+                typeStack.push(this, dtOther);
                 for (int i = 0; i < types1.Count; i++)
                 {
                     if (!types1[i].Equals(types2[i]))

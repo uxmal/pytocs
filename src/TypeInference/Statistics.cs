@@ -6,25 +6,17 @@ namespace Pytocs.TypeInference
 {
     public class Statistics
     {
-        IDictionary<string, object> contents = new Dictionary<string, object>();
+        IDictionary<string, long> contents = new Dictionary<string, long>();
 
         public void putInt(string key, long value)
         {
             contents[key] = value;
         }
 
-
         public void inc(string key, long x)
         {
-            long? old = getInt(key);
-            if (!old.HasValue)
-            {
-                contents[key] = 1;
-            }
-            else
-            {
-                contents[key] = old.Value + x;
-            }
+            long old = getInt(key);
+            contents[key] = old + x;
         }
 
         public void inc(string key)
@@ -34,35 +26,21 @@ namespace Pytocs.TypeInference
 
         public long getInt(string key)
         {
-            object ret;
+            long ret;
             if (!contents.TryGetValue(key, out ret))
                 return 0;
-            return (long) ret;
+            return ret;
         }
-
 
         public string print()
         {
             StringBuilder sb = new StringBuilder();
-
             foreach (var e in contents)
             {
-                sb.AppendFormat("\n- {0}: {1}", e.Key, e.Value);
+                sb.AppendLine();
+                sb.AppendFormat("- {0}: {1}", e.Key, e.Value);
             }
             return sb.ToString();
-        }
-
-        internal void putDate(string key, DateTime dateTime)
-        {
-            contents[key] = dateTime;
-        }
-
-        internal DateTime getDateTime(string key)
-        {
-            object dt;
-            if (contents.TryGetValue(key, out dt))
-                return (DateTime) dt;
-            return default(DateTime);
         }
     }
 }

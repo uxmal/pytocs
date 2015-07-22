@@ -66,14 +66,17 @@ namespace Pytocs.Types
 
         public override bool Equals(object other)
         {
-            if (typeStack.contains(this, other))
+            var dtOther = other as DataType;
+            if (dtOther == null)
+                return false;
+            if (typeStack.contains(this, dtOther))
             {
                 return true;
             }
             else if (other is ListType)
             {
                 ListType co = (ListType) other;
-                typeStack.push(this, other);
+                typeStack.push(this, co);
                 bool ret = co.eltType.Equals(eltType);
                 typeStack.pop(this, other);
                 return ret;

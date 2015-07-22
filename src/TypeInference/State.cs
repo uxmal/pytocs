@@ -57,7 +57,7 @@ namespace Pytocs.TypeInference
         }
 
         // erase and overwrite this to s's contents
-        public void overwrite(State s)
+        public void Overwrite(State s)
         {
             this.table = s.table;
             this.Parent = s.Parent;
@@ -310,9 +310,9 @@ namespace Pytocs.TypeInference
         }
 
 
-        /**
-         * Look for a binding named {@code name} and if found, return its type.
-         */
+        /// <summary>
+        /// Look for a binding named {@code name} and if found, return its type.
+        /// </summary>
         public DataType lookupType(string name)
         {
             ISet<Binding> bs = lookup(name);

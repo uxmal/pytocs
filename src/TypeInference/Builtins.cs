@@ -90,7 +90,7 @@ namespace Pytocs.TypeInference
             "UnicodeEncodeError", "UnicodeError", "UnicodeTranslateError",
             "UnicodeWarning", "UserWarning", "ValueError", "Warning",
             "ZeroDivisionError"
-    };
+        };
 
         ClassType newClass(string name, State table)
         {
