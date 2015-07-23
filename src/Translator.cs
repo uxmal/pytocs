@@ -8,6 +8,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Threading.Tasks;
+using Pytocs.TypeInference;
 
 namespace Pytocs
 {
@@ -15,11 +16,13 @@ namespace Pytocs
     {
         private string nmspace;
         private string moduleName;
+        private ILogger logger;
 
-        public Translator(string nmspace, string moduleName)
+        public Translator(string nmspace, string moduleName, ILogger logger)
         {
             this.nmspace = nmspace;
             this.moduleName = moduleName;
+            this.logger = logger;
         }
 
         public void Translate(string filename, TextReader input, TextWriter output)
@@ -42,14 +45,27 @@ namespace Pytocs
             TextWriter writer = null;
             try
             {
-                reader = new StreamReader(inputFileName);
-                writer = new StreamWriter(new FileStream(outputFileName, FileMode.Create, FileAccess.Write), new UTF8Encoding(false));
+                try
+                {
+                    reader = new StreamReader(inputFileName);
+                }
+                catch (IOException ex)
+                {
+                    logger.Error(ex, "Unable to open file {0} for reading.", inputFileName);
+                    return;
+                }
+                try 
+                {
+                    writer = new StreamWriter(new FileStream(outputFileName, FileMode.Create, FileAccess.Write), new UTF8Encoding(false));
+                }
+                catch (IOException ex)
+                {
+                    logger.Error(ex, "Unable to open file {0} for writing.", outputFileName);
+                    return;
+                }
                 Translate(inputFileName, reader, writer);
             }
-            catch (Exception)
-            {
-                // Diagnostic.
-            }
+            
             finally
             {
                 if (writer != null) writer.Dispose();

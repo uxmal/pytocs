@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pytocs.TypeInference;
 
 namespace Pytocs
 {
@@ -14,7 +15,8 @@ namespace Pytocs
         {
             if (args.Length == 0)
             {
-                var xlator = new Translator("", "module_name");
+                var xlator = new Translator("", "module_name", 
+                    new ConsoleLogger());
                 xlator.Translate("-", Console.In, Console.Out);
                 Console.Out.Flush();
                 return;
@@ -29,15 +31,17 @@ namespace Pytocs
             if (args[0].ToLower() == "-r")
             {
                 var walker = new DirectoryWalker("*.py");
-                var symtab = new SymbolTable(); 
                 walker.Enumerate();
             }
             else
             {
-                var symtab = new SymbolTable(); 
                 foreach (var fileName in args)
                 {
-                    //ProcessFile(fileName, symtab);
+                    var xlator = new Translator(
+                        "", 
+                        Path.GetFileNameWithoutExtension(fileName),
+                        new ConsoleLogger());
+                    xlator.TranslateFile(fileName, fileName + ".cs");
                 }
             }
         }
