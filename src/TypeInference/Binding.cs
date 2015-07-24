@@ -23,43 +23,24 @@ using Pytocs.Types;
 
 namespace Pytocs.TypeInference
 {
+    /// <summary>
+    /// A binding associates a type with an entity.
+    /// </summary>
     public class Binding : IComparable<Binding>
     {
-        public enum Kind
-        {
-            ATTRIBUTE,    // attr accessed with "." on some other object
-            CLASS,        // class definition
-            CONSTRUCTOR,  // __init__ functions in classes
-            FUNCTION,     // plain function
-            METHOD,       // static or instance method
-            MODULE,       // file
-            PARAMETER,    // function param
-            SCOPE,        // top-level variable ("scope" means we assume it can have attrs)
-            VARIABLE      // local variable
-        }
-
         private bool _isStatic = false;         // static fields/methods
-        private bool _isSynthetic = false;      // auto-generated bindings
 
         public string name;     // unqualified name
         public Node node;
-        public string qname     // qualified name
-        {
-            get;
-            set;
-        }
-
+        public string qname;     // qualified name
         public DataType type;   // inferred type
-        public Kind kind
-        {       // name usage context
-            get;
-            set;
-        }
+
+        public BindingKind kind;       // name usage context
 
         /// <summary>
         /// The places where this binding is referenced.
         /// </summary>
-        public ISet<Node> refs = new HashSet<Node>();
+        public ISet<Node> refs { get; private set; }
 
         // fields from Def
         public int start = -1;
@@ -68,13 +49,14 @@ namespace Pytocs.TypeInference
         public int bodyEnd = -1;
         public string fileOrUrl;
 
-        public Binding(string id, Node node, DataType type, Kind kind)
+        public Binding(string id, Node node, DataType type, BindingKind kind)
         {
             this.name = id;
             this.qname = type.Table.Path;
             this.type = type;
             this.kind = kind;
             this.node = node;
+            this.refs = new HashSet<Node>();
 
             if (node is Url)
             {
@@ -96,7 +78,6 @@ namespace Pytocs.TypeInference
                     name = ((Identifier) node).Name;
                 }
             }
-
             initLocationInfo(node);
         }
 
@@ -147,7 +128,7 @@ namespace Pytocs.TypeInference
         // used by stateful assignments which we can't track down the control flow
         public void addType(DataType t)
         {
-            type = UnionType.union(type, t);
+            type = UnionType.Union(type, t);
         }
 
         public void setType(DataType type)
@@ -161,11 +142,8 @@ namespace Pytocs.TypeInference
             set { _isStatic = value; }
         }
 
-        public bool IsSynthetic
-        {
-            get { return _isSynthetic; }
-            set { _isSynthetic = value; }
-        }
+        // True if auto-generated bindings
+        public bool IsSynthetic { get; set; }
 
         /// <summary>
         /// True if not from a source file.
@@ -258,5 +236,18 @@ namespace Pytocs.TypeInference
         {
             return node.GetHashCode();
         }
+    }
+
+    public enum BindingKind
+    {
+        ATTRIBUTE,    // attr accessed with "." on some other object
+        CLASS,        // class definition
+        CONSTRUCTOR,  // __init__ functions in classes
+        FUNCTION,     // plain function
+        METHOD,       // static or instance method
+        MODULE,       // file
+        PARAMETER,    // function param
+        SCOPE,        // top-level variable ("scope" means we assume it can have attrs)
+        VARIABLE      // local variable
     }
 }

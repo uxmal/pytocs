@@ -1429,7 +1429,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             var o2 = or_test();
             Expect(TokenType.Else);
             var o3 = test();
-            return new Test(filename, o.Start, o3.End)
+            return new TestExp(filename, o.Start, o3.End)
             {
                 Consequent = o,
                 Condition = o2,

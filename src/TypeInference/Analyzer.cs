@@ -35,61 +35,51 @@ namespace Pytocs.TypeInference
         HashSet<Name> unresolved { get; }
 
         DataType LoadFile(string path);
-        DataType loadModule(List<Name> name, State state);
+        DataType LoadModule(List<Name> name, State state);
         Module getAstForFile(string file);
         string moduleQname(string file);
 
-        Binding CreateBinding(string id, Node node, DataType type, Binding.Kind kind);
+        Binding CreateBinding(string id, Node node, DataType type, BindingKind kind);
         void addRef(AttributeAccess attr, DataType targetType, ISet<Binding> bs);
         void putRef(Node node, ICollection<Binding> bs);
         void putRef(Node node, Binding bs);
-        void addUncalled(FunType f);
-        void removeUncalled(FunType f);
-        void pushStack(object v);
-        void popStack(object v);
-        bool inStack(object v);
+        void AddUncalled(FunType f);
+        void RemoveUncalled(FunType f);
+        void pushStack(Exp v);
+        void popStack(Exp v);
+        bool inStack(Exp v);
 
-        string moduleName(string path);
-        string extendPath(string path, string name);
+        string ModuleName(string path);
+        string ExtendPath(string path, string name);
 
         void putProblem(Node loc, string msg);
         void putProblem(string filename, int start, int end, string msg);
 
         //void msg(string message);
         void msg_(string message);
-        string formatNumber(object n, int length);
-        string percent(long num, long total);
+        string Percent(long num, long total);
     }
 
     public class AnalyzerImpl : Analyzer
     {
-        public const string MODEL_LOCATION = "org/yinwang/pysonar/models";
-
-        // global static instance of the analyzer itself
-        public static Analyzer self;
-        public State moduleTable = new State(null, State.StateType.GLOBAL);
-        public List<string> loadedFiles = new List<string>();
-        public List<Binding> allBindings = new List<Binding>();
-        private Dictionary<Node, List<Binding>> references = new Dictionary<Node, List<Binding>>();  // new LinkedHashMap<>();
-        public Dictionary<string, List<Diagnostic>> semanticErrors = new Dictionary<string, List<Diagnostic>>();
-        public Dictionary<string, List<Diagnostic>> parseErrors = new Dictionary<string, List<Diagnostic>>();
-        public string cwd = null;
-        public bool multilineFunType = false;
-        public List<string> path = new List<string>();
+        //public const string MODEL_LOCATION = "org/yinwang/pysonar/models";
+        private List<string> loadedFiles = new List<string>();
+        private List<Binding> allBindings = new List<Binding>();
+        private Dictionary<Node, List<Binding>> references = new Dictionary<Node, List<Binding>>(); 
+        private Dictionary<string, List<Diagnostic>> semanticErrors = new Dictionary<string, List<Diagnostic>>();
+        private Dictionary<string, List<Diagnostic>> parseErrors = new Dictionary<string, List<Diagnostic>>();
+        private string cwd = null;
+        private List<string> path = new List<string>();
         private HashSet<FunType> uncalled = new HashSet<FunType>();
         private HashSet<object> callStack = new HashSet<object>();
         private HashSet<object> importStack = new HashSet<object>();
 
         private AstCache astCache;
-        public String cacheDir;
-        public HashSet<string> failedToParse = new HashSet<string>();
-        public Statistics stats = new Statistics();
-        public Builtins builtins;
-        private Progress loadingProgress = null;
-
-        public String projectDir;
-        public String modelDir;
-        public String suffix;
+        private string cacheDir;
+        private HashSet<string> failedToParse = new HashSet<string>();
+        private Progress loadingProgress;
+        private string projectDir;
+        private string suffix;
 
         public Dictionary<string, Object> options;
         private DateTime startTime;
@@ -118,8 +108,8 @@ namespace Pytocs.TypeInference
             }
             this.startTime = startTime;
             this.suffix = ".py";
-            this.builtins = new Builtins(this);
-            this.builtins.init();
+            this.Builtins = new Builtins(this);
+            this.Builtins.init();
             addPythonPath();
             copyModels();
             createCacheDir();
@@ -132,6 +122,8 @@ namespace Pytocs.TypeInference
         public State globaltable { get; private set; }
         public HashSet<Name> resolved { get; private set; }
         public HashSet<Name> unresolved { get; private set; }
+        public Builtins Builtins { get; private set; }
+        public State ModuleTable = new State(null, State.StateType.GLOBAL);
 
         public bool hasOption(string option)
         {
@@ -142,21 +134,18 @@ namespace Pytocs.TypeInference
                 return false;
         }
 
-
         public void setOption(string option)
         {
             options[option] = true;
         }
-
 
         // main entry to the analyzer
         public void Analyze(string path)
         {
             string upath = FileSystem.GetFullPath(path);
             projectDir = FileSystem.DirectoryExists(upath) ? upath : FileSystem.GetDirectoryName(upath);
-            loadFileRecursive(upath);
+            LoadFileRecursive(upath);
         }
-
 
         public void setCWD(string cd)
         {
@@ -165,7 +154,6 @@ namespace Pytocs.TypeInference
                 cwd = FileSystem.GetFullPath(cd);
             }
         }
-
 
         public void addPaths(List<string> p)
         {
@@ -180,13 +168,11 @@ namespace Pytocs.TypeInference
             path.Add(FileSystem.GetFullPath(p));
         }
 
-
         public void setPath(List<string> path)
         {
             this.path = new List<string>(path.Count);
             addPaths(path);
         }
-
 
         private void addPythonPath()
         {
@@ -206,7 +192,7 @@ namespace Pytocs.TypeInference
         {
 #if NOT
         URL resource = Thread.currentThread().getContextClassLoader().getResource(MODEL_LOCATION);
-        String dest = _.locateTmp("models");
+        string dest = _.locateTmp("models");
         this.modelDir = dest;
 
         try {
@@ -234,17 +220,17 @@ namespace Pytocs.TypeInference
             return loadPath;
         }
 
-        public bool inStack(object f)
+        public bool inStack(Exp f)
         {
             return callStack.Contains(f);
         }
 
-        public void pushStack(object f)
+        public void pushStack(Exp f)
         {
             callStack.Add(f);
         }
 
-        public void popStack(object f)
+        public void popStack(Exp f)
         {
             callStack.Remove(f);
         }
@@ -275,7 +261,7 @@ namespace Pytocs.TypeInference
 
         ModuleType getCachedModule(string file)
         {
-            DataType t = moduleTable.lookupType(moduleQname(file));
+            DataType t = ModuleTable.lookupType(moduleQname(file));
             if (t == null)
             {
                 return null;
@@ -314,8 +300,7 @@ namespace Pytocs.TypeInference
             return file.Replace(".", "%20").Replace('/', '.').Replace('\\', '.');
         }
 
-
-        public List<Diagnostic> getDiagnosticsForFile(string file)
+        public List<Diagnostic> GetDiagnosticsForFile(string file)
         {
             List<Diagnostic> errs;
             if (semanticErrors.TryGetValue(file, out errs))
@@ -324,7 +309,6 @@ namespace Pytocs.TypeInference
             }
             return new List<Diagnostic>();
         }
-
 
         public void putRef(Node node, ICollection<Binding> bs)
         {
@@ -363,16 +347,15 @@ namespace Pytocs.TypeInference
 
         public void putProblem(Node loc, string msg)
         {
-            String file = loc.Filename;
+            string file = loc.Filename;
             if (file != null)
             {
                 addFileErr(file, loc.Start, loc.End, msg);
             }
         }
 
-
         // for situations without a Node
-        public void putProblem(string file, int begin, int end, String msg)
+        public void putProblem(string file, int begin, int end, string msg)
         {
             if (file != null)
             {
@@ -380,10 +363,9 @@ namespace Pytocs.TypeInference
             }
         }
 
-
-        void addFileErr(string file, int begin, int end, String msg)
+        void addFileErr(string file, int begin, int end, string msg)
         {
-            Diagnostic d = new Diagnostic(file, Diagnostic.Category.ERROR, begin, end, msg);
+            var d = new Diagnostic(file, Diagnostic.Category.ERROR, begin, end, msg);
             getFileErrs(file, semanticErrors).Add(d);
         }
 
@@ -446,7 +428,7 @@ namespace Pytocs.TypeInference
             }
             else
             {
-                DataType type = new TypeTransformer(moduleTable, this).VisitModule(ast);
+                DataType type = new TypeTransformer(ModuleTable, this).VisitModule(ast);
                 loadedFiles.Add(file);
                 return type;
             }
@@ -490,12 +472,12 @@ namespace Pytocs.TypeInference
             return getAstCache().getAST(file);
         }
 
-        public ModuleType getBuiltinModule(String qname)
+        public ModuleType getBuiltinModule(string qname)
         {
-            return builtins.get(qname);
+            return Builtins.get(qname);
         }
 
-        public String makeQname(List<Name> names)
+        public string MakeQname(List<Name> names)
         {
             if (names.Count == 0)
             {
@@ -512,7 +494,6 @@ namespace Pytocs.TypeInference
             ret += names[names.Count - 1].Name;
             return ret;
         }
-
 
         /// <summary>
         /// Find the path that contains modname. Used to find the starting point of locating a qname.
@@ -540,25 +521,22 @@ namespace Pytocs.TypeInference
             return null;
         }
 
-
-
-        public DataType loadModule(List<Name> name, State state)
+        public DataType LoadModule(List<Name> name, State state)
         {
             if (name.Count == 0)
             {
                 return null;
             }
 
-            String qname = makeQname(name);
-
+            string qname = MakeQname(name);
             DataType mt = getBuiltinModule(qname);
             if (mt != null)
             {
-                state.insert(
+                state.Insert(
                         this,
                         name[0].Name,
                         new Url(Builtins.LIBRARY_URL + mt.Table.Path + ".html"),
-                        mt, Binding.Kind.SCOPE);
+                        mt, BindingKind.SCOPE);
                 return mt;
             }
 
@@ -587,11 +565,11 @@ namespace Pytocs.TypeInference
 
                     if (prev != null)
                     {
-                        prev.Table.insert(this, name[i].Name, name[i], mod, Binding.Kind.VARIABLE);
+                        prev.Table.Insert(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
                     }
                     else
                     {
-                        state.insert(this, name[i].Name, name[i], mod, Binding.Kind.VARIABLE);
+                        state.Insert(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
                     }
 
                     prev = mod;
@@ -609,11 +587,11 @@ namespace Pytocs.TypeInference
                         }
                         if (prev != null)
                         {
-                            prev.Table.insert(this, name[i].Name, name[i], mod, Binding.Kind.VARIABLE);
+                            prev.Table.Insert(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
                         }
                         else
                         {
-                            state.insert(this, name[i].Name, name[i], mod, Binding.Kind.VARIABLE);
+                            state.Insert(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
                         }
                         prev = mod;
                     }
@@ -631,7 +609,7 @@ namespace Pytocs.TypeInference
         /// directory; otherwise just load a file.  Looks at file extension to
         /// determine whether to load a given file.
         /// </summary>
-        public void loadFileRecursive(string fullname)
+        public void LoadFileRecursive(string fullname)
         {
             int count = countFileRecursive(fullname);
             if (loadingProgress == null)
@@ -645,7 +623,7 @@ namespace Pytocs.TypeInference
             {
                 foreach (string file in FileSystem.GetFileSystemEntries(file_or_dir))
                 {
-                    loadFileRecursive(file);
+                    LoadFileRecursive(file);
                 }
             }
             else
@@ -681,12 +659,11 @@ namespace Pytocs.TypeInference
             return sum;
         }
 
-
         public void Finish()
         {
             msg("\nFinished loading files. " + nCalled + " functions were called.");
             msg("Analyzing uncalled functions");
-            applyUncalled();
+            ApplyUncalled();
 
             // mark unused variables
             foreach (Binding b in allBindings)
@@ -724,7 +701,7 @@ namespace Pytocs.TypeInference
             }
         }
 
-        public void addUncalled(FunType cl)
+        public void AddUncalled(FunType cl)
         {
             if (!cl.Definition.called)
             {
@@ -732,14 +709,12 @@ namespace Pytocs.TypeInference
             }
         }
 
-
-        public void removeUncalled(FunType f)
+        public void RemoveUncalled(FunType f)
         {
             uncalled.Remove(f);
         }
 
-
-        public void applyUncalled()
+        public void ApplyUncalled()
         {
             Progress progress = new Progress(this, uncalled.Count, 50, this.hasOption("quiet"));
 
@@ -750,24 +725,23 @@ namespace Pytocs.TypeInference
                 foreach (FunType cl in uncalledDup)
                 {
                     progress.tick();
-                    TypeTransformer.apply(this, cl, null, null, null, null, null);
+                    TypeTransformer.Apply(this, cl, null, null, null, null, null);
                 }
             }
         }
 
-
-        public string formatTime(TimeSpan span)
+        public string FormatTime(TimeSpan span)
         {
             return string.Format("{0:hh\\:mm\\:ss}", span);
         }
 
-        public String getAnalysisSummary()
+        public string getAnalysisSummary()
         {
             StringBuilder sb = new StringBuilder();
             sb.AppendLine();
-            sb.Append("\n" + banner("analysis summary"));
+            sb.Append("\n" + banner("Analysis summary"));
 
-            String duration = formatTime(DateTime.Now  - this.startTime);
+            string duration = FormatTime(DateTime.Now  - this.startTime);
             sb.Append("\n- total time: " + duration);
             sb.Append("\n- modules loaded: " + loadedFiles.Count);
             sb.Append("\n- semantic problems: " + semanticErrors.Count);
@@ -789,7 +763,7 @@ namespace Pytocs.TypeInference
             long unresolved = this.unresolved.Count;
             sb.Append("\n- resolved names: " + resolved);
             sb.Append("\n- unresolved names: " + unresolved);
-            sb.Append("\n- name resolve rate: " + percent(resolved, resolved + unresolved));
+            sb.Append("\n- name resolve rate: " + Percent(resolved, resolved + unresolved));
 
             return sb.ToString();
         }
@@ -799,7 +773,7 @@ namespace Pytocs.TypeInference
             return "---------------- " + msg + " ----------------";
         }
 
-        public List<String> getLoadedFiles()
+        public List<string> getLoadedFiles()
         {
             List<string> files = new List<string>();
             foreach (string file in loadedFiles)
@@ -834,10 +808,10 @@ namespace Pytocs.TypeInference
         /// returns the last component of the file's parent directory, else 
         /// returns the filename without path or extension. 
         /// </summary>
-        public string moduleName(string path)
+        public string ModuleName(string path)
         {
             string f = path;
-            String name = FileSystem.GetFileName(f);
+            string name = FileSystem.GetFileName(f);
             if (name == "__init__.py")
             {
                 return FileSystem.GetDirectoryName(f);
@@ -852,15 +826,14 @@ namespace Pytocs.TypeInference
             }
         }
 
-        public Binding CreateBinding(string id, Node node, DataType type, Binding.Kind kind)
+        public Binding CreateBinding(string id, Node node, DataType type, BindingKind kind)
         {
             var b = new Binding(id, node, type, kind);
             registerBinding(b);
             return b;
         }
 
-
-        public string percent(long num, long total)
+        public string Percent(long num, long total)
         {
             if (total == 0)
             {
@@ -869,30 +842,7 @@ namespace Pytocs.TypeInference
             else
             {
                 int pct = (int) (num * 100 / total);
-                return String.Format("{0:3}", pct) + "%";
-            }
-        }
-
-        /// <summary>
-        /// format number with fixed width 
-        /// </summary>
-        public string formatNumber(object n, int length)
-        {
-            if (length == 0)
-            {
-                length = 1;
-            }
-            if (n is int)
-            {
-                return String.Format("{0:" + length + "}", (int) n);
-            }
-            else if (n is long)
-            {
-                return String.Format("{0:" + length + "}", (long) n);
-            }
-            else
-            {
-                return String.Format("{0:" + length + "}", n);
+                return string.Format("{0:3}%", pct);
             }
         }
 
@@ -909,9 +859,9 @@ namespace Pytocs.TypeInference
             }
         }
 
-        public string extendPath(string path, string name)
+        public string ExtendPath(string path, string name)
         {
-            name = moduleName(name);
+            name = ModuleName(name);
             if (path == "")
             {
                 return name;

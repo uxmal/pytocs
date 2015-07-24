@@ -36,8 +36,8 @@ namespace Pytocs.Types
         
         public void add(DataType key, DataType val)
         {
-            keyType = UnionType.union(keyType, key);
-            valueType = UnionType.union(valueType, val);
+            keyType = UnionType.Union(keyType, key);
+            valueType = UnionType.Union(valueType, val);
         }
 
         public TupleType toTupleType(int n)

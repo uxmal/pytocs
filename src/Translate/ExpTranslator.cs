@@ -467,7 +467,7 @@ namespace Pytocs.Translate
             return new CodePrimitiveExpression(s);
         }
 
-        public CodeExpression VisitTest(Test t)
+        public CodeExpression VisitTest(TestExp t)
         {
             var cond = t.Condition.Accept(this);
             var cons = t.Consequent.Accept(this);

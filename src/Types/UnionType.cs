@@ -53,7 +53,7 @@ namespace Pytocs.Types
         /**
          * Returns true if t1 == t2 or t1 is a union type that contains t2.
          */
-        static public bool contains(DataType t1, DataType t2)
+        static public bool Contains(DataType t1, DataType t2)
         {
             if (t1 is UnionType)
             {
@@ -89,7 +89,7 @@ namespace Pytocs.Types
             DataType t = DataType.Unknown;
             foreach (DataType nt in types)
             {
-                t = union(t, nt);
+                t = Union(t, nt);
             }
             return t;
         }
@@ -120,7 +120,7 @@ namespace Pytocs.Types
         /// Make the a union of two types
         /// with preference: other > None > Cont > unknown
         /// </summary>
-        public static DataType union(DataType u, DataType v)
+        public static DataType Union(DataType u, DataType v)
         {
             if (u.Equals(v))
             {

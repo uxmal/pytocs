@@ -51,7 +51,7 @@ namespace Pytocs.Syntax
         void VisitSlice(Slice slice);
         void VisitStarExp(StarExp starExp);
         void VisitStr(Str s);
-        void VisitTest(Test test);
+        void VisitTest(TestExp test);
         void VisitTuple(PyTuple tuple);
         void VisitUnary(UnaryExp u);
         void VisitYieldExp(YieldExp yieldExp);
@@ -91,7 +91,7 @@ namespace Pytocs.Syntax
         T VisitSlice(Slice slice);
         T VisitStarExp(StarExp starExp);
         T VisitStr(Str s);
-        T VisitTest(Test test);
+        T VisitTest(TestExp test);
         T VisitTuple(PyTuple tuple);
         T VisitUnary(UnaryExp u);
         T VisitYieldExp(YieldExp yieldExp);

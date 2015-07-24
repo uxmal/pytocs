@@ -67,9 +67,9 @@ namespace Pytocs.TypeInference
             {
                 analyzer.msg_("\r");
                 int dlen = (int) Math.Ceiling(Math.Log10((double) total));
-                analyzer.msg_(analyzer.percent(count, total) + " (" +
-                        analyzer.formatNumber(count, dlen) +
-                        " of " + analyzer.formatNumber(total, dlen) + ")");
+                analyzer.msg_(analyzer.Percent(count, total) + " (" +
+                        FormatNumber(count, dlen) +
+                        " of " + FormatNumber(total, dlen) + ")");
 
                 int rate;
                 if (elapsed > 1)
@@ -82,7 +82,7 @@ namespace Pytocs.TypeInference
                 }
 
                 lastRate = rate;
-                analyzer.msg_("   SPEED: " + analyzer.formatNumber(rate, MAX_SPEED_DIGITS) + "/s");
+                analyzer.msg_("   SPEED: " + FormatNumber(rate, MAX_SPEED_DIGITS) + "/s");
 
                 double totalElapsed = (DateTime.Now - startTime).TotalMilliseconds;
                 int avgRate;
@@ -97,7 +97,7 @@ namespace Pytocs.TypeInference
                 }
                 avgRate = avgRate == 0 ? 1 : avgRate;
 
-                analyzer.msg_("   AVG SPEED: " + analyzer.formatNumber(avgRate, MAX_SPEED_DIGITS) + "/s");
+                analyzer.msg_("   AVG SPEED: " + FormatNumber(avgRate, MAX_SPEED_DIGITS) + "/s");
 
                 long remain = total - count;
                 //long remainTime = remain / avgRate * 1000;
@@ -112,6 +112,28 @@ namespace Pytocs.TypeInference
             }
         }
 
+        /// <summary>
+        /// format number with fixed width 
+        /// </summary>
+        public string FormatNumber(object n, int length)
+        {
+            if (length == 0)
+            {
+                length = 1;
+            }
+            if (n is int)
+            {
+                return string.Format("{0:" + length + "}", (int)n);
+            }
+            else if (n is long)
+            {
+                return string.Format("{0:" + length + "}", (long)n);
+            }
+            else
+            {
+                return string.Format("{0:" + length + "}", n);
+            }
+        }
 
         public void tick()
         {

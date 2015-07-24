@@ -152,7 +152,7 @@ namespace Pytocs.Translate
             throw new NotImplementedException();
         }
 
-        public void VisitTest(Test tuple)
+        public void VisitTest(TestExp tuple)
         {
             throw new NotImplementedException();
         }

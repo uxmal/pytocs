@@ -36,10 +36,5 @@ namespace Pytocs.Types
         {
             return (other is StrType);
         }
-
-        public override int GetHashCode()
-        {
-            return "StrType".GetHashCode();
-        }
     }
 }

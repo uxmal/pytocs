@@ -49,7 +49,7 @@ namespace Pytocs.Types
 
         public void add(DataType another)
         {
-            eltType = UnionType.union(eltType, another);
+            eltType = UnionType.Union(eltType, another);
             positional.Add(another);
         }
 

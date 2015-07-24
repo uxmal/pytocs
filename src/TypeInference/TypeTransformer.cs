@@ -60,7 +60,7 @@ namespace Pytocs.TypeInference
                 DataType retType = DataType.Unknown;
                 foreach (DataType tt in types)
                 {
-                    retType = UnionType.union(retType, getAttrType(a, tt));
+                    retType = UnionType.Union(retType, getAttrType(a, tt));
                 }
                 return retType;
             }
@@ -72,7 +72,7 @@ namespace Pytocs.TypeInference
 
         public DataType getAttrType(AttributeAccess a, DataType targetType)
         {
-            ISet<Binding> bs = targetType.Table.lookupAttr(a.FieldName.Name);
+            ISet<Binding> bs = targetType.Table.LookupAttribute(a.FieldName.Name);
             if (bs == null)
             {
                 analyzer.putProblem(a.FieldName, "attribute not found in type: " + targetType);
@@ -83,7 +83,7 @@ namespace Pytocs.TypeInference
             else
             {
                 analyzer.addRef(a, targetType, bs);
-                return State.makeUnion(bs);
+                return State.MakeUnion(bs);
             }
         }
 
@@ -97,7 +97,7 @@ namespace Pytocs.TypeInference
             }
             else
             {
-                return UnionType.union(ltype, rtype);
+                return UnionType.Union(ltype, rtype);
             }
         }
 
@@ -112,8 +112,8 @@ namespace Pytocs.TypeInference
                     .SelectMany(g => g.names));
             foreach (var id in globalNames)
             {
-                scope.addGlobalName(id.Name);
-                ISet<Binding> nb = scope.lookup(id.Name);
+                scope.AddGlobalName(id.Name);
+                ISet<Binding> nb = scope.Lookup(id.Name);
                 if (nb != null)
                 {
                     analyzer.putRef(id, nb);
@@ -127,8 +127,8 @@ namespace Pytocs.TypeInference
                 DataType t = n.Accept(this);
                 if (!returned)
                 {
-                    retType = UnionType.union(retType, t);
-                    if (!UnionType.contains(t, DataType.Cont))
+                    retType = UnionType.Union(retType, t);
+                    if (!UnionType.Contains(t, DataType.Cont))
                     {
                         returned = true;
                         retType = UnionType.remove(retType, DataType.Cont);
@@ -173,18 +173,18 @@ namespace Pytocs.TypeInference
                 DataType retType = DataType.Unknown;
                 foreach (DataType ft in types)
                 {
-                    DataType t = resolveCall(c, ft, dtPos, hash, dtKw, dtStar);
-                    retType = UnionType.union(retType, t);
+                    DataType t = ResolveCall(c, ft, dtPos, hash, dtKw, dtStar);
+                    retType = UnionType.Union(retType, t);
                 }
                 return retType;
             }
             else
             {
-                return resolveCall(c, fun, dtPos, hash, dtKw, dtStar);
+                return ResolveCall(c, fun, dtPos, hash, dtKw, dtStar);
             }
         }
 
-        private DataType resolveCall(
+        private DataType ResolveCall(
             Application c,
             DataType fun,
             List<DataType> pos,
@@ -195,7 +195,7 @@ namespace Pytocs.TypeInference
             if (fun is FunType)
             {
                 FunType ft = (FunType) fun;
-                return apply(analyzer, ft, pos, hash, kw, star, c);
+                return Apply(analyzer, ft, pos, hash, kw, star, c);
             }
             else if (fun is ClassType)
             {
@@ -205,19 +205,18 @@ namespace Pytocs.TypeInference
             }
             else
             {
-                addWarning(c, "calling non-function and non-class: " + fun);
+                AddWarning(c, "calling non-function and non-class: " + fun);
                 return DataType.Unknown;
             }
         }
 
         public static void ApplyConstructor(Analyzer analyzer, InstanceType i, Application call, List<DataType> args)
         {
-            DataType initFunc = i.Table.lookupAttrType("__init__");
-
-            if (initFunc != null && initFunc is FunType && ((FunType) initFunc).Definition != null)
+            var initFunc = i.Table.LookupAttributeType("__init__") as FunType;
+            if (initFunc != null && initFunc.Definition != null)
             {
                 ((FunType) initFunc).SelfType = i;
-                TypeTransformer.apply(analyzer, (FunType) initFunc, args, null, null, null, call);
+                TypeTransformer.Apply(analyzer, (FunType) initFunc, args, null, null, null, call);
                 ((FunType) initFunc).SelfType = null;
             }
         }
@@ -227,7 +226,7 @@ namespace Pytocs.TypeInference
         /// Called when an application of a function is encountered.
         /// </summary>
         //$TODO: move to Analyzer.
-        public static DataType apply(
+        public static DataType Apply(
             Analyzer analyzer,
             FunType func,
             List<DataType> pos,
@@ -236,7 +235,7 @@ namespace Pytocs.TypeInference
             DataType star,
             Exp call)
         {
-            analyzer.removeUncalled(func);
+            analyzer.RemoveUncalled(func);
 
             if (func.Definition != null && !func.Definition.called)
             {
@@ -278,7 +277,7 @@ namespace Pytocs.TypeInference
                 pTypes.AddRange(pos);
             }
 
-            bindMethodAttrs(analyzer, func);
+            BindMethodAttrs(analyzer, func);
 
             State funcTable = new State(func.env, State.StateType.FUNCTION);
             if (func.Table.Parent != null)
@@ -290,7 +289,7 @@ namespace Pytocs.TypeInference
                 funcTable.Path = func.Definition.name.Name;
             }
 
-            DataType fromType = bindParams(analyzer,
+            DataType fromType = BindParameters(analyzer,
                 call, func.Definition, funcTable, func.Definition.parameters,
                 func.Definition.vararg, func.Definition.kwarg,
                 pTypes, func.defaultTypes, hash, kw, star);
@@ -336,7 +335,7 @@ namespace Pytocs.TypeInference
         /// <param name="kw"></param>
         /// <param name="star"></param>
         /// <returns></returns>
-        private static DataType bindParams(
+        private static DataType BindParameters(
             Analyzer analyzer,
             Node call,
             FunctionDef func,
@@ -398,7 +397,7 @@ namespace Pytocs.TypeInference
                         }
                     }
                 }
-                funcTable.Bind(analyzer, param.Id, aType, Binding.Kind.PARAMETER);
+                funcTable.Bind(analyzer, param.Id, aType, BindingKind.PARAMETER);
                 fromType.add(aType);
             }
 
@@ -411,7 +410,7 @@ namespace Pytocs.TypeInference
                             analyzer,
                             restKw,
                             analyzer.TypeFactory.CreateDict(DataType.Str, hashType),
-                            Binding.Kind.PARAMETER);
+                            BindingKind.PARAMETER);
                 }
                 else
                 {
@@ -419,7 +418,7 @@ namespace Pytocs.TypeInference
                         analyzer,
                             restKw,
                             DataType.Unknown,
-                            Binding.Kind.PARAMETER);
+                            BindingKind.PARAMETER);
                 }
             }
 
@@ -428,7 +427,7 @@ namespace Pytocs.TypeInference
                 if (pTypes.Count > pSize)
                 {
                     DataType restType = analyzer.TypeFactory.CreateTuple(pTypes.subList(pSize, pTypes.Count).ToArray());
-                    funcTable.Bind(analyzer, rest, restType, Binding.Kind.PARAMETER);
+                    funcTable.Bind(analyzer, rest, restType, BindingKind.PARAMETER);
                 }
                 else
                 {
@@ -436,7 +435,7 @@ namespace Pytocs.TypeInference
                             analyzer,
                             rest,
                             DataType.Unknown,
-                            Binding.Kind.PARAMETER);
+                            BindingKind.PARAMETER);
                 }
             }
             return fromType;
@@ -465,17 +464,17 @@ namespace Pytocs.TypeInference
             return hasNone && hasOther;
         }
 
-        static void bindMethodAttrs(Analyzer analyzer, FunType cl)
+        static void BindMethodAttrs(Analyzer analyzer, FunType cl)
         {
             if (cl.Table.Parent != null)
             {
                 DataType cls = cl.Table.Parent.Type;
                 if (cls != null && cls is ClassType)
                 {
-                    addReadOnlyAttr(analyzer, cl, "im_class", cls, Binding.Kind.CLASS);
-                    addReadOnlyAttr(analyzer, cl, "__class__", cls, Binding.Kind.CLASS);
-                    addReadOnlyAttr(analyzer, cl, "im_self", cls, Binding.Kind.ATTRIBUTE);
-                    addReadOnlyAttr(analyzer, cl, "__self__", cls, Binding.Kind.ATTRIBUTE);
+                    addReadOnlyAttr(analyzer, cl, "im_class", cls, BindingKind.CLASS);
+                    addReadOnlyAttr(analyzer, cl, "__class__", cls, BindingKind.CLASS);
+                    addReadOnlyAttr(analyzer, cl, "im_self", cls, BindingKind.ATTRIBUTE);
+                    addReadOnlyAttr(analyzer, cl, "__self__", cls, BindingKind.ATTRIBUTE);
                 }
             }
         }
@@ -485,7 +484,7 @@ namespace Pytocs.TypeInference
             FunType fun,
             string name,
             DataType type,
-            Binding.Kind kind)
+            BindingKind kind)
         {
             Node loc = Builtins.newDataModelUrl("the-standard-type-hierarchy");
             Binding b = analyzer.CreateBinding(name, loc, type, kind);
@@ -496,7 +495,7 @@ namespace Pytocs.TypeInference
 
         public void addSpecialAttribute(State s, string name, DataType proptype)
         {
-            Binding b = analyzer.CreateBinding(name, Builtins.newTutUrl("classes.html"), proptype, Binding.Kind.ATTRIBUTE);
+            Binding b = analyzer.CreateBinding(name, Builtins.newTutUrl("classes.html"), proptype, BindingKind.ATTRIBUTE);
             s.Update(name, b);
             b.IsSynthetic = true;
             b.IsStatic = true;
@@ -539,7 +538,7 @@ namespace Pytocs.TypeInference
 
             // Bind ClassType to name here before resolving the body because the
             // methods need this type as self.
-            scope.Bind(analyzer, c.name, classType, Binding.Kind.CLASS);
+            scope.Bind(analyzer, c.name, classType, BindingKind.CLASS);
             if (c.body != null)
             {
                 var sOld = this.scope;
@@ -603,8 +602,8 @@ namespace Pytocs.TypeInference
 
         public DataType VisitDictInitializer(DictInitializer d)
         {
-            DataType keyType = resolveUnion(d.KeyValues.Select(kv => kv.Key));
-            DataType valType = resolveUnion(d.KeyValues.Select(kv => kv.Value));
+            DataType keyType = ResolveUnion(d.KeyValues.Select(kv => kv.Key));
+            DataType valType = ResolveUnion(d.KeyValues.Select(kv => kv.Value));
             return analyzer.TypeFactory.CreateDict(keyType, valType);
         }
 
@@ -615,7 +614,7 @@ namespace Pytocs.TypeInference
         /// 
         public DataType VisitDictComprehension(DictComprehension d)
         {
-            resolveList(d.generators);
+            ResolveList(d.generators);
             DataType keyType = d.key.Accept(this);
             DataType valueType = d.value.Accept(this);
             return analyzer.TypeFactory.CreateDict(keyType, valueType);
@@ -673,7 +672,7 @@ namespace Pytocs.TypeInference
 
         public DataType VisitFor(ForStatement f)
         {
-            scope.BindIterator(analyzer, f.exprs, f.tests, f.tests.Accept(this), Binding.Kind.SCOPE);
+            scope.BindIterator(analyzer, f.exprs, f.tests, f.tests.Accept(this), BindingKind.SCOPE);
             DataType ret;
             if (f.Body == null)
             {
@@ -685,7 +684,7 @@ namespace Pytocs.TypeInference
             }
             if (f.Else != null)
             {
-                ret = UnionType.union(ret, f.Else.Accept(this));
+                ret = UnionType.Union(ret, f.Else.Accept(this));
             }
             return ret;
         }
@@ -696,8 +695,8 @@ namespace Pytocs.TypeInference
             var fun = new FunType(lambda, env);
             fun.Table.Parent = this.scope;
             fun.Table.Path = scope.extendPath(analyzer, "<lambda>");
-            fun.setDefaultTypes(resolveList(lambda.args.Select(p => p.test)));
-            analyzer.addUncalled(fun);
+            fun.setDefaultTypes(ResolveList(lambda.args.Select(p => p.test)));
+            analyzer.AddUncalled(fun);
             return fun;
         }
 
@@ -707,26 +706,26 @@ namespace Pytocs.TypeInference
             FunType fun = new FunType(f, env);
             fun.Table.Parent = this.scope;
             fun.Table.Path = scope.extendPath(analyzer, f.name.Name);
-            fun.setDefaultTypes(resolveList(f.parameters
+            fun.setDefaultTypes(ResolveList(f.parameters
                 .Where(p => p.test != null)
                 .Select(p => p.test)));
-            analyzer.addUncalled(fun);
-            Binding.Kind funkind;
+            analyzer.AddUncalled(fun);
+            BindingKind funkind;
 
             if (scope.stateType == State.StateType.CLASS)
             {
                 if ("__init__" == f.name.Name)
                 {
-                    funkind = Binding.Kind.CONSTRUCTOR;
+                    funkind = BindingKind.CONSTRUCTOR;
                 }
                 else
                 {
-                    funkind = Binding.Kind.METHOD;
+                    funkind = BindingKind.METHOD;
                 }
             }
             else
             {
-                funkind = Binding.Kind.FUNCTION;
+                funkind = BindingKind.FUNCTION;
             }
 
             DataType outType = scope.Type;
@@ -784,7 +783,7 @@ namespace Pytocs.TypeInference
             State s1 = scope.Clone();
             State s2 = scope.Clone();
 
-            // ignore condition for now
+            // Ignore condition for now
             i.Test.Accept(this);
 
             if (i.Then != null)
@@ -805,13 +804,13 @@ namespace Pytocs.TypeInference
                 type2 = DataType.Cont;
             }
 
-            bool cont1 = UnionType.contains(type1, DataType.Cont);
-            bool cont2 = UnionType.contains(type2, DataType.Cont);
+            bool cont1 = UnionType.Contains(type1, DataType.Cont);
+            bool cont2 = UnionType.Contains(type2, DataType.Cont);
 
-            // decide which branch affects the downstream state
+            // Decide which branch affects the downstream state
             if (cont1 && cont2)
             {
-                s1.merge(s2);
+                s1.Merge(s2);
                 scope.Overwrite(s1);
             }
             else if (cont1)
@@ -822,10 +821,10 @@ namespace Pytocs.TypeInference
             {
                 scope.Overwrite(s2);
             }
-            return UnionType.union(type1, type2);
+            return UnionType.Union(type1, type2);
         }
 
-        public DataType VisitTest(Test i)
+        public DataType VisitTest(TestExp i)
         {
             DataType type1, type2;
             i.Condition.Accept(this);
@@ -846,21 +845,21 @@ namespace Pytocs.TypeInference
             {
                 type2 = DataType.Cont;
             }
-            return UnionType.union(type1, type2);
+            return UnionType.Union(type1, type2);
         }
 
         public DataType VisitImport(ImportStatement i)
         {
             foreach (var a in i.names)
             {
-                DataType mod = analyzer.loadModule(a.orig.segs, scope);
+                DataType mod = analyzer.LoadModule(a.orig.segs, scope);
                 if (mod == null)
                 {
                     analyzer.putProblem(i, "Cannot load module");
                 }
                 else if (a.alias != null)
                 {
-                    scope.insert(analyzer, a.alias.Name, a.alias, mod, Binding.Kind.VARIABLE);
+                    scope.Insert(analyzer, a.alias.Name, a.alias, mod, BindingKind.VARIABLE);
                 }
             }
             return DataType.Cont;
@@ -873,7 +872,7 @@ namespace Pytocs.TypeInference
                 return DataType.Cont;
             }
 
-            DataType dtModule = analyzer.loadModule(i.DottedName.segs, scope);
+            DataType dtModule = analyzer.LoadModule(i.DottedName.segs, scope);
             if (dtModule == null)
             {
                 analyzer.putProblem(i, "Cannot load module");
@@ -887,7 +886,7 @@ namespace Pytocs.TypeInference
                 foreach (var a in i.AliasedNames)
                 {
                     Identifier first = a.orig.segs[0];
-                    ISet<Binding> bs = dtModule.Table.lookup(first.Name);
+                    ISet<Binding> bs = dtModule.Table.Lookup(first.Name);
                     if (bs != null)
                     {
                         if (a.alias != null)
@@ -905,16 +904,16 @@ namespace Pytocs.TypeInference
                     {
                         List<Identifier> ext = new List<Identifier>(i.DottedName.segs);
                         ext.Add(first);
-                        DataType mod2 = analyzer.loadModule(ext, scope);
+                        DataType mod2 = analyzer.LoadModule(ext, scope);
                         if (mod2 != null)
                         {
                             if (a.alias != null)
                             {
-                                scope.insert(analyzer, a.alias.Name, a.alias, mod2, Binding.Kind.VARIABLE);
+                                scope.Insert(analyzer, a.alias.Name, a.alias, mod2, BindingKind.VARIABLE);
                             }
                             else
                             {
-                                scope.insert(analyzer, first.Name, first, mod2, Binding.Kind.VARIABLE);
+                                scope.Insert(analyzer, first.Name, first, mod2, BindingKind.VARIABLE);
                             }
                         }
                     }
@@ -958,7 +957,7 @@ namespace Pytocs.TypeInference
 
                 foreach (string name in names)
                 {
-                    ISet<Binding> b = mt.Table.lookupLocal(name);
+                    ISet<Binding> b = mt.Table.LookupLocal(name);
                     if (b != null)
                     {
                         scope.Update(name, b);
@@ -968,11 +967,11 @@ namespace Pytocs.TypeInference
                         List<Identifier> m2 = new List<Identifier>(i.DottedName.segs);
                         Identifier fakeName = new Identifier(name, i.Filename, start, start + name.Length);
                         m2.Add(fakeName);
-                        DataType type = analyzer.loadModule(m2, scope);
+                        DataType type = analyzer.LoadModule(m2, scope);
                         if (type != null)
                         {
                             start += name.Length;
-                            scope.insert(analyzer, name, fakeName, type, Binding.Kind.VARIABLE);
+                            scope.Insert(analyzer, name, fakeName, type, BindingKind.VARIABLE);
                         }
                     }
                 }
@@ -1058,7 +1057,7 @@ namespace Pytocs.TypeInference
 
             ModuleType mt = analyzer.TypeFactory.CreateModule(m.Name, m.Filename, qname, analyzer.globaltable);
 
-            scope.insert(analyzer, analyzer.moduleQname(m.Filename), m, mt, Binding.Kind.MODULE);
+            scope.Insert(analyzer, analyzer.moduleQname(m.Filename), m, mt, BindingKind.MODULE);
             if (m.body != null)
             {
                 var sOld = this.scope;
@@ -1071,13 +1070,13 @@ namespace Pytocs.TypeInference
 
         public DataType VisitIdentifier(Identifier id)
         {
-            ISet<Binding> b = scope.lookup(id.Name);
+            ISet<Binding> b = scope.Lookup(id.Name);
             if (b != null)
             {
                 analyzer.putRef(id, b);
                 analyzer.resolved.Add(id);
                 analyzer.unresolved.Remove(id);
-                return State.makeUnion(b);
+                return State.MakeUnion(b);
             }
             else if (id.Name == "True" || id.Name == "False")
             {
@@ -1111,7 +1110,7 @@ namespace Pytocs.TypeInference
             }
             if (p.args != null)
             {
-                resolveList(p.args.Select(a => a.defval));
+                ResolveList(p.args.Select(a => a.defval));
             }
             return DataType.Cont;
         }
@@ -1232,7 +1231,7 @@ namespace Pytocs.TypeInference
                 DataType retType = DataType.Unknown;
                 foreach (DataType t in ((UnionType) vt).types)
                 {
-                    retType = UnionType.union(retType, getSubscript(s, t, st));
+                    retType = UnionType.Union(retType, getSubscript(s, t, st));
                 }
                 return retType;
             }
@@ -1261,7 +1260,7 @@ namespace Pytocs.TypeInference
                 DictType dt = (DictType) vt;
                 if (!dt.keyType.Equals(st))
                 {
-                    addWarning(s, "Possible KeyError (wrong type for subscript)");
+                    AddWarning(s, "Possible KeyError (wrong type for subscript)");
                 }
                 return ((DictType) vt).valueType;
             }
@@ -1273,7 +1272,7 @@ namespace Pytocs.TypeInference
                 }
                 else
                 {
-                    addWarning(s, "Possible KeyError (wrong type for subscript)");
+                    AddWarning(s, "Possible KeyError (wrong type for subscript)");
                     return DataType.Unknown;
                 }
             }
@@ -1297,7 +1296,7 @@ namespace Pytocs.TypeInference
                 }
                 else
                 {
-                    DataType sliceFunc = vt.Table.lookupAttrType("__getslice__");
+                    DataType sliceFunc = vt.Table.LookupAttributeType("__getslice__");
                     if (sliceFunc == null)
                     {
                         addError(s, "The type can't be sliced: " + vt);
@@ -1305,7 +1304,7 @@ namespace Pytocs.TypeInference
                     }
                     else if (sliceFunc is FunType)
                     {
-                        return apply(analyzer, (FunType) sliceFunc, null, null, null, null, s);
+                        return Apply(analyzer, (FunType) sliceFunc, null, null, null, null, s);
                     }
                     else
                     {
@@ -1331,7 +1330,7 @@ namespace Pytocs.TypeInference
             {
                 foreach (var h in t.exHandlers)
                 {
-                    tph = UnionType.union(tph, VisitHandler(h));
+                    tph = UnionType.Union(tph, VisitHandler(h));
                 }
             }
 
@@ -1384,7 +1383,7 @@ namespace Pytocs.TypeInference
 
             if (w.Else != null)
             {
-                t = UnionType.union(t, w.Else.Accept(this));
+                t = UnionType.Union(t, w.Else.Accept(this));
             }
             return t;
         }
@@ -1439,7 +1438,7 @@ namespace Pytocs.TypeInference
             analyzer.putProblem(n, msg);
         }
 
-        protected void addWarning(Node n, string msg)
+        protected void AddWarning(Node n, string msg)
         {
             analyzer.putProblem(n, msg);
         }
@@ -1447,7 +1446,7 @@ namespace Pytocs.TypeInference
         /// <summary>
         /// Resolves each element, and constructs a result list.
         /// </summary>
-        private List<DataType> resolveList(IEnumerable<Exp> nodes)
+        private List<DataType> ResolveList(IEnumerable<Exp> nodes)
         {
             if (nodes == null)
             {
@@ -1464,18 +1463,18 @@ namespace Pytocs.TypeInference
             }
         }
 
-        /**
-         * Utility method to resolve every node in {@code nodes} and
-         * return the union of their types.  If {@code nodes} is empty or
-         * {@code null}, returns a new {@link Pytocs.Types.UnknownType}.
-         */
-        public DataType resolveUnion(IEnumerable<Exp> nodes)
+        /// <summary>
+        /// Utility method to resolve every node in <param name="nodes"/> and
+        /// return the union of their types.  If <param name="nodes" /> is empty or
+        /// null, returns a new {@link Pytocs.Types.UnknownType}.
+        /// </summary>
+        public DataType ResolveUnion(IEnumerable<Exp> nodes)
         {
             DataType result = DataType.Unknown;
             foreach (var node in nodes)
             {
                 DataType nodeType = node.Accept(this);
-                result = UnionType.union(result, nodeType);
+                result = UnionType.Union(result, nodeType);
             }
             return result;
         }

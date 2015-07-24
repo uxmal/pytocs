@@ -112,7 +112,7 @@ namespace Pytocs.TypeInference
                 var posStart = moduleStmts[0].Start;
                 var posEnd = moduleStmts.Last().End;
                 module = new Module(
-                    analyzer.moduleName(path),
+                    analyzer.ModuleName(path),
                     new SuiteStatement(moduleStmts, path, posStart, posEnd),
                     path, posStart, posEnd);
             }

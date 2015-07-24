@@ -72,6 +72,9 @@ namespace Pytocs.TypeInference
             this.Path = s.Path;
         }
 
+        public string Path { get; set; }
+        public DataType Type { get; set; } 
+
         // erase and overwrite this to s's contents
         public void Overwrite(State s)
         {
@@ -90,7 +93,7 @@ namespace Pytocs.TypeInference
             return new State(this);
         }
 
-        public void merge(State other)
+        public void Merge(State other)
         {
             foreach (var e2 in other.table)
             {
@@ -111,7 +114,7 @@ namespace Pytocs.TypeInference
         public static State merge(State state1, State state2)
         {
             State ret = state1.Clone();
-            ret.merge(state2);
+            ret.Merge(state2);
             return ret;
         }
 
@@ -141,7 +144,7 @@ namespace Pytocs.TypeInference
             this.stateType = type;
         }
 
-        public void addGlobalName(string name)
+        public void AddGlobalName(string name)
         {
             if (globalNames == null)
             {
@@ -171,7 +174,7 @@ namespace Pytocs.TypeInference
             table.Remove(id);
         }
 
-        public Binding insert(Analyzer analyzer, string id, Module node, DataType type, Binding.Kind kind)
+        public Binding Insert(Analyzer analyzer, string id, Module node, DataType type, BindingKind kind)
         {
             Binding b = analyzer.CreateBinding(id, node, type, kind);
             if (type is ModuleType)
@@ -180,13 +183,13 @@ namespace Pytocs.TypeInference
             }
             else
             {
-                b.qname = analyzer.extendPath(this.Path, id);
+                b.qname = analyzer.ExtendPath(this.Path, id);
             }
             Update(id, b);
             return b;
         }
 
-        public Binding insert(Analyzer analyzer, string id, Exp node, DataType type, Binding.Kind kind)
+        public Binding Insert(Analyzer analyzer, string id, Exp node, DataType type, BindingKind kind)
         {
             Binding b = analyzer.CreateBinding(id, node, type, kind);
             if (type is ModuleType)
@@ -215,14 +218,11 @@ namespace Pytocs.TypeInference
             return bs;
         }
 
-        public string Path { get; set; }
-        public DataType Type { get; set; } 
-
         /// <summary>
         /// Look up a name in the current symbol table only. Don't recurse on the
         /// parent table.
         /// </summary>
-        public ISet<Binding> lookupLocal(string name)
+        public ISet<Binding> LookupLocal(string name)
         {
             ISet<Binding> bs;
             if (table.TryGetValue(name, out bs))
@@ -235,28 +235,25 @@ namespace Pytocs.TypeInference
         /// Look up a name in the current symbol table.  If not found,
         /// recurse on the parent table.
         /// </summary>
-        public ISet<Binding> lookup(string name)
+        public ISet<Binding> Lookup(string name)
         {
             ISet<Binding> b = getModuleBindingIfGlobal(name);
             if (b != null)
             {
                 return b;
             }
+            ISet<Binding> ent = LookupLocal(name);
+            if (ent != null)
+            {
+                return ent;
+            }
+            else if (Parent != null)
+            {
+                return Parent.Lookup(name);
+            }
             else
             {
-                ISet<Binding> ent = lookupLocal(name);
-                if (ent != null)
-                {
-                    return ent;
-                }
-                else if (Parent != null)
-                {
-                    return Parent.lookup(name);
-                }
-                else
-                {
-                    return null;
-                }
+                return null;
             }
         }
 
@@ -264,7 +261,7 @@ namespace Pytocs.TypeInference
          * Look up a name in the module if it is declared as global, otherwise look
          * it up locally.
          */
-        public ISet<Binding> lookupScope(string name)
+        public ISet<Binding> LookupScope(string name)
         {
             ISet<Binding> b = getModuleBindingIfGlobal(name);
             if (b != null)
@@ -273,7 +270,7 @@ namespace Pytocs.TypeInference
             }
             else
             {
-                return lookupLocal(name);
+                return LookupLocal(name);
             }
         }
 
@@ -287,90 +284,83 @@ namespace Pytocs.TypeInference
          */
         private static ISet<State> looked = new HashSet<State>();    // circularity prevention
 
-        public ISet<Binding> lookupAttr(string attr)
+        public ISet<Binding> LookupAttribute(string attr)
         {
             if (looked.Contains(this))
             {
                 return null;
             }
+
+            ISet<Binding> b = LookupLocal(attr);
+            if (b != null)
+            {
+                return b;
+            }
             else
             {
-                ISet<Binding> b = lookupLocal(attr);
-                if (b != null)
+                if (supers != null && supers.Count > 0)
                 {
-                    return b;
-                }
-                else
-                {
-                    if (supers != null && supers.Count > 0)
+                    looked.Add(this);
+                    foreach (State p in supers)
                     {
-                        looked.Add(this);
-                        foreach (State p in supers)
+                        b = p.LookupAttribute(attr);
+                        if (b != null)
                         {
-                            b = p.lookupAttr(attr);
-                            if (b != null)
-                            {
-                                looked.Remove(this);
-                                return b;
-                            }
+                            looked.Remove(this);
+                            return b;
                         }
-                        looked.Remove(this);
-                        return null;
                     }
-                    else
-                    {
-                        return null;
-                    }
+                    looked.Remove(this);
                 }
+                return null;
             }
         }
-
 
         /// <summary>
         /// Look for a binding named {@code name} and if found, return its type.
         /// </summary>
         public DataType lookupType(string name)
         {
-            ISet<Binding> bs = lookup(name);
+            ISet<Binding> bs = Lookup(name);
             if (bs == null)
             {
                 return null;
             }
             else
             {
-                return makeUnion(bs);
+                return MakeUnion(bs);
             }
         }
 
-        /**
-         * Look for an attribute named {@code attr} and if found, return its type.
-         */
-        public DataType lookupAttrType(string attr)
+        /// <summary>
+        /// Look for an attribute named <param name="attr" />
+        /// and if found, return its type.
+        /// </summary>
+        public DataType LookupAttributeType(string attr)
         {
-            ISet<Binding> bs = lookupAttr(attr);
+            ISet<Binding> bs = LookupAttribute(attr);
             if (bs == null)
             {
                 return null;
             }
             else
             {
-                return makeUnion(bs);
+                return MakeUnion(bs);
             }
         }
 
-        public static DataType makeUnion(ISet<Binding> bs)
+        public static DataType MakeUnion(ISet<Binding> bs)
         {
             DataType t = DataType.Unknown;
             foreach (Binding b in bs)
             {
-                t = UnionType.union(t, b.type);
+                t = UnionType.Union(t, b.type);
             }
             return t;
         }
 
-
-       /// <summary>
-       /// Find a symbol table of a certain type in the enclosing scopes.
+        /// <summary>
+        /// Find a symbol table of a certain type in the enclosing scopes.
         /// </summary>
         public State getStateOfType(StateType type)
         {
@@ -409,7 +399,7 @@ namespace Pytocs.TypeInference
                 State module = getGlobalTable();
                 if (module != this)
                 {
-                    return module.lookupLocal(name);
+                    return module.LookupLocal(name);
                 }
             }
             return null;
@@ -435,7 +425,7 @@ namespace Pytocs.TypeInference
 
         public string extendPath(Analyzer analyzer, string pathname)
         {
-            return analyzer.extendPath(this.Path, pathname); 
+            return analyzer.ExtendPath(this.Path, pathname); 
         }
 
         public override string ToString()
@@ -446,7 +436,7 @@ namespace Pytocs.TypeInference
         /// <summary>
         /// Bind a name to this scope, including destructuring assignment.
         /// </summary>
-        public void Bind(Analyzer analyzer, Exp target, DataType rvalue, Binding.Kind kind)
+        public void Bind(Analyzer analyzer, Exp target, DataType rvalue, BindingKind kind)
         {
             if (target is Identifier)
             {
@@ -475,7 +465,7 @@ namespace Pytocs.TypeInference
                 if (valueType is ListType)
                 {
                     ListType t = (ListType) valueType;
-                    t.setElementType(UnionType.union(t.eltType, rvalue));
+                    t.setElementType(UnionType.Union(t.eltType, rvalue));
                 }
             }
             else if (target != null)
@@ -491,28 +481,28 @@ namespace Pytocs.TypeInference
         /// </summary>
         public void BindByScope(Analyzer analyzer, Exp target, DataType rvalue)
         {
-            Binding.Kind kind;
+            BindingKind kind;
             if (this.stateType == State.StateType.FUNCTION)
             {
-                kind = Binding.Kind.VARIABLE;
+                kind = BindingKind.VARIABLE;
             }
             else if (this.stateType == State.StateType.CLASS ||
                   this.stateType == State.StateType.INSTANCE)
             {
-                kind = Binding.Kind.ATTRIBUTE;
+                kind = BindingKind.ATTRIBUTE;
             }
             else
             {
-                kind = Binding.Kind.SCOPE;
+                kind = BindingKind.SCOPE;
             }
             this.Bind(analyzer, target, rvalue, kind);
         }
 
-        public void Bind(Analyzer analyzer, Identifier id, DataType rvalue, Binding.Kind kind)
+        public void Bind(Analyzer analyzer, Identifier id, DataType rvalue, BindingKind kind)
         {
             if (this.IsGlobalName(id.Name))
             {
-                ISet<Binding> bs = this.lookup(id.Name);
+                ISet<Binding> bs = this.Lookup(id.Name);
                 if (bs != null)
                 {
                     foreach (Binding b in bs)
@@ -524,11 +514,11 @@ namespace Pytocs.TypeInference
             }
             else
             {
-                this.insert(analyzer, id.Name, id, rvalue, kind);
+                this.Insert(analyzer, id.Name, id, rvalue, kind);
             }
         }
 
-        public void Bind(Analyzer analyzer, List<Exp> xs, DataType rvalue, Binding.Kind kind)
+        public void Bind(Analyzer analyzer, List<Exp> xs, DataType rvalue, BindingKind kind)
         {
             if (rvalue is TupleType)
             {
@@ -591,7 +581,7 @@ namespace Pytocs.TypeInference
         }
 
         // iterator
-        public void BindIterator(Analyzer analyzer, Exp target, Exp iter, DataType iterType, Binding.Kind kind)
+        public void BindIterator(Analyzer analyzer, Exp target, Exp iter, DataType iterType, BindingKind kind)
         {
             if (iterType is ListType)
             {
@@ -603,7 +593,7 @@ namespace Pytocs.TypeInference
             }
             else
             {
-                ISet<Binding> ents = iterType.Table.lookupAttr("__iter__");
+                ISet<Binding> ents = iterType.Table.LookupAttribute("__iter__");
                 if (ents != null)
                 {
                     foreach (Binding ent in ents)
@@ -652,12 +642,12 @@ namespace Pytocs.TypeInference
                 analyzer.putProblem(attr, "Can't set attribute for UnknownType");
                 return;
             }
-            ISet<Binding> bs = targetType.Table.lookupAttr(attr.FieldName.Name);
+            ISet<Binding> bs = targetType.Table.LookupAttribute(attr.FieldName.Name);
             if (bs != null)
             {
                 analyzer.addRef(attr, targetType, bs);
             }
-            targetType.Table.insert(null, attr.FieldName.Name, attr, attrType, Binding.Kind.ATTRIBUTE);
+            targetType.Table.Insert(null, attr.FieldName.Name, attr, attrType, BindingKind.ATTRIBUTE);
         }
 
         public static void transformExprs(Analyzer analyzer, List<Slice> exprs, State s)

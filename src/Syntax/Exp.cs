@@ -411,13 +411,13 @@ namespace Pytocs.Syntax
         }
     }
 
-    public class Test : Exp
+    public class TestExp : Exp
     {
         public Exp Consequent;
         public Exp Condition;
         public Exp Alternative;
 
-        public Test(string filename, int start, int end)
+        public TestExp(string filename, int start, int end)
             : base(filename, start, end)
         {
         }

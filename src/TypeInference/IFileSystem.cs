@@ -79,7 +79,7 @@ namespace Pytocs.TypeInference
             }
         }
 
-        public void DeleteFile(String path)
+        public void DeleteFile(string path)
         {
             File.Delete(path);
         }
@@ -90,11 +90,12 @@ namespace Pytocs.TypeInference
         }
 
         public bool DirectoryExists(string dirPath) { return Directory.Exists(dirPath); }
+
         public bool FileExists(string filePath) { return File.Exists(filePath); }
 
         public string getSystemTempDir()
         {
-            String tmp = Environment.GetEnvironmentVariable("TEMP");
+            string tmp = Environment.GetEnvironmentVariable("TEMP");
             var sep = DirectorySeparatorChar;
             if (tmp.EndsWith(sep + ""))
             {
@@ -125,7 +126,7 @@ namespace Pytocs.TypeInference
             StringBuilder sb = new StringBuilder();
             foreach (byte aMessageDigest in messageDigest)
             {
-                sb.Append(String.Format("{0:X2}", 0xFF & aMessageDigest));
+                sb.Append(string.Format("{0:X2}", 0xFF & aMessageDigest));
             }
             return sb.ToString();
         }
