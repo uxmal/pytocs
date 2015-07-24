@@ -12,26 +12,26 @@ namespace Pytocs.TypeInference
     public interface Analyzer
     {
         IFileSystem FileSystem { get; }
+        DataTypeFactory TypeFactory { get; }
+        int nCalled { get; set; }
+        State globaltable { get; }
+        HashSet<Name> resolved { get; }
+        HashSet<Name> unresolved { get; }
 
         DataType LoadFile(string path);
         DataType loadModule(List<Name> name, State state);
         Module getAstForFile(string file);
         string moduleQname(string file);
 
-        DataTypeFactory TypeFactory { get; }
         Binding CreateBinding(string id, Node node, DataType type, Binding.Kind kind);
         void addRef(AttributeAccess attr, DataType targetType, ISet<Binding> bs);
         void putRef(Node node, ICollection<Binding> bs);
         void putRef(Node node, Binding bs);
         void addUncalled(FunType f);
         void removeUncalled(FunType f);
-        int nCalled { get; set; }
         void pushStack(object v);
         void popStack(object v);
         bool inStack(object v);
-        State globaltable { get; }
-        HashSet<Name> resolved { get; }
-        HashSet<Name> unresolved { get; }
 
         string moduleName(string path);
         string extendPath(string path, string name);
@@ -39,7 +39,7 @@ namespace Pytocs.TypeInference
         void putProblem(Node loc, string msg);
         void putProblem(string filename, int start, int end, string msg);
 
-        void msg(string message);
+        //void msg(string message);
         void msg_(string message);
         string formatNumber(object n, int length);
         string percent(long num, long total);
@@ -666,7 +666,7 @@ namespace Pytocs.TypeInference
         }
 
 
-        public void finish()
+        public void Finish()
         {
             msg("\nFinished loading files. " + nCalled + " functions were called.");
             msg("Analyzing uncalled functions");

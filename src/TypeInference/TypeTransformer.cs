@@ -261,7 +261,7 @@ namespace Pytocs.TypeInference
                 analyzer.pushStack(call);
             }
 
-            List<DataType> pTypes = new List<DataType>();
+            var pTypes = new List<DataType>();
 
             // Python: bind first parameter to self type
             if (func.SelfType != null)
@@ -306,10 +306,10 @@ namespace Pytocs.TypeInference
                 DataType toType = func.Definition.body.Accept(new TypeTransformer(funcTable, analyzer));
                 if (missingReturn(toType))
                 {
-                    analyzer.putProblem(func.Definition.name, "Function not always return a value");
+                    analyzer.putProblem(func.Definition.name, "Function doesn't always return a value");
                     if (call != null)
                     {
-                        analyzer.putProblem(call, "Call not always return a value");
+                        analyzer.putProblem(call, "Call doesn't always return a value");
                     }
                 }
 

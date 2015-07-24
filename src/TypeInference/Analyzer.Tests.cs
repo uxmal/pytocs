@@ -110,7 +110,7 @@ def crunk(a):
     return 'fun'
 ");
             an.Analyze(@"\foo");
-            an.finish();
+            an.Finish();
             var sExp =
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
 @"(binding:kind=SCOPE:node=x:type=str:qname=.foo.test.x:refs=[x,x,x])" + nl +
@@ -143,7 +143,7 @@ def bar(y):
 foo('Hello')
 ");
             an.Analyze(@"\foo");
-            an.finish();
+            an.Finish();
             var sExp =
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
 @"(binding:kind=FUNCTION:node=foo:type=str -> None:qname=.foo.test.foo:refs=[foo])" + nl +
@@ -175,7 +175,7 @@ f = Foo('Hello')
 f.foo()
 ");
             an.Analyze(@"\foo");
-            an.finish();
+            an.Finish();
             var sExp =
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
 @"(binding:kind=FUNCTION:node=foo:type=str -> None:qname=.foo.test.foo:refs=[foo])" + nl +

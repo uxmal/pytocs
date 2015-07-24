@@ -119,7 +119,6 @@
     <Compile Include="Syntax\AliasedName.cs" />
     <Compile Include="Syntax\Argument.cs" />
     <Compile Include="Syntax\ClassDef.cs" />
-    <Compile Include="Syntax\Decorated.cs" />
     <Compile Include="Syntax\Decorator.cs" />
     <Compile Include="Syntax\DictMaker.cs" />
     <Compile Include="Syntax\DottedName.cs" />
