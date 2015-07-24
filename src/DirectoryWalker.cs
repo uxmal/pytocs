@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pytocs.TypeInference;
 
 namespace Pytocs
 {
@@ -86,7 +87,10 @@ namespace Pytocs
         {
             foreach (var file in Directory.GetFiles(state.DirectoryName, "*.py", SearchOption.TopDirectoryOnly))
             {
-                var xlator = new Translator(state.Namespace, Path.GetFileNameWithoutExtension(file));
+                var xlator = new Translator(
+                    state.Namespace, 
+                    Path.GetFileNameWithoutExtension(file),
+                    new ConsoleLogger());
                 xlator.TranslateFile(file, file + ".cs");
             }
         }

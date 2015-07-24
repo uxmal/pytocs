@@ -27,9 +27,42 @@ namespace Pytocs.TypeInference
     {
         TraceLevel Level { get; set; }
      
-        void Error(Exception ex, string p);
+        void Error(Exception ex, string format, params object [] args);
+        void Error(string format, params object [] args);
         void Inform(string p);
         void Verbose(string p);
+    }
+
+    public class ConsoleLogger : ILogger{
+
+        public void Error(Exception ex, string format, params object[] args)
+        {
+            Console.Error.Write("Error: ");
+            Console.Error.WriteLine(format, args);
+            while (ex != null)
+            {
+                Console.Error.WriteLine(" {0}", ex.Message);
+                ex = ex.InnerException;
+            }
+        }
+
+        public void Error(string format, params object[] args)
+        {
+            Console.Error.Write("Error: ");
+            Console.Error.WriteLine(format, args);
+        }
+
+        public void Inform(string p)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void Verbose(string p)
+        {
+            throw new NotImplementedException();
+        }
+
+        public TraceLevel Level { get; set; }
     }
 
     public class Logger : ILogger
@@ -43,10 +76,15 @@ namespace Pytocs.TypeInference
 
         public TraceLevel Level { get; set; }
 
-        public void Error(Exception ex, string msg)
+        public void Error(string format, params object[] args)
+        {
+            Write(EventLogEntryType.Error, string.Format(format, args));
+        }
+
+        public void Error(Exception ex, string format, params object[] args)
         {
             var sb = new StringBuilder();
-            sb.AppendLine(msg);
+            sb.AppendFormat(format, args);
             while (ex != null)
             {
                 sb.Append(" ");
