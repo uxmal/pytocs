@@ -471,15 +471,15 @@ namespace Pytocs.TypeInference
                 DataType cls = cl.Table.Parent.Type;
                 if (cls != null && cls is ClassType)
                 {
-                    addReadOnlyAttr(analyzer, cl, "im_class", cls, BindingKind.CLASS);
-                    addReadOnlyAttr(analyzer, cl, "__class__", cls, BindingKind.CLASS);
-                    addReadOnlyAttr(analyzer, cl, "im_self", cls, BindingKind.ATTRIBUTE);
-                    addReadOnlyAttr(analyzer, cl, "__self__", cls, BindingKind.ATTRIBUTE);
+                    AddReadOnlyAttr(analyzer, cl, "im_class", cls, BindingKind.CLASS);
+                    AddReadOnlyAttr(analyzer, cl, "__class__", cls, BindingKind.CLASS);
+                    AddReadOnlyAttr(analyzer, cl, "im_self", cls, BindingKind.ATTRIBUTE);
+                    AddReadOnlyAttr(analyzer, cl, "__self__", cls, BindingKind.ATTRIBUTE);
                 }
             }
         }
 
-        static void addReadOnlyAttr(
+        static void AddReadOnlyAttr(
             Analyzer analyzer,
             FunType fun,
             string name,

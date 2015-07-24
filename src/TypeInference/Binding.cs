@@ -28,14 +28,12 @@ namespace Pytocs.TypeInference
     /// </summary>
     public class Binding : IComparable<Binding>
     {
-        private bool _isStatic = false;         // static fields/methods
-
-        public string name;     // unqualified name
+        public string name;             // unqualified name
         public Node node;
-        public string qname;     // qualified name
-        public DataType type;   // inferred type
+        public string qname;            // qualified name
+        public DataType type;           // inferred type
 
-        public BindingKind kind;       // name usage context
+        public BindingKind kind;        // name usage context
 
         /// <summary>
         /// The places where this binding is referenced.
@@ -73,15 +71,14 @@ namespace Pytocs.TypeInference
             else
             {
                 fileOrUrl = node.Filename;
-                if (node is Identifier)
-                {
-                    name = ((Identifier) node).Name;
-                }
+                var idNode = node as Identifier;
+                if (idNode != null)
+                    name= node.Name;
             }
-            initLocationInfo(node);
+            SetLocationInfo(node);
         }
 
-        private void initLocationInfo(Node node)
+        private void SetLocationInfo(Node node)
         {
             this.start = node.Start;
             this.end = node.End;
@@ -92,10 +89,12 @@ namespace Pytocs.TypeInference
             {
                 this.bodyStart = parent.Start;
                 this.bodyEnd = parent.End;
+                return;
             }
-            else if (node is Module)
-            {
-                name = ((Module) node).Name;
+            var modNode = node as Module;
+            if (modNode != null)
+            { 
+                name = modNode.Name;
                 this.start = 0;
                 this.end = 0;
                 this.bodyStart = node.Start;
@@ -136,11 +135,8 @@ namespace Pytocs.TypeInference
             this.type = type;
         }
 
-        public bool IsStatic
-        {
-            get { return _isStatic; }
-            set { _isStatic = value; }
-        }
+        // True if this is a static attribute or method.
+        public bool IsStatic { get; set; }
 
         // True if auto-generated bindings
         public bool IsSynthetic { get; set; }

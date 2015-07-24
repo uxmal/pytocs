@@ -253,7 +253,7 @@ namespace Pytocs.TypeInference
         }
 
 
-        public List<Binding> getAllBindings()
+        public List<Binding> GetAllBindings()
         {
             return allBindings;
         }
@@ -749,7 +749,7 @@ namespace Pytocs.TypeInference
 
             // calculate number of defs, refs, xrefs
             int nDef = 0, nXRef = 0;
-            foreach (Binding b in getAllBindings())
+            foreach (Binding b in GetAllBindings())
             {
                 nDef += 1;
                 nXRef += b.refs.Count;

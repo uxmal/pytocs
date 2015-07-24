@@ -63,7 +63,7 @@ namespace Pytocs.TypeInference
         private string BindingsToString()
         {
             var sb = new StringBuilder();
-            var e = an.getAllBindings().Where(b => !b.IsBuiltin).GetEnumerator();
+            var e = an.GetAllBindings().Where(b => !b.IsBuiltin && !b.IsSynthetic).GetEnumerator();
             while (e.MoveNext())
             {
                 sb.AppendLine(e.Current.ToString());
@@ -194,10 +194,14 @@ f.foo()
             an.Finish();
             var sExp =
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
-@"(binding:kind=FUNCTION:node=foo:type=str -> None:qname=.foo.test.foo:refs=[foo])" + nl +
-@"(binding:kind=FUNCTION:node=bar:type=str -> None:qname=.foo.test.bar:refs=[bar])" + nl +
-@"(binding:kind=PARAMETER:node=x:type=str:qname=.foo.test.foo.x:refs=[x,x])" + nl +
-@"(binding:kind=PARAMETER:node=y:type=str:qname=.foo.test.bar.y:refs=[y])" + nl;
+@"(binding:kind=CLASS:node=Foo:type=<Foo>:qname=.foo.test.Foo:refs=[Foo])" + nl +
+@"(binding:kind=METHOD:node=foo:type=Foo -> None:qname=.foo.test.Foo.foo:refs=[f.foo])" + nl +
+@"(binding:kind=METHOD:node=bar:type=(Foo, ?) -> None:qname=.foo.test.Foo.bar:refs=[])" + nl +
+@"(binding:kind=SCOPE:node=f:type=Foo:qname=.foo.test.f:refs=[f])" + nl +
+@"(binding:kind=PARAMETER:node=self:type=Foo:qname=.foo.test.Foo.foo.self:refs=[self])" + nl +
+@"(binding:kind=PARAMETER:node=self:type=Foo:qname=.foo.test.Foo.bar.self:refs=[])" + nl +
+@"(binding:kind=PARAMETER:node=y:type=?:qname=.foo.test.Foo.bar.y:refs=[y])" + nl;
+
 
             Console.WriteLine(BindingsToString());
 
