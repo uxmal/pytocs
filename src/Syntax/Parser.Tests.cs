@@ -413,5 +413,48 @@ def wrapper():
             Assert.AreEqual(0, e.Start);
             Assert.AreEqual(2, e.End);
         }
+
+        [Test]
+        public void Parse_Set()
+        {
+            var pySrc = "{self._path_merge_points[addr]}";
+            var e = ParseExp(pySrc);
+            Assert.AreEqual("{ self._path_merge_points[addr] }", e.ToString());
+        }
+
+        [Test]
+        public void Parse_Slice()
+        {
+            var pySrc = "a[::]";
+            var e = ParseExp(pySrc);
+            Assert.AreEqual("a[::]", e.ToString());
+        }
+
+        [Test]
+        public void Parse_Regression1()
+        {
+            var pySrc =
+@"if ((dt.address == action.addr).model is True # FIXME: This is ugly. claripy.is_true() is the way to go
+        and (dt.bits.ast == action.size.ast)):
+    data_taint = dt
+";
+            var sExp =
+@"if (((dt.address = action.addr).model is True) and (dt.bits.ast = action.size.ast)):
+    data_taint=dt
+";
+            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+        }
+
+        [Test]
+        public void Parse_Regression2()
+        {
+            var pySrc = 
+@"segs = sorted(all_segments, key=lambda (_, seg): seg.offset)
+";
+            var sExp =
+@"segs=sorted(all_segments,key=lambda (_,seg): seg.offset)
+"; 
+            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+        }
     }
 }

@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -75,6 +76,21 @@ namespace Pytocs.Syntax
         {
             v.VisitLambda(this);
         }
-    }
 
+        public override void Write(TextWriter writer)
+        {
+            writer.Write("lambda");
+            writer.Write(" ");
+            var sep = "";
+            foreach (var v in args)
+            {
+                writer.Write(sep);
+                sep = ",";
+                v.name.Write(writer);
+            }
+            writer.Write(":");
+            writer.Write(" ");
+            this.body.Write(writer);
+        }
+    }
 }

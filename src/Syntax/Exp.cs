@@ -56,8 +56,8 @@ namespace Pytocs.Syntax
             case Op.Ne: return "@";
             case Op.In: return "in";
             case Op.NotIn: return "@";
-            case Op.Is: return "@";
-            case Op.IsNot: return "@";
+            case Op.Is: return "is";
+            case Op.IsNot: return "is not";
             case Op.Xor: return "@";
             case Op.LogOr: return "or";
             case Op.LogAnd: return "and";
@@ -94,6 +94,8 @@ namespace Pytocs.Syntax
         {
             yield return this;
         }
+
+        public string Comment { get; set; }
     }
 
     public class NoneExp : Exp
@@ -133,6 +135,11 @@ namespace Pytocs.Syntax
         public override void Accept(IExpVisitor v)
         {
             v.VisitBooleanLiteral(this);
+        }
+
+        public override void Write(TextWriter writer)
+        {
+            writer.Write(Value ? "True" : "False");
         }
     }
 
@@ -311,13 +318,13 @@ namespace Pytocs.Syntax
     {
         public Exp key;
         public Exp value;
-        public List<Exp> generators;
+        public CompFor source;
 
-        public DictComprehension(Exp key, Exp value, List<Exp> generators,  string filename, int start, int end) : base(filename, start, end) 
+        public DictComprehension(Exp key, Exp value, CompFor collection,  string filename, int start, int end) : base(filename, start, end) 
         {
             this.key = key;
             this.value = value;
-            this.generators = generators;
+            this.source = collection;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -548,6 +555,17 @@ namespace Pytocs.Syntax
         {
             v.VisitArrayRef(this);
         }
+
+        public override void Write(TextWriter writer)
+        {
+            array.Write(writer);
+            writer.Write("[");
+            foreach (var slice in subs)
+            {
+                slice.Write(writer);
+            }
+            writer.Write("]");
+        }
     }
 
     public class Slice : Exp
@@ -571,6 +589,29 @@ namespace Pytocs.Syntax
         public override void Accept(IExpVisitor v)
         {
             v.VisitSlice(this);
+        }
+
+        public override void Write(TextWriter writer)
+        {
+            if (lower == null && step == null && upper == null)
+            {
+                writer.Write("::");
+            }
+            else if (lower != null)
+            {
+                lower.Write(writer);
+                if (step != null)
+                {
+                    writer.Write(':');
+                    step.Write(writer);
+                    writer.Write(':');
+                    if (upper != null)
+                    {
+                        writer.Write(':');
+                        upper.Write(writer);
+                    }
+                }
+            }
         }
     }
 

@@ -24,7 +24,7 @@ namespace Pytocs.Syntax
 {
     public class VarArg
     {
-        public Identifier name;
+        public Exp name;    // could be tuple
         public Exp test;
 
         public static VarArg Keyword(string name) { return new VarArg(); }

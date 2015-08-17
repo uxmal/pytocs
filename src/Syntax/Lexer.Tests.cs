@@ -163,20 +163,20 @@ namespace Pytocs.Syntax
         [Test]
         public void LexInt()
         {
-            Assert.AreEqual(0, (int) Lex("0").Value);
-            Assert.AreEqual(1, (int) Lex("1").Value);
-            Assert.AreEqual(30, (int) Lex("30").Value);
-            Assert.AreEqual(0xF, (int) Lex("0xF").Value);
-            Assert.AreEqual(0xed, (int) Lex("0xed").Value);
-            Assert.AreEqual(10, (int) Lex("0o12").Value);
-            Assert.AreEqual(13, (int) Lex("0O15").Value);
-            Assert.AreEqual(0xA, (int) Lex("0b1010").Value);
-            Assert.AreEqual(0xA, (int) Lex("0B1010").Value);
+            Assert.AreEqual(0, (int)Lex("0").Value);
+            Assert.AreEqual(1, (int)Lex("1").Value);
+            Assert.AreEqual(30, (int)Lex("30").Value);
+            Assert.AreEqual(0xF, (int)Lex("0xF").Value);
+            Assert.AreEqual(0xed, (int)Lex("0xed").Value);
+            Assert.AreEqual(10, (int)Lex("0o12").Value);
+            Assert.AreEqual(13, (int)Lex("0O15").Value);
+            Assert.AreEqual(0xA, (int)Lex("0b1010").Value);
+            Assert.AreEqual(0xA, (int)Lex("0B1010").Value);
         }
 
         private string LexString(string pyStr)
         {
-            return ((Str) Lex(pyStr).Value).s;
+            return ((Str)Lex(pyStr).Value).s;
         }
 
         [Test]
@@ -279,7 +279,7 @@ namespace Pytocs.Syntax
         {
             var token = Lex("u'foo'");
             Assert.AreEqual(TokenType.STRING, token.Type);
-            Assert.AreEqual("foo", ((Str) token.Value).s);
+            Assert.AreEqual("foo", ((Str)token.Value).s);
         }
 
         [Test]
@@ -287,7 +287,7 @@ namespace Pytocs.Syntax
         {
             var token = Lex("u'\u00e9'");
             Assert.AreEqual(TokenType.STRING, token.Type);
-            Assert.AreEqual("é", ((Str) token.Value).s);
+            Assert.AreEqual("é", ((Str)token.Value).s);
         }
 
         [Test]
@@ -346,7 +346,7 @@ namespace Pytocs.Syntax
         {
             var t = Lex("b'\x00'");
             Assert.AreEqual(TokenType.STRING, t.Type);
-            Assert.AreEqual("\x00", ((Bytes) t.Value).s);
+            Assert.AreEqual("\x00", ((Bytes)t.Value).s);
         }
 
         [Test]
@@ -375,6 +375,7 @@ namespace Pytocs.Syntax
                 TokenType.Def, TokenType.ID, TokenType.LPAREN, TokenType.RPAREN, TokenType.COLON, TokenType.NEWLINE,
                 TokenType.INDENT, TokenType.Return, TokenType.NEWLINE, TokenType.DEDENT, TokenType.EOF);
         }
+
     }
 }
 #endif

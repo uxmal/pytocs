@@ -52,6 +52,7 @@ namespace Pytocs.Translate
             { Op.Shl, CodeOperatorType.Shl },
             { Op.Complement, CodeOperatorType.Complement },
             { Op.IDiv, CodeOperatorType.Div },
+            { Op.Xor, CodeOperatorType.BitXor },
             { Op.AugAdd, CodeOperatorType.AddEq },
             { Op.AugSub, CodeOperatorType.SubEq },
             { Op.AugMul, CodeOperatorType.MulEq },
@@ -72,6 +73,15 @@ namespace Pytocs.Translate
         public CodeExpression VisitCompFor(CompFor f)
         {
             throw new NotImplementedException();
+            //var v = compFor.variable.Accept(this);
+            //var c = Translate(v, compFor);
+            //var mr = new CodeMethodReferenceExpression(c, "Select");
+            //var s = m.Appl(mr, new CodeExpression[] {
+            //            m.Lambda(
+            //                new CodeExpression[] { v },
+            //                a.name.Accept(this))
+            //        });
+            //return s;
         }
 
         public CodeExpression VisitCompIf(CompIf i)
@@ -386,7 +396,24 @@ namespace Pytocs.Translate
                 var join = compFor.next as CompFor;
                 if (join != null)
                 {
-                    throw new NotImplementedException(" c = CrossJoin(c, join);");
+                    //var pySrc = "((a, s) for a in stackframe.alocs.values() for s in a._segment_list)";
+                    //string sExp = "stackframe.alocs.SelectMany(aa => aa._segment_list, (a, s) => Tuple.Create( a, s ))";
+                    return m.Appl(
+                        new CodeMethodReferenceExpression(c, "SelectMany"),
+                        m.Lambda(
+                            new CodeExpression[] {((Identifier)compFor.variable).Accept(this) },
+                            join.collection.Accept(this)),
+                        m.Lambda(
+                            new CodeExpression[] { 
+                                ((Identifier)compFor.variable).Accept(this),
+                                ((Identifier)join.variable).Accept(this)
+                            },
+                            m.Appl(
+                                new CodeMethodReferenceExpression(
+                                    new CodeTypeReferenceExpression("Tuple"),
+                                    "Create"),
+                                ((Identifier)compFor.variable).Accept(this),
+                                ((Identifier)join.variable).Accept(this))));
                 }
             }
             return c;
@@ -514,7 +541,23 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitDictComprehension(DictComprehension dc)
         {
-            throw new NotImplementedException();
+            //{ k:copy.copy(v) for k, v in path.info.iteritems() }
+            //string sExp = "path.info.iteritems.ToDictionary(k => k, v => copy.copy(v))";
+
+            var list = dc.source.collection.Accept(this);
+            var varList = dc.source.variable as ExpList;
+            if (varList == null || varList.Expressions.Count != 2)
+                throw new InvalidOperationException("Variable list should contain two variables.");
+            var k = (Identifier)varList.Expressions[0];
+            var v = (Identifier)varList.Expressions[1];
+            var kValue = dc.key.Accept(this);
+            var vValue = dc.value.Accept(this);
+            return m.Appl(
+                new CodeMethodReferenceExpression(
+                    list,
+                    "ToDictionary"),
+                    m.Lambda(new CodeExpression[] { k.Accept(this) }, kValue),
+                    m.Lambda(new CodeExpression[] { v.Accept(this) }, vValue));
         }
     }
 }

@@ -232,5 +232,21 @@ namespace Pytocs.Translate
             string sExp = "foo.ToList()";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
+
+        [Test]
+        public void Ex_DictComprehension()
+        {
+            var pySrc = "{ k:copy.copy(v) for k, v in path.info.iteritems() }";
+            string sExp = "path.info.iteritems().ToDictionary(k => k, v => copy.copy(v))";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
+
+        [Test]
+        public void Ex_Regression1()
+        {
+            var pySrc = "((a, s) for a in stackframe.alocs.values() for s in a._segment_list)";
+            string sExp = "stackframe.alocs.values().SelectMany(a => a._segment_list, (a,s) => Tuple.Create(a, s)).Select(a => Tuple.Create(a, s))";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
     }
 }

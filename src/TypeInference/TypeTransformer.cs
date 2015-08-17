@@ -614,7 +614,7 @@ namespace Pytocs.TypeInference
         /// 
         public DataType VisitDictComprehension(DictComprehension d)
         {
-            ResolveList(d.generators);
+           // ResolveList(d.generator);
             DataType keyType = d.key.Accept(this);
             DataType valueType = d.value.Accept(this);
             return analyzer.TypeFactory.CreateDict(keyType, valueType);
@@ -954,7 +954,6 @@ namespace Pytocs.TypeInference
             if (names.Count > 0)
             {
                 int start = i.Start;
-
                 foreach (string name in names)
                 {
                     ISet<Binding> b = mt.Table.LookupLocal(name);
@@ -1012,7 +1011,6 @@ namespace Pytocs.TypeInference
             }
             return listType;
         }
-
 
         /// <remarks>
         /// Python's list comprehension will bind the variables used in generators.

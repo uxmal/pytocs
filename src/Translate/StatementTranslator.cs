@@ -201,13 +201,23 @@ namespace Pytocs.Translate
             CodeVariableReferenceExpression tup = GenSymLocal("_tup_");
             gen.Assign(tup, rhs);
             int i = 0;
-            foreach (Identifier value in lhs.Expressions)
+            foreach (Exp value in lhs.Expressions)
             {
                 ++i;
                 if (value.Name == "_")
                     continue;
-                EnsureLocalVariable(value.Name);
-                gen.Assign(new CodeVariableReferenceExpression(value.Name), gen.Access(tup, "Item" + i)); 
+                var tupleField = gen.Access(tup, "Item" + i);
+                var id = value as Identifier;
+                if (id != null)
+                {
+                    EnsureLocalVariable(id.Name);
+                    gen.Assign(new CodeVariableReferenceExpression(id.Name), tupleField);
+                }
+                else
+                {
+                    var dst = value.Accept(xlat);
+                    gen.Assign(dst, tupleField);
+                }
             }
         }
 
@@ -324,9 +334,12 @@ namespace Pytocs.Translate
         {
             foreach (var alias in f.AliasedNames)
             {
-                var total = f.DottedName.segs.Concat(alias.orig.segs)
-                    .Select(s => gen.EscapeKeywordName(s.Name));
-                gen.Using(alias.alias.Name, string.Join(".", total));
+                if (f.DottedName != null)
+                {
+                    var total = f.DottedName.segs.Concat(alias.orig.segs)
+                        .Select(s => gen.EscapeKeywordName(s.Name));
+                    gen.Using(alias.alias.Name, string.Join(".", total));
+                }
             }
         }
 

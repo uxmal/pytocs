@@ -204,6 +204,7 @@ namespace Pytocs.CodeModel
 
             case CodeOperatorType.BitAnd: return "&";
             case CodeOperatorType.BitOr: return "|";
+            case CodeOperatorType.BitXor: return "^";
 
             case CodeOperatorType.LogAnd: return "&&";
             case CodeOperatorType.LogOr: return "||";
@@ -375,7 +376,7 @@ namespace Pytocs.CodeModel
             else if (p.Value is long)
                 writer.Write("{0}L", p.Value);
             else if (p.Value is bool)
-                writer.Write((bool) p.Value ? "true" : "false");
+                writer.Write((bool)p.Value ? "true" : "false");
             else if (p.Value is double)
             {
                 var s = p.Value.ToString();
@@ -384,7 +385,7 @@ namespace Pytocs.CodeModel
                 writer.Write(s);
             }
             else if (p.Value is Syntax.Str)
-                WriteStringLiteral((Syntax.Str) p.Value);
+                WriteStringLiteral((Syntax.Str)p.Value);
             else
                 throw new NotImplementedException("" + p.Value);
         }
@@ -407,7 +408,7 @@ namespace Pytocs.CodeModel
             {
                 writer.Write("@\"");
             }
-            else 
+            else
                 writer.Write("\"");
 
             for (int i = 0; i < literal.s.Length; ++i)

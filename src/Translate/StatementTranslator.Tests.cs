@@ -221,7 +221,6 @@ public static class testModule {
             Assert.AreEqual(sExp, XlatModule(src));
         }
 
-
         [Test]
         public void Stmt_MemberVarInit()
         {
@@ -872,6 +871,20 @@ bar = _tup_1.Item2;
             var sExp =
 @"_tup_1 = baz();
 bar = _tup_1.Item2;
+";
+            Assert.AreEqual(sExp, XlatStmts(pySrc));
+        }
+
+        [Test]
+        public void Stmt_AssignTuple_Nonlocals()
+        {
+            var pySrc =
+@"foo.x, foo.y = baz()
+";
+            var sExp =
+@"_tup_1 = baz();
+foo.x = _tup_1.Item1;
+foo.y = _tup_1.Item2;
 ";
             Assert.AreEqual(sExp, XlatStmts(pySrc));
         }

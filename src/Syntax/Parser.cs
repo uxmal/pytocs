@@ -653,16 +653,27 @@ eval_input: testlist NEWLINE* ENDMARKER
             var args = new List<VarArg>();
             switch (lexer.Peek().Type)
             {
+            case TokenType.LPAREN:
             case TokenType.ID:
                 do
                 {
-                    var id = new Identifier(vfpdef(), filename, 0, 0);
+                    if (PeekAndDiscard(TokenType.LPAREN))
+                    {
+                        var tuple = testlist_comp(true);
+                        Expect(TokenType.RPAREN);
+                        args.Add(new VarArg { name = tuple });
+                    }
+                    else
+                    {
+                        var id = new Identifier(vfpdef(), filename, 0, 0);
                     Exp init = null;
                     if (PeekAndDiscard(TokenType.EQ))
                     {
                         init = test();
                     }
                     args.Add(new VarArg { name = id, test = init });
+                    }
+
                 } while (PeekAndDiscard(TokenType.COMMA));
                 break;
             case TokenType.OP_STAR:
@@ -1498,12 +1509,20 @@ eval_input: testlist NEWLINE* ENDMARKER
             Exp e = not_test();
             if (e == null)
                 return e;
-            while (PeekAndDiscard(TokenType.And))
+            for (; ; )
             {
+                if (Peek(TokenType.COMMENT))
+                {
+                    e.Comment = (string)Expect(TokenType.COMMENT).Value;
+                    continue;
+                }
+                if (!PeekAndDiscard(TokenType.And))
+                    break;
+
                 var r = not_test();
                 if (r == null)
                     Unexpected();
-                e = new BinExp( Op.LogAnd, e,  r, filename, e.Start, r.End );
+                e = new BinExp(Op.LogAnd, e, r, filename, e.Start, r.End);
             }
             return e;
         }
@@ -1826,6 +1845,8 @@ eval_input: testlist NEWLINE* ENDMARKER
                 e = star_expr();
             else
                 e = test();
+            if (Peek(TokenType.COMMENT))
+                e.Comment = (string)Expect(TokenType.COMMENT).Value;
             Exp e2;
             if (Peek(TokenType.For))
             {
@@ -1838,6 +1859,8 @@ eval_input: testlist NEWLINE* ENDMARKER
                 var exprs = new List<Exp> { e };
                 while (PeekAndDiscard(TokenType.COMMA))
                 {
+                    while (PeekAndDiscard(TokenType.COMMENT))
+                        ;
                     // Trailing comma forces a tuple.
                     if (Peek(TokenType.RBRACKET, TokenType.RPAREN))
                     {
@@ -1848,6 +1871,8 @@ eval_input: testlist NEWLINE* ENDMARKER
                         e2 = star_expr();
                     else
                         exprs.Add(test());
+                    if (Peek(TokenType.COMMENT))
+                        e.Comment = (string)Expect(TokenType.COMMENT).Value;
                 }
                 if (tuple)
                 {
@@ -1910,6 +1935,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             Exp start = null;
             Exp end = null;
             Exp slice = null;
+            int lexPos = lexer.LineNumber;
             if (!Peek(TokenType.COLON))
             {
                 start = test();
@@ -1926,10 +1952,10 @@ eval_input: testlist NEWLINE* ENDMARKER
                 }
             }
             //$REVIEW: fix this [2:]
-            return new Slice(start, end, slice, 
+            return new Slice(start, end, slice,
                 filename,
-                (start ?? end ?? slice).Start,
-                (slice ?? end ?? start).End);
+                lexPos,
+                lexer.LineNumber);       //$BUG: should be position, not line number.
         }
 
         //sliceop: ':' [test]
@@ -1980,21 +2006,24 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             Token token;
             var kvs = new List<KeyValuePair<Exp, Exp>>();
+            while (PeekAndDiscard(TokenType.COMMENT))
+                ;
             if (Peek(TokenType.RBRACE, out token))
                 return new DictInitializer(kvs, filename, posStart, token.End);
 
             var k = test();
             if (PeekAndDiscard(TokenType.COLON))
             {
-                // dict comprenension
+                // dict comprehension
                 var v = test();
                 if (Peek(TokenType.For))
                 {
                     var f = comp_for();
-                    throw new NotImplementedException();
+                    return new DictComprehension(k, v, f, filename, k.Start, f.End);
                 }
                 else
                 {
+                    // dict initializer
                     kvs.Add(new KeyValuePair<Exp, Exp>(k, v));
                     while (PeekAndDiscard(TokenType.COMMA))
                     {
@@ -2014,23 +2043,28 @@ eval_input: testlist NEWLINE* ENDMARKER
             else
             {
                 // set comprehension
-                throw new NotImplementedException();
                 if (Peek(TokenType.For))
                 {
+                    throw new NotImplementedException();
                     var f = comp_for();
+                    return new SetComprehension(k, null, filename, k.Start, k.End);
                 }
                 else
                 {
+                    var items = new List<Exp> { k };
                     while (PeekAndDiscard(TokenType.COMMA))
                     {
+                        while (PeekAndDiscard(TokenType.COMMENT))
+                            ;
                         if (Peek(TokenType.RBRACE))
                             break;
+
                         k = test();
+                        items.Add(k);
                     }
+                    return new PySet(items, filename, items[0].Start, items[items.Count - 1].End);
                 }
-                return new SetComprehension(k, null, filename, k.Start, k.End);
             }
-            return new DictMaker(null, 0, 0);
         }
 
         //classdef: 'class' NAME ['(' [arglist] ')'] ':' suite

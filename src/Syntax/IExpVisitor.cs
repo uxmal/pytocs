@@ -96,6 +96,5 @@ namespace Pytocs.Syntax
         T VisitUnary(UnaryExp u);
         T VisitYieldExp(YieldExp yieldExp);
         T VisitYieldFromExp(YieldFromExp yieldExp);
-
     }
 }
