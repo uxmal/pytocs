@@ -656,7 +656,7 @@ namespace Pytocs.Syntax
                     case '"': Transition(State.Quote2); break;
                     case '\\':
                         oldState = State.QuoteString;
-                        Accum(ch, rawString ? oldState : State.StringEscape);
+                        Accum(ch, State.StringEscape);
                         break;
                     default: Accum(ch, State.QuoteString); break;
                     }
@@ -667,7 +667,7 @@ namespace Pytocs.Syntax
                     case '\'': Transition(State.Apos2); break;
                     case '\\':
                         oldState = State.AposString;
-                        Accum(ch, rawString ? oldState : State.StringEscape);
+                        Accum(ch, State.StringEscape);
                         break;
                     default: Accum(ch, State.AposString); break;
                     }
@@ -709,7 +709,7 @@ namespace Pytocs.Syntax
                     case '\'': return EatChToken(TokenType.STRING, CreateStringLiteral(false));
                     case '\\':
                         oldState = st;
-                        Accum(ch, (rawString) ? st : State.StringEscape);
+                        Accum(ch, State.StringEscape);
                         break;
                     default:
                         if (c < 0)

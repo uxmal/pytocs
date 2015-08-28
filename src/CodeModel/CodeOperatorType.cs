@@ -59,5 +59,6 @@ namespace Pytocs.CodeModel
         Is,
         ShlEq,
         ShrEq,
+        XorEq,
     }
 }

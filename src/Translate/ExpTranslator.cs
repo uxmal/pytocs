@@ -61,6 +61,7 @@ namespace Pytocs.Translate
             { Op.AugOr, CodeOperatorType.OrEq },
             { Op.AugShl, CodeOperatorType.ShlEq },
             { Op.AugShr, CodeOperatorType.ShrEq },
+            { Op.AugXor, CodeOperatorType.XorEq },
         };
 
         private CodeGenerator m;
@@ -272,7 +273,55 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitSetComprehension(SetComprehension sc)
         {
-            throw new NotImplementedException();
+            var compFor = (CompFor) sc.Collection;
+            var list = compFor.collection.Accept(this);
+            var id = (Identifier)compFor.variable;
+            return m.Appl(
+                new CodeMethodReferenceExpression(
+                    list,
+                    "ToHashSet"),
+                    m.Lambda(
+                        new CodeExpression[] { id.Accept(this) },
+                        sc.Projection.Accept(this)));
+            //var varList = dc.source.variable as ExpList;
+#if NO
+            var list = dc.source.collection.Accept(this);
+            var varList = dc.source.variable as ExpList;
+            if (varList != null)
+            {
+                if (varList.Expressions.Count != 2)
+                    throw new InvalidOperationException("Variable list should contain one or two variables.");
+                var k = (Identifier)varList.Expressions[0];
+                var v = (Identifier)varList.Expressions[1];
+                var kValue = dc.key.Accept(this);
+                var vValue = dc.value.Accept(this);
+                return m.Appl(
+                    new CodeMethodReferenceExpression(
+                        list,
+                        "ToDictionary"),
+                        m.Lambda(new CodeExpression[] { k.Accept(this) }, kValue),
+                        m.Lambda(new CodeExpression[] { v.Accept(this) }, vValue));
+            }
+            var id = sc dc.source.variable as Identifier;
+            if (id != null)
+            {
+                var vValue = dc.value.Accept(this);
+                return m.Appl(
+                    new CodeMethodReferenceExpression(
+                        list,
+                        "ToHashSet"),
+                    m.Lambda(new CodeExpression[] { id.Accept(this) }, vValue));
+            }
+            var tuple = dc.source.variable as PyTuple;
+            if (tuple != null)
+            {
+                //TODO: tuples, especially nested tuples, are hard.
+                return new CodePrimitiveExpression("!!!{" +
+                    dc.key.Accept(this) +
+                    ": " +
+                    dc.value.Accept(this));
+            }
+#endif
         }
 
         public CodeExpression VisitUnary(UnaryExp u)
@@ -546,18 +595,42 @@ namespace Pytocs.Translate
 
             var list = dc.source.collection.Accept(this);
             var varList = dc.source.variable as ExpList;
-            if (varList == null || varList.Expressions.Count != 2)
-                throw new InvalidOperationException("Variable list should contain two variables.");
-            var k = (Identifier)varList.Expressions[0];
-            var v = (Identifier)varList.Expressions[1];
-            var kValue = dc.key.Accept(this);
-            var vValue = dc.value.Accept(this);
-            return m.Appl(
-                new CodeMethodReferenceExpression(
-                    list,
-                    "ToDictionary"),
-                    m.Lambda(new CodeExpression[] { k.Accept(this) }, kValue),
-                    m.Lambda(new CodeExpression[] { v.Accept(this) }, vValue));
+            if (varList != null)
+            {
+                if (varList.Expressions.Count != 2)
+                    throw new InvalidOperationException("Variable list should contain one or two variables.");
+                var k = (Identifier)varList.Expressions[0];
+                var v = (Identifier)varList.Expressions[1];
+                var kValue = dc.key.Accept(this);
+                var vValue = dc.value.Accept(this);
+                return m.Appl(
+                    new CodeMethodReferenceExpression(
+                        list,
+                        "ToDictionary"),
+                        m.Lambda(new CodeExpression[] { k.Accept(this) }, kValue),
+                        m.Lambda(new CodeExpression[] { v.Accept(this) }, vValue));
+            }
+            var id = dc.source.variable as Identifier;
+            if (id != null)
+            { 
+                var vValue = dc.value.Accept(this);
+                return m.Appl(
+                    new CodeMethodReferenceExpression(
+                        list,
+                        "ToHashSet"),
+                    m.Lambda(new CodeExpression[] { id.Accept(this) }, vValue));
+            }
+            var tuple = dc.source.variable as PyTuple;
+            if (tuple != null)
+            {
+                //TODO: tuples, especially nested tuples, are hard.
+                return new CodePrimitiveExpression("!!!{" +
+                    dc.key.Accept(this) +
+                    ": " +
+                    dc.value.Accept(this));
+            }
+
+            throw new NotImplementedException();
         }
     }
 }

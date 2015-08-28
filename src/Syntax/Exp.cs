@@ -183,6 +183,8 @@ namespace Pytocs.Syntax
 
         public override void Write(TextWriter writer)
         {
+            if (Raw)
+                writer.Write("r");
             writer.Write('\"');
             writer.Write(s);
             writer.Write('\"');

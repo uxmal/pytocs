@@ -2045,9 +2045,8 @@ eval_input: testlist NEWLINE* ENDMARKER
                 // set comprehension
                 if (Peek(TokenType.For))
                 {
-                    throw new NotImplementedException();
                     var f = comp_for();
-                    return new SetComprehension(k, null, filename, k.Start, k.End);
+                    return new SetComprehension(k, f, filename, k.Start, k.End);
                 }
                 else
                 {

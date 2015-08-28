@@ -456,5 +456,25 @@ def wrapper():
 "; 
             Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
         }
+
+        [Test]
+        public void Parse_Regression3()
+        {
+            var pySrc = 
+@"flags = ['#', '0', r'\-', r' ', r'\+', r'\'', 'I']
+";
+            var sExp =
+@"flags=[""#"",""0"",r""\-"",r"" "",r""\+"",r""\'"",""I""]
+";
+            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+        }
+
+        [Test]
+        public void Parse_SetComprehension()
+        {
+            var pySrc = "{ id(e) for e in self._breakpoints[t] }";
+            var sExp = "{id(e) for e in self._breakpoints[t]}";
+            Assert.AreEqual(sExp, ParseExp(pySrc).ToString());
+        }
     }
 }

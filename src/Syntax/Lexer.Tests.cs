@@ -255,8 +255,8 @@ namespace Pytocs.Syntax
         [Test]
         public void Lex_RawString()
         {
-            var token = LexString(@"r'\'");
-            Assert.AreEqual("\\", token);
+            var token = LexString(@"r'\''");
+            Assert.AreEqual("\\'", token);
         }
 
         [Test]
@@ -376,6 +376,12 @@ namespace Pytocs.Syntax
                 TokenType.INDENT, TokenType.Return, TokenType.NEWLINE, TokenType.DEDENT, TokenType.EOF);
         }
 
+        [Test]
+        public void Lex_Regression2()
+        {
+            Lex(@"r'\'', 'I'",
+                TokenType.STRING, TokenType.COMMA, TokenType.STRING, TokenType.EOF);
+        }
     }
 }
 #endif

@@ -89,6 +89,7 @@ namespace Pytocs.CodeModel
             { CodeOperatorType.DivEq, 1 },
             { CodeOperatorType.ShlEq, PrecAssignment },
             { CodeOperatorType.ShrEq, PrecAssignment },
+            { CodeOperatorType.XorEq, PrecAssignment },
         };
 
         private IndentingTextWriter writer;
@@ -224,6 +225,7 @@ namespace Pytocs.CodeModel
             case CodeOperatorType.AndEq: return "|=";
             case CodeOperatorType.ShlEq: return "<<=";
             case CodeOperatorType.ShrEq: return ">>=";
+            case CodeOperatorType.XorEq: return "^=";
             }
         }
 

@@ -39,11 +39,13 @@ namespace Pytocs.CodeModel
             "false",
             "int",
             "new",
-            "true",
+            "ref",
             "sizeof",
             "static",
             "string",
             "struct",
+            "this",
+            "true",
         };
 
         public IndentingTextWriter(TextWriter writer)

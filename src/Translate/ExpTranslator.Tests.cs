@@ -248,5 +248,38 @@ namespace Pytocs.Translate
             string sExp = "stackframe.alocs.values().SelectMany(a => a._segment_list, (a,s) => Tuple.Create(a, s)).Select(a => Tuple.Create(a, s))";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
+
+        [Test]
+        public void Ex_Regression2()
+        {
+            var pySrc = @"[""#"",""0"",r""\-"",r"" "",r""\+"",r""\'"",""I""]";
+            var sExp = @"new List<object> {
+    ""#"",
+    ""0"",
+    @""\-"",
+    @"" "",
+    @""\+"",
+    @""\'"",
+    ""I""
+}";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+
+        }
+
+        [Test]
+        public void Ex_Regression4()
+        {
+            var pySrc = "{ k:_raw_ast(a[k]) for k in a }";
+            var sExp = "a.ToHashSet(k => _raw_ast(a[k]))";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
+
+        [Test]
+        public void Ex_SetComprehension()
+        {
+            var pySrc = "{ id(e) for e in self._breakpoints[t] }";
+            var sExp = "this._breakpoints[t].ToHashSet(e => id(e))";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
     }
 }
