@@ -34,11 +34,18 @@ namespace Pytocs.Syntax
         public Exp test;
         public bool vararg;
         public bool keyarg;
+        public List<Parameter> tuple;
 
         public override string ToString()
         {
             var sb = new StringBuilder();
-            if (keyarg)
+            if (tuple != null)
+            {
+                sb.Append("(");
+                sb.Append(string.Join(",", tuple));
+                sb.Append(")");
+            }
+            else if (keyarg)
             {
                 sb.AppendFormat("**{0}", Id);
             }

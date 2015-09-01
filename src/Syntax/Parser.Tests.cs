@@ -476,5 +476,31 @@ def wrapper():
             var sExp = "{id(e) for e in self._breakpoints[t]}";
             Assert.AreEqual(sExp, ParseExp(pySrc).ToString());
         }
+
+        [Test]
+        public void Parse_TupleArguments()
+        {
+            var pySrc = 
+@"def foo(self, (value, sort)):
+    self.value = value
+";
+            var sExp = 
+@"def foo(self,(value,sort)):
+    self.value=value
+";
+            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+        }
+
+        [Test]
+        public void Parse_LambdaWithParams()
+        {
+            var pySrc =
+@"Base = lambda *args, **kwargs: None
+";
+            var sExp =
+@"Base=lambda *args,**kwargs: None
+";
+            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+        }
     }
 }

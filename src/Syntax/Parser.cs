@@ -452,7 +452,10 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             var t = lexer.Peek();
             if (t.Type != tokenType)
+            {
+                Debug.Print("Expect failed: {0} {1}", filename, t.LineNumber);
                 throw new FormatException(string.Format("Expected token type {0}, but saw {1} on line {2}.", tokenType, t.Type, t.LineNumber));
+            }
             return lexer.Get();
         }
 
@@ -547,26 +550,26 @@ eval_input: testlist NEWLINE* ENDMARKER
                 case TokenType.OP_STAR:
                     lexer.Get();
                     if (Peek(TokenType.ID))
-                        tfpdef();
+                        fpdef();
                     while (PeekAndDiscard(TokenType.COMMA))
                     {
                         if (PeekAndDiscard(TokenType.OP_STARSTAR))
                         {
-                            tfpdef();
+                            fpdef();
                             return args;
                         }
-                        tfpdef();
+                        fpdef();
                         if (PeekAndDiscard(TokenType.EQ))
                             test();
                     }
                     return args;
                 case TokenType.OP_STARSTAR:
                     lexer.Get();
-                    tfpdef();
+                    fpdef();
                     return args;
                 default:
                     // (tfpdef ['=' test] (',' tfpdef ['=' test])* [','  ['*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef]]
-                    var arg = tfpdef();
+                    var arg = fpdef();
                     args.Add(arg);
                     if (PeekAndDiscard(TokenType.EQ))
                         arg.test = test();
@@ -576,19 +579,19 @@ eval_input: testlist NEWLINE* ENDMARKER
                             break;      // Skip trailing comma
                         if (PeekAndDiscard(TokenType.OP_STARSTAR))
                         {
-                            arg = tfpdef();
+                            arg = fpdef();
                             arg.keyarg = true;
                             args.Add(arg);
                         }
                         else if (PeekAndDiscard(TokenType.OP_STAR))
                         {
-                            arg = tfpdef();
+                            arg = fpdef();
                             arg.vararg = true;
                             args.Add(arg);
                         }
                         else
                         {
-                            arg = tfpdef();
+                            arg = fpdef();
                             args.Add(arg);
                             if (PeekAndDiscard(TokenType.EQ))
                                 arg.test = test();
@@ -605,7 +608,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             List<Parameter> args = new List<Parameter>();
             while (Peek(TokenType.ID))
             {
-                Parameter t = tfpdef();
+                Parameter t = fpdef();
                 if (PeekAndDiscard(TokenType.EQ))
                 {
                     t.test = test();
@@ -618,21 +621,31 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 Parameter t = null;
                 if (Peek(TokenType.ID))
-                    t = tfpdef();
+                    t = fpdef();
                 args.Add(t);
                 if (!PeekAndDiscard(TokenType.COMMA))
                     return args;
             }
             if (PeekAndDiscard(TokenType.OP_STARSTAR))
             {
-                args.Add(tfpdef());
+                args.Add(fpdef());
             }
             return args;
         }
 
+// fpdef: NAME | '(' fplist ')'
         // tfpdef: NAME [':' test]
-        Parameter tfpdef()
+        Parameter fpdef()
         {
+            if (PeekAndDiscard(TokenType.LPAREN))
+            {
+                var fpl = fplist();
+                Expect(TokenType.RPAREN);
+                return new Parameter
+                {
+                    tuple = fpl
+                };
+            }
             var name = id();
             Exp t = null;
             if (PeekAndDiscard(TokenType.COLON))
@@ -642,6 +655,23 @@ eval_input: testlist NEWLINE* ENDMARKER
                 Id = name,
                 test = t,
             };
+        }
+
+        // fplist: fpdef (',' fpdef)* [',']
+        List<Parameter> fplist()
+        {
+            var p = new List<Parameter>();
+            p.Add(fpdef());
+            if (PeekAndDiscard(TokenType.COMMA))
+            {
+                while (!Peek(TokenType.EOF, TokenType.RPAREN))
+                {
+                    p.Add(fpdef());
+                    if (!PeekAndDiscard(TokenType.COMMA))
+                        return p;
+                }
+            }
+            return p;
         }
 
 //varargslist: 
@@ -665,19 +695,33 @@ eval_input: testlist NEWLINE* ENDMARKER
                     }
                     else
                     {
-                        var id = new Identifier(vfpdef(), filename, 0, 0);
-                    Exp init = null;
-                    if (PeekAndDiscard(TokenType.EQ))
-                    {
-                        init = test();
-                    }
-                    args.Add(new VarArg { name = id, test = init });
+                        var id = vfpdef();
+                        Exp init = null;
+                        if (PeekAndDiscard(TokenType.EQ))
+                        {
+                            init = test();
+                        }
+                        args.Add(new VarArg { name = id, test = init });
                     }
 
                 } while (PeekAndDiscard(TokenType.COMMA));
                 break;
             case TokenType.OP_STAR:
-                throw new NotImplementedException();
+                Expect(TokenType.OP_STAR);
+                args.Add(VarArg.Indexed(vfpdef()));
+                if (PeekAndDiscard(TokenType.COMMA))
+                {
+                    if (!PeekAndDiscard(TokenType.OP_STARSTAR))
+                    {
+                        throw new NotImplementedException();
+                    }
+                    else
+                    {
+                        args.Add(VarArg.Keyword(vfpdef()));
+                        return args;
+                    }
+                }
+                break;
             case TokenType.OP_STARSTAR:
                 args.Add(VarArg.Keyword(vfpdef()));
                 break;
@@ -685,9 +729,10 @@ eval_input: testlist NEWLINE* ENDMARKER
             return args;
         }
 //vfpdef: NAME
-        public string vfpdef()
+        public Identifier vfpdef()
         {
-            return (string) Expect(TokenType.ID).Value;
+            var token = Expect(TokenType.ID);
+            return new Identifier((string)token.Value, filename, token.Start, token.End);
         }
 
 

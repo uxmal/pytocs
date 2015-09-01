@@ -33,7 +33,8 @@ namespace Pytocs.Translate
         protected ExpTranslator xlat;
         protected StatementTranslator stmtXlat;
         protected CodeGenerator gen;
-        private HashSet<string> locals;
+        private Dictionary<string, Tuple<string,CodeTypeReference, bool>> autos;
+        private Dictionary<Parameter, CodeParameterDeclarationExpression> mpPyParamToCs;
 
         public MethodGenerator(FunctionDef f, string fnName, List<Parameter> args, bool isStatic, CodeGenerator gen)
         {
@@ -46,9 +47,9 @@ namespace Pytocs.Translate
         
         public CodeMemberMethod Generate()
         {
-            this.locals = new HashSet<string>();
+            this.autos = new Dictionary<string, Tuple<string,CodeTypeReference,bool>>();
             this.xlat = new ExpTranslator(gen);
-            this.stmtXlat = new StatementTranslator(gen, locals);
+            this.stmtXlat = new StatementTranslator(gen, autos);
 
             int iFirstDefaultValue = -1;
             for (var i = 0; i < args.Count; ++i)
@@ -74,6 +75,7 @@ namespace Pytocs.Translate
             {
                 method = gen.Method(fnName, parms, () => Xlat(f.body));
             }
+            GenerateTupleParameterUnpackers(method);
             GenerateLocalVariables(method);
             return method;
         }
@@ -82,9 +84,33 @@ namespace Pytocs.Translate
         {
             method.Statements.InsertRange(
                 0,
-                locals
-                    .OrderBy(l => l)
-                    .Select(l => new CodeVariableDeclarationStatement("object", l)));
+                autos.Values
+                    .OrderBy(l => l.Item1)
+                    .Where(l => !l.Item3)
+                    .Select(l => new CodeVariableDeclarationStatement("object", l.Item1)));
+        }
+
+        protected void GenerateTupleParameterUnpackers(CodeMemberMethod method)
+        {
+            foreach (var parameter in args.Where(p => p.tuple != null))
+            {
+                var csTupleParam = mpPyParamToCs[parameter];
+                var tuplePath = new CodeVariableReferenceExpression(csTupleParam.ParameterName);
+                foreach (var component in parameter.tuple.Select((p, i) => new { p, i=i+1 }))
+                {
+                    GenerateTupleParameterUnpacker(component.p, component.i, tuplePath, method);
+                }
+            }
+        }
+
+        private void GenerateTupleParameterUnpacker(Parameter p, int i, CodeExpression tuplePath, CodeMemberMethod method)
+        {
+            if (p.Id.Name == "_")
+                return;
+            method.Statements.Insert(0, new CodeVariableDeclarationStatement("object", p.Id.Name));
+            method.Statements.Insert(1, new CodeAssignStatement(
+                new CodeVariableReferenceExpression(p.Id.Name), 
+                new CodeFieldReferenceExpression(tuplePath, "Item"+ i)));
         }
 
         private void Xlat(SuiteStatement suite)
@@ -94,28 +120,51 @@ namespace Pytocs.Translate
             gen.CurrentMethod.Comments.AddRange(comments);
         }
 
-        private CodeParameterDeclarationExpression[] CreateFunctionParameters(IEnumerable<Parameter> args)
+        private CodeParameterDeclarationExpression[] CreateFunctionParameters(IEnumerable<Parameter> parameters)
         {
-            return args
+            var convs = parameters
                 .OrderBy(ta => ta.vararg)
-                .Select(ta => GenerateFunctionParameter(ta)).ToArray();
+                .Select(ta => Tuple.Create(ta, GenerateFunctionParameter(ta))).ToArray();
+            this.mpPyParamToCs = convs.ToDictionary(k => k.Item1, v => v.Item2);
+            return convs.Select(c => c.Item2).ToArray();
         }
 
         private CodeParameterDeclarationExpression GenerateFunctionParameter(Parameter ta)
         {
-            var parameterType = new CodeTypeReference(typeof(object));
-            if (ta.keyarg)
+            CodeTypeReference parameterType;
+            if (ta.tuple != null)
+            {
+                parameterType = GenerateTupleParameterType(ta.tuple);
+                return new CodeParameterDeclarationExpression
+                {
+                    ParameterType = parameterType,
+                    ParameterName = stmtXlat.GenSymParameter("_tup_", parameterType).Name,
+                    IsVarargs = false,
+                };
+            } 
+            else if (ta.keyarg)
             {
                 parameterType = new CodeTypeReference("Hashtable");
                 gen.EnsureImport("System.Collections");
             }
-
+            else 
+            {
+                parameterType = new CodeTypeReference(typeof(object));
+            }
             return new CodeParameterDeclarationExpression
             {
                 ParameterType =  parameterType,
                 ParameterName = ta.Id.Name,
                 IsVarargs = ta.vararg
             };
+        }
+
+        private CodeTypeReference GenerateTupleParameterType(List<Parameter> list)
+        {
+            var types = list.Select(p => p.tuple != null 
+                ? GenerateTupleParameterType(p.tuple)
+                : new CodeTypeReference(typeof(object)));
+            return new CodeTypeReference("Tuple", types.ToArray());
         }
 
         private void GenerateDefaultArgMethod(int iFirstDefault)

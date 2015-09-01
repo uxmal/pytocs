@@ -26,7 +26,11 @@ namespace Pytocs.Syntax
     {
         public Exp name;    // could be tuple
         public Exp test;
+        public bool IsKeyword;
+        public bool IsIndexed;
 
-        public static VarArg Keyword(string name) { return new VarArg(); }
+        public static VarArg Keyword(Identifier name) { return new VarArg { name= name, IsKeyword = true }; }
+
+        public static VarArg Indexed(Identifier name) { return new VarArg { name = name ,IsIndexed = true }; }
     }
 }

@@ -86,7 +86,12 @@ namespace Pytocs.Syntax
             {
                 writer.Write(sep);
                 sep = ",";
-                v.name.Write(writer);
+                if (v.IsIndexed)
+                    writer.Write("*");
+                else if (v.IsKeyword)
+                    writer.Write("**");
+                if (v.name != null)
+                    v.name.Write(writer);
             }
             writer.Write(":");
             writer.Write(" ");

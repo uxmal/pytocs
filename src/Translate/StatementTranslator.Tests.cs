@@ -40,7 +40,7 @@ namespace Pytocs.Translate
             var stm = par.stmt();
             var gen = new CodeGenerator(new CodeCompileUnit(), "", "module");
             gen.CurrentMethod = new CodeMemberMethod();
-            var xlt = new StatementTranslator(gen, new HashSet<string>());
+            var xlt = new StatementTranslator(gen, new Dictionary<string, Tuple<string, CodeTypeReference, bool>>());
             stm.Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -64,7 +64,7 @@ namespace Pytocs.Translate
             var stm = par.stmt();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
-            var xlt = new StatementTranslator(gen, new HashSet<string>());
+            var xlt = new StatementTranslator(gen, new Dictionary<string, Tuple<string,CodeTypeReference, bool>>());
             stm.Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -107,7 +107,7 @@ namespace Pytocs.Translate
             var stm = par.stmt();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
-            var xlt = new StatementTranslator(gen, new HashSet<string>());
+            var xlt = new StatementTranslator(gen, new Dictionary<string,Tuple<string, CodeTypeReference, bool>>());
             stm.Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -887,6 +887,58 @@ foo.x = _tup_1.Item1;
 foo.y = _tup_1.Item2;
 ";
             Assert.AreEqual(sExp, XlatStmts(pySrc));
+        }
+
+        [Test]
+        public void Stmt_TupleArguments()
+        {
+            var pySrc =
+@"class bar:
+    def foo(self, (value, sort)):
+       self.value = value
+";
+
+            var sExp =
+@"public static class testModule {
+    
+    public class bar {
+        
+        public virtual object foo(Tuple<object, object> _tup_1) {
+            object sort;
+            sort = _tup_1.Item2;
+            object value;
+            value = _tup_1.Item1;
+            this.value = value;
+        }
+    }
+}
+";
+            Assert.AreEqual(sExp, XlatModule(pySrc));
+        }
+
+        [Test]
+        public void Stmt_TupleSingletonAssignment()
+        {
+            var pySrc =
+@"yx, = sdf()
+";
+            var sExp =
+@"_tup_1 = sdf();
+yx = _tup_1.Item1;
+";
+            Assert.AreEqual(sExp, XlatStmts(pySrc));
+        }
+
+        [Test]
+        public void Stmt_LambdaWithParams()
+        {
+            var pySrc =
+@"Base = lambda *args, **kwargs: None
+";
+            var sExp =
+@"Base = (args,kwargs) => null;
+";
+            Assert.AreEqual(sExp, XlatStmts(pySrc).ToString());
         }
     }
 }

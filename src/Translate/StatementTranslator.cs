@@ -29,12 +29,12 @@ namespace Pytocs.Translate
         private CodeGenerator gen;
         private ExpTranslator xlat;
         private ClassDef currentClass;
-        private HashSet<string> locals;
+        private Dictionary<string, Tuple<string, CodeTypeReference, bool>> autos;
 
-        public StatementTranslator(CodeGenerator gen, HashSet<string> locals)
+        public StatementTranslator(CodeGenerator gen, Dictionary<string, Tuple<string,CodeTypeReference,bool>> autos)
         {
             this.gen = gen;
-            this.locals = locals;
+            this.autos = autos;
             this.xlat = new ExpTranslator(gen);
         }
 
@@ -42,7 +42,7 @@ namespace Pytocs.Translate
         {
             var baseClasses = c.args.Select(a => GenerateBaseClassName(a)).ToList();
             var comments = ConvertFirstStringToComments(c.body.stmts);
-            var stmtXlt = new StatementTranslator(gen, new HashSet<string>());
+            var stmtXlt = new StatementTranslator(gen, new Dictionary<string, Tuple<string, CodeTypeReference, bool>>());
             stmtXlt.currentClass = c;
             var csClass = gen.Class(c.name.Name, baseClasses, () => c.body.Accept(stmtXlt));
             csClass.Comments.AddRange(comments);
@@ -147,7 +147,7 @@ namespace Pytocs.Translate
             {
                 var idDst = ass.Dst as Identifier;
                 if (idDst != null)
-                    EnsureLocalVariable(idDst.Name);
+                    EnsureLocalVariable(idDst.Name, new CodeTypeReference(typeof(object)), false);
 
                 var rhs = ass.Src.Accept(xlat);
                 var dstTuple = ass.Dst as ExpList;
@@ -198,19 +198,19 @@ namespace Pytocs.Translate
 
         private void EmitTupleAssignment(ExpList lhs, CodeExpression rhs)
         {
-            CodeVariableReferenceExpression tup = GenSymLocal("_tup_");
+            var  tup = GenSymLocal("_tup_", new CodeTypeReference(typeof(object)));
             gen.Assign(tup, rhs);
             int i = 0;
             foreach (Exp value in lhs.Expressions)
             {
                 ++i;
-                if (value.Name == "_")
+                if (value == null || value.Name == "_")
                     continue;
                 var tupleField = gen.Access(tup, "Item" + i);
                 var id = value as Identifier;
                 if (id != null)
                 {
-                    EnsureLocalVariable(id.Name);
+                    EnsureLocalVariable(id.Name, new CodeTypeReference(typeof(object)), false);
                     gen.Assign(new CodeVariableReferenceExpression(id.Name), tupleField);
                 }
                 else
@@ -221,18 +221,29 @@ namespace Pytocs.Translate
             }
         }
 
-        private CodeVariableReferenceExpression GenSymLocal(string prefix)
+        public CodeVariableReferenceExpression GenSymParameter(string prefix, CodeTypeReference type)
+        {
+            return GenSymAutomatic(prefix, type, true);
+        }
+
+        public CodeVariableReferenceExpression GenSymLocal(string prefix, CodeTypeReference type)
+        {
+            return GenSymAutomatic(prefix, type, false);
+        }
+
+        public CodeVariableReferenceExpression GenSymAutomatic(string prefix,  CodeTypeReference type, bool parameter)
         {
             int i = 1;
-            while (locals.Contains(prefix + i))
+            while (autos.Select(l => l.Key).Contains(prefix + i))
                 ++i;
-            EnsureLocalVariable(prefix + i);
+            EnsureLocalVariable(prefix + i, type, parameter);
             return new CodeVariableReferenceExpression(prefix + i);
         }
 
-        private void EnsureLocalVariable(string name)
+        private void EnsureLocalVariable(string name, CodeTypeReference type, bool parameter)
         {
-            locals.Add(name);
+            if (!autos.ContainsKey(name))
+                autos.Add(name, Tuple.Create(name, type, parameter));
         }
 
         private CodeConstructor EnsureClassConstructor()
@@ -288,17 +299,20 @@ namespace Pytocs.Translate
 
             if (currentClass != null)
             {
-                bool hasSelf = f.parameters.Where(p => p.Id.Name == "self").Count() > 0;
+                // Inside a class; is this a instance method?
+                bool hasSelf = f.parameters.Where(p => p.Id != null && p.Id.Name == "self").Count() > 0;
                 if (hasSelf)
                 {
-                    var adjustedPs = f.parameters.Where(p => p.Id.Name != "self").ToList();
-                    if (f.name.Name == "__init__")
+                    // Presence of 'self' says it _is_ an instance method.
+                    var adjustedPs = f.parameters.Where(p => p.Id == null || p.Id.Name != "self").ToList();
+                    var fnName = f.name.Name;
+                    if (fnName == "__init__")
                     {
+                        // Magic function __init__ is a ctor.
                         mgen = new ConstructorGenerator(f, adjustedPs, gen);
                     }
                     else
                     {
-                        var fnName = f.name.Name;
                         if (f.name.Name == "__str__")
                         {
                             attrs = MemberAttributes.Override;

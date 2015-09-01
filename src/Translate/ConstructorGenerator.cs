@@ -34,6 +34,7 @@ namespace Pytocs.Translate
         protected override CodeMemberMethod Generate(CodeParameterDeclarationExpression[] parms)
         {
             var cons = gen.Constructor(parms, () => XlatConstructor(f.body));
+            GenerateTupleParameterUnpackers(cons);
             GenerateLocalVariables(cons);
             return cons;
         }
