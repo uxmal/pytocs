@@ -714,10 +714,9 @@ public static object foo(object a) {
         public void Stmt_IfWithCommentEmptyCommentLine()
         {
             var pyStm =
-@"if args:
-    # Comment
-    args = 0
-";
+@"if args:"+ nl +
+"    # Comment"+ nl +
+"    args = 0" + nl;
             var sExp =
 @"if (args) {
     // Comment
@@ -733,9 +732,8 @@ public static object foo(object a) {
             var pyStm =
 @"foo(
         bar,
-        #baz
-     )
-";
+" +"        #baz" + nl +
+"     )" + nl;
             var sExp = "foo(bar);\r\n";
             Assert.AreEqual(sExp, XlatStmts(pyStm));
         }
@@ -744,12 +742,11 @@ public static object foo(object a) {
         public void Stmt_TrailingComment()
         {
             var pyStm =
-@"try:
-    bonehead()
-#if toast whine.
-except:
-    whine()
-";
+"try:" + nl +
+"    bonehead()" + nl +
+"#if toast whine." + nl +
+"except:" + nl +
+"    whine()" + nl;
             var sExp =
 @"try {
     bonehead();

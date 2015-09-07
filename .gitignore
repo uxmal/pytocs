@@ -5,3 +5,6 @@
 /bin/Debug
 /obj/Debug
 *.suo
+/.svn
+/src/obj
+/src/bin

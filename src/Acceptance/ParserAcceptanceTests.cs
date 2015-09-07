@@ -31,6 +31,8 @@ namespace Pytocs.Acceptance
     [TestFixture]
     public class ParserAcceptanceTests
     {
+        private static readonly string nl = Environment.NewLine;
+
         private string XlatModule(string pyModule)
         {
             var rdr = new StringReader(pyModule);
@@ -105,7 +107,8 @@ class RefactorMenu(gtk.Menu):
 			menuitem.set_state(gtk.STATE_INSENSITIVE)
 
 	def on_menuitem_activate(self, menuitem, refactoring):
-		# Ask user input
+" +
+"		# Ask user input" + @"
 		args = refactoring.input(
 			self.model.get_term(),
 			self.model.get_selection(),
@@ -157,10 +160,11 @@ def PopupMenu(model):
 
 	menu = gtk.Menu()
 
-	#menuitem = gtk.MenuItem()
-	#menuitem.show()
-	#menu.prepend(menuitem)
-
+" +
+"	#menuitem = gtk.MenuItem()" + nl + 
+"	#menuitem.show()" + nl + 
+"	#menu.prepend(menuitem)" + nl + 
+@"
 	menuitem = gtk.MenuItem(""View"")
 	viewmenu = ViewMenu(model)
 	menuitem.set_submenu(viewmenu)
