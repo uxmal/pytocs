@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" DefaultTargets="Start">
+
+  <Import Project="external\msbuild\MSBuild.Community.Tasks.Targets" />
+  
+	<!-- Variables -->
+	<PropertyGroup>
+
+		<!-- Release Folder -->
+		<!-- To change the output folder, use the following parameter: /p:BuildDir=C:\BuildTest-->
+		<MainReleaseDir>release</MainReleaseDir>
+		<ReleaseDir>$(MainReleaseDir)\bin</ReleaseDir>
+
+		<!-- Build Folder -->
+		<OutDir>src\bin\Release</OutDir>
+
+	</PropertyGroup>
+
+
+	<!-- "Autostart" -->
+	<Target Name="Start">
+		<CallTarget Targets="DeleteReleaseFolder"/>
+		<CallTarget Targets="Build"/>
+		<CallTarget Targets="CopyRelease"/>
+		<CallTarget Targets="Zip"/>
+	</Target>
+
+
+	<!-- delete and re-create build folder -->
+	<Target Name="DeleteReleaseFolder">
+		<RemoveDir Directories="$(MainReleaseDir)"/>
+	</Target>
+
+
+	<!-- compile solution as release -->
+	<Target Name="Build">
+		<MSBuild Projects="src\pytocs.sln" Properties="Configuration=Release"/>
+	</Target>
+
+
+	<!-- copy files to release folder -->
+	<Target Name="CopyRelease">
+		<MakeDir Directories="$(ReleaseDir)"/>
+		<ItemGroup>
+			<ReleaseFiles
+				Include="$(OutDir)\pytocs.exe;
+					README.md;"
+				Exclude="$(OutDir)\*.pdb;
+					$(OutDir)\*.xml">
+			</ReleaseFiles>
+		</ItemGroup>
+		<Copy SourceFiles="@(ReleaseFiles)" DestinationFiles="@(ReleaseFiles -> '$(ReleaseDir)\%(RecursiveDir)%(Filename)%(Extension)')"/>
+
+	</Target>
+
+	<!-- create zip file with content of release\bin folder -->
+	<Target Name="Zip">
+		<CreateItem Include="$(ReleaseDir)\*.*" >
+			<Output ItemName="ZipFiles" TaskParameter="Include"/>
+		</CreateItem>
+		<Message Text="Zipping $(ReleaseDir)\*.* @(ZipFiles)" />
+		<Zip ZipFileName="$(ReleaseDir)\zip\pytocs-$(VersionNumber).zip" WorkingDirectory="$(ReleaseDir)\bin" Files="@(ZipFiles)" />
+	</Target>
+</Project>

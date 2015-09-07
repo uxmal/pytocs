@@ -8,3 +8,5 @@
 /.svn
 /src/obj
 /src/bin
+*.user
+/release
