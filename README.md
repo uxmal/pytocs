@@ -33,3 +33,8 @@ public static class hello {
 }
 ```
 
+## Roadmap
+
+The next big items on the list are:
+* Take the types that are inferred and apply them to the code to get away from everything being `object`.
+* Place local variable declarations at the statementent that dominates all definitions of said variables.
