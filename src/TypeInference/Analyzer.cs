@@ -37,7 +37,7 @@ namespace Pytocs.TypeInference
         DataType LoadFile(string path);
         DataType LoadModule(List<Name> name, State state);
         Module getAstForFile(string file);
-        string moduleQname(string file);
+        string GetModuleQname(string file);
 
         Binding CreateBinding(string id, Node node, DataType type, BindingKind kind);
         void addRef(AttributeAccess attr, DataType targetType, ISet<Binding> bs);
@@ -60,6 +60,11 @@ namespace Pytocs.TypeInference
         string Percent(long num, long total);
     }
 
+    /// <summary>
+    /// Analyzes a directory of Python files, collecting 
+    /// and inferring type information as it parses all 
+    /// the files.
+    /// </summary>
     public class AnalyzerImpl : Analyzer
     {
         //public const string MODEL_LOCATION = "org/yinwang/pysonar/models";
@@ -77,13 +82,12 @@ namespace Pytocs.TypeInference
         private AstCache astCache;
         private string cacheDir;
         private HashSet<string> failedToParse = new HashSet<string>();
-        private Progress loadingProgress;
+        private IProgress loadingProgress;
         private string projectDir;
         private string suffix;
 
         public Dictionary<string, Object> options;
         private DateTime startTime;
-
 
         public AnalyzerImpl()
             : this(new FileSystem(), new Dictionary<string, object>(), DateTime.Now)
@@ -109,11 +113,11 @@ namespace Pytocs.TypeInference
             this.startTime = startTime;
             this.suffix = ".py";
             this.Builtins = new Builtins(this);
-            this.Builtins.init();
-            addPythonPath();
-            copyModels();
-            createCacheDir();
-            getAstCache();
+            this.Builtins.Initialize();
+            AddPythonPath();
+            CopyModels();
+            CreateCacheDirectory();
+            GetAstCache();
         }
 
         public IFileSystem FileSystem { get; private set; }
@@ -124,6 +128,16 @@ namespace Pytocs.TypeInference
         public HashSet<Name> unresolved { get; private set; }
         public Builtins Builtins { get; private set; }
         public State ModuleTable = new State(null, State.StateType.GLOBAL);
+
+        /// <summary>
+        /// Main entry to the analyzer
+        /// </summary>
+        public void Analyze(string path)
+        {
+            string upath = FileSystem.GetFullPath(path);
+            projectDir = FileSystem.DirectoryExists(upath) ? upath : FileSystem.GetDirectoryName(upath);
+            LoadFileRecursive(upath);
+        }
 
         public bool hasOption(string option)
         {
@@ -137,14 +151,6 @@ namespace Pytocs.TypeInference
         public void setOption(string option)
         {
             options[option] = true;
-        }
-
-        // main entry to the analyzer
-        public void Analyze(string path)
-        {
-            string upath = FileSystem.GetFullPath(path);
-            projectDir = FileSystem.DirectoryExists(upath) ? upath : FileSystem.GetDirectoryName(upath);
-            LoadFileRecursive(upath);
         }
 
         public void setCWD(string cd)
@@ -174,11 +180,12 @@ namespace Pytocs.TypeInference
             addPaths(path);
         }
 
-        private void addPythonPath()
+        private void AddPythonPath()
         {
             string path = Environment.GetEnvironmentVariable("PYTHONPATH");
             if (path != null)
             {
+                //$BUG: Unix-specific?
                 string[] segments = path.Split(':');
                 foreach (string p in segments)
                 {
@@ -187,8 +194,7 @@ namespace Pytocs.TypeInference
             }
         }
 
-
-        private void copyModels()
+        private void CopyModels()
         {
 #if NOT
         URL resource = Thread.currentThread().getContextClassLoader().getResource(MODEL_LOCATION);
@@ -246,12 +252,10 @@ namespace Pytocs.TypeInference
             importStack.Add(f);
         }
 
-
         public void popImportStack(object f)
         {
             importStack.Remove(f);
         }
-
 
         public List<Binding> GetAllBindings()
         {
@@ -259,9 +263,9 @@ namespace Pytocs.TypeInference
         }
 
 
-        ModuleType getCachedModule(string file)
+        ModuleType GetCachedModule(string file)
         {
-            DataType t = ModuleTable.lookupType(moduleQname(file));
+            DataType t = ModuleTable.lookupType(GetModuleQname(file));
             if (t == null)
             {
                 return null;
@@ -287,7 +291,7 @@ namespace Pytocs.TypeInference
             }
         }
 
-        public string moduleQname(string file)
+        public string GetModuleQname(string file)
         {
             if (file.EndsWith("__init__.py"))
             {
@@ -331,7 +335,6 @@ namespace Pytocs.TypeInference
             }
         }
 
-
         public void putRef(Node node, Binding b)
         {
             List<Binding> bs = new List<Binding>();
@@ -343,7 +346,6 @@ namespace Pytocs.TypeInference
         {
             return references;
         }
-
 
         public void putProblem(Node loc, string msg)
         {
@@ -369,7 +371,6 @@ namespace Pytocs.TypeInference
             getFileErrs(file, semanticErrors).Add(d);
         }
 
-
         List<Diagnostic> getFileErrs(string file, Dictionary<string, List<Diagnostic>> map)
         {
             List<Diagnostic> msgs;
@@ -390,7 +391,7 @@ namespace Pytocs.TypeInference
                 return null;
             }
 
-            ModuleType module = getCachedModule(path);
+            ModuleType module = GetCachedModule(path);
             if (module != null)
             {
                 return module;
@@ -415,10 +416,9 @@ namespace Pytocs.TypeInference
             return type;
         }
 
-
         private DataType parseAndResolve(string file)
         {
-            loadingProgress.tick();
+            loadingProgress.Tick();
             Module ast = getAstForFile(file);
 
             if (ast == null)
@@ -434,8 +434,7 @@ namespace Pytocs.TypeInference
             }
         }
 
-
-        private void createCacheDir()
+        private void CreateCacheDirectory()
         {
             var p = FileSystem.CombinePath(FileSystem.getSystemTempDir(), "pysonar2");
             cacheDir =FileSystem.CombinePath(p, "ast_cache");
@@ -457,7 +456,7 @@ namespace Pytocs.TypeInference
         }
 
 
-        private AstCache getAstCache()
+        private AstCache GetAstCache()
         {
             if (astCache == null)
                 astCache = new AstCache(this, FileSystem, new Logger("@"), cacheDir);
@@ -469,7 +468,7 @@ namespace Pytocs.TypeInference
         /// </summary>
         public Module getAstForFile(string file)
         {
-            return getAstCache().getAST(file);
+            return GetAstCache().getAST(file);
         }
 
         public ModuleType getBuiltinModule(string qname)
@@ -635,8 +634,11 @@ namespace Pytocs.TypeInference
             }
         }
 
-
-        // count number of .py files
+        /// <summary>
+        /// Count number of .py files
+        /// </summary>
+        /// <param name="fullname"></param>
+        /// <returns></returns>
         public int countFileRecursive(string fullname)
         {
             string file_or_dir = fullname;
@@ -679,7 +681,6 @@ namespace Pytocs.TypeInference
             msg(getAnalysisSummary());
         }
 
-
         public void close()
         {
             astCache.close();
@@ -716,7 +717,7 @@ namespace Pytocs.TypeInference
 
         public void ApplyUncalled()
         {
-            Progress progress = new Progress(this, uncalled.Count, 50, this.hasOption("quiet"));
+            IProgress progress = new Progress(this, uncalled.Count, 50, this.hasOption("quiet"));
 
             while (uncalled.Count != 0)
             {
@@ -724,7 +725,7 @@ namespace Pytocs.TypeInference
 
                 foreach (FunType cl in uncalledDup)
                 {
-                    progress.tick();
+                    progress.Tick();
                     TypeTransformer.Apply(this, cl, null, null, null, null, null);
                 }
             }
@@ -786,12 +787,10 @@ namespace Pytocs.TypeInference
             return files;
         }
 
-
-        public void registerBinding(Binding b)
+        public void RegisterBinding(Binding b)
         {
             allBindings.Add(b);
         }
-
 
         public override string ToString()
         {
@@ -829,7 +828,7 @@ namespace Pytocs.TypeInference
         public Binding CreateBinding(string id, Node node, DataType type, BindingKind kind)
         {
             var b = new Binding(id, node, type, kind);
-            registerBinding(b);
+            RegisterBinding(b);
             return b;
         }
 

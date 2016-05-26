@@ -1,4 +1,4 @@
-﻿#region License
+﻿    #region License
 //  Copyright 2015 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +24,9 @@ using System.Threading.Tasks;
 
 namespace Pytocs.Translate
 {
+    /// <summary>
+    /// Generates code for a Python function definition.
+    /// </summary>
     public class MethodGenerator
     {
         protected FunctionDef f;

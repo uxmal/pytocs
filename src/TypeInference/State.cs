@@ -381,7 +381,7 @@ namespace Pytocs.TypeInference
         /**
          * Returns the global scope (i.e. the module scope for the current module).
          */
-        public State getGlobalTable()
+        public State GetGlobalTable()
         {
             State result = getStateOfType(StateType.MODULE);
             Debug.Assert(result != null, "Couldn't find global table.");
@@ -396,7 +396,7 @@ namespace Pytocs.TypeInference
         {
             if (IsGlobalName(name))
             {
-                State module = getGlobalTable();
+                State module = GetGlobalTable();
                 if (module != this)
                 {
                     return module.LookupLocal(name);

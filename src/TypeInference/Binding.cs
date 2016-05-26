@@ -29,7 +29,7 @@ namespace Pytocs.TypeInference
     public class Binding : IComparable<Binding>
     {
         public string name;             // unqualified name
-        public Node node;
+        public Node node;               // Thing that has the type.
         public string qname;            // qualified name
         public DataType type;           // inferred type
 

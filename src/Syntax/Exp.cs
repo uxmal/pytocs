@@ -164,6 +164,9 @@ namespace Pytocs.Syntax
         }
     }
 
+    /// <summary>
+    /// Python string literal.
+    /// </summary>
     public class Str : Exp
     {
         public readonly string s;

@@ -357,7 +357,7 @@ namespace Pytocs.TypeInference
         }
 
 
-        public void init()
+        public void Initialize()
         {
             buildObjectType();
             buildTupleType();
@@ -452,14 +452,14 @@ namespace Pytocs.TypeInference
             return (ModuleType) type;
         }
 
-
-
         private ModuleType getModule(string name)
         {
-            NativeModule wrap = modules[name];
-            return wrap == null ? null : wrap.getModule();
+            NativeModule wrap;
+            if (!modules.TryGetValue(name, out wrap))
+                return null;
+            else
+                return wrap.getModule();
         }
-
 
         void buildObjectType()
         {

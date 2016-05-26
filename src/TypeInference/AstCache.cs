@@ -109,8 +109,13 @@ namespace Pytocs.TypeInference
                 var lexer = new Lexer(path, fs.CreateStreamReader(path));
                 var parser = new Parser(path, lexer);
                 var moduleStmts = parser.Parse().ToList();
-                var posStart = moduleStmts[0].Start;
-                var posEnd = moduleStmts.Last().End;
+                int posStart = 0;
+                int posEnd = 0;
+                if (moduleStmts.Count > 0)
+                {
+                    posStart = moduleStmts[0].Start;
+                    posEnd = moduleStmts.Last().End;
+                }
                 module = new Module(
                     analyzer.ModuleName(path),
                     new SuiteStatement(moduleStmts, path, posStart, posEnd),
@@ -119,11 +124,6 @@ namespace Pytocs.TypeInference
             finally
             {
                 cache[path] = module;  // may be null
-            }
-
-            if (module != null)
-            {
-                serialize(module);
             }
             return module;
         }
@@ -136,32 +136,6 @@ namespace Pytocs.TypeInference
         public string getCachePath(string sourcePath)
         {
             return fs.makePathString(cacheDir, fs.getFileHash(sourcePath));
-        }
-
-        // package-private for testing
-        void serialize(Node ast)
-        {
-#if NEVER
-        string path = getCachePath(ast.file);
-        StreamWriter oos = null;
-        FileOutputStream fos = null;
-        try {
-            fos = new StreamWriter(path);
-            oos = new StreamWriter(fos);
-            oos.writeObject(ast);
-        } catch (Exception e) {
-            _.msg("Failed to serialize: " + path);
-        } finally {
-            try {
-                if (oos != null) {
-                    oos.close();
-                } else if (fos != null) {
-                    fos.close();
-                }
-            } catch (Exception e) {
-            }
-        }
-#endif
         }
 
         // package-private for testing

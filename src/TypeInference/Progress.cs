@@ -18,7 +18,12 @@ using System;
 
 namespace Pytocs.TypeInference
 {
-    public class Progress
+    public interface IProgress
+    {
+        void Tick();
+    }
+
+    public class Progress : IProgress
     {
         private const int MAX_SPEED_DIGITS = 5;
 
@@ -51,7 +56,6 @@ namespace Pytocs.TypeInference
             }
             this.quiet = quiet;
         }
-
 
         public void tick(int n)
         {
@@ -135,7 +139,7 @@ namespace Pytocs.TypeInference
             }
         }
 
-        public void tick()
+        public void Tick()
         {
             if (!quiet)
             {

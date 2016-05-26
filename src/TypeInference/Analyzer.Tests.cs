@@ -202,12 +202,97 @@ f.foo()
 @"(binding:kind=PARAMETER:node=self:type=Foo:qname=.foo.test.Foo.bar.self:refs=[])" + nl +
 @"(binding:kind=PARAMETER:node=y:type=?:qname=.foo.test.Foo.bar.y:refs=[y])" + nl;
 
-
             Console.WriteLine(BindingsToString());
 
             Assert.AreEqual(sExp, BindingsToString());
         }
 
+        [Test]
+        public void TypeAn_LocalVar()
+        {
+            fs.Dir("foo")
+                .File("test.py",
+@"
+x = 'string'   # global var
+def bar():
+    x = 3      # local var
+    print(x)
+");
+            an.Analyze(@"\foo");
+            an.Finish();
+            var sExp =
+@"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
+@"(binding:kind=SCOPE:node=x:type=str:qname=.foo.test.x:refs=[])" + nl +
+@"(binding:kind=FUNCTION:node=bar:type=() -> None:qname=.foo.test.bar:refs=[])" + nl +
+@"(binding:kind=SCOPE:node=x:type=int:qname=.foo.test.bar.x:refs=[x])" + nl +
+@"(binding:kind=VARIABLE:node=x:type=int:qname=.foo.test.bar.x:refs=[x])" + nl;
+            Console.Write(BindingsToString());
+            Assert.AreEqual(sExp, BindingsToString());
+        }
+
+        [Test]
+        public void TypeAn_Point()
+        {
+            fs.Dir("foo")
+                .File("test.py",
+@"
+def bar(point):
+    return sqrt(point.x * point.x + point.y * point.y)
+");
+            an.Analyze(@"\foo");
+            an.Finish();
+            var sExp =
+@"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
+@"(binding:kind=FUNCTION:node=bar:type=? -> ?:qname=.foo.test.bar:refs=[])" + nl +
+@"(binding:kind=PARAMETER:node=point:type=?:qname=.foo.test.bar.point:refs=[point,point,point,point])" + nl;
+
+            Console.Write(BindingsToString());
+            Assert.AreEqual(sExp, BindingsToString());
+        }
+
+        [Test]
+        [Ignore]
+        public void TypeAn_Dirs()
+        {
+            fs.Dir("sys_q")
+                .Dir("parsing")
+                    .File("__init__.py", "")
+                    .File("parser.py",
+@"
+class Parser(object):
+    def parse(self, file):
+        pass
+")
+                .End()
+                .File("main.py",
+@"
+from parsing.parser import Parser
+
+def mane_lupe(file):
+    p = Parser()
+    p.parse(file)
+");
+            an.Analyze(@"\sys_q");
+                  an.Finish();
+            var sExp =
+@"(binding:kind=MODULE:node=(module:\sys_q\parsing\__init__.py):type=:qname=:refs=[])" + nl +
+@"(binding:kind=MODULE:node=(module:\sys_q\parsing\parser.py):type=parser:qname=.sys_q.parsing.parser:refs=[])" + nl + 
+@"(binding:kind=CLASS:node=Parser:type=<Parser>:qname=.sys_q.parsing.parser.Parser:refs=[Parser,Parser])" + nl + 
+@"(binding:kind=METHOD:node=parse:type=(Parser, ? -> file) -> None:qname=.sys_q.parsing.parser.Parser.parse:refs=[p.parse])" + nl + 
+
+@"(binding:kind=MODULE:node=(module:\sys_q\main.py):type=main:qname=.sys_q.main:refs=[])" + nl + 
+@"(binding:kind=VARIABLE:node=parsing:type=:qname=:refs=[])"+ nl+
+@"(binding:kind=VARIABLE:node=parser:type=parser:qname=.sys_q.parsing.parser:refs=[])" + nl+
+@"(binding:kind=FUNCTION:node=mane_lupe:type=? -> None:qname=.sys_q.main.mane_lupe:refs=[])" + nl + 
+@"(binding:kind=SCOPE:node=parser:type=Parser:qname=.sys_q.main.mane_lupe.parser:refs=[parser])" + nl + 
+@"(binding:kind=PARAMETER:node=self:type=Parser:qname=.sys_q.parsing.parser.Parser.parse.self:refs=[])" + nl + 
+@"(binding:kind=PARAMETER:node=file:type=?:qname=.sys_q.parsing.parser.Parser.parse.file:refs=[])" + nl + 
+@"(binding:kind=PARAMETER:node=file:type=?:qname=.sys_q.main.mane_lupe.file:refs=[file])" + nl + 
+@"(binding:kind=VARIABLE:node=parser:type=?:qname=.sys_q.main.mane_lupe.parser:refs=[parser])"+ nl;
+            Console.Write(BindingsToString());
+            Assert.AreEqual(sExp, BindingsToString());
+        }
     }
 }
+
 #endif

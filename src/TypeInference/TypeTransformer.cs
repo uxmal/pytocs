@@ -6,7 +6,7 @@ using Pytocs.Syntax;
 
 namespace Pytocs.TypeInference
 {
-    public class TypeTransformer : // INodeVisitor<DataType>,
+    public class TypeTransformer : 
         IStatementVisitor<DataType>,
         IExpVisitor<DataType>
     {
@@ -1046,7 +1046,7 @@ namespace Pytocs.TypeInference
                 // This will return null iff specified file is not prefixed by
                 // any path in the module search path -- i.e., the caller asked
                 // the analyzer to load a file not in the search path.
-                qname = analyzer.moduleQname(m.Filename);
+                qname = analyzer.GetModuleQname(m.Filename);
             }
             if (qname == null)
             {
@@ -1055,7 +1055,7 @@ namespace Pytocs.TypeInference
 
             ModuleType mt = analyzer.TypeFactory.CreateModule(m.Name, m.Filename, qname, analyzer.globaltable);
 
-            scope.Insert(analyzer, analyzer.moduleQname(m.Filename), m, mt, BindingKind.MODULE);
+            scope.Insert(analyzer, analyzer.GetModuleQname(m.Filename), m, mt, BindingKind.MODULE);
             if (m.body != null)
             {
                 var sOld = this.scope;
