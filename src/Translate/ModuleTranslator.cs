@@ -28,7 +28,7 @@ namespace Pytocs.Translate
     {
         private CodeGenerator gen;
 
-        public ModuleTranslator(CodeGenerator gen) : base(gen, new Dictionary<string, Tuple<string,CodeTypeReference,bool>>())
+        public ModuleTranslator(CodeGenerator gen) : base(gen, new Dictionary<string, LocalSymbol>())
         {
             this.gen = gen;
         }

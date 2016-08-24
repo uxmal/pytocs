@@ -646,6 +646,11 @@ eval_input: testlist NEWLINE* ENDMARKER
                     tuple = fpl
                 };
             }
+            string eolComment = null;
+            if (Peek(TokenType.COMMENT))
+            {
+                eolComment = (string)Expect(TokenType.COMMENT).Value;
+            }
             var name = id();
             Exp t = null;
             if (PeekAndDiscard(TokenType.COLON))
@@ -654,6 +659,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 Id = name,
                 test = t,
+                Comment = eolComment,
             };
         }
 

@@ -29,9 +29,9 @@ namespace Pytocs.Translate
         private CodeGenerator gen;
         private ExpTranslator xlat;
         private ClassDef currentClass;
-        private Dictionary<string, Tuple<string, CodeTypeReference, bool>> autos;
+        private Dictionary<string, LocalSymbol> autos;
 
-        public StatementTranslator(CodeGenerator gen, Dictionary<string, Tuple<string,CodeTypeReference,bool>> autos)
+        public StatementTranslator(CodeGenerator gen, Dictionary<string, LocalSymbol> autos)
         {
             this.gen = gen;
             this.autos = autos;
@@ -42,7 +42,7 @@ namespace Pytocs.Translate
         {
             var baseClasses = c.args.Select(a => GenerateBaseClassName(a)).ToList();
             var comments = ConvertFirstStringToComments(c.body.stmts);
-            var stmtXlt = new StatementTranslator(gen, new Dictionary<string, Tuple<string, CodeTypeReference, bool>>());
+            var stmtXlt = new StatementTranslator(gen, new Dictionary<string, LocalSymbol>());
             stmtXlt.currentClass = c;
             var csClass = gen.Class(c.name.Name, baseClasses, () => c.body.Accept(stmtXlt));
             csClass.Comments.AddRange(comments);
@@ -243,7 +243,7 @@ namespace Pytocs.Translate
         private void EnsureLocalVariable(string name, CodeTypeReference type, bool parameter)
         {
             if (!autos.ContainsKey(name))
-                autos.Add(name, Tuple.Create(name, type, parameter));
+                autos.Add(name, new LocalSymbol(name, type, parameter));
         }
 
         private CodeConstructor EnsureClassConstructor()
@@ -261,10 +261,20 @@ namespace Pytocs.Translate
 
         private void ClassTranslator_GenerateField(Identifier id, ExpTranslator xlat, AssignExp ass)
         {
-            var slotNames = ass.Src as PyList;
+            IEnumerable<Exp> slotNames = null;
+            var srcList = ass.Src as PyList;
+            if (srcList != null)
+            {
+                slotNames= srcList.elts;
+            }
+            var srcTuple = ass.Src as PyTuple;
+            if (srcTuple != null)
+            {
+                slotNames = srcTuple.values;
+            }
             if (id.Name == "__slots__")
             {
-                foreach (var slotName in slotNames.elts.OfType<Str>())
+                foreach (var slotName in slotNames.OfType<Str>())
                 {
                     GenerateField(slotName.s, null);
                 }

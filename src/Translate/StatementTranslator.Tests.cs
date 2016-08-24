@@ -40,7 +40,7 @@ namespace Pytocs.Translate
             var stm = par.stmt();
             var gen = new CodeGenerator(new CodeCompileUnit(), "", "module");
             gen.CurrentMethod = new CodeMemberMethod();
-            var xlt = new StatementTranslator(gen, new Dictionary<string, Tuple<string, CodeTypeReference, bool>>());
+            var xlt = new StatementTranslator(gen, new Dictionary<string, LocalSymbol>());
             stm.Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -64,7 +64,7 @@ namespace Pytocs.Translate
             var stm = par.stmt();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
-            var xlt = new StatementTranslator(gen, new Dictionary<string, Tuple<string,CodeTypeReference, bool>>());
+            var xlt = new StatementTranslator(gen, new Dictionary<string, LocalSymbol>());
             stm.Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -94,7 +94,7 @@ namespace Pytocs.Translate
         /// <returns></returns>
         private string SanitizeNamespace(string nmspace, CodeGenerator gen)
         {
-            return string.Join(".", 
+            return string.Join(".",
                 nmspace.Split('.')
                 .Select(n => gen.EscapeKeywordName(n)));
         }
@@ -107,7 +107,7 @@ namespace Pytocs.Translate
             var stm = par.stmt();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
-            var xlt = new StatementTranslator(gen, new Dictionary<string,Tuple<string, CodeTypeReference, bool>>());
+            var xlt = new StatementTranslator(gen, new Dictionary<string, LocalSymbol>());
             stm.Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -714,8 +714,8 @@ public static object foo(object a) {
         public void Stmt_IfWithCommentEmptyCommentLine()
         {
             var pyStm =
-@"if args:"+ nl +
-"    # Comment"+ nl +
+@"if args:" + nl +
+"    # Comment" + nl +
 "    args = 0" + nl;
             var sExp =
 @"if (args) {
@@ -732,7 +732,7 @@ public static object foo(object a) {
             var pyStm =
 @"foo(
         bar,
-" +"        #baz" + nl +
+" + "        #baz" + nl +
 "     )" + nl;
             var sExp = "foo(bar);\r\n";
             Assert.AreEqual(sExp, XlatStmts(pyStm));
@@ -808,7 +808,7 @@ public static object foo(object a) {
         public void Stmt_YieldNoExpr()
         {
             var pyStm = "yield\n";
-            var sExp = "yield return null;"+ nl;
+            var sExp = "yield return null;" + nl;
             Assert.AreEqual(sExp, XlatStmts(pyStm));
         }
 

@@ -36,7 +36,7 @@ namespace Pytocs.Translate
         protected ExpTranslator xlat;
         protected StatementTranslator stmtXlat;
         protected CodeGenerator gen;
-        private Dictionary<string, Tuple<string,CodeTypeReference, bool>> autos;
+        private Dictionary<string, LocalSymbol> autos;
         private Dictionary<Parameter, CodeParameterDeclarationExpression> mpPyParamToCs;
 
         public MethodGenerator(FunctionDef f, string fnName, List<Parameter> args, bool isStatic, CodeGenerator gen)
@@ -50,7 +50,7 @@ namespace Pytocs.Translate
         
         public CodeMemberMethod Generate()
         {
-            this.autos = new Dictionary<string, Tuple<string,CodeTypeReference,bool>>();
+            this.autos = new Dictionary<string, LocalSymbol>();
             this.xlat = new ExpTranslator(gen);
             this.stmtXlat = new StatementTranslator(gen, autos);
 
@@ -88,9 +88,9 @@ namespace Pytocs.Translate
             method.Statements.InsertRange(
                 0,
                 autos.Values
-                    .OrderBy(l => l.Item1)
-                    .Where(l => !l.Item3)
-                    .Select(l => new CodeVariableDeclarationStatement("object", l.Item1)));
+                    .OrderBy(l => l.name)
+                    .Where(l => !l.parameter)
+                    .Select(l => new CodeVariableDeclarationStatement("object", l.name)));
         }
 
         protected void GenerateTupleParameterUnpackers(CodeMemberMethod method)

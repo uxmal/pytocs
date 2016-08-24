@@ -36,6 +36,8 @@ namespace Pytocs.Syntax
         public bool keyarg;
         public List<Parameter> tuple;
 
+        public string Comment { get; internal set; }
+
         public override string ToString()
         {
             var sb = new StringBuilder();

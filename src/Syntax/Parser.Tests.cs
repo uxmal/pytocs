@@ -502,5 +502,20 @@ def wrapper():
 ";
             Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
         }
+
+        [Test]
+        public void Parse_EolComment()
+        {
+            var pySrc =
+@"def foo(bar, # continues next line
+    ble, bla):
+    pass
+";
+            var sExp = 
+@"def foo(bar,ble,bla):
+    pass
+";
+            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+        }
     }
 }
