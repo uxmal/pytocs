@@ -297,5 +297,13 @@ namespace Pytocs.Translate
             var sExp = "foo(bar: \"baz\")";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
+
+        [Test]
+        public void Ex_HashSet()
+        {
+            var pySrc = "set()";
+            var sExp = "new HashSet<object>()";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
     }
 }

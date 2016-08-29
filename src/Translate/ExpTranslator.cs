@@ -157,7 +157,24 @@ namespace Pytocs.Translate
                     fn = new CodeMethodReferenceExpression(args[0], "ToList");
                     return m.Appl(fn);
                 }
-
+            }
+            if (id.Name == "set")
+            {
+                if (args.Length == 0)
+                {
+                    m.EnsureImport("System.Collections.Generic");
+                    return new CodeObjectCreateExpression
+                    {
+                        Type = new CodeTypeReference
+                        {
+                            TypeName = "HashSet",
+                            TypeArguments =
+                            {
+                                new CodeTypeReference(typeof(object))
+                            }
+                        }
+                    };
+                }
             }
             return m.Appl(fn, args);
         }
