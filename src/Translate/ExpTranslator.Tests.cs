@@ -281,5 +281,13 @@ namespace Pytocs.Translate
             var sExp = "this._breakpoints[t].ToHashSet(e => id(e))";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
+
+        [Test]
+        public void Ex_DictionaryComprehension2()
+        {
+            var pySrc = "{(a.addr,b.addr) for a,b in fdiff.block_matches}";
+            var sExp = "fdiff.block_matches.Chop((a,b) => Tuple.Create(a.addr, b.addr)).ToHashSet()";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
     }
 }

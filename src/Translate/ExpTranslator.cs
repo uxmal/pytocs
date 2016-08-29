@@ -275,15 +275,35 @@ namespace Pytocs.Translate
         {
             var compFor = (CompFor) sc.Collection;
             var list = compFor.collection.Accept(this);
-            var id = (Identifier)compFor.variable;
-            return m.Appl(
-                new CodeMethodReferenceExpression(
-                    list,
-                    "ToHashSet"),
-                    m.Lambda(
-                        new CodeExpression[] { id.Accept(this) },
-                        sc.Projection.Accept(this)));
-            //var varList = dc.source.variable as ExpList;
+            var id = compFor.variable as Identifier;
+            if (id != null)
+            {
+                return m.Appl(
+                    new CodeMethodReferenceExpression(
+                        list,
+                        "ToHashSet"),
+                        m.Lambda(
+                            new CodeExpression[] { id.Accept(this) },
+                            sc.Projection.Accept(this)));
+            }
+            else
+            {
+                var varList = (ExpList)compFor.variable;
+                var sExp = "fdiff.block_matches.Chop((a, b) => "+ 
+                    " Tuple.Create(a.addr, b.addr)).ToHashSet()";
+
+                return
+                    m.Appl(
+                        new CodeMethodReferenceExpression(
+                            m.Appl(
+                                new CodeMethodReferenceExpression(
+                                    list,
+                                    "Chop"),
+                                    m.Lambda(
+                                         varList.Expressions.Select(e => e.Accept(this)).ToArray(),
+                                         sc.Projection.Accept(this))),
+                            "ToHashSet"));
+            }
 #if NO
             var list = dc.source.collection.Accept(this);
             var varList = dc.source.variable as ExpList;
