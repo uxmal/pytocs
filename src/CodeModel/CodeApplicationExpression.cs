@@ -26,7 +26,7 @@ namespace Pytocs.CodeModel
     {
         public CodeExpression Method { get; private set; }
 
-        private  CodeApplicationExpression()
+        private CodeApplicationExpression()
         {
             this.Arguments = new List<CodeExpression>();
         }

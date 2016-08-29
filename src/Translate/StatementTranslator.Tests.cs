@@ -931,10 +931,21 @@ yx = _tup_1.Item1;
             Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
         }
 
-   
+        [Test]
+        public void Stmt_DelFromDictionary()
+        {
+            var pySrc =
+@"def foo():
+   del items[bar]
+";
+            var sExp =
+@"public static object foo() {
+    items.Remove(bar);
+}
 
-
-
+";
+            Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
+        }
     }
 }
 #endif

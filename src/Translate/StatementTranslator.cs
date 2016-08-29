@@ -501,11 +501,29 @@ namespace Pytocs.Translate
 
         public void VisitDel(DelStatement d)
         {
-            var exprList = d.Expressions.AsList();
-            var fn = new CodeVariableReferenceExpression("WONKO_del");
-            foreach (var e in exprList)
+            var exprList = d.Expressions.AsList()
+                .Select(e => e.Accept(xlat))
+                .ToList();
+            if (exprList.Count == 1)
             {
-                gen.SideEffect(gen.Appl(fn, e.Accept(xlat)));
+                var aref = exprList[0] as CodeArrayIndexerExpression;
+                if (aref != null && aref.Indices.Length == 1)
+                {
+                    // del foo[bar] is likely
+                    // foo.Remove(bar)
+                    gen.SideEffect(
+                        gen.Appl(
+                            new CodeMethodReferenceExpression(
+                                aref.TargetObject,
+                                "Remove"),
+                            aref.Indices[0]));
+                    return;
+                }
+            }
+            var fn = new CodeVariableReferenceExpression("WONKO_del");
+            foreach (var exp in exprList)
+            {
+                gen.SideEffect(gen.Appl(fn, exp));
             }
         }
 
