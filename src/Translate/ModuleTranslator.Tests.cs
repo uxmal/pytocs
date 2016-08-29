@@ -147,7 +147,7 @@ namespace test {
     
     public static class module {
         
-        public static object _tokenizer = antlrre.Tokenizer(tokens = new List<object> {
+        public static object _tokenizer = antlrre.Tokenizer(tokens: new List<object> {
             Tuple.Create(foo.a, ""sss"")
         });
     }

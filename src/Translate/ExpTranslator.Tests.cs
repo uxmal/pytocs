@@ -289,5 +289,13 @@ namespace Pytocs.Translate
             var sExp = "fdiff.block_matches.Chop((a,b) => Tuple.Create(a.addr, b.addr)).ToHashSet()";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
+
+        [Test]
+        public void Ex_NamedParameterCall()
+        {
+            var pySrc = "foo(bar='baz')";
+            var sExp = "foo(bar: \"baz\")";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
     }
 }

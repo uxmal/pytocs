@@ -303,7 +303,7 @@ namespace Pytocs.CodeModel
             arg.exp1.Accept(this);
             if (arg.exp2 != null)
             {
-                writer.Write(" = ");
+                writer.Write(": ");
                 Write(arg.exp2, PrecBase);
             }
         }
