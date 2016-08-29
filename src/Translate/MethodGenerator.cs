@@ -54,16 +54,6 @@ namespace Pytocs.Translate
             this.xlat = new ExpTranslator(gen);
             this.stmtXlat = new StatementTranslator(gen, autos);
 
-            int iFirstDefaultValue = -1;
-            for (var i = 0; i < args.Count; ++i)
-            {
-                if (args[i].test != null || iFirstDefaultValue != -1)
-                {
-                    if (iFirstDefaultValue == -1)
-                        iFirstDefaultValue = i;
-                    GenerateDefaultArgMethod(i);
-                }
-            }
             return Generate(CreateFunctionParameters(args)); // () => bodyGenerator(f.body));
         }
 
@@ -150,7 +140,7 @@ namespace Pytocs.Translate
                 parameterType = new CodeTypeReference("Hashtable");
                 gen.EnsureImport("System.Collections");
             }
-            else 
+            else
             {
                 parameterType = new CodeTypeReference(typeof(object));
             }
@@ -158,7 +148,10 @@ namespace Pytocs.Translate
             {
                 ParameterType =  parameterType,
                 ParameterName = ta.Id.Name,
-                IsVarargs = ta.vararg
+                IsVarargs = ta.vararg,
+                DefaultValue =  ta.test != null 
+                    ? ta.test.Accept(this.xlat)
+                    : null,
             };
         }
 

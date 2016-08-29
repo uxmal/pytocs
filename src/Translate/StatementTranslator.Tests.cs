@@ -398,11 +398,7 @@ else:
             var sExp =
 @"public static class testModule {
     
-    public static object @__init__(object self) {
-        return @__init__(self, null);
-    }
-    
-    public static object @__init__(object self, object func) {
+    public static object @__init__(object self, object func = null) {
         printf(func);
     }
 }
@@ -646,11 +642,7 @@ public static object foo() {
         {
             var pyStm = "def foo(a = bar.baz): return a\n";
             var sExp =
-@"public static object foo() {
-    return foo(bar.baz);
-}
-
-public static object foo(object a) {
+@"public static object foo(object a = bar.baz) {
     return a;
 }
 
@@ -665,15 +657,7 @@ public static object foo(object a) {
             var sExp =
 @"public class Class {
     
-    public Class(object a)
-        : this(a, ""q"", ""cc"") {
-    }
-    
-    public Class(object a, object b)
-        : this(a, b, ""cc"") {
-    }
-    
-    public Class(object a, object b, object c) {
+    public Class(object a, object b = ""q"", object c = ""cc"") {
     }
 }
 
@@ -936,6 +920,21 @@ yx = _tup_1.Item1;
 @"Base = (args,kwargs) => null;
 ";
             Assert.AreEqual(sExp, XlatStmts(pySrc).ToString());
+        }
+
+        [Test]
+        public void Stmt_DefWithDefaultArgs()
+        {
+            var pySrc =
+@"def foo(phoo, bar = 'hello', baz = 3):
+    pass
+";
+            var sExp =
+@"public static object foo(object phoo, object bar = ""hello"", object baz = 3) {
+}
+
+";
+            Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
         }
     }
 }
