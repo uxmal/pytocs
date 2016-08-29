@@ -563,10 +563,8 @@ public static class testModule {
 ";
             var sExp =
 @"public static object aterm(object self, object _t) {
-    object aterm_AST_in;
-    object ret;
-    ret = null;
-    aterm_AST_in = null;
+    object ret = null;
+    object aterm_AST_in = null;
 }
 
 ";
@@ -628,8 +626,7 @@ public static object foo() {
     
     public Foo()
         : base(""x"") {
-        object a;
-        a = 3;
+        object a = 3;
     }
 }
 
@@ -771,8 +768,7 @@ public static object foo() {
             var pyStm = "def fn():\n    loc = 4\n    return loc\n";
             var sExp =
 @"public static object fn() {
-    object loc;
-    loc = 4;
+    object loc = 4;
     return loc;
 }
 
@@ -885,10 +881,8 @@ foo.y = _tup_1.Item2;
     public class bar {
         
         public virtual object foo(Tuple<object, object> _tup_1) {
-            object sort;
-            sort = _tup_1.Item2;
-            object value;
-            value = _tup_1.Item1;
+            object sort = _tup_1.Item2;
+            object value = _tup_1.Item1;
             this.value = value;
         }
     }
@@ -936,6 +930,105 @@ yx = _tup_1.Item1;
 ";
             Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
         }
+
+        [Test]
+        public void Stmt_LocalInBranch()
+        {
+            var pySrc =
+@"def foo():
+    if self.x:
+        x = self.x
+        self.x = None
+        x.foo()
+";
+
+            var sExp =
+@"public static object foo() {
+    if (this.x) {
+        object x = this.x;
+        this.x = null;
+        x.foo();
+    }
+}
+
+";
+            Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
+        }
+
+        [Test]
+        public void Stmt_LocalRedefinition()
+        {
+            var pySrc =
+@"def foo():
+    if self.x:
+        x = self.x
+        x = x + 1
+        self.x = x
+";
+
+            var sExp =
+@"public static object foo() {
+    if (this.x) {
+        object x = this.x;
+        x = x + 1;
+        this.x = x;
+    }
+}
+
+";
+            Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
+        }
+
+        [Test]
+        public void Stmt_ForceStandAloneDefinition()
+        {
+            var pySrc =
+@"def foo():
+    if self.x:
+        x = self.x
+    x = x + 1
+";
+
+            var sExp =
+@"public static object foo() {
+    object x;
+    if (this.x) {
+        x = this.x;
+    }
+    x = x + 1;
+}
+
+";
+            Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
+        }
+
+        [Test]
+        public void Stmt_IfElseDeclaration()
+        {
+            var pySrc =
+@"def foo():
+    if self.x:
+        y = 3
+    else:
+        y = 9
+    self.y = y * 2
+";
+
+            var sExp =
+@"public static object foo() {
+    object y;
+    if (this.x) {
+        y = 3;
+    } else {
+        y = 9;
+    }
+    this.y = y * 2;
+}
+
+";
+            Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
+        }
+
     }
 }
 #endif

@@ -69,18 +69,8 @@ namespace Pytocs.Translate
                 method = gen.Method(fnName, parms, () => Xlat(f.body));
             }
             GenerateTupleParameterUnpackers(method);
-            GenerateLocalVariables(method);
+            LocalVariableGenerator.Generate(method);
             return method;
-        }
-
-        protected void GenerateLocalVariables(CodeMemberMethod method)
-        {
-            method.Statements.InsertRange(
-                0,
-                autos.Values
-                    .OrderBy(l => l.name)
-                    .Where(l => !l.parameter)
-                    .Select(l => new CodeVariableDeclarationStatement("object", l.name)));
         }
 
         protected void GenerateTupleParameterUnpackers(CodeMemberMethod method)
@@ -100,10 +90,10 @@ namespace Pytocs.Translate
         {
             if (p.Id.Name == "_")
                 return;
-            method.Statements.Insert(0, new CodeVariableDeclarationStatement("object", p.Id.Name));
-            method.Statements.Insert(1, new CodeAssignStatement(
-                new CodeVariableReferenceExpression(p.Id.Name), 
-                new CodeFieldReferenceExpression(tuplePath, "Item"+ i)));
+            method.Statements.Insert(0, new CodeVariableDeclarationStatement("object", p.Id.Name)
+            {
+                InitExpression = new CodeFieldReferenceExpression(tuplePath, "Item" + i)
+            });
         }
 
         private void Xlat(SuiteStatement suite)

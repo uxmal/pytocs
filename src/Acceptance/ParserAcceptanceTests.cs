@@ -204,12 +204,10 @@ namespace test {
             
             public virtual object populate() {
                 object menuitem;
-                object names;
-                object refactoring;
-                names = this.refactoring_factory.refactorings.keys();
+                object names = this.refactoring_factory.refactorings.keys();
                 names.sort();
                 foreach (var name in names) {
-                    refactoring = this.refactoring_factory.refactorings[name];
+                    object refactoring = this.refactoring_factory.refactorings[name];
                     menuitem = gtk.MenuItem(refactoring.name());
                     menuitem.connect(""realize"", this.on_menuitem_realize, refactoring);
                     menuitem.connect(""activate"", this.on_menuitem_activate, refactoring);
@@ -226,10 +224,8 @@ namespace test {
             }
             
             public virtual object on_menuitem_realize(object menuitem, object refactoring) {
-                object selection;
-                object term;
-                term = this.model.get_term();
-                selection = this.model.get_selection();
+                object term = this.model.get_term();
+                object selection = this.model.get_selection();
                 if (refactoring.applicable(term, selection)) {
                     menuitem.set_state(gtk.STATE_NORMAL);
                 } else {
@@ -238,9 +234,8 @@ namespace test {
             }
             
             public virtual object on_menuitem_activate(object menuitem, object refactoring) {
-                object args;
                 // Ask user input
-                args = refactoring.input(this.model.get_term(), this.model.get_selection());
+                object args = refactoring.input(this.model.get_term(), this.model.get_selection());
                 this.model.apply_refactoring(refactoring, args);
             }
             
@@ -263,10 +258,9 @@ namespace test {
             };
             
             public ViewMenu(object model) {
-                object menuitem;
                 this.model = model;
                 foreach (var viewfactory in this.viewfactories) {
-                    menuitem = gtk.MenuItem(viewfactory.get_name());
+                    object menuitem = gtk.MenuItem(viewfactory.get_name());
                     menuitem.connect(""realize"", this.on_menuitem_realize, viewfactory);
                     menuitem.connect(""activate"", this.on_menuitem_activate, viewfactory);
                     menuitem.show();
@@ -288,15 +282,12 @@ namespace test {
         }
         
         public static object PopupMenu(object model) {
-            object menu;
-            object menuitem;
-            object viewmenu;
-            menu = gtk.Menu();
+            object menu = gtk.Menu();
             //menuitem = gtk.MenuItem()
             //menuitem.show()
             //menu.prepend(menuitem)
-            menuitem = gtk.MenuItem(""View"");
-            viewmenu = ViewMenu(model);
+            object menuitem = gtk.MenuItem(""View"");
+            object viewmenu = ViewMenu(model);
             menuitem.set_submenu(viewmenu);
             menuitem.show();
             menu.prepend(menuitem);
