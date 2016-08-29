@@ -152,6 +152,7 @@
     <Compile Include="Translate\ExpTranslator.Tests.cs" />
     <Compile Include="Translate\LocalSymbol.cs" />
     <Compile Include="Translate\LocalVariableGenerator.cs" />
+    <Compile Include="Translate\LocalVariableGenerator.Tests.cs" />
     <Compile Include="Translate\MethodGenerator.cs" />
     <Compile Include="Translate\ModuleNameDiscovery.cs" />
     <Compile Include="Translate\ModuleTranslator.cs" />

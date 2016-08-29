@@ -59,7 +59,11 @@ namespace Pytocs.Translate
 
         private void Generate()
         {
-            foreach (var de in paths)
+            var paramNames = new HashSet<string>(
+                method.Parameters
+                .Select(p => p.ParameterName));
+            foreach (var de in paths.Where(
+                d => !paramNames.Contains(d.Key.Name)))
             {
                 var id = de.Key;
                 var defs = de.Value;

@@ -306,9 +306,6 @@ namespace Pytocs.Translate
             else
             {
                 var varList = (ExpList)compFor.variable;
-                var sExp = "fdiff.block_matches.Chop((a, b) => "+ 
-                    " Tuple.Create(a.addr, b.addr)).ToHashSet()";
-
                 return
                     m.Appl(
                         new CodeMethodReferenceExpression(
