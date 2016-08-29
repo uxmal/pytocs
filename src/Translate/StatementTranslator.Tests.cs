@@ -416,7 +416,7 @@ else:
 }
 ";
             var sExp =
-@"r = new Hashtable {
+@"r = new Dictionary<object, object> {
     {
         ""major"",
         ""2""},

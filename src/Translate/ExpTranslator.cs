@@ -261,10 +261,17 @@ namespace Pytocs.Translate
             var items = s.KeyValues.Select(kv => new CodeInitializerExpression(
                 kv.Key.Accept(this),
                 kv.Value.Accept(this)));
-            m.EnsureImport("System.Collections");
+            m.EnsureImport("System.Collections.Generic");
             var init = new CodeObjectCreateExpression
             {
-                Type = new CodeTypeReference("Hashtable"),
+                Type = new CodeTypeReference("Dictionary")
+                {
+                    TypeArguments =
+                    {
+                        m.TypeRef("object"),
+                        m.TypeRef("object"),
+                    }
+                },
                 Initializer = new CodeInitializerExpression
                 {
                     Values = items.ToArray()

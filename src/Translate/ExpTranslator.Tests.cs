@@ -29,6 +29,8 @@ namespace Pytocs.Translate
     [TestFixture]
     public class ExpTranslatorTests
     {
+        private string nl = Environment.NewLine;
+
         string Xlat(string pyExp)
         {
             var rdr = new StringReader(pyExp);
@@ -303,6 +305,14 @@ namespace Pytocs.Translate
         {
             var pySrc = "set()";
             var sExp = "new HashSet<object>()";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
+
+        [Test]
+        public void Ex_HashTable()
+        {
+            var pySrc = "{}";
+            var sExp = "new Dictionary<object, object> {" + nl + "}";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
     }
