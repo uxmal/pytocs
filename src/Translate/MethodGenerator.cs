@@ -47,7 +47,7 @@ namespace Pytocs.Translate
             this.isStatic = isStatic;
             this.gen = gen;
         }
-        
+
         public CodeMemberMethod Generate()
         {
             this.autos = new Dictionary<string, LocalSymbol>();
@@ -79,7 +79,7 @@ namespace Pytocs.Translate
             {
                 var csTupleParam = mpPyParamToCs[parameter];
                 var tuplePath = new CodeVariableReferenceExpression(csTupleParam.ParameterName);
-                foreach (var component in parameter.tuple.Select((p, i) => new { p, i=i+1 }))
+                foreach (var component in parameter.tuple.Select((p, i) => new { p, i = i + 1 }))
                 {
                     GenerateTupleParameterUnpacker(component.p, component.i, tuplePath, method);
                 }
@@ -96,7 +96,7 @@ namespace Pytocs.Translate
             });
         }
 
-        private void Xlat(SuiteStatement suite)
+        protected void Xlat(SuiteStatement suite)
         {
             var comments = StatementTranslator.ConvertFirstStringToComments(suite.stmts);
             stmtXlat.Xlat(suite);
@@ -124,7 +124,7 @@ namespace Pytocs.Translate
                     ParameterName = stmtXlat.GenSymParameter("_tup_", parameterType).Name,
                     IsVarargs = false,
                 };
-            } 
+            }
             else if (ta.keyarg)
             {
                 parameterType = new CodeTypeReference("Hashtable");
@@ -136,10 +136,10 @@ namespace Pytocs.Translate
             }
             return new CodeParameterDeclarationExpression
             {
-                ParameterType =  parameterType,
+                ParameterType = parameterType,
                 ParameterName = ta.Id.Name,
                 IsVarargs = ta.vararg,
-                DefaultValue =  ta.test != null 
+                DefaultValue = ta.test != null
                     ? ta.test.Accept(this.xlat)
                     : null,
             };
@@ -147,7 +147,7 @@ namespace Pytocs.Translate
 
         private CodeTypeReference GenerateTupleParameterType(List<Parameter> list)
         {
-            var types = list.Select(p => p.tuple != null 
+            var types = list.Select(p => p.tuple != null
                 ? GenerateTupleParameterType(p.tuple)
                 : new CodeTypeReference(typeof(object)));
             return new CodeTypeReference("Tuple", types.ToArray());
@@ -174,9 +174,9 @@ namespace Pytocs.Translate
 
         protected virtual void GenerateDefaultArgMethod(
             CodeParameterDeclarationExpression[] argList,
-            CodeExpression [] paramList)
+            CodeExpression[] paramList)
         {
-            if (isStatic) 
+            if (isStatic)
             {
                 gen.StaticMethod(fnName, argList, () =>
                 {
@@ -185,7 +185,7 @@ namespace Pytocs.Translate
                         paramList));
                 });
             }
-            else 
+            else
             {
                 gen.Method(fnName, argList, () =>
                 {

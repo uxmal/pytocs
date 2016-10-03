@@ -177,6 +177,14 @@ namespace Pytocs.CodeModel
             return method;
         }
 
+        public CodeMemberMethod LambdaMethod(IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
+        {
+            var method = new CodeMemberMethod();
+            method.Parameters.AddRange(parms.ToArray());
+            GenerateMethodBody(method, body);
+            return method;
+        }
+
         private void GenerateMethodBody(CodeMemberMethod method, Action body)
         {
             var old = Scope;
@@ -263,14 +271,14 @@ namespace Pytocs.CodeModel
             return t;
         }
 
-        internal CodeExpression BinOp(CodeExpression l, Func<object, object, bool> func, CodeExpression r)
-        {
-            throw new NotImplementedException();
-        }
-
         internal CodeExpression Lambda(CodeExpression[] args, CodeExpression expr)
         {
             return new CodeLambdaExpression(args, expr);
+        }
+
+        internal CodeExpression Lambda(CodeExpression[] args, List<CodeStatement> stmts)
+        {
+            return new CodeLambdaExpression(args, stmts);
         }
 
         public CodeExpression ListInitializer(IEnumerable<CodeExpression> exprs)
@@ -360,6 +368,13 @@ namespace Pytocs.CodeModel
         internal CodeTypeReference TypeRef(string typeName)
         {
             return new CodeTypeReference(typeName);
+        }
+
+        internal CodeTypeReference TypeRef(string typeName, params string[] genericArgs)
+        {
+            return new CodeTypeReference(
+                typeName,
+                genericArgs.Select(ga => new CodeTypeReference(ga)).ToArray());
         }
 
         internal CodeAttributeDeclaration CustomAttr(CodeTypeReference typeRef, params CodeAttributeArgument [] args)

@@ -284,8 +284,17 @@ namespace Pytocs.CodeModel
                 }
                 writer.Write(")");
             }
-            writer.Write(" => ");
-            l.Body.Accept(this);
+            writer.Write(" =>");
+            if (l.Body != null)
+            {
+                writer.Write(" ");
+                l.Body.Accept(this);
+            }
+            else
+            {
+                var sw = new CSharpStatementWriter(writer);
+                sw.WriteStatements(l.Statements);
+            }
         }
 
         public void VisitMethodReference(CodeMethodReferenceExpression m)

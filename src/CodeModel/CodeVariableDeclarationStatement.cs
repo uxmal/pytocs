@@ -30,6 +30,12 @@ namespace Pytocs.CodeModel
             this.Name = name;
         }
 
+        public CodeVariableDeclarationStatement(CodeTypeReference type, string name)
+        {
+            this.Type = type;
+            this.Name = name;
+        }
+
         public CodeTypeReference Type { get; set; }
         public string Name { get; set; }
         public CodeExpression InitExpression { get; set; }

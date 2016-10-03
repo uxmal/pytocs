@@ -307,7 +307,18 @@ namespace Pytocs.Translate
             MethodGenerator mgen;
             MemberAttributes attrs = 0;
 
-            if (currentClass != null)
+            if (this.gen.CurrentMethod != null)
+            {
+                var lgen = new LambdaBodyGenerator(f, f.parameters, true, gen);
+                var def = lgen.GenerateLambdaVariable(f);
+                var meth = lgen.Generate();
+                def.InitExpression = gen.Lambda(
+                    meth.Parameters.Select(p => new CodeVariableReferenceExpression(p.ParameterName)).ToArray(),
+                    meth.Statements);
+                gen.CurrentMethod.Statements.Add(def);
+                return;
+            }
+            if (this.currentClass != null)
             {
                 // Inside a class; is this a instance method?
                 bool hasSelf = f.parameters.Where(p => p.Id != null && p.Id.Name == "self").Count() > 0;

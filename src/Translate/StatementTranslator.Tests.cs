@@ -946,6 +946,35 @@ yx = _tup_1.Item1;
 ";
             Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
         }
+
+        [Test]
+        public void Stmt_NestedDef()
+        {
+            var pySrc=
+@"def foo():
+    bar = 4
+
+    # inner fn should become C# lambda
+    def baz(a, b):
+        print (""Bar squared"" + bar * bar)
+        return False
+
+    baz('3', 4)
+";
+            var sExp =
+@"public static object foo() {
+    object bar = 4;
+    // inner fn should become C# lambda
+    Func<object, object, object> baz = (a,b) => {
+        Console.WriteLine(""Bar squared"" + bar * bar);
+        return false;
+    };
+    baz(""3"", 4);
+}
+
+";
+            Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
+        }
     }
 }
 #endif

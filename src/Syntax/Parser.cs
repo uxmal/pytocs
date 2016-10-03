@@ -454,7 +454,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             if (t.Type != tokenType)
             {
                 Debug.Print("Expect failed: {0} {1}", filename, t.LineNumber);
-                throw new FormatException(string.Format("Expected token type {0}, but saw {1} on line {2}.", tokenType, t.Type, t.LineNumber));
+                throw new FormatException(string.Format("{0} ({1}): Expected token type {2}, but saw {3}.", filename, t.LineNumber, tokenType, t.Type));
             }
             return lexer.Get();
         }

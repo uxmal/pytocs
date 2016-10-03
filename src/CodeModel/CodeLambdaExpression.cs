@@ -29,8 +29,15 @@ namespace Pytocs.CodeModel
             this.Body = expr;
         }
 
+        public CodeLambdaExpression(CodeExpression[] args, List<CodeStatement> stmts)
+        {
+            this.Arguments = args;
+            this.Statements = stmts;
+        }
+
         public CodeExpression[] Arguments { get; set; }
         public CodeExpression Body { get; set; }
+        public List<CodeStatement> Statements { get; set; }
 
         public override void Accept(ICodeExpressionVisitor visitor)
         {
