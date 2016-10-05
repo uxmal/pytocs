@@ -35,20 +35,22 @@ namespace Pytocs
     {
         private string nmspace;
         private string moduleName;
+        private IFileSystem fs;
         private ILogger logger;
 
-        public Translator(string nmspace, string moduleName, ILogger logger)
+        public Translator(string nmspace, string moduleName, IFileSystem fs, ILogger logger)
         {
             this.nmspace = nmspace;
             this.moduleName = moduleName;
+            this.fs = fs;
             this.logger = logger;
         }
 
         public void Translate(string filename, TextReader input, TextWriter output)
         {
             Debug.Print("Translating module {0} in namespace {1}", moduleName, nmspace);
-            var lex = new Syntax.Lexer(filename, input);
-            var par = new Syntax.Parser(filename, lex);
+            var lex = new Lexer(filename, input);
+            var par = new Parser(filename, lex);
             var stm = par.Parse();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, nmspace, Path.GetFileNameWithoutExtension(moduleName));
@@ -66,7 +68,7 @@ namespace Pytocs
             {
                 try
                 {
-                    reader = new StreamReader(inputFileName);
+                    reader = fs.CreateStreamReader(inputFileName);
                 }
                 catch (IOException ex)
                 {
@@ -75,7 +77,7 @@ namespace Pytocs
                 }
                 try 
                 {
-                    writer = new StreamWriter(new FileStream(outputFileName, FileMode.Create, FileAccess.Write), new UTF8Encoding(false));
+                    writer = fs.CreateStreamWriter(fs.CreateFileStream(outputFileName, FileMode.Create, FileAccess.Write), new UTF8Encoding(false));
                 }
                 catch (IOException ex)
                 {

@@ -90,6 +90,7 @@ namespace Pytocs
                 var xlator = new Translator(
                     state.Namespace, 
                     Path.GetFileNameWithoutExtension(file),
+                    new FileSystem(),
                     new ConsoleLogger());
                 xlator.TranslateFile(file, file + ".cs");
             }

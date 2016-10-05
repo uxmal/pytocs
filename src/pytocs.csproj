@@ -169,6 +169,7 @@
     <Compile Include="TypeInference\Builtins.cs" />
     <Compile Include="TypeInference\Diagnostic.cs" />
     <Compile Include="TypeInference\FakeFileSystem.cs" />
+    <Compile Include="TypeInference\FakeLogger.cs" />
     <Compile Include="TypeInference\IFileSystem.cs" />
     <Compile Include="TypeInference\ILogger.cs" />
     <Compile Include="TypeInference\JsonTools.cs" />
@@ -189,6 +190,7 @@
     <Compile Include="Types\IntType.cs" />
     <Compile Include="Types\ListType.cs" />
     <Compile Include="Types\ModuleType.cs" />
+    <Compile Include="Types\SetType.cs" />
     <Compile Include="Types\StrType.cs" />
     <Compile Include="Types\SymbolType.cs" />
     <Compile Include="Types\TupleType.cs" />
@@ -199,6 +201,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+    <None Include="ClassDiagram1.cd" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />

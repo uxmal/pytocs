@@ -24,7 +24,7 @@ namespace Pytocs.Types
     public class FunType : DataType
     {
         public IDictionary<DataType, DataType> arrows = new Dictionary<DataType, DataType>();
-        public FunctionDef Definition;
+        public readonly FunctionDef Definition;
         public Lambda lambda;
         public ClassType Class = null;
         public State env;

@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using Pytocs.Syntax;
 using Pytocs.Types;
 using Name = Pytocs.Syntax.Identifier;
+using System.Diagnostics;
 
 namespace Pytocs.TypeInference
 {
@@ -38,6 +39,7 @@ namespace Pytocs.TypeInference
         DataType LoadModule(List<Name> name, State state);
         Module getAstForFile(string file);
         string GetModuleQname(string file);
+        IEnumerable<Binding> GetModuleBindings();
 
         Binding CreateBinding(string id, Node node, DataType type, BindingKind kind);
         void addRef(AttributeAccess attr, DataType targetType, ISet<Binding> bs);
@@ -85,18 +87,20 @@ namespace Pytocs.TypeInference
         private IProgress loadingProgress;
         private string projectDir;
         private string suffix;
+        private ILogger logger;
 
-        public Dictionary<string, Object> options;
+        public Dictionary<string, object> options;
         private DateTime startTime;
 
-        public AnalyzerImpl()
-            : this(new FileSystem(), new Dictionary<string, object>(), DateTime.Now)
+        public AnalyzerImpl(ILogger logger)
+            : this(new FileSystem(), logger, new Dictionary<string, object>(), DateTime.Now)
         {
         }
 
-        public AnalyzerImpl(IFileSystem fs, Dictionary<string, object> options, DateTime startTime)
+        public AnalyzerImpl(IFileSystem fs, ILogger logger, Dictionary<string, object> options, DateTime startTime)
         {
             this.FileSystem = fs;
+            this.logger = logger;
             this.TypeFactory = new DataTypeFactory(this);
             this.globaltable = new State(null, State.StateType.GLOBAL);
             this.resolved = new HashSet<Name>();
@@ -262,6 +266,13 @@ namespace Pytocs.TypeInference
             return allBindings;
         }
 
+        public IEnumerable<Binding> GetModuleBindings()
+        {
+            return ModuleTable.table.Values
+                .SelectMany(g =>g)
+                .Where(g => g.kind == BindingKind.MODULE && 
+                            !g.IsBuiltin && !g.IsSynthetic);
+        }
 
         ModuleType GetCachedModule(string file)
         {
@@ -459,7 +470,7 @@ namespace Pytocs.TypeInference
         private AstCache GetAstCache()
         {
             if (astCache == null)
-                astCache = new AstCache(this, FileSystem, new Logger("@"), cacheDir);
+                astCache = new AstCache(this, FileSystem, logger, cacheDir);
             return astCache;
         }
 
@@ -704,7 +715,7 @@ namespace Pytocs.TypeInference
 
         public void AddUncalled(FunType cl)
         {
-            if (!cl.Definition.called)
+            if (cl.Definition != null && !cl.Definition.called)
             {
                 uncalled.Add(cl);
             }

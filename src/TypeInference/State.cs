@@ -257,10 +257,10 @@ namespace Pytocs.TypeInference
             }
         }
 
-        /**
-         * Look up a name in the module if it is declared as global, otherwise look
-         * it up locally.
-         */
+        /// <summary>
+        /// Look up a name in the module if it is declared as global, otherwise look
+        /// it up locally.
+        /// </summary>
         public ISet<Binding> LookupScope(string name)
         {
             ISet<Binding> b = getModuleBindingIfGlobal(name);
@@ -458,10 +458,11 @@ namespace Pytocs.TypeInference
             }
             else if (target is ArrayRef)
             {
-                ArrayRef aref = (ArrayRef) target;
-                DataType valueType = transformExpr(analyzer, aref.array, this);
+                ArrayRef sub = (ArrayRef) target;
+
+                DataType valueType = transformExpr(analyzer, sub.array, this);
                 var xform = new TypeTransformer(this, analyzer);
-                transformExprs(analyzer, aref.subs, this);
+                transformExprs(analyzer, sub.subs, this);
                 if (valueType is ListType)
                 {
                     ListType t = (ListType) valueType;
@@ -647,7 +648,7 @@ namespace Pytocs.TypeInference
             {
                 analyzer.addRef(attr, targetType, bs);
             }
-            targetType.Table.Insert(null, attr.FieldName.Name, attr, attrType, BindingKind.ATTRIBUTE);
+            targetType.Table.Insert(analyzer, attr.FieldName.Name, attr, attrType, BindingKind.ATTRIBUTE);
         }
 
         public static void transformExprs(Analyzer analyzer, List<Slice> exprs, State s)

@@ -33,8 +33,8 @@ namespace Pytocs.TypeInference
         void Verbose(string p);
     }
 
-    public class ConsoleLogger : ILogger{
-
+    public class ConsoleLogger : ILogger
+    {
         public void Error(Exception ex, string format, params object[] args)
         {
             Console.Error.Write("Error: ");
@@ -59,7 +59,6 @@ namespace Pytocs.TypeInference
 
         public void Verbose(string p)
         {
-            throw new NotImplementedException();
         }
 
         public TraceLevel Level { get; set; }
@@ -106,7 +105,7 @@ namespace Pytocs.TypeInference
 
         private void Write(EventLogEntryType et, string message)
         {
-            Console.WriteLine("{0}: {1}: {1}",  title, et, message);
+            Console.WriteLine("{0}: {1}: {1}", title, et, message);
         }
     }
 }

@@ -34,6 +34,7 @@ namespace Pytocs.Types
         T VisitInt(IntType i);
         T VisitList(ListType l);
         T VisitModule(ModuleType m);
+        T VisitSet(SetType s);
         T VisitStr(StrType s);
         T VisitSymbol(SymbolType s);
         T VisitTuple(TupleType t);

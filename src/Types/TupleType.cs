@@ -21,6 +21,9 @@ using System.Text;
 
 namespace Pytocs.Types
 {
+    /// <summary>
+    /// Represents a Python tuple.
+    /// </summary>
     public class TupleType : DataType
     {
         public List<DataType> eltTypes;

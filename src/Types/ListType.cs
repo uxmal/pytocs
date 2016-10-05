@@ -59,7 +59,6 @@ namespace Pytocs.Types
             values.Add(v);
         }
 
-
         public DataType get(int i)
         {
             return positional[i];

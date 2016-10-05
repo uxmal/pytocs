@@ -171,6 +171,11 @@ namespace Pytocs.Types
             return m.name;
         }
 
+        public string VisitSet(SetType s)
+        {
+            return "{" + s.ElementType.Accept(this) + "}";
+        }
+
         public string VisitStr(StrType s)
         {
             if (this.showLiterals)

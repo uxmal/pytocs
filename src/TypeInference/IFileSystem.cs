@@ -46,6 +46,8 @@ namespace Pytocs.TypeInference
         string GetFullPath(string file);
         void WriteFile(string path, string contents);
         void DeleteFile(string path);
+        TextWriter CreateStreamWriter(Stream stm, Encoding encoding);
+        Stream CreateFileStream(string outputFileName, FileMode mode, FileAccess access);
     }
 
     public class FileSystem : IFileSystem
@@ -191,6 +193,16 @@ namespace Pytocs.TypeInference
             }
         }
 
+        public Stream CreateFileStream(string filename, FileMode mode, FileAccess access)
+        {
+            return new FileStream(filename, mode, access);
+        }
+
+        public TextWriter CreateStreamWriter(Stream stm, Encoding encoding)
+        {
+            return new StreamWriter(stm, encoding);
+        }
+        
         public string GetFullPath(string file)
         {
             return Path.GetFullPath(file);

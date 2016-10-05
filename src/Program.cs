@@ -29,10 +29,11 @@ namespace Pytocs
     {
         static void Main(string[] args)
         {
+            var fs = new FileSystem();
+            var logger = new ConsoleLogger();
             if (args.Length == 0)
             {
-                var xlator = new Translator("", "module_name", 
-                    new ConsoleLogger());
+                var xlator = new Translator("", "module_name", fs, logger);
                 xlator.Translate("-", Console.In, Console.Out);
                 Console.Out.Flush();
                 return;
@@ -46,8 +47,14 @@ namespace Pytocs
 
             if (args[0].ToLower() == "-r")
             {
+#if READY_FOR_TYPES
+                var typeAnalysis = new Pytocs.TypeInference.AnalyzerImpl(fs, logger, new Dictionary<string, object>(), DateTime.Now);
+                typeAnalysis.Analyze(".");
+                TranslateModules(typeAnalysis);
+#else
                 var walker = new DirectoryWalker("*.py");
                 walker.Enumerate();
+#endif
             }
             else
             {
@@ -56,10 +63,17 @@ namespace Pytocs
                     var xlator = new Translator(
                         "", 
                         Path.GetFileNameWithoutExtension(fileName),
+                        new FileSystem(),
                         new ConsoleLogger());
                     xlator.TranslateFile(fileName, fileName + ".cs");
                 }
             }
+        }
+
+        private static void TranslateModules(Analyzer typeAnalysis)
+        {
+            var bind = typeAnalysis.GetModuleBindings().ToArray();
+            throw new NotImplementedException();
         }
     }
 }

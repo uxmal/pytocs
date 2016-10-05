@@ -561,7 +561,10 @@ namespace Pytocs.TypeInference
 
         public DataType VisitCompFor(CompFor f)
         {
-            throw new NotImplementedException();
+            var it = f.variable.Accept(this);
+            scope.BindIterator(analyzer, f.variable, f.collection, it, BindingKind.SCOPE);
+            //f.visit(node.ifs, s);
+            return f.variable.Accept(this);
         }
 
         public DataType VisitCompIf(CompIf i)
@@ -583,7 +586,7 @@ namespace Pytocs.TypeInference
 
         public DataType VisitDecorated(Decorated d)
         {
-            throw new NotImplementedException();
+            return d.Statement.Accept(this);
         }
 
         public DataType VisitDel(DelStatement d)
@@ -658,17 +661,24 @@ namespace Pytocs.TypeInference
 
         public DataType VisitExpList(ExpList list)
         {
-            throw new NotImplementedException();
+            var t = new TupleType();
+            var elTypes = new List<DataType>();
+            foreach (var el in list.Expressions)
+            {
+                var elt = el.Accept(this);
+                elTypes.Add(elt);
+            }
+            return new TupleType(elTypes);
         }
 
-        //public DataType VisitExtSlice(ExtSlice e)
-        //{
-        //    foreach (var d in e.dims)
-        //    {
-        //        d.Accept(this);
-        //    }
-        //    return new ListType();
-        //}
+        public DataType VisitExtSlice(List<Slice> e)
+        {
+            foreach (var d in e)
+            {
+                d.Accept(this);
+            }
+            return new ListType();
+        }
 
         public DataType VisitFor(ForStatement f)
         {
@@ -694,7 +704,7 @@ namespace Pytocs.TypeInference
             State env = scope.getForwarding();
             var fun = new FunType(lambda, env);
             fun.Table.Parent = this.scope;
-            fun.Table.Path = scope.extendPath(analyzer, "<lambda>");
+            fun.Table.Path = scope.extendPath(analyzer, "{lambda}");
             fun.setDefaultTypes(ResolveList(lambda.args.Select(p => p.test)));
             analyzer.AddUncalled(fun);
             return fun;
@@ -1158,33 +1168,14 @@ namespace Pytocs.TypeInference
 
         public DataType VisitSet(PySet s)
         {
-            throw new NotImplementedException();
-
-            //  if (s.elts.Count == 0)
-            //    {
-            //        return new ListType();
-            //    }
-
-            //    ListType listType = null;
-            //    foreach (Node elt in s.elts)
-            //    {
-            //        if (listType == null)
-            //        {
-            //            listType = new ListType(elt.Accept(this));
-            //        }
-            //        else
-            //        {
-            //            listType.add(elt.Accept(this));
-            //        }
-            //    }
-            //    return listType
+            DataType valType = ResolveUnion(s.exps);
+            return new SetType(valType);
         }
 
         public DataType VisitSetComprehension(SetComprehension s)
         {
-            throw new NotImplementedException();
-            //resolveList(s.generators);
-            return analyzer.TypeFactory.CreateList(s.Projection.Accept(this));
+            s.Collection.Accept(this);
+            return new SetType(s.Projection.Accept(this));
         }
 
         public DataType VisitSlice(Slice s)
@@ -1222,14 +1213,20 @@ namespace Pytocs.TypeInference
         public DataType VisitArrayRef(ArrayRef s)
         {
             DataType vt = s.array.Accept(this);
-            DataType st = null;
-            throw new NotImplementedException("DataType st = s.subs.Accept(this);");
+            DataType st;
+            if (s.subs == null || s.subs.Count == 0)
+                st = null;
+            else if (s.subs.Count == 1)
+                st = s.subs[0].Accept(this);
+            else
+                st = VisitExtSlice(s.subs);
+
             if (vt is UnionType)
             {
                 DataType retType = DataType.Unknown;
-                foreach (DataType t in ((UnionType) vt).types)
+                foreach (DataType t in ((UnionType)vt).types)
                 {
-                    retType = UnionType.Union(retType, getSubscript(s, t, st));
+                    retType = UnionType.Union( retType, getSubscript(s, t, st));
                 }
                 return retType;
             }
@@ -1251,16 +1248,16 @@ namespace Pytocs.TypeInference
             }
             else if (vt is TupleType)
             {
-                return getListSubscript(s, ((TupleType) vt).toListType(), st);
+                return getListSubscript(s, ((TupleType)vt).toListType(), st);
             }
             else if (vt is DictType)
             {
-                DictType dt = (DictType) vt;
+                DictType dt = (DictType)vt;
                 if (!dt.keyType.Equals(st))
                 {
                     AddWarning(s, "Possible KeyError (wrong type for subscript)");
                 }
-                return ((DictType) vt).valueType;
+                return ((DictType)vt).valueType;
             }
             else if (vt == DataType.Str)
             {
@@ -1290,7 +1287,7 @@ namespace Pytocs.TypeInference
                 }
                 else if (st == null || st.isNumType())
                 {
-                    return ((ListType) vt).eltType;
+                    return ((ListType)vt).eltType;
                 }
                 else
                 {
@@ -1302,7 +1299,7 @@ namespace Pytocs.TypeInference
                     }
                     else if (sliceFunc is FunType)
                     {
-                        return Apply(analyzer, (FunType) sliceFunc, null, null, null, null, s);
+                        return Apply(analyzer, (FunType)sliceFunc, null, null, null, null, s);
                     }
                     else
                     {
@@ -1455,7 +1452,8 @@ namespace Pytocs.TypeInference
                 var ret = new List<DataType>();
                 foreach (var n in nodes)
                 {
-                    ret.Add(n.Accept(this));
+                    var dt = n != null ? n.Accept(this) : null;
+                    ret.Add(dt);
                 }
                 return ret;
             }

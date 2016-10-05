@@ -238,6 +238,16 @@ namespace Pytocs.TypeInference
             FakeDirectory d = Traverse(segs.Take(segs.Length - 1));
             ((FakeFile) d.Entries[segs.Last()]).Contents = contents;
         }
+
+        public TextWriter CreateStreamWriter(Stream stm, Encoding encoding)
+        {
+            throw new NotImplementedException();
+        }
+
+        public Stream CreateFileStream(string outputFileName, FileMode mode, FileAccess access)
+        {
+            throw new NotImplementedException();
+        }
     }
 
     [TestFixture]
