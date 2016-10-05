@@ -217,7 +217,11 @@ namespace Pytocs.Translate
             //$TODO cycle detection
             foreach (var pyAss in dstTuple.Zip(srcTuple, (a, b) => new { Dst = a, Src = b }))
             {
-                EnsureLocalVariable(((Identifier)pyAss.Dst).Name, gen.TypeRef("object"), false);
+                var id = pyAss.Dst as Identifier;
+                if (id != null)
+                {
+                    EnsureLocalVariable(id.Name, gen.TypeRef("object"), false);
+                }
                 gen.Assign(pyAss.Dst.Accept(xlat), pyAss.Src.Accept(xlat));
             }
         }
@@ -333,17 +337,30 @@ namespace Pytocs.Translate
                 gen.Foreach(exp, v, () => f.Body.Accept(this));
                 return;
             }
+            var expList = f.exprs as ExpList;
+            if (expList != null)
+            {
+                GenerateForTuple(f, expList.Expressions);
+                return;
+            }
             var tuple = f.exprs as PyTuple;
             if (tuple != null)
             {
-                var localVar = GenSymLocalTuple();
-                var v = f.tests.Accept(xlat);
-                gen.Foreach(localVar, v, () =>
-                {
-                    EmitTupleFieldAssignments(tuple.values, localVar);
-                    f.Body.Accept(this);
-                });
+                GenerateForTuple(f, tuple.values);
+                return;
             }
+            throw new NotImplementedException();
+        }
+
+        private void GenerateForTuple(ForStatement f, List<Exp> ids)
+        {
+            var localVar = GenSymLocalTuple();
+            var v = f.tests.Accept(xlat);
+            gen.Foreach(localVar, v, () =>
+            {
+                EmitTupleFieldAssignments(ids, localVar);
+                f.Body.Accept(this);
+            });
         }
 
         public void VisitFuncdef(FunctionDef f)

@@ -980,7 +980,7 @@ yx = _tup_1.Item1;
         public void Stmt_foreach_tuple()
         {
             var pySrc =
-@"for (a,b) in foo:
+@"for a,b in foo:
     print(a + b)
 ";
             var sExp =
@@ -1002,6 +1002,43 @@ yx = _tup_1.Item1;
             var sExp =
 @"a = c;
 b = d;
+";
+            Assert.AreEqual(sExp, XlatStmts(pySrc));
+        }
+
+        [Test]
+        public  void Stmt_Tuple_Assign_field()
+        {
+            var pySrc = 
+@"a.b, c.de = 'e','f'
+";
+            var sExp =
+@"a.b = ""e"";
+c.de = ""f"";
+";
+            Assert.AreEqual(sExp, XlatStmts(pySrc));
+        }
+
+        [Test]
+        public void Stmt_For_Tuple_regression1()
+        {
+            var pySrc =
+@"for exit_stmt_id, target_addr in targets:
+    if target_addr is None:
+        addr_strs.append(""default"")
+    else:
+        addr_strs.append(""%#x"" % target_addr)
+";
+            var sExp =
+@"foreach (var _tup_1 in targets) {
+    exit_stmt_id = _tup_1.Item1;
+    target_addr = _tup_1.Item2;
+    if (target_addr == null) {
+        addr_strs.append(""default"");
+    } else {
+        addr_strs.append(String.Format(""%#x"", target_addr));
+    }
+}
 ";
             Assert.AreEqual(sExp, XlatStmts(pySrc));
         }
