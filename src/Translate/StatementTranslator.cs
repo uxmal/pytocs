@@ -149,13 +149,22 @@ namespace Pytocs.Translate
                 if (idDst != null)
                     EnsureLocalVariable(idDst.Name, new CodeTypeReference(typeof(object)), false);
 
-                var rhs = ass.Src.Accept(xlat);
                 var dstTuple = ass.Dst as ExpList;
                 if (dstTuple != null)
                 {
-                    EmitTupleAssignment(dstTuple, rhs);
+                    var srcTuple = ass.Src as ExpList;
+                    if (srcTuple != null)
+                    {
+                        EmitTupleToTupleAssignment(dstTuple.Expressions, srcTuple.Expressions);
+                    }
+                    else
+                    {
+                        var rhsTuple = ass.Src.Accept(xlat);
+                        EmitTupleAssignment(dstTuple.Expressions, rhsTuple);
+                    }
                     return;
                 }
+                var rhs = ass.Src.Accept(xlat);
                 var lhs = ass.Dst.Accept(xlat);
                 if (gen.CurrentMethod != null)
                 {
@@ -196,12 +205,27 @@ namespace Pytocs.Translate
             }
         }
 
-        private void EmitTupleAssignment(ExpList lhs, CodeExpression rhs)
+        private void EmitTupleAssignment(List<Exp> lhs, CodeExpression rhs)
         {
-            var  tup = GenSymLocal("_tup_", new CodeTypeReference(typeof(object)));
+            var tup = GenSymLocalTuple();
             gen.Assign(tup, rhs);
+            EmitTupleFieldAssignments(lhs, tup);
+        }
+
+        private void EmitTupleToTupleAssignment(List<Exp> dstTuple, List<Exp> srcTuple)
+        {
+            //$TODO cycle detection
+            foreach (var pyAss in dstTuple.Zip(srcTuple, (a, b) => new { Dst = a, Src = b }))
+            {
+                EnsureLocalVariable(((Identifier)pyAss.Dst).Name, gen.TypeRef("object"), false);
+                gen.Assign(pyAss.Dst.Accept(xlat), pyAss.Src.Accept(xlat));
+            }
+        }
+
+        private void EmitTupleFieldAssignments(List<Exp> lhs, CodeVariableReferenceExpression tup)
+        {
             int i = 0;
-            foreach (Exp value in lhs.Expressions)
+            foreach (Exp value in lhs)
             {
                 ++i;
                 if (value == null || value.Name == "_")
@@ -219,6 +243,11 @@ namespace Pytocs.Translate
                     gen.Assign(dst, tupleField);
                 }
             }
+        }
+
+        private CodeVariableReferenceExpression GenSymLocalTuple()
+        {
+            return GenSymLocal("_tup_", new CodeTypeReference(typeof(object)));
         }
 
         public CodeVariableReferenceExpression GenSymParameter(string prefix, CodeTypeReference type)
@@ -297,9 +326,24 @@ namespace Pytocs.Translate
 
         public void VisitFor(ForStatement f)
         {
-            var exp = f.exprs.Accept(xlat);
-            var v = f.tests.Accept(xlat);
-            gen.Foreach(exp, v, () => f.Body.Accept(this));
+            if (f.exprs is Identifier)
+            {
+                var exp = f.exprs.Accept(xlat);
+                var v = f.tests.Accept(xlat);
+                gen.Foreach(exp, v, () => f.Body.Accept(this));
+                return;
+            }
+            var tuple = f.exprs as PyTuple;
+            if (tuple != null)
+            {
+                var localVar = GenSymLocalTuple();
+                var v = f.tests.Accept(xlat);
+                gen.Foreach(localVar, v, () =>
+                {
+                    EmitTupleFieldAssignments(tuple.values, localVar);
+                    f.Body.Accept(this);
+                });
+            }
         }
 
         public void VisitFuncdef(FunctionDef f)

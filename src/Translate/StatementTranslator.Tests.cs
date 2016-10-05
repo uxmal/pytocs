@@ -975,6 +975,36 @@ yx = _tup_1.Item1;
 ";
             Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
         }
+
+        [Test]
+        public void Stmt_foreach_tuple()
+        {
+            var pySrc =
+@"for (a,b) in foo:
+    print(a + b)
+";
+            var sExp =
+@"foreach (var _tup_1 in foo) {
+    a = _tup_1.Item1;
+    b = _tup_1.Item2;
+    Console.WriteLine(a + b);
+}
+";
+            Assert.AreEqual(sExp, XlatStmts(pySrc));
+        }
+
+        [Test]
+        public void Stmt_Tuple_Assign()
+        {
+            var pySrc =
+@"a,b = c,d
+";
+            var sExp =
+@"a = c;
+b = d;
+";
+            Assert.AreEqual(sExp, XlatStmts(pySrc));
+        }
     }
 }
 #endif
