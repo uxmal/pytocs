@@ -189,5 +189,32 @@ class MyClass:
 
             Assert.AreEqual(sExp, XlatModule(pyModule, "__init__.py"));
         }
+
+        [Test]
+        public void Module__init__nested_classes()
+        {
+            var pyModule =
+@"
+class OuterClass:
+   class InnerClass:
+       pass
+";
+            string sExp =
+@"namespace test {
+    
+    public static class @__init__ {
+    }
+    
+    public class OuterClass {
+        
+        public class InnerClass {
+        }
+    }
+}
+";
+            Debug.Print(XlatModule(pyModule, "__init__.py"));
+
+            Assert.AreEqual(sExp, XlatModule(pyModule, "__init__.py"));
+        }
     }
 }
