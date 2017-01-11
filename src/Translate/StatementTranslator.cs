@@ -434,8 +434,7 @@ namespace Pytocs.Translate
                         name.alias.Name,
                         string.Join(
                             ".",
-                            name.orig.segs.Concat(new[] { name.alias })
-                                .Select(s => gen.EscapeKeywordName(s.Name))));
+                            name.orig.segs.Select(s => gen.EscapeKeywordName(s.Name))));
                 }
             }
         }

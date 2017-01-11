@@ -212,9 +212,27 @@ class OuterClass:
     }
 }
 ";
-            Debug.Print(XlatModule(pyModule, "__init__.py"));
-
             Assert.AreEqual(sExp, XlatModule(pyModule, "__init__.py"));
+        }
+
+        [Test]
+        public void Module_import_as()
+        {
+            var pyModule =
+@"
+import vivisect.const as viv_const
+";
+            var sExp =
+@"namespace test {
+    
+    using viv_const = vivisect.@const;
+    
+    public static class module {
+    }
+}
+";
+            Debug.Print(XlatModule(pyModule));
+            Assert.AreEqual(sExp, XlatModule(pyModule));
         }
     }
 }
