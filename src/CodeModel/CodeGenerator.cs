@@ -27,10 +27,12 @@ namespace Pytocs.CodeModel
     {
         private CSharpCodeProvider provider;
         private CodeCompileUnit unt;
+        private string moduleName;
 
         public CodeGenerator(CodeCompileUnit unt, string modulePath, string moduleName)
         {
             this.unt = unt;
+            this.moduleName = moduleName;
             this.provider = new CSharpCodeProvider();
             this.Scope = new List<CodeStatement>();  // dummy scope.
             this.CurrentNamespace = new CodeNamespace(modulePath);
@@ -76,7 +78,16 @@ namespace Pytocs.CodeModel
                 IsClass = true,
                 Name = name,
             };
-            CurrentType.Members.Add(c);
+
+            // classes in __init__ files go directly into the namespace.
+            if (this.moduleName == "__init__")
+            {
+                CurrentNamespace.Types.Add(c);
+            }
+            else
+            {
+                CurrentType.Members.Add(c);
+            }
             c.BaseTypes.AddRange(baseClasses.Select(b => new CodeTypeReference(b)).ToArray());
             var old = CurrentType;
             var oldMethod = CurrentMethod;

@@ -29,14 +29,14 @@ namespace Pytocs.Translate
     [TestFixture]
     public class ModuleTranslatorTests
     {
-        private string XlatModule(string pyModule)
+        private string XlatModule(string pyModule, string filename = "module.py")
         {
             var rdr = new StringReader(pyModule);
-            var lex = new Syntax.Lexer("foo.py", rdr);
-            var par = new Syntax.Parser("foo.py", lex);
+            var lex = new Syntax.Lexer(filename, rdr);
+            var par = new Syntax.Parser(filename, lex);
             var stm = par.Parse();
             var unt = new CodeCompileUnit();
-            var gen = new CodeGenerator(unt, "test", "module");
+            var gen = new CodeGenerator(unt, "test", Path.GetFileNameWithoutExtension(filename));
             var xlt = new ModuleTranslator(gen);
             xlt.Translate(stm);
 
@@ -154,6 +154,40 @@ namespace test {
 }
 ";
             Assert.AreEqual(sExp, XlatModule(pyModule));
+        }
+
+        [Test]
+        public void Module__init__file()
+        {
+            var pyModule =
+@"
+def static_func():
+  pass;
+
+class MyClass:
+   def method(self, arg):
+       print(arg)
+";
+            string sExp =
+@"namespace test {
+    
+    public static class @__init__ {
+        
+        public static object static_func() {
+        }
+    }
+    
+    public class MyClass {
+        
+        public virtual object method(object arg) {
+            Console.WriteLine(arg);
+        }
+    }
+}
+";
+            Debug.Print(XlatModule(pyModule, "__init__.py"));
+
+            Assert.AreEqual(sExp, XlatModule(pyModule, "__init__.py"));
         }
     }
 }
