@@ -517,5 +517,21 @@ def wrapper():
 ";
             Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
         }
+
+        [Test]
+        public void Parse_ReturnWithComment()
+        {
+            var pySrc =
+@"if addtup == None:
+    logger.debug('DAA:  % x % x % x % x - addtup is None' % (C, H, upop, loop))
+    return #FIXME: raise exception once figured out
+";
+            var sExp =
+@"if (addtup = None):
+    logger.debug((""DAA:  % x % x % x % x - addtup is None"" % (C,H,upop,loop)))
+    return
+";
+            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+        }
     }
 }

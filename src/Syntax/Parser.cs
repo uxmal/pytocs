@@ -477,16 +477,25 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             var decs = decorators();
             Statement d = null;
-            if (Peek(TokenType.Def))
+            for (;;)
             {
-                d = funcdef();
+                if (Peek(TokenType.Def))
+                {
+                    d = funcdef();
+                    break;
+                }
+                else if (Peek(TokenType.Class))
+                {
+                    d = classdef();
+                    break;
+                }
+                else if (!Peek(TokenType.COMMENT, TokenType.NEWLINE))
+                {
+                    Error("Expected function or class defnition.");
+                }
+                //$TODO: keep the comments.
+                lexer.Get();
             }
-            else if (Peek(TokenType.Class))
-            {
-                d = classdef();
-            }
-            else
-                Error("Expected function or class defnition.");
             return new Decorated(d, decs, filename, decs[0].Start, d.End);
         }
 
@@ -1005,7 +1014,10 @@ eval_input: testlist NEWLINE* ENDMARKER
             if (!Peek(stmt_follow))
             {
                 e = testlist();
-                posEnd = e.End;
+                if (e != null)
+                {
+                    posEnd = e.End;
+                }
             }
             return new ReturnStatement(e, filename, posStart, posEnd);
         }
@@ -1841,13 +1853,23 @@ eval_input: testlist NEWLINE* ENDMARKER
             case TokenType.STRING:
                 t = lexer.Get();
                 var start = t.Start;
-                var str = (Str) t.Value;
+                var str = t.Value as Str;
+                if (str != null)
+                {
+                    while (Peek(TokenType.STRING))
+                    {
+                        t = lexer.Get();
+                        str = new Str(str.s + t.Value, filename, start, t.End);
+                    }
+                    return str;
+                }
+                var byteStr = (Bytes)t.Value;
                 while (Peek(TokenType.STRING))
                 {
                     t = lexer.Get();
-                    str = new Str(str.s + t.Value, filename, start, t.End);
+                    byteStr = new Bytes(str.s + t.Value, filename, start, t.End);
                 }
-                return str;
+                return byteStr;
             case TokenType.INTEGER:
                 t = lexer.Get();
                 return new IntLiteral((int) t.Value, filename, t.Start, t.End);

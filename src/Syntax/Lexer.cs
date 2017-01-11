@@ -870,7 +870,14 @@ namespace Pytocs.Syntax
                     switch (ch)
                     {
                     case '.': Transition(State.Dot2); break;
-                    default: return Token(TokenType.DOT);
+                    default:
+                        if (Char.IsDigit(ch))
+                        {
+                            sb.AppendFormat("0.{0}", ch);
+                            Transition(State.RealFraction);
+                            break;
+                        }
+                        return Token(TokenType.DOT);
                     }
                     break;
                 case State.Dot2:

@@ -382,6 +382,13 @@ namespace Pytocs.Syntax
             Lex(@"r'\'', 'I'",
                 TokenType.STRING, TokenType.COMMA, TokenType.STRING, TokenType.EOF);
         }
+        
+        [Test]
+        public void Lex_FloatConstant()
+        {
+            Lex(".68",
+                TokenType.REAL, TokenType.EOF);
+        }
     }
 }
 #endif

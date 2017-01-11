@@ -63,6 +63,7 @@
     <Compile Include="CodeModel\CodeMethodReferenceExpression.cs" />
     <Compile Include="CodeModel\CodeMethodReturnStatement.cs" />
     <Compile Include="CodeModel\CodeObjectCreateExpression.cs" />
+    <Compile Include="CodeModel\CodeObjectInitializer.cs" />
     <Compile Include="CodeModel\CodePostTestLoopStatement.cs" />
     <Compile Include="CodeModel\CodePreTestLoopStatement.cs" />
     <Compile Include="CodeModel\CodePrimitiveExpression.cs" />
@@ -160,7 +161,8 @@
     <Compile Include="Translate\ModuleTranslator.Tests.cs" />
     <Compile Include="Translate\StatementNameDiscovery.cs" />
     <Compile Include="Translate\StatementTranslator.cs" />
-    <Compile Include="Translate\StatementTranslator.Tests.cs" />
+    <None Include="Translate\StatementTranslator.Tests.cs" />
+    <Compile Include="Translate\SymbolGenerator.cs" />
     <Compile Include="Translator.cs" />
     <Compile Include="TypeInference\Analyzer.cs" />
     <Compile Include="TypeInference\Analyzer.Tests.cs" />

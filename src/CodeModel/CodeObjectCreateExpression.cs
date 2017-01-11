@@ -31,7 +31,7 @@ namespace Pytocs.CodeModel
         }
 
         public CodeTypeReference Type { get; set; }
-        public CodeInitializerExpression Initializer { get; set; }
+        public CodeInitializer Initializer { get; set; }
         public List<CodeExpression> Arguments { get; private set; }
         public List<CodeExpression> Initializers { get; set; }
 

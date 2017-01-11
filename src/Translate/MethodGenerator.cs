@@ -36,8 +36,8 @@ namespace Pytocs.Translate
         protected ExpTranslator xlat;
         protected StatementTranslator stmtXlat;
         protected CodeGenerator gen;
-        private Dictionary<string, LocalSymbol> autos;
         private Dictionary<Parameter, CodeParameterDeclarationExpression> mpPyParamToCs;
+        private SymbolGenerator gensym;
 
         public MethodGenerator(FunctionDef f, string fnName, List<Parameter> args, bool isStatic, CodeGenerator gen)
         {
@@ -50,9 +50,9 @@ namespace Pytocs.Translate
 
         public CodeMemberMethod Generate()
         {
-            this.autos = new Dictionary<string, LocalSymbol>();
-            this.xlat = new ExpTranslator(gen);
-            this.stmtXlat = new StatementTranslator(gen, autos);
+            this.gensym = new SymbolGenerator();
+            this.xlat = new ExpTranslator(gen, gensym);
+            this.stmtXlat = new StatementTranslator(gen, gensym);
 
             return Generate(CreateFunctionParameters(args)); // () => bodyGenerator(f.body));
         }

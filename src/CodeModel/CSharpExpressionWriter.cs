@@ -245,7 +245,7 @@ namespace Pytocs.CodeModel
             writer.WriteName(field.FieldName);
         }
 
-        public void VisitInitializer(CodeInitializerExpression i)
+        public void VisitCollectionInitializer(CodeCollectionInitializer i)
         {
             writer.Write("{");
             writer.WriteLine();
@@ -261,6 +261,34 @@ namespace Pytocs.CodeModel
                 }
                 sep = true;
                 v.Accept(this);
+            }
+            --writer.IndentLevel;
+            writer.Write("}");
+        }
+
+        public void VisitObjectInitializer(CodeObjectInitializer i)
+        {
+            writer.Write("new");
+            writer.Write(" ");
+            writer.Write("{");
+            writer.WriteLine();
+            ++writer.IndentLevel;
+
+            bool sep = false;
+            foreach (var md in i.MemberDeclarators)
+            {
+                if (sep)
+                {
+                    writer.Write(",");
+                    writer.WriteLine();
+                }
+                sep = true;
+                if (md.Name != null)
+                {
+                    writer.Write(md.Name);
+                    writer.Write(" = ");
+                }
+                md.Expression.Accept(this);
             }
             --writer.IndentLevel;
             writer.Write("}");
@@ -331,7 +359,10 @@ namespace Pytocs.CodeModel
         {
             writer.Write("new");
             writer.Write(" ");
-            VisitTypeReference(c.Type);
+            if (c.Type != null)
+            {
+                VisitTypeReference(c.Type);
+            }
             if (c.Arguments.Count > 0 || c.Initializers.Count == 0 && c.Initializer == null)
             {
                 writer.Write("(");
@@ -397,6 +428,8 @@ namespace Pytocs.CodeModel
             }
             else if (p.Value is Syntax.Str)
                 WriteStringLiteral((Syntax.Str)p.Value);
+            else if (p.Value is Syntax.Bytes)
+                WriteByteLiteral((Syntax.Bytes)p.Value);
             else
                 throw new NotImplementedException("" + p.Value);
         }
@@ -413,6 +446,46 @@ namespace Pytocs.CodeModel
             writer.Write('\"');
         }
 
+        private void WriteByteLiteral(Syntax.Bytes literal)
+        {
+            writer.Write("new");
+            writer.Write(" ");
+            writer.Write("byte[]");
+            writer.Write(" { ");
+            var s = literal.s;
+            var sep = "";
+            for (int i = 0; i < s.Length; ++i)
+            {
+                writer.Write(sep);
+                sep = ", ";
+                if (s[i] == '\\')
+                {
+                    if (s[i + 1] == 'x')
+                    {
+                        writer.Write("0x{0}{1}", s[i + 2], s[i + 3]);
+                        i += 3;
+                    }
+                    else if (s[i + 1] == '\\')
+                    {
+                        writer.Write("(byte)'\\\\'");
+                        i += 1;
+                    }
+                    else
+                    {
+                        throw new NotImplementedException();
+                    }
+                }
+                else if (' ' <= s[i] && s[i] <= '~')
+                {
+                   writer.Write("(byte)'{0}'", s[i]);
+                }
+                else
+                {
+                    writer.Write("0x{0:X2}", (int)s[i]);
+                }
+            }
+            writer.Write(" }");
+        }
         private void WriteStringLiteral(Syntax.Str literal)
         {
             if (literal.Long || literal.Raw)

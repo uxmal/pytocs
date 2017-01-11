@@ -29,7 +29,7 @@ namespace Pytocs.TypeInference
 
         public void Verbose(string p)
         {
-            throw new NotImplementedException();
+            Debug.WriteLine(p);
         }
     }
 }

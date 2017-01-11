@@ -28,21 +28,24 @@ namespace Pytocs.Translate
     {
         private CodeGenerator gen;
         private ExpTranslator xlat;
+        private SymbolGenerator gensym;
         private ClassDef currentClass;
-        private Dictionary<string, LocalSymbol> autos;
+        private IEnumerable<CodeAttributeDeclaration> customAttrs;
+        private CodeConstructor classConstructor;
 
-        public StatementTranslator(CodeGenerator gen, Dictionary<string, LocalSymbol> autos)
+        public StatementTranslator(CodeGenerator gen, SymbolGenerator gensym)
         {
             this.gen = gen;
-            this.autos = autos;
-            this.xlat = new ExpTranslator(gen);
+            this.gensym = gensym;
+            this.xlat = new ExpTranslator(gen, gensym);
         }
 
         public void VisitClass(ClassDef c)
         {
             var baseClasses = c.args.Select(a => GenerateBaseClassName(a)).ToList();
             var comments = ConvertFirstStringToComments(c.body.stmts);
-            var stmtXlt = new StatementTranslator(gen, new Dictionary<string, LocalSymbol>());
+            var gensym = new SymbolGenerator();
+            var stmtXlt = new StatementTranslator(gen, gensym);
             stmtXlt.currentClass = c;
             var csClass = gen.Class(c.name.Name, baseClasses, () => c.body.Accept(stmtXlt));
             csClass.Comments.AddRange(comments);
@@ -119,8 +122,6 @@ namespace Pytocs.Translate
             { Op.AugAdd, CsAssignOp.AugAdd },
         };
 
-        private  IEnumerable<CodeAttributeDeclaration> customAttrs;
-        private CodeConstructor classConstructor;
 
         public void VisitExec(ExecStatement e)
         {
@@ -147,7 +148,7 @@ namespace Pytocs.Translate
             {
                 var idDst = ass.Dst as Identifier;
                 if (idDst != null)
-                    EnsureLocalVariable(idDst.Name, new CodeTypeReference(typeof(object)), false);
+                    gensym.EnsureLocalVariable(idDst.Name, new CodeTypeReference(typeof(object)), false);
 
                 var dstTuple = ass.Dst as ExpList;
                 if (dstTuple != null)
@@ -220,7 +221,7 @@ namespace Pytocs.Translate
                 var id = pyAss.Dst as Identifier;
                 if (id != null)
                 {
-                    EnsureLocalVariable(id.Name, gen.TypeRef("object"), false);
+                    gensym.EnsureLocalVariable(id.Name, gen.TypeRef("object"), false);
                 }
                 gen.Assign(pyAss.Dst.Accept(xlat), pyAss.Src.Accept(xlat));
             }
@@ -238,7 +239,7 @@ namespace Pytocs.Translate
                 var id = value as Identifier;
                 if (id != null)
                 {
-                    EnsureLocalVariable(id.Name, new CodeTypeReference(typeof(object)), false);
+                    gensym.EnsureLocalVariable(id.Name, new CodeTypeReference(typeof(object)), false);
                     gen.Assign(new CodeVariableReferenceExpression(id.Name), tupleField);
                 }
                 else
@@ -251,32 +252,12 @@ namespace Pytocs.Translate
 
         private CodeVariableReferenceExpression GenSymLocalTuple()
         {
-            return GenSymLocal("_tup_", new CodeTypeReference(typeof(object)));
+            return gensym.GenSymLocal("_tup_", new CodeTypeReference(typeof(object)));
         }
 
         public CodeVariableReferenceExpression GenSymParameter(string prefix, CodeTypeReference type)
         {
-            return GenSymAutomatic(prefix, type, true);
-        }
-
-        public CodeVariableReferenceExpression GenSymLocal(string prefix, CodeTypeReference type)
-        {
-            return GenSymAutomatic(prefix, type, false);
-        }
-
-        public CodeVariableReferenceExpression GenSymAutomatic(string prefix,  CodeTypeReference type, bool parameter)
-        {
-            int i = 1;
-            while (autos.Select(l => l.Key).Contains(prefix + i))
-                ++i;
-            EnsureLocalVariable(prefix + i, type, parameter);
-            return new CodeVariableReferenceExpression(prefix + i);
-        }
-
-        private void EnsureLocalVariable(string name, CodeTypeReference type, bool parameter)
-        {
-            if (!autos.ContainsKey(name))
-                autos.Add(name, new LocalSymbol(name, type, parameter));
+            return gensym.GenSymAutomatic(prefix, type, true);
         }
 
         private CodeConstructor EnsureClassConstructor()

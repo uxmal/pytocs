@@ -34,6 +34,11 @@ namespace Pytocs.Types
 
         public State Table { get; set; }
 
+        public override bool Equals(object obj)
+        {
+            return object.ReferenceEquals(this, obj);
+        }
+
         public override int GetHashCode()
         {
             return GetType().Name.GetHashCode();

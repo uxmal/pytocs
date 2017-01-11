@@ -365,6 +365,11 @@ namespace Pytocs.CodeModel
             return y;
         }
 
+        internal CodeExpression MethodRef(CodeExpression exp, string methodName)
+        {
+            return new CodeMethodReferenceExpression(exp, methodName);
+        }
+
         internal CodeTypeReference TypeRef(string typeName)
         {
             return new CodeTypeReference(typeName);

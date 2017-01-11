@@ -65,10 +65,12 @@ namespace Pytocs.Translate
         };
 
         private CodeGenerator m;
+        private SymbolGenerator gensym;
 
-        public ExpTranslator(CodeGenerator gen)
+        public ExpTranslator(CodeGenerator gen, SymbolGenerator gensym)
         {
             this.m = gen;
+            this.gensym = gensym;
         }
 
         public CodeExpression VisitCompFor(CompFor f)
@@ -258,7 +260,7 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitDictInitializer(DictInitializer s)
         {
-            var items = s.KeyValues.Select(kv => new CodeInitializerExpression(
+            var items = s.KeyValues.Select(kv => new CodeCollectionInitializer(
                 kv.Key.Accept(this),
                 kv.Value.Accept(this)));
             m.EnsureImport("System.Collections.Generic");
@@ -272,7 +274,7 @@ namespace Pytocs.Translate
                         m.TypeRef("object"),
                     }
                 },
-                Initializer = new CodeInitializerExpression
+                Initializer = new CodeCollectionInitializer
                 {
                     Values = items.ToArray()
                 }
@@ -282,12 +284,12 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitSet(PySet s)
         {
-            var items = s.exps.Select(e => new CodeInitializerExpression(e.Accept(this)));
+            var items = s.exps.Select(e => new CodeCollectionInitializer(e.Accept(this)));
             m.EnsureImport("System.Collections");
             var init = new CodeObjectCreateExpression
             {
                 Type = new CodeTypeReference("HashSet"),
-                Initializer = new CodeInitializerExpression
+                Initializer = new CodeCollectionInitializer
                 {
                     Values = items.ToArray()
                 }
@@ -537,10 +539,12 @@ namespace Pytocs.Translate
         public CodeExpression VisitIdentifier(Identifier id)
         {
             if (id.Name == "self")
+            {
                 return new CodeThisReferenceExpression();
+            }
             else
             {
-                return new CodeVariableReferenceExpression(id.Name);
+                return gensym.MapLocalReference(id.Name);
             }
         }
 
@@ -638,27 +642,48 @@ namespace Pytocs.Translate
             var varList = dc.source.variable as ExpList;
             if (varList != null)
             {
-                if (varList.Expressions.Count != 2)
-                    throw new InvalidOperationException("Variable list should contain one or two variables.");
-                var k = (Identifier)varList.Expressions[0];
-                var v = (Identifier)varList.Expressions[1];
+                //if (varList.Expressions.Count != 2)
+                //    throw new InvalidOperationException("Variable list should contain one or two variables.");
+                var tyArgs = Enumerable.Range(0, varList.Expressions.Count).Select(e => "object").ToArray();
+                var tpl = gensym.GenSymParameter("_tup_", m.TypeRef("Tuple", tyArgs));
+                var anonymousCtor = new CodeObjectCreateExpression
+                {
+                    Initializer = new CodeObjectInitializer()
+                };
+
+                list = m.Appl(
+                    m.MethodRef(list, "Select"),
+                    m.Lambda(
+                        new CodeExpression[] { tpl },
+                        new CodeObjectInitializer
+                        {
+                            MemberDeclarators = varList.Expressions.Select((e, i) => new MemberDeclarator
+                            {
+                                Name = e.ToString(),
+                                Expression = m.Access(tpl, string.Format("Item{0}", i + 1))
+                            }).ToList()
+                        }));
+
+                gensym.PushIdMappings(varList.Expressions.ToDictionary(e => e.ToString(), e => m.Access(tpl, e.ToString())));
+
                 var kValue = dc.key.Accept(this);
                 var vValue = dc.value.Accept(this);
+
+                gensym.PopIdMappings();
+
                 return m.Appl(
-                    new CodeMethodReferenceExpression(
-                        list,
-                        "ToDictionary"),
-                        m.Lambda(new CodeExpression[] { k.Accept(this) }, kValue),
-                        m.Lambda(new CodeExpression[] { v.Accept(this) }, vValue));
+                    m.MethodRef(list, "ToDictionary"),
+                    m.Lambda(new CodeExpression[] { tpl }, kValue),
+                    m.Lambda(new CodeExpression[] { tpl }, vValue));
             }
             var id = dc.source.variable as Identifier;
             if (id != null)
             { 
+                var kValue = dc.key.Accept(this);
                 var vValue = dc.value.Accept(this);
                 return m.Appl(
-                    new CodeMethodReferenceExpression(
-                        list,
-                        "ToHashSet"),
+                    m.MethodRef(list, "ToDictionary"),
+                    m.Lambda(new CodeExpression[] { id.Accept(this) }, kValue),
                     m.Lambda(new CodeExpression[] { id.Accept(this) }, vValue));
             }
             var tuple = dc.source.variable as PyTuple;

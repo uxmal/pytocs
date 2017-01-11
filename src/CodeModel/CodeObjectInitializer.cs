@@ -22,28 +22,25 @@ using System.Threading.Tasks;
 
 namespace Pytocs.CodeModel
 {
-    public abstract class CodeInitializer : CodeExpression
+    public class CodeObjectInitializer : CodeInitializer
     {
-
-    }
-
-    public class CodeCollectionInitializer : CodeInitializer
-    {
-        public CodeCollectionInitializer(params CodeExpression[] values)
-        {
-            this.Values = values;
-        }
-
-        public CodeExpression[] Values { get; set; }
+        public List<MemberDeclarator> MemberDeclarators = new List<MemberDeclarator>();
 
         public override void Accept(ICodeExpressionVisitor visitor)
         {
-            visitor.VisitCollectionInitializer(this);
+            visitor.VisitObjectInitializer(this);
         }
 
         public override T Accept<T>(ICodeExpressionVisitor<T> visitor)
         {
-            return visitor.VisitCollectionInitializer(this);
+            return visitor.VisitObjectInitializer(this);
         }
     }
+
+    public class MemberDeclarator
+    {
+        public string Name;
+        public CodeExpression Expression;
+    }
+
 }

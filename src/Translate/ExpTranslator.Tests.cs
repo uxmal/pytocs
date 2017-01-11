@@ -38,7 +38,8 @@ namespace Pytocs.Translate
             var par = new Syntax.Parser("foo.py", lex);
             var exp = par.test();
             Debug.Print("{0}", exp);
-            var xlt = new ExpTranslator(new CodeGenerator(new CodeCompileUnit(), "", "test"));
+            var sym = new SymbolGenerator();
+            var xlt = new ExpTranslator(new CodeGenerator(new CodeCompileUnit(), "", "test"), sym);
             var csExp = exp.Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -236,14 +237,6 @@ namespace Pytocs.Translate
         }
 
         [Test]
-        public void Ex_DictComprehension()
-        {
-            var pySrc = "{ k:copy.copy(v) for k, v in path.info.iteritems() }";
-            string sExp = "path.info.iteritems().ToDictionary(k => k, v => copy.copy(v))";
-            Assert.AreEqual(sExp, Xlat(pySrc));
-        }
-
-        [Test]
         public void Ex_Regression1()
         {
             var pySrc = "((a, s) for a in stackframe.alocs.values() for s in a._segment_list)";
@@ -272,7 +265,7 @@ namespace Pytocs.Translate
         public void Ex_Regression4()
         {
             var pySrc = "{ k:_raw_ast(a[k]) for k in a }";
-            var sExp = "a.ToHashSet(k => _raw_ast(a[k]))";
+            var sExp = "a.ToDictionary(k => k, k => _raw_ast(a[k]))";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
 
@@ -284,11 +277,53 @@ namespace Pytocs.Translate
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
 
+
         [Test]
-        public void Ex_DictionaryComprehension2()
+        public void Ex_SetComprehension2()
         {
             var pySrc = "{(a.addr,b.addr) for a,b in fdiff.block_matches}";
             var sExp = "fdiff.block_matches.Chop((a,b) => Tuple.Create(a.addr, b.addr)).ToHashSet()";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
+
+        [Test]
+        public void Ex_SetComprehension3()
+        {
+            var pySrc = "{(a.addr ,b.addr) for a,b in fdiff.block_matches}";
+            var sExp = "fdiff.block_matches.Chop((a,b) => Tuple.Create(a.addr, b.addr)).ToHashSet()";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
+
+        [Test]
+        public void Ex_DictComprehension1()
+        {
+            var pySrc = "{ k:copy.copy(v) for k, v in path.info.iteritems() }";
+            string sExp = "path.info.iteritems()" +
+                ".Select(_tup_1 => new {" + nl +
+                "    k = _tup_1.Item1," + nl +
+                "    v = _tup_1.Item2})" +
+                ".ToDictionary(_tup_1 => _tup_1.k, _tup_1 => copy.copy(_tup_1.v))";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
+
+        [Test]
+        public void Ex_DictComprehension2()
+        {
+            var pySrc = "{ k:k + 'X' for k in path.info }";
+            string sExp = "path.info.ToDictionary(k => k, k => k + \"X\")";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
+
+        [Test]
+        public void Ex_DictComprehension3()
+        {
+            var pySrc = "{ a + b: b + c for a, b, c in path }";
+            string sExp = "path" +
+                ".Select(_tup_1 => new {" + nl +
+                "    a = _tup_1.Item1," + nl +
+                "    b = _tup_1.Item2," + nl +
+                "    c = _tup_1.Item3})" +
+                ".ToDictionary(_tup_1 => _tup_1.a + _tup_1.b, _tup_1 => _tup_1.b + _tup_1.c)";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
 
@@ -313,6 +348,22 @@ namespace Pytocs.Translate
         {
             var pySrc = "{}";
             var sExp = "new Dictionary<object, object> {" + nl + "}";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
+
+        [Test]
+        public void Ex_Regression5()
+        {
+            var pySrc = "round(float( float(count) / float(self.insn_count)), 3) >= .67";
+            var sExp = "round(float(float(count) / float(this.insn_count)), 3) >= 0.67";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
+
+        [Test]
+        public void Ex_ByteConstant()
+        {
+            var pySrc = "b'\\xfe\\xed' * init_stack_size";
+            var sExp = "new byte[] { 0xfe, 0xed } * init_stack_size";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
     }
