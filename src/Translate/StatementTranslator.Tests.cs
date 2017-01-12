@@ -40,7 +40,7 @@ namespace Pytocs.Translate
             var stm = par.stmt();
             var gen = new CodeGenerator(new CodeCompileUnit(), "", "module");
             gen.CurrentMethod = new CodeMemberMethod();
-            var xlt = new StatementTranslator(gen, new Dictionary<string, LocalSymbol>());
+            var xlt = new StatementTranslator(gen, new SymbolGenerator());
             stm.Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -64,7 +64,7 @@ namespace Pytocs.Translate
             var stm = par.stmt();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
-            var xlt = new StatementTranslator(gen, new Dictionary<string, LocalSymbol>());
+            var xlt = new StatementTranslator(gen, new SymbolGenerator());
             stm.Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -107,7 +107,7 @@ namespace Pytocs.Translate
             var stm = par.stmt();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
-            var xlt = new StatementTranslator(gen, new Dictionary<string, LocalSymbol>());
+            var xlt = new StatementTranslator(gen, new SymbolGenerator());
             stm.Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -626,7 +626,7 @@ public static object foo() {
     
     public Foo()
         : base(""x"") {
-        object a = 3;
+        var a = 3;
     }
 }
 
@@ -768,7 +768,7 @@ public static object foo() {
             var pyStm = "def fn():\n    loc = 4\n    return loc\n";
             var sExp =
 @"public static object fn() {
-    object loc = 4;
+    var loc = 4;
     return loc;
 }
 
@@ -954,7 +954,7 @@ yx = _tup_1.Item1;
 @"def foo():
     bar = 4
 
-    # inner fn should become C# lambda
+" + "#" + @" inner fn should become C# lambda
     def baz(a, b):
         print (""Bar squared"" + bar * bar)
         return False
@@ -963,7 +963,7 @@ yx = _tup_1.Item1;
 ";
             var sExp =
 @"public static object foo() {
-    object bar = 4;
+    var bar = 4;
     // inner fn should become C# lambda
     Func<object, object, object> baz = (a,b) => {
         Console.WriteLine(""Bar squared"" + bar * bar);
@@ -1041,6 +1041,26 @@ c.de = ""f"";
 }
 ";
             Assert.AreEqual(sExp, XlatStmts(pySrc));
+        }
+
+        [Test]
+        public void Stmt_Use_CSharpVar_Unless_Null()
+        {
+            var pySrc =
+@"def foo():
+  x = 1
+  node = null
+";
+            var sExp =
+@"public static class testModule {
+    
+    public static object foo() {
+        var x = 1;
+        object node = null;
+    }
+}
+";
+            Assert.AreEqual(sExp, XlatModule(pySrc));
         }
     }
 }

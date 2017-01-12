@@ -161,7 +161,7 @@
     <Compile Include="Translate\ModuleTranslator.Tests.cs" />
     <Compile Include="Translate\StatementNameDiscovery.cs" />
     <Compile Include="Translate\StatementTranslator.cs" />
-    <None Include="Translate\StatementTranslator.Tests.cs" />
+    <Compile Include="Translate\StatementTranslator.Tests.cs" />
     <Compile Include="Translate\SymbolGenerator.cs" />
     <Compile Include="Translator.cs" />
     <Compile Include="TypeInference\Analyzer.cs" />

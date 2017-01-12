@@ -111,7 +111,13 @@ namespace Pytocs.Translate
                     var ass = codeStatement as CodeAssignStatement;
                     if (ass != null)
                     {
-                        stms[i] = new CodeVariableDeclarationStatement("object", id.Name)
+                        // An assignment of type 'name = <exp>'. If the value
+                        // assigned is null, use object type 'object', otherwise
+                        // use 'var'.
+                        var dstType = (ass.Source as CodePrimitiveExpression)?.Value == null
+                            ? "object"
+                            : "var";
+                        stms[i] = new CodeVariableDeclarationStatement(dstType, id.Name)
                         {
                             InitExpression = ass.Source
                         };
