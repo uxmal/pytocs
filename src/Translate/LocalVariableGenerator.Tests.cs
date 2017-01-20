@@ -165,7 +165,7 @@ namespace Pytocs.Translate
             var sExp =
 @"public static object foo() {
     if (this.x) {
-        object x = this.x;
+        var x = this.x;
         x = x + 1;
         this.x = x;
     }
@@ -189,7 +189,7 @@ namespace Pytocs.Translate
             var sExp =
 @"public static object foo() {
     if (this.x) {
-        object x = this.x;
+        var x = this.x;
         this.x = null;
         x.foo();
     }

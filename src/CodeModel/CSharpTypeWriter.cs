@@ -53,6 +53,11 @@ namespace Pytocs.CodeModel
 
         public int VisitMethod(CodeMemberMethod method)
         {
+            foreach (var comment in method.Comments)
+            {
+                writer.Write("//");
+                writer.WriteLine(comment.Comment);
+            }
             RenderCustomAttributes(method);
             RenderMethodAttributes(method.Attributes);
             var expWriter = new CSharpExpressionWriter(writer);

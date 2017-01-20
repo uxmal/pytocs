@@ -950,7 +950,7 @@ yx = _tup_1.Item1;
         [Test]
         public void Stmt_NestedDef()
         {
-            var pySrc=
+            var pySrc =
 @"def foo():
     bar = 4
 
@@ -1007,9 +1007,9 @@ b = d;
         }
 
         [Test]
-        public  void Stmt_Tuple_Assign_field()
+        public void Stmt_Tuple_Assign_field()
         {
-            var pySrc = 
+            var pySrc =
 @"a.b, c.de = 'e','f'
 ";
             var sExp =
@@ -1049,7 +1049,8 @@ c.de = ""f"";
             var pySrc =
 @"def foo():
   x = 1
-  node = null
+  node = None
+  y = bar(x)
 ";
             var sExp =
 @"public static class testModule {
@@ -1057,6 +1058,30 @@ c.de = ""f"";
     public static object foo() {
         var x = 1;
         object node = null;
+        var y = bar(x);
+    }
+}
+";
+            Assert.AreEqual(sExp, XlatModule(pySrc));
+        }
+
+        [Test]
+        public void Stmt_DocString()
+        {
+            var pySrc =
+@"def foo():
+    '''
+    Doc string
+    '''
+    pass
+";
+            var sExp =
+@"public static class testModule {
+    
+    // 
+    //     Doc string
+    //     
+    public static object foo() {
     }
 }
 ";
