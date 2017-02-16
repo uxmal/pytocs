@@ -684,6 +684,22 @@ public static object foo() {
         }
 
         [Test]
+        public void Class_ComputedSlots()
+        {
+            var pyCls =
+@"class MyClass:
+    __slots__ = [x for x, _ in meta.fields]
+";
+
+            var sExp =
+@"public class MyClass {
+}
+
+";
+            Assert.AreEqual(sExp, XlatMember(pyCls));
+        }
+
+        [Test]
         public void Stmt_EmptyCommentLine()
         {
             var pyStm = "# Comment\n";
@@ -1085,6 +1101,21 @@ c.de = ""f"";
     }
 }
 ";
+            Assert.AreEqual(sExp, XlatModule(pySrc));
+        }
+
+        [Test]
+        public void Stmt_Regress3()
+        {
+            var pySrc =
+@"def foo():
+    try:
+        with open(args.wasm_file, 'rb') as raw:
+            raw = raw.read()
+    except IOError as exc:
+        print(""[-] Can't open input file: "" + str(exc), file=sys.stderr)
+";
+            var sExp = "@@@";
             Assert.AreEqual(sExp, XlatModule(pySrc));
         }
     }

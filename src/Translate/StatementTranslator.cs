@@ -288,9 +288,17 @@ namespace Pytocs.Translate
             }
             if (id.Name == "__slots__")
             {
-                foreach (var slotName in slotNames.OfType<Str>())
+                if (slotNames == null)
                 {
-                    GenerateField(slotName.s, null);
+                    // dynamically generated slots are hard.
+                    gen.Comment(ass.ToString());
+                }
+                else
+                {
+                    foreach (var slotName in slotNames.OfType<Str>())
+                    {
+                        GenerateField(slotName.s, null);
+                    }
                 }
             }
             else
