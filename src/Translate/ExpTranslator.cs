@@ -148,6 +148,11 @@ namespace Pytocs.Translate
                 }
                 if (id.Name == "list")
                 {
+                    if (args.Length == 0)
+                    {
+                        m.EnsureImport("System.Collections.Generic");
+                        return m.New(m.TypeRef("List", "object"));
+                    }
                     if (args.Length == 1)
                     {
                         m.EnsureImport("System.Linq");
@@ -182,13 +187,6 @@ namespace Pytocs.Translate
                         var arg = args[0];
                         args = new CodeExpression[0];
                         fn = new CodeFieldReferenceExpression(arg, "Sum");
-                    }
-                }
-                if (id.Name == "list")
-                {
-                    if (args.Length == 0)
-                    {
-                        return m.New(m.TypeRef("List", "object"));
                     }
                 }
             }
