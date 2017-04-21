@@ -170,6 +170,35 @@ namespace Pytocs.Translate
                             args);
                     }
                 }
+                if (id.Name == "dict")
+                {
+                    if (args.Length == 0)
+                    {
+                        m.EnsureImport("System.Collections.Generic");
+                        return m.New(
+                            m.TypeRef("Dictionary", "object", "object"));
+                    }
+                    else if (args.All(a => a is CodeNamedArgument))
+                    {
+                        m.EnsureImport("System.Collections.Generic");
+                        var exp = m.New(
+                            m.TypeRef("Dictionary", "string", "object"));
+                        exp.Initializer = new CodeCollectionInitializer(
+                            args.Cast<CodeNamedArgument>()
+                                .Select(a =>
+                                    new CodeCollectionInitializer(
+                                        new CodePrimitiveExpression(
+                                            ((CodeVariableReferenceExpression)a.exp1).Name),
+                                        a.exp2))
+                                .ToArray());
+                        return exp;
+                    }
+                    else if (args.Length == 1)
+                    {
+                        m.EnsureImport("System.Collections.Generic");
+                        return m.Appl(m.MethodRef(args[0], "ToDictionary"));
+                    }
+                }
                 if (id.Name == "len")
                 {
                     if (args.Length == 1)
@@ -184,9 +213,31 @@ namespace Pytocs.Translate
                 {
                     if (args.Length == 1)
                     {
+                        m.EnsureImport("System.Linq");
                         var arg = args[0];
                         args = new CodeExpression[0];
-                        fn = new CodeFieldReferenceExpression(arg, "Sum");
+                        fn = m.Access(arg, "Sum");
+                    }
+                }
+                if (id.Name == "filter")
+                {
+                    if (args.Length == 2)
+                    {
+                        m.EnsureImport("System.Collections.Generic");
+                        m.EnsureImport("System.Linq");
+                        var filter = args[0];
+                        if (appl.args[0].defval is NoneExp)
+                        {
+                            var formal = gensym.GenSymParameter("_p_", m.TypeRef("object"));
+                            filter = m.Lambda(
+                                new[] { formal },
+                                m.BinOp(formal, CodeOperatorType.NotEqual, new CodePrimitiveExpression(null)));
+                        }
+                        fn = m.Access(
+                                m.Appl(m.Access(args[1], "Where"), filter),
+                                "ToList");
+                        args = new CodeExpression[0];
+
                     }
                 }
             }

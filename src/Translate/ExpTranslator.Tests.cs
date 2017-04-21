@@ -439,6 +439,51 @@ namespace Pytocs.Translate
             Assert.AreEqual(sExp, Xlat(pysrc));
         }
 
+        [Test]
+        public void Ex_intrinsic_dict()
+        {
+            var pysrc = "dict()";
+            var sExp = "new Dictionary<object, object>()";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
 
+        [Test]
+        public void Ex_intrinsic_dict_kwargs()
+        {
+            var pysrc = "dict(foo='bob', bar=sue+3)";
+            var sExp =
+                "new Dictionary<@string, object> {" + nl +
+                "    {" + nl +
+                "        \"foo\"," + nl +
+                "        \"bob\"}," + nl +
+                "    {" + nl +
+                "        \"bar\"," + nl +
+                "        sue + 3}}";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+        [Test]
+        public void Ex_intrinsic_dict_iterable()
+        {
+            var pysrc = "dict(a)";
+            var sExp = "a.ToDictionary()";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+        [Test]
+        public void Ex_intrinsic_filter()
+        {
+            var pysrc = "filter(fn, items)";
+            var sExp = "items.Where(fn).ToList()";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+        [Test]
+        public void Ex_intrinsic_filter_none()
+        {
+            var pysrc = "filter(None, items)";
+            var sExp = "items.Where(_p_1 => _p_1 != null).ToList()";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
     }
 }
