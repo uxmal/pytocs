@@ -518,5 +518,13 @@ namespace Pytocs.Translate
             Assert.AreEqual(sExp, Xlat(pysrc));
         }
 
+        [Test]
+        public void Ex_intrinsic_enumerate()
+        {
+            var pysrc = "enumerate(items)";
+            var sExp = "items.Select((_p_1,_p_2) => Tuple.Create(_p_2, _p_1))";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
     }
 }

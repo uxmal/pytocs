@@ -243,6 +243,20 @@ namespace Pytocs.Translate
                 {
                     return TranslateSorted(args);
                 }
+                if (id.Name == "enumerate")
+                {
+                    if (args.Length == 1)
+                    {
+                        var p = gensym.GenSymLocal("_p_", m.TypeRef("object"));
+                        var i = gensym.GenSymLocal("_p_", m.TypeRef("int"));
+                        return m.ApplyMethod(
+                            args[0],
+                            "Select",
+                            m.Lambda(
+                                new[] { p, i },
+                                m.ApplyMethod(m.TypeRefExpr("Tuple"), "Create", i, p)));
+                    }
+                }
             }
             else
             {
