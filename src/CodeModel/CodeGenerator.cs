@@ -394,6 +394,11 @@ namespace Pytocs.CodeModel
             return exp;
         }
 
+        internal CodePrimitiveExpression Prim(object o)
+        {
+            return new CodePrimitiveExpression(o);
+        }
+
         internal CodeTypeReference TypeRef(string typeName)
         {
             return new CodeTypeReference(typeName);

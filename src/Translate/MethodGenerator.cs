@@ -92,7 +92,7 @@ namespace Pytocs.Translate
                 return;
             method.Statements.Insert(0, new CodeVariableDeclarationStatement("object", p.Id.Name)
             {
-                InitExpression = new CodeFieldReferenceExpression(tuplePath, "Item" + i)
+                InitExpression = gen.Access(tuplePath, "Item" + i)
             });
         }
 

@@ -104,8 +104,8 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitExpList(ExpList l)
         {
-            var fn = new CodeMethodReferenceExpression(
-                new CodeTypeReferenceExpression("Tuple"),
+            var fn = m.MethodRef(
+                m.TypeRefExpr("Tuple"),
                 "Create");
             return m.Appl
                 (fn,
@@ -143,8 +143,7 @@ namespace Pytocs.Translate
                 if (id.Name == "int")
                 {
                     m.EnsureImport("System");
-                    fn = new CodeMethodReferenceExpression(
-                        m.TypeRefExpr("Convert"), "ToInt32");
+                    fn = m.MethodRef(m.TypeRefExpr("Convert"), "ToInt32");
                 }
                 if (id.Name == "list")
                 {
@@ -156,7 +155,7 @@ namespace Pytocs.Translate
                     if (args.Length == 1)
                     {
                         m.EnsureImport("System.Linq");
-                        fn = new CodeMethodReferenceExpression(args[0], "ToList");
+                        fn = m.MethodRef(args[0], "ToList");
                         return m.Appl(fn);
                     }
                 }
@@ -187,7 +186,7 @@ namespace Pytocs.Translate
                             args.Cast<CodeNamedArgument>()
                                 .Select(a =>
                                     new CodeCollectionInitializer(
-                                        new CodePrimitiveExpression(
+                                        m.Prim(
                                             ((CodeVariableReferenceExpression)a.exp1).Name),
                                         a.exp2))
                                 .ToArray());
@@ -206,7 +205,7 @@ namespace Pytocs.Translate
                         var arg = args[0];
                         // TODO: if args is known to be an iterable, but not a collection,
                         // using LinQ Count() instead?
-                        return new CodeFieldReferenceExpression(arg, "Count");
+                        return m.Access(arg, "Count");
                     }
                 }
                 if (id.Name == "sum")
@@ -231,7 +230,7 @@ namespace Pytocs.Translate
                             var formal = gensym.GenSymParameter("_p_", m.TypeRef("object"));
                             filter = m.Lambda(
                                 new[] { formal },
-                                m.BinOp(formal, CodeOperatorType.NotEqual, new CodePrimitiveExpression(null)));
+                                m.BinOp(formal, CodeOperatorType.NotEqual, m.Prim(null)));
                         }
                         fn = m.Access(
                                 m.Appl(m.Access(args[1], "Where"), filter),
@@ -260,14 +259,14 @@ namespace Pytocs.Translate
                     {
                         if (args.Length == 0)
                         {
-                            return new CodeFieldReferenceExpression(field.Expression, "Values");
+                            return m.Access(field.Expression, "Values");
                         }
                     }
                     else if (field.FieldName == "iterkeys")
                     {
                         if (args.Length == 0)
                         {
-                            return new CodeFieldReferenceExpression(field.Expression, "Keys");
+                            return m.Access(field.Expression, "Keys");
                         }
                     }
                 }
@@ -314,7 +313,7 @@ namespace Pytocs.Translate
                     else if (s.step != null)
                         return s.step.Accept(this);
                     else
-                        return new CodePrimitiveExpression(":");
+                        return m.Prim(":");
                 })
                 .ToArray();
             return m.Aref(target, subs);
@@ -341,7 +340,7 @@ namespace Pytocs.Translate
                 {
                     var v = compFor.variable.Accept(this);
                     var c = Translate(v, compFor);
-                    var mr = new CodeMethodReferenceExpression(c, "Select");
+                    var mr = m.MethodRef(c, "Select");
                     var s = m.Appl(mr, new CodeExpression[] {
                         m.Lambda(
                             new CodeExpression[] { v },
@@ -370,7 +369,7 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitRealLiteral(RealLiteral r)
         {
-            return new CodePrimitiveExpression(r.Value);
+            return m.Prim(r.Value);
         }
 
 
@@ -421,7 +420,7 @@ namespace Pytocs.Translate
             if (id != null)
             {
                 return m.Appl(
-                    new CodeMethodReferenceExpression(
+                    m.MethodRef(
                         list,
                         "ToHashSet"),
                         m.Lambda(
@@ -433,9 +432,9 @@ namespace Pytocs.Translate
                 var varList = (ExpList)compFor.variable;
                 return
                     m.Appl(
-                        new CodeMethodReferenceExpression(
+                        m.MethodRef(
                             m.Appl(
-                                new CodeMethodReferenceExpression(
+                                m.MethodRef(
                                     list,
                                     "Chop"),
                                     m.Lambda(
@@ -518,7 +517,7 @@ namespace Pytocs.Translate
             if (bin.op == Op.In)
             {
                 return m.Appl(
-                    new CodeMethodReferenceExpression(r, "Contains"),
+                    m.MethodRef(r, "Contains"),
                      l);
             }
             if (bin.op == Op.NotIn)
@@ -526,14 +525,14 @@ namespace Pytocs.Translate
                 return new CodeUnaryOperatorExpression(
                     CodeOperatorType.Not,
                     m.Appl(
-                        new CodeMethodReferenceExpression(r, "Contains"),
+                        m.MethodRef(r, "Contains"),
                         l));
             }
             if (bin.op == Op.Is)
             {
                 return m.Appl(
-                    new CodeMethodReferenceExpression(
-                        new CodeTypeReferenceExpression("object"),
+                    m.MethodRef(
+                        m.TypeRefExpr("object"),
                         "ReferenceEquals"),
                     l,
                     r);
@@ -563,8 +562,8 @@ namespace Pytocs.Translate
             }
             m.EnsureImport("System");
             return m.Appl(
-                new CodeMethodReferenceExpression(
-                    new CodeTypeReferenceExpression("String"),
+                m.MethodRef(
+                    m.TypeRefExpr("String"),
                     "Format"),
                 args.ToArray());
         }
@@ -574,7 +573,7 @@ namespace Pytocs.Translate
             var compFor = (CompFor) lc.Collection;
             var v = compFor.variable.Accept(this);
             var c = Translate(v, compFor);
-            var mr = new CodeMethodReferenceExpression(c, "Select");
+            var mr = m.MethodRef(c, "Select");
             var s = m.Appl(mr, new CodeExpression[] {
                 m.Lambda(
                     new CodeExpression[] { v },
@@ -607,7 +606,7 @@ namespace Pytocs.Translate
                     //var pySrc = "((a, s) for a in stackframe.alocs.values() for s in a._segment_list)";
                     //string sExp = "stackframe.alocs.SelectMany(aa => aa._segment_list, (a, s) => Tuple.Create( a, s ))";
                     return m.Appl(
-                        new CodeMethodReferenceExpression(c, "SelectMany"),
+                        m.MethodRef(c, "SelectMany"),
                         m.Lambda(
                             new CodeExpression[] {((Identifier)compFor.variable).Accept(this) },
                             join.collection.Accept(this)),
@@ -617,8 +616,8 @@ namespace Pytocs.Translate
                                 ((Identifier)join.variable).Accept(this)
                             },
                             m.Appl(
-                                new CodeMethodReferenceExpression(
-                                    new CodeTypeReferenceExpression("Tuple"),
+                                m.MethodRef(
+                                    m.TypeRefExpr("Tuple"),
                                     "Create"),
                                 ((Identifier)compFor.variable).Accept(this),
                                 ((Identifier)join.variable).Accept(this))));
@@ -629,7 +628,7 @@ namespace Pytocs.Translate
 
         private CodeExpression Where(CodeExpression c, CodeExpression v, CodeExpression filter)
         {
-            var mr = new CodeMethodReferenceExpression(c, "Where");
+            var mr = m.MethodRef(c, "Where");
             var f = m.Appl(mr, new CodeExpression[] {
                 m.Lambda(
                     new CodeExpression[] { v },
@@ -649,7 +648,7 @@ namespace Pytocs.Translate
         public CodeExpression VisitFieldAccess(AttributeAccess acc)
         {
             var exp = acc.Expression.Accept(this);
-            return new CodeFieldReferenceExpression(exp, acc.FieldName.Name);
+            return m.Access(exp, acc.FieldName.Name);
         }
 
         public CodeExpression VisitIdentifier(Identifier id)
@@ -666,12 +665,12 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitNoneExp()
         {
-            return new CodePrimitiveExpression(null);
+            return m.Prim(null);
         }
 
         public CodeExpression VisitBooleanLiteral(BooleanLiteral b)
         {
-            return new CodePrimitiveExpression(b.Value);
+            return m.Prim(b.Value);
         }
 
         public CodeExpression VisitImaginary(ImaginaryLiteral im)
@@ -681,12 +680,12 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitIntLiteral(IntLiteral i)
         {
-            return new CodePrimitiveExpression(i.Value);
+            return m.Prim(i.Value);
         }
 
         public CodeExpression VisitLongLiteral(LongLiteral l)
         {
-            return new CodePrimitiveExpression(l.Value);
+            return m.Prim(l.Value);
         }
 
         public CodeExpression VisitStarExp(StarExp s)
@@ -696,12 +695,12 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitBytes(Bytes b)
         {
-            return new CodePrimitiveExpression(b);
+            return m.Prim(b);
         }
 
         public CodeExpression VisitStr(Str s)
         {
-            return new CodePrimitiveExpression(s);
+            return m.Prim(s);
         }
 
         public CodeExpression VisitTest(TestExp t)
@@ -714,11 +713,11 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitTuple(PyTuple tuple)
         {
-            var fn = new CodeMethodReferenceExpression(
-                new CodeTypeReferenceExpression("Tuple"), "Create");
+            var fn = m.MethodRef(
+                m.TypeRefExpr("Tuple"), "Create");
             if (tuple.values.Count == 0)
             {
-                return m.Appl(fn, new CodePrimitiveExpression("<Empty>"));
+                return m.Appl(fn, m.Prim("<Empty>"));
             }
             else
             {
@@ -729,7 +728,7 @@ namespace Pytocs.Translate
         public CodeExpression VisitYieldExp(YieldExp yieldExp)
         {
             if (yieldExp.exp == null)
-                return new CodePrimitiveExpression(null);
+                return m.Prim(null);
             else
                 return yieldExp.exp.Accept(this);
         }
@@ -806,7 +805,7 @@ namespace Pytocs.Translate
             if (tuple != null)
             {
                 //TODO: tuples, especially nested tuples, are hard.
-                return new CodePrimitiveExpression("!!!{" +
+                return m.Prim("!!!{" +
                     dc.key.Accept(this) +
                     ": " +
                     dc.value.Accept(this));

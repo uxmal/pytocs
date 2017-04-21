@@ -468,9 +468,9 @@ namespace Pytocs.Translate
             }
             else
             {
-                e = new CodeTypeReferenceExpression("Console");
+                e = gen.TypeRefExpr("Console");
             }
-            e = new CodeMethodReferenceExpression(
+            e = gen.MethodRef(
                 e, "WriteLine");
             gen.SideEffect(
                 gen.Appl(
@@ -525,8 +525,8 @@ namespace Pytocs.Translate
         {
             gen.SideEffect(
                 gen.Appl(
-                    new CodeMethodReferenceExpression(
-                        new CodeTypeReferenceExpression("Debug"),
+                    gen.MethodRef(
+                        gen.TypeRefExpr("Debug"),
                         "Assert"),
                     test.Accept(xlat)));
             gen.EnsureImport("System.Diagnostics");
@@ -573,7 +573,7 @@ namespace Pytocs.Translate
                     // foo.Remove(bar)
                     gen.SideEffect(
                         gen.Appl(
-                            new CodeMethodReferenceExpression(
+                            gen.MethodRef(
                                 aref.TargetObject,
                                 "Remove"),
                             aref.Indices[0]));
