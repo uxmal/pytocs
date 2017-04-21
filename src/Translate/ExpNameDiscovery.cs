@@ -187,18 +187,15 @@ namespace Pytocs.Translate
             throw new NotImplementedException();
         }
 
-
         public void VisitSlice(Slice slice)
         {
             throw new NotImplementedException();
         }
 
-
         public void VisitDictComprehension(DictComprehension dc)
         {
             throw new NotImplementedException();
         }
-
 
         public void VisitDictInitializer(DictInitializer di)
         {

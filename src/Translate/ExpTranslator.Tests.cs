@@ -485,5 +485,38 @@ namespace Pytocs.Translate
             var sExp = "items.Where(_p_1 => _p_1 != null).ToList()";
             Assert.AreEqual(sExp, Xlat(pysrc));
         }
+
+        [Test]
+        public void Ex_intrinsic_sorted()
+        {
+            var pysrc = "sorted(items)";
+            var sExp = "items.OrderBy(_p_1 => _p_1).ToList()";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+        [Test]
+        public void Ex_intrinsic_sorted_cmp()
+        {
+            var pysrc = "sorted(items, cmp)";
+            var sExp = "items.OrderBy(cmp).ToList()";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+        [Test]
+        public void Ex_intrinsic_sorted_key()
+        {
+            var pysrc = "sorted(items, key=lambda x: x.addr)";
+            var sExp = "items.OrderBy(x => x.addr).ToList()";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+        [Test]
+        public void Ex_intrinsic_sorted_reverse_bool()
+        {
+            var pysrc = "sorted(items, reverse=true)";
+            var sExp = "items.OrderBy(_p_1 => _p_1).ToList()";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
     }
 }

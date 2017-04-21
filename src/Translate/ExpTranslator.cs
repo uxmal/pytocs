@@ -227,17 +227,21 @@ namespace Pytocs.Translate
                         var filter = args[0];
                         if (appl.args[0].defval is NoneExp)
                         {
-                            var formal = gensym.GenSymParameter("_p_", m.TypeRef("object"));
+                            var formal = gensym.GenSymLocal("_p_", m.TypeRef("object"));
                             filter = m.Lambda(
                                 new[] { formal },
                                 m.BinOp(formal, CodeOperatorType.NotEqual, m.Prim(null)));
                         }
-                        fn = m.Access(
-                                m.Appl(m.Access(args[1], "Where"), filter),
+                        fn = m.MethodRef(
+                                m.Appl(m.MethodRef(args[1], "Where"), filter),
                                 "ToList");
                         args = new CodeExpression[0];
 
                     }
+                }
+                if (id.Name == "sorted")
+                {
+                    return TranslateSorted(args);
                 }
             }
             else
@@ -272,6 +276,57 @@ namespace Pytocs.Translate
                 }
             }
             return m.Appl(fn, args);
+        }
+
+        private CodeExpression TranslateSorted( CodeExpression[] args)
+        {
+            if (args.Length == 0)
+                return m.Appl(new CodeVariableReferenceExpression("sorted"), args);
+            var iter = args[0];
+            var cmp = args.Length > 1 && !(args[1] is CodeNamedArgument)
+                ? args[1]
+                : null;
+            var key = args.Length > 2 && !(args[2] is CodeNamedArgument)
+                ? args[2]
+                : null;
+            var rev = args.Length > 3 && !(args[3] is CodeNamedArgument)
+                ? args[3]
+                : null;
+            var namedArgs = args.OfType<CodeNamedArgument>().ToDictionary(
+                k => ((CodeVariableReferenceExpression)k.exp1).Name,
+                v => v.exp2);
+
+            CodeExpression tmp;
+            if (namedArgs.TryGetValue("cmp", out tmp))
+                cmp = tmp;
+            if (namedArgs.TryGetValue("key", out tmp))
+                key = tmp;
+            if (namedArgs.TryGetValue("reverse", out tmp))
+                rev = tmp;
+
+            m.EnsureImport("System.Collections.Generic");
+            var formal = gensym.GenSymLocal("_p_", m.TypeRef("object"));
+            return m.ApplyMethod(
+                m.ApplyMethod(
+                    iter,
+                    IsReverse(rev) ? "OrderByDescending" : "OrderBy",
+                    cmp ?? key ?? m.Lambda(new[] { formal }, formal)),
+                "ToList");
+        }
+
+        private bool IsReverse(CodeExpression rev)
+        {
+            if (rev == null)
+                return false;
+            var p = rev as CodePrimitiveExpression;
+            if (p != null)
+            {
+                if (p.Value is bool)
+                {
+                    return (bool)p.Value;
+                }
+            }
+            return false;
         }
 
         private CodeExpression TranslateIsinstance(Application appl)

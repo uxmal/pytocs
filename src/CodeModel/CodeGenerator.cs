@@ -141,6 +141,13 @@ namespace Pytocs.CodeModel
             return new CodeApplicationExpression(fn, args);
         }
 
+        public CodeExpression ApplyMethod(CodeExpression obj, string method, params CodeExpression[] args)
+        {
+            return new CodeApplicationExpression(
+                this.MethodRef(obj, method),
+                args);
+        }
+
         public CodeStatement SideEffect(CodeExpression exp)
         {
             var sideeffect = new CodeExpressionStatement(exp);
