@@ -138,10 +138,7 @@ namespace Pytocs.Translate
             {
                 if (id.Name == "isinstance" && appl.args.Count == 2)
                 {
-                    return new CodeBinaryOperatorExpression(
-                        appl.args[0].defval.Accept(this),
-                        CodeOperatorType.Is,
-                        new CodeTypeReferenceExpression(appl.args[1].defval.ToString()));
+                    return TranslateIsinstance(appl);
                 }
                 if (id.Name == "int")
                 {
@@ -160,20 +157,12 @@ namespace Pytocs.Translate
                 }
                 if (id.Name == "set")
                 {
-                    if (args.Length == 0)
+                    if (args.Length == 0 || args.Length == 1)
                     {
                         m.EnsureImport("System.Collections.Generic");
-                        return new CodeObjectCreateExpression
-                        {
-                            Type = new CodeTypeReference
-                            {
-                                TypeName = "HashSet",
-                                TypeArguments =
-                            {
-                                new CodeTypeReference(typeof(object))
-                            }
-                            }
-                        };
+                        return m.New(
+                            m.TypeRef("HashSet", "object"),
+                            args);
                     }
                 }
                 if (id.Name == "len")
@@ -184,6 +173,22 @@ namespace Pytocs.Translate
                         // TODO: if args is known to be an iterable, but not a collection,
                         // using LinQ Count() instead?
                         return new CodeFieldReferenceExpression(arg, "Count");
+                    }
+                }
+                if (id.Name == "sum")
+                {
+                    if (args.Length == 1)
+                    {
+                        var arg = args[0];
+                        args = new CodeExpression[0];
+                        fn = new CodeFieldReferenceExpression(arg, "Sum");
+                    }
+                }
+                if (id.Name == "list")
+                {
+                    if (args.Length == 0)
+                    {
+                        return m.New(m.TypeRef("List", "object"));
                     }
                 }
             }
@@ -219,6 +224,28 @@ namespace Pytocs.Translate
                 }
             }
             return m.Appl(fn, args);
+        }
+
+        private CodeExpression TranslateIsinstance(Application appl)
+        {
+            var tuple = appl.args[1].defval as PyTuple;
+            List<Exp> types;
+            if (tuple != null)
+            {
+                types = tuple.values.ToList();
+            }
+            else
+            {
+                types = new List<Exp> { appl.args[1].defval };
+            }
+
+            var exp = appl.args[0].defval.Accept(this);
+            return types.
+                Select(t => m.BinOp(
+                    exp,
+                    CodeOperatorType.Is,
+                    m.TypeRefExpr(t.ToString())))
+                .Aggregate((a, b) => m.BinOp(a, CodeOperatorType.LogOr, b));
         }
 
         public CodeExpression VisitArrayRef(ArrayRef aref)

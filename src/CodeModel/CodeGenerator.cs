@@ -384,6 +384,16 @@ namespace Pytocs.CodeModel
             return new CodeMethodReferenceExpression(exp, methodName);
         }
 
+        internal CodeExpression New(CodeTypeReference type, params CodeExpression[] args)
+        {
+            var exp = new CodeObjectCreateExpression
+            {
+                Type = type
+            };
+            exp.Arguments.AddRange(args);
+            return exp;
+        }
+
         internal CodeTypeReference TypeRef(string typeName)
         {
             return new CodeTypeReference(typeName);

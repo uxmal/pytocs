@@ -572,6 +572,13 @@ namespace Pytocs.CodeModel
             }
         }
 
+        private static Dictionary<string, string> csharpTypenames = new Dictionary<string, string>
+        {
+            { "int", "int" },
+            { "long", "long" },
+            { "System.Object", "object" },
+        };
+
         private void GenerateTypeName(string typeName)
         {
             if (typeName == "System.Object")
@@ -579,7 +586,13 @@ namespace Pytocs.CodeModel
             else if (typeName == null)
                 writer.Write("void");
             else
-                writer.WriteName(typeName);
+            {
+                string csharpName;
+                if (csharpTypenames.TryGetValue(typeName, out csharpName))
+                    writer.Write(csharpName);
+                else
+                    writer.WriteName(typeName);
+            }
         }
 
         public void VisitTypeReference(CodeTypeReferenceExpression t)

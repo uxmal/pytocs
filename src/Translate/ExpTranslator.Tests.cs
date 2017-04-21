@@ -75,6 +75,14 @@ namespace Pytocs.Translate
         }
 
         [Test]
+        public void ExIsOneOfManyTypes()
+        {
+            var pysrc = "isinstance(read_addr, (int, long))";
+            var sExp = "read_addr is int || read_addr is long";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+        [Test]
         public void ExSelf()
         {
             Assert.AreEqual("this", Xlat("self"));
@@ -224,7 +232,7 @@ namespace Pytocs.Translate
         public void Ex_CompFor()
         {
             var pySrc = "sum(int2byte(b) for b in bytelist)";
-            string sExp = "sum(bytelist.Select(b => int2byte(b)))";
+            string sExp = "bytelist.Select(b => int2byte(b)).Sum()";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
 
@@ -398,5 +406,39 @@ namespace Pytocs.Translate
             var sExp = "foo.Keys";
             Assert.AreEqual(sExp, Xlat(pysrc));
         }
+
+        [Test]
+        public void Ex_instrinsic_sum()
+        {
+            var pysrc = "sum(bar)";
+            var sExp = "bar.Sum()";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+        
+        [Test]
+        public void Ex_instrinsic_list()
+        {
+            var pysrc = "list()";
+            var sExp = "new List<object>()";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+        [Test]
+        public void Ex_instrinsic_set()
+        {
+            var pysrc = "set()";
+            var sExp = "new HashSet<object>()";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+        [Test]
+        public void Ex_instrinsic_set_with_args()
+        {
+            var pysrc = "set(a)";
+            var sExp = "new HashSet<object>(a)";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+
     }
 }
