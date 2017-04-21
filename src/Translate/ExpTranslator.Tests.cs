@@ -298,7 +298,7 @@ namespace Pytocs.Translate
         public void Ex_DictComprehension1()
         {
             var pySrc = "{ k:copy.copy(v) for k, v in path.info.iteritems() }";
-            string sExp = "path.info.iteritems()" +
+            string sExp = "path.info" +
                 ".Select(_tup_1 => new {" + nl +
                 "    k = _tup_1.Item1," + nl +
                 "    v = _tup_1.Item2})" +
@@ -372,6 +372,30 @@ namespace Pytocs.Translate
         {
             var pysrc = "len(foo.bar)";
             var sExp = "foo.bar.Count";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+        [Test]
+        public void Ex_instrinsic_iteritems()
+        {
+            var pysrc = "foo.iteritems()";
+            var sExp = "foo";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+        [Test]
+        public void Ex_instrinsic_itervalues()
+        {
+            var pysrc = "foo.itervalues()";
+            var sExp = "foo.Values";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+        [Test]
+        public void Ex_instrinsic_iterkeys()
+        {
+            var pysrc = "foo.iterkeys()";
+            var sExp = "foo.Keys";
             Assert.AreEqual(sExp, Xlat(pysrc));
         }
     }

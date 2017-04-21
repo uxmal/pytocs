@@ -134,58 +134,88 @@ namespace Pytocs.Translate
             var fn = appl.fn.Accept(this);
             var args = TranslateArgs(appl).ToArray();
             var id = fn as CodeVariableReferenceExpression;
-            if (id == null)
+            if (id != null)
             {
-                return m.Appl(appl.fn.Accept(this), args);
-            }
-            if (id.Name == "isinstance" && appl.args.Count == 2)
-            {
-                return new CodeBinaryOperatorExpression(
-                    appl.args[0].defval.Accept(this),
-                    CodeOperatorType.Is,
-                    new CodeTypeReferenceExpression(appl.args[1].defval.ToString()));
-            }
-            if (id.Name == "int")
-            {
-                m.EnsureImport("System");
-                fn = new CodeMethodReferenceExpression(
-                    m.TypeRefExpr("Convert"), "ToInt32");
-            }
-            if (id.Name == "list")
-            {
-                if (args.Length == 1)
+                if (id.Name == "isinstance" && appl.args.Count == 2)
                 {
-                    m.EnsureImport("System.Linq");
-                    fn = new CodeMethodReferenceExpression(args[0], "ToList");
-                    return m.Appl(fn);
+                    return new CodeBinaryOperatorExpression(
+                        appl.args[0].defval.Accept(this),
+                        CodeOperatorType.Is,
+                        new CodeTypeReferenceExpression(appl.args[1].defval.ToString()));
                 }
-            }
-            if (id.Name == "set")
-            {
-                if (args.Length == 0)
+                if (id.Name == "int")
                 {
-                    m.EnsureImport("System.Collections.Generic");
-                    return new CodeObjectCreateExpression
+                    m.EnsureImport("System");
+                    fn = new CodeMethodReferenceExpression(
+                        m.TypeRefExpr("Convert"), "ToInt32");
+                }
+                if (id.Name == "list")
+                {
+                    if (args.Length == 1)
                     {
-                        Type = new CodeTypeReference
+                        m.EnsureImport("System.Linq");
+                        fn = new CodeMethodReferenceExpression(args[0], "ToList");
+                        return m.Appl(fn);
+                    }
+                }
+                if (id.Name == "set")
+                {
+                    if (args.Length == 0)
+                    {
+                        m.EnsureImport("System.Collections.Generic");
+                        return new CodeObjectCreateExpression
                         {
-                            TypeName = "HashSet",
-                            TypeArguments =
+                            Type = new CodeTypeReference
+                            {
+                                TypeName = "HashSet",
+                                TypeArguments =
                             {
                                 new CodeTypeReference(typeof(object))
                             }
-                        }
-                    };
+                            }
+                        };
+                    }
+                }
+                if (id.Name == "len")
+                {
+                    if (args.Length == 1)
+                    {
+                        var arg = args[0];
+                        // TODO: if args is known to be an iterable, but not a collection,
+                        // using LinQ Count() instead?
+                        return new CodeFieldReferenceExpression(arg, "Count");
+                    }
                 }
             }
-            if (id.Name == "len")
+            else
             {
-                if (args.Length == 1)
+                var field = fn as CodeFieldReferenceExpression;
+                if (field != null)
                 {
-                    var arg = args[0];
-                    // TODO: if args is known to be an iterable, but not a collection,
-                    // using LinQ Count() instead?
-                    return new CodeFieldReferenceExpression(arg, "Count");
+                    if (field.FieldName == "iteritems")
+                    {
+                        if (args.Length == 0)
+                        {
+                            // iteritems is Python 2.x returning an iterable over 
+                            // a dictionary's key-value pairs. In C#, just return
+                            // the dictionary (assumes that we're dealing with a dictionary!)
+                        }
+                        return field.Expression;
+                    }
+                    else if (field.FieldName == "itervalues")
+                    {
+                        if (args.Length == 0)
+                        {
+                            return new CodeFieldReferenceExpression(field.Expression, "Values");
+                        }
+                    }
+                    else if (field.FieldName == "iterkeys")
+                    {
+                        if (args.Length == 0)
+                        {
+                            return new CodeFieldReferenceExpression(field.Expression, "Keys");
+                        }
+                    }
                 }
             }
             return m.Appl(fn, args);
