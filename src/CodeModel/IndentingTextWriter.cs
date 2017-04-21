@@ -27,7 +27,7 @@ namespace Pytocs.CodeModel
         private TextWriter writer;
         private bool atStartOfLine;
 
-        private static HashSet<string> keywords = new HashSet<string>
+        private static HashSet<string> csharpKeywords = new HashSet<string>
         {
             "base",
             "bool",
@@ -39,6 +39,8 @@ namespace Pytocs.CodeModel
             "false",
             "int",
             "new",
+            "operator",
+            "override",
             "ref",
             "sizeof",
             "static",
@@ -96,7 +98,7 @@ namespace Pytocs.CodeModel
         {
             if (name.Contains("__"))
                 return true;
-            return keywords.Contains(name);
+            return csharpKeywords.Contains(name);
         }
 
         internal void Write(string format, params object [] args)

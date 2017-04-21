@@ -366,5 +366,13 @@ namespace Pytocs.Translate
             var sExp = "new byte[] { 0xfe, 0xed } * init_stack_size";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
+
+        [Test]
+        public void Ex_intrinsic_len()
+        {
+            var pysrc = "len(foo.bar)";
+            var sExp = "foo.bar.Count";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
     }
 }

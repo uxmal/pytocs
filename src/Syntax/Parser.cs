@@ -586,6 +586,10 @@ eval_input: testlist NEWLINE* ENDMARKER
                     {
                         if (Peek(TokenType.RPAREN))
                             break;      // Skip trailing comma
+                        else if (PeekAndDiscard(TokenType.COMMENT))
+                        {
+                            //$TODO: arg-specific comment?
+                        }
                         if (PeekAndDiscard(TokenType.OP_STARSTAR))
                         {
                             arg = fpdef();

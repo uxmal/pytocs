@@ -533,5 +533,23 @@ def wrapper():
 ";
             Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
         }
+
+        [Test]
+        public void Parse_FunctionDef()
+        {
+            var pySrc =
+@"def foo(arch_options=None,
+                 start=None,  # deprecated
+                 end=None,  # deprecated
+                 **extra_arch_options
+                 ):
+    return 3
+";
+            var sExp =
+@"def foo(arch_options=None,start=None,end=None,**extra_arch_options):
+    return 3
+";
+            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+        }
     }
 }

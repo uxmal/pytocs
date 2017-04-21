@@ -178,6 +178,16 @@ namespace Pytocs.Translate
                     };
                 }
             }
+            if (id.Name == "len")
+            {
+                if (args.Length == 1)
+                {
+                    var arg = args[0];
+                    // TODO: if args is known to be an iterable, but not a collection,
+                    // using LinQ Count() instead?
+                    return new CodeFieldReferenceExpression(arg, "Count");
+                }
+            }
             return m.Appl(fn, args);
         }
 
