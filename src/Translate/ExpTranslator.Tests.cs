@@ -526,5 +526,28 @@ namespace Pytocs.Translate
             Assert.AreEqual(sExp, Xlat(pysrc));
         }
 
+        [Test]
+        public void Ex_for_with_if()
+        {
+            var pysrc = "(a for a in function.endpoints if a.addr == endpoint_addr)";
+            var sExp = "function.endpoints.Where(a => a.addr == endpoint_addr)";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+        [Test]
+        public void Ex_for_with_if_projected()
+        {
+            var pysrc = "(a.x for a in function.endpoints if a.addr == endpoint_addr)";
+            var sExp = "function.endpoints.Where(a => a.addr == endpoint_addr).Select(a => a.x)";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+        [Test]
+        public void Ex_for_with_if_projected_to_set()
+        {
+            var pysrc = "{a for a in function.endpoints if a.addr == endpoint_addr}";
+            var sExp = "function.endpoints.Where(a => a.addr == endpoint_addr).ToHashSet()";
+            Assert.AreEqual(sExp, Xlat(pysrc));
+        }
     }
 }

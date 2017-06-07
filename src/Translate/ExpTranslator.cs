@@ -484,16 +484,25 @@ namespace Pytocs.Translate
         public CodeExpression VisitSetComprehension(SetComprehension sc)
         {
             var compFor = (CompFor) sc.Collection;
-            var list = compFor.collection.Accept(this);
-            var id = compFor.variable as Identifier;
-            if (id != null)
+
+            var v = compFor.variable.Accept(this);
+            var c = Translate(v, compFor);
+
+            if (IsIdentityProjection(compFor, sc.Projection))
             {
                 return m.Appl(
                     m.MethodRef(
-                        list,
+                        c,
+                        "ToHashSet"));
+            }
+            else if (v is CodeVariableReferenceExpression)
+            {
+                return m.Appl(
+                    m.MethodRef(
+                        c,
                         "ToHashSet"),
                         m.Lambda(
-                            new CodeExpression[] { id.Accept(this) },
+                            new CodeExpression[] { v },
                             sc.Projection.Accept(this)));
             }
             else
@@ -504,7 +513,7 @@ namespace Pytocs.Translate
                         m.MethodRef(
                             m.Appl(
                                 m.MethodRef(
-                                    list,
+                                    c,
                                     "Chop"),
                                     m.Lambda(
                                          varList.Expressions.Select(e => e.Accept(this)).ToArray(),
@@ -637,11 +646,22 @@ namespace Pytocs.Translate
                 args.ToArray());
         }
 
+        private bool IsIdentityProjection(CompFor compFor, Exp projection)
+        {
+            var idV = compFor.variable as Identifier;
+            var idP = projection as Identifier;
+            return (idV != null && idP != null && idV.Name == idP.Name);
+        }
+
         public CodeExpression VisitListComprehension(ListComprehension lc)
         {
             var compFor = (CompFor) lc.Collection;
             var v = compFor.variable.Accept(this);
             var c = Translate(v, compFor);
+
+            if (IsIdentityProjection(compFor, lc.Projection))
+                return c;
+
             var mr = m.MethodRef(c, "Select");
             var s = m.Appl(mr, new CodeExpression[] {
                 m.Lambda(
