@@ -71,7 +71,10 @@ namespace Pytocs.CodeModel
             return clause;
         }
 
-        public CodeTypeDeclaration Class(string name, IEnumerable<string> baseClasses, Action body)
+        public CodeTypeDeclaration Class(
+            string name, 
+            IEnumerable<string> baseClasses, 
+            Action body)
         {
             var c = new CodeTypeDeclaration
             {
@@ -452,6 +455,28 @@ namespace Pytocs.CodeModel
             xlatUsingBody();
             Scope = old;
             return u;
+        }
+
+        internal CodeMemberProperty PropertyDef(string name, Action generatePropertyGetter, Action generatePropertySetter)
+        {
+            var prop = new CodeMemberProperty
+            {
+                Name = name,
+                Attributes = MemberAttributes.Public,
+                PropertyType = new CodeTypeReference(typeof(object))
+            };
+            var mem = new System.CodeDom.CodeMemberProperty();
+            var old = Scope;
+            this.Scope = prop.GetStatements;
+            generatePropertyGetter();
+            if (generatePropertySetter != null)
+            {
+                this.Scope = prop.SetStatements;
+                generatePropertySetter();
+            }
+            Scope = old;
+            CurrentType.Members.Add(prop);
+            return prop;
         }
     }
 }

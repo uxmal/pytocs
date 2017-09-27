@@ -31,6 +31,7 @@ namespace Pytocs.Translate
         private SymbolGenerator gensym;
         private ClassDef currentClass;
         private IEnumerable<CodeAttributeDeclaration> customAttrs;
+        private Dictionary<Decorated, PropertyDefinition> properties;
         private CodeConstructor classConstructor;
 
         public StatementTranslator(CodeGenerator gen, SymbolGenerator gensym)
@@ -47,6 +48,7 @@ namespace Pytocs.Translate
             var gensym = new SymbolGenerator();
             var stmtXlt = new StatementTranslator(gen, gensym);
             stmtXlt.currentClass = c;
+            stmtXlt.properties = FindProperties(c.body.stmts);
             var csClass = gen.Class(c.name.Name, baseClasses, () => c.body.Accept(stmtXlt));
             csClass.Comments.AddRange(comments);
             if (customAttrs != null)
@@ -54,6 +56,34 @@ namespace Pytocs.Translate
                 csClass.CustomAttributes.AddRange(customAttrs);
                 customAttrs = null;
             }
+        }
+
+        public Dictionary<Decorated, PropertyDefinition> FindProperties(List<Statement> stmts)
+        {
+            var decs = stmts.OfType<Decorated>();
+            var propdefs = new Dictionary<string, PropertyDefinition>();
+            var result = new Dictionary<Decorated, PropertyDefinition>();
+            foreach (var dec in decs)
+            {
+                foreach (var decoration in dec.Decorations)
+                {
+                    if (decoration.className.segs.Count == 1 &&
+                        decoration.className.segs[0].Name == "property")
+                    {
+                        var def = (FunctionDef)dec.Statement;
+                        PropertyDefinition propdef;
+                        if (!propdefs.TryGetValue(def.name.Name, out propdef))
+                        {
+                            propdef = new PropertyDefinition(def.name.Name);
+                            propdefs.Add(def.name.Name, propdef);
+                        }
+                        result[dec] = propdef;
+                        propdef.Getter = dec;
+                        propdef.GetterDecoration = decoration;
+                    }
+                }
+            }
+            return result;
         }
 
         public static IEnumerable<CodeCommentStatement> ConvertFirstStringToComments(List<Statement> statements)
@@ -544,8 +574,40 @@ namespace Pytocs.Translate
 
         public void VisitDecorated(Decorated d)
         {
-            this.customAttrs = d.Decorations.Select(dd => VisitDecorator(dd));
-            d.Statement.Accept(this);
+            var decorators = d.Decorations.ToList();
+            PropertyDefinition propdef;
+            if (this.properties.TryGetValue(d, out propdef))
+            {
+                if (propdef.IsTranslated)
+                    return;
+                decorators.Remove(propdef.GetterDecoration);
+                decorators.Remove(propdef.SetterDecoration);
+                this.customAttrs = decorators.Select(dd => VisitDecorator(dd));
+                gen.PropertyDef(
+                    propdef.Name,
+                    () => GeneratePropertyGetter(propdef.Getter),
+                    () => GeneratePropertySetter(propdef.Setter));
+                propdef.IsTranslated = true;
+            }
+            else
+            {
+                this.customAttrs = d.Decorations.Select(dd => VisitDecorator(dd));
+                d.Statement.Accept(this);
+            }
+        }
+
+        private void GeneratePropertyGetter(Decorated getter)
+        {
+            var def = (FunctionDef)getter.Statement;
+            def.body.Accept(this);
+        }
+
+        private void GeneratePropertySetter(Decorated setter)
+        {
+            if (setter == null)
+                return;
+            var def = (FunctionDef)setter.Statement;
+            def.body.Accept(this);
         }
 
         public CodeAttributeDeclaration VisitDecorator(Decorator d)
@@ -636,6 +698,21 @@ namespace Pytocs.Translate
         public void VisitYield(YieldStatement y)
         {
             gen.Yield(y.Expression.Accept(xlat));
+        }
+    }
+
+    public class PropertyDefinition
+    {
+        public string Name;
+        public Decorated Getter;
+        public Decorated Setter;
+        public Decorator GetterDecoration;
+        public Decorator SetterDecoration;
+        public bool IsTranslated;
+
+        public PropertyDefinition(string name)
+        {
+            this.Name = name;
         }
     }
 }

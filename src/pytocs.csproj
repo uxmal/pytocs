@@ -33,8 +33,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="nunit.framework, Version=2.6.3.13283, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <SpecificVersion>False</SpecificVersion>
+    <Reference Include="nunit.framework">
+      <HintPath>..\external\NUnit-2.6.3\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -60,6 +60,7 @@
     <Compile Include="CodeModel\CodeFieldReferenceExpression.cs" />
     <Compile Include="CodeModel\CodeInitializerExpression.cs" />
     <Compile Include="CodeModel\CodeLambdaExpression.cs" />
+    <Compile Include="CodeModel\CodeMemberProperty.cs" />
     <Compile Include="CodeModel\CodeMethodReferenceExpression.cs" />
     <Compile Include="CodeModel\CodeMethodReturnStatement.cs" />
     <Compile Include="CodeModel\CodeObjectCreateExpression.cs" />

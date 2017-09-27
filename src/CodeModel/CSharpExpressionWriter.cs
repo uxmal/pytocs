@@ -92,6 +92,11 @@ namespace Pytocs.CodeModel
             { CodeOperatorType.XorEq, PrecAssignment },
         };
 
+        internal void VisitTypeReference(object propertyType)
+        {
+            throw new NotImplementedException();
+        }
+
         private IndentingTextWriter writer;
         private int precedence;
 

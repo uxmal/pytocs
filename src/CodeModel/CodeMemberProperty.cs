@@ -18,15 +18,25 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace Pytocs.CodeModel
 {
-    public interface ICodeMemberVisitor<T>
+    public class CodeMemberProperty : CodeMember
     {
-        T VisitField(CodeMemberField field);
-        T VisitMethod(CodeMemberMethod method);
-        T VisitTypeDefinition(CodeTypeDeclaration type);
-        T VisitProperty(CodeMemberProperty codeMemberProperty);
-        T VisitConstructor(CodeConstructor codeConstructor);
+        public CodeMemberProperty()
+        {
+            this.GetStatements = new List<CodeStatement>();
+            this.SetStatements = new List<CodeStatement>();
+        }
+
+        public CodeTypeReference PropertyType { get; set; }
+        public List<CodeStatement> GetStatements { get; set; }
+        public List<CodeStatement> SetStatements { get; set; }
+
+        public override T Accept<T>(ICodeMemberVisitor<T> visitor)
+        {
+            return visitor.VisitProperty(this);
+        }
     }
 }

@@ -51,6 +51,37 @@ namespace Pytocs.CodeModel
             return 0;
         }
 
+        public int VisitProperty(CodeMemberProperty property)
+        {
+            RenderMemberFieldAttributes(property.Attributes);
+            var expWriter = new CSharpExpressionWriter(writer);
+            expWriter.VisitTypeReference(property.PropertyType);
+            writer.Write(" ");
+            writer.WriteName(property.Name);
+            writer.Write(" ");
+            writer.Write("{");
+            writer.WriteLine();
+            ++writer.IndentLevel;
+            writer.Write("get");
+
+            var stmWriter = new CSharpStatementWriter(writer);
+            stmWriter.WriteStatements(property.GetStatements);
+            writer.WriteLine();
+
+            if (property.SetStatements.Count > 0)
+            {
+                writer.Write("set");
+                stmWriter = new CSharpStatementWriter(writer);
+                stmWriter.WriteStatements(property.SetStatements);
+                writer.WriteLine();
+            }
+
+            --writer.IndentLevel;
+            writer.Write("}");
+            writer.WriteLine();
+            return 0;
+        }
+
         public int VisitMethod(CodeMemberMethod method)
         {
             foreach (var comment in method.Comments)

@@ -1119,6 +1119,32 @@ c.de = ""f"";
             var sExp = "@@@";
             Assert.AreEqual(sExp, XlatModule(pySrc));
         }
+
+        [Test]
+        public void Stmt_Property()
+        {
+            var pySrc =
+@"class foo:
+
+    @property
+    def size():
+        return 3
+";
+            var sExp =
+@"public static class testModule {
+    
+    public class foo {
+        
+        public object size {
+            get {
+                return 3;
+            }
+        }
+    }
+}
+";
+            Assert.AreEqual(sExp, XlatModule(pySrc));
+        }
     }
 }
 #endif
