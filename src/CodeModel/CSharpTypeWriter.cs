@@ -53,6 +53,12 @@ namespace Pytocs.CodeModel
 
         public int VisitProperty(CodeMemberProperty property)
         {
+            foreach (var comment in property.Comments)
+            {
+                writer.Write("//");
+                writer.WriteLine(comment.Comment);
+            }
+            RenderCustomAttributes(property);
             RenderMemberFieldAttributes(property.Attributes);
             var expWriter = new CSharpExpressionWriter(writer);
             expWriter.VisitTypeReference(property.PropertyType);

@@ -33,7 +33,6 @@ namespace Pytocs.CodeModel
         {
             this.Members = new List<CodeMember>();
             this.BaseTypes = new List<CodeTypeReference>();
-            this.Comments = new List<CodeCommentStatement>();
             Attributes = MemberAttributes.Public;
         }
 
@@ -42,8 +41,6 @@ namespace Pytocs.CodeModel
         public List<CodeMember> Members { get; private set; }
 
         public List<CodeTypeReference> BaseTypes { get; private set; }
-
-        public List<CodeCommentStatement> Comments { get; private set; }
 
         public override T Accept<T>(ICodeMemberVisitor<T> visitor)
         {

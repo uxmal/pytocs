@@ -349,6 +349,10 @@ namespace Pytocs.TypeInference
             }
         }
 
+        /// <summary>
+        /// Create a datatype from the union of the 
+        /// types of each binding.
+        /// </summary>
         public static DataType MakeUnion(ISet<Binding> bs)
         {
             DataType t = DataType.Unknown;

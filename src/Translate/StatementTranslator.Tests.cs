@@ -39,7 +39,7 @@ namespace Pytocs.Translate
             var par = new Syntax.Parser("foo.py", lex);
             var stm = par.stmt();
             var gen = new CodeGenerator(new CodeCompileUnit(), "", "module");
-            gen.CurrentMethod = new CodeMemberMethod();
+            gen.SetCurrentMethod(new CodeMemberMethod());
             var xlt = new StatementTranslator(gen, new SymbolGenerator());
             stm.Accept(xlt);
             var pvd = new CSharpCodeProvider();
@@ -1138,6 +1138,95 @@ c.de = ""f"";
         public object size {
             get {
                 return 3;
+            }
+        }
+    }
+}
+";
+            Assert.AreEqual(sExp, XlatModule(pySrc));
+        }
+
+        [Test]
+        public void Stmt_Property_WithAssignment()
+        {
+            var pySrc =
+@"class foo:
+
+    @property
+    def size():
+        a = 3
+        return a
+";
+            var sExp =
+@"public static class testModule {
+    
+    public class foo {
+        
+        public object size {
+            get {
+                var a = 3;
+                return a;
+            }
+        }
+    }
+}
+";
+            Assert.AreEqual(sExp, XlatModule(pySrc));
+        }
+
+        [Test]
+        public void Stmt_Property_Method()
+        {
+            var pySrc =
+@"class foo:
+
+    @property
+    def size():
+        return x
+
+    def method():
+        print ""Hello""
+";
+            var sExp =
+@"public static class testModule {
+    
+    public class foo {
+        
+        public object size {
+            get {
+                return x;
+            }
+        }
+        
+        public static object method() {
+            Console.WriteLine(""Hello"");
+        }
+    }
+}
+";
+            Assert.AreEqual(sExp, XlatModule(pySrc));
+        }
+
+        [Test]
+        public void Stmt_Property_DocComment()
+        {
+            var pySrc =
+@"class foo:
+
+    @property
+    def size():
+        ''' DocComment '''
+        return x
+";
+            var sExp =
+@"public static class testModule {
+    
+    public class foo {
+        
+        //  DocComment 
+        public object size {
+            get {
+                return x;
             }
         }
     }

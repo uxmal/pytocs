@@ -39,6 +39,7 @@ namespace Pytocs.Translate
             this.gen = gen;
             this.gensym = gensym;
             this.xlat = new ExpTranslator(gen, gensym);
+            this.properties = new Dictionary<Decorated, PropertyDefinition>();
         }
 
         public void VisitClass(ClassDef c)
@@ -197,7 +198,7 @@ namespace Pytocs.Translate
                 }
                 var rhs = ass.Src.Accept(xlat);
                 var lhs = ass.Dst.Accept(xlat);
-                if (gen.CurrentMethod != null)
+                if (gen.CurrentMember != null)
                 {
                     if (ass.op == Op.Assign)
                     {
@@ -223,7 +224,7 @@ namespace Pytocs.Translate
                 }
                 return;
             }
-            if (gen.CurrentMethod != null)
+            if (gen.CurrentMember != null)
             {
                 var ex = e.Expression.Accept(xlat);
                 gen.SideEffect(ex);
@@ -387,7 +388,7 @@ namespace Pytocs.Translate
             MethodGenerator mgen;
             MemberAttributes attrs = 0;
 
-            if (this.gen.CurrentMethod != null)
+            if (this.gen.CurrentMember != null)
             {
                 var lgen = new LambdaBodyGenerator(f, f.parameters, true, gen);
                 var def = lgen.GenerateLambdaVariable(f);
@@ -395,13 +396,13 @@ namespace Pytocs.Translate
                 def.InitExpression = gen.Lambda(
                     meth.Parameters.Select(p => new CodeVariableReferenceExpression(p.ParameterName)).ToArray(),
                     meth.Statements);
-                gen.CurrentMethod.Statements.Add(def);
+                gen.CurrentMemberStatements.Add(def);
                 return;
             }
             if (this.currentClass != null)
             {
                 // Inside a class; is this a instance method?
-                bool hasSelf = f.parameters.Where(p => p.Id != null && p.Id.Name == "self").Count() > 0;
+                bool hasSelf = f.parameters.Any(p => p.Id != null && p.Id.Name == "self");
                 if (hasSelf)
                 {
                     // Presence of 'self' says it _is_ an instance method.
@@ -583,10 +584,16 @@ namespace Pytocs.Translate
                 decorators.Remove(propdef.GetterDecoration);
                 decorators.Remove(propdef.SetterDecoration);
                 this.customAttrs = decorators.Select(dd => VisitDecorator(dd));
-                gen.PropertyDef(
+                var prop = gen.PropertyDef(
                     propdef.Name,
                     () => GeneratePropertyGetter(propdef.Getter),
                     () => GeneratePropertySetter(propdef.Setter));
+                LocalVariableGenerator.Generate(null, prop.GetStatements);
+                LocalVariableGenerator.Generate(
+                    new List<CodeParameterDeclarationExpression> {
+                        new CodeParameterDeclarationExpression(prop.PropertyType, "value"),
+                    },
+                    prop.SetStatements);
                 propdef.IsTranslated = true;
             }
             else
@@ -599,7 +606,10 @@ namespace Pytocs.Translate
         private void GeneratePropertyGetter(Decorated getter)
         {
             var def = (FunctionDef)getter.Statement;
-            def.body.Accept(this);
+            var mgen = new MethodGenerator(def, null, def.parameters, false, gen);
+            var comments = ConvertFirstStringToComments(def.body.stmts);
+            gen.CurrentMemberComments.AddRange(comments);
+            mgen.Xlat(def.body);
         }
 
         private void GeneratePropertySetter(Decorated setter)
@@ -607,7 +617,10 @@ namespace Pytocs.Translate
             if (setter == null)
                 return;
             var def = (FunctionDef)setter.Statement;
-            def.body.Accept(this);
+            var mgen = new MethodGenerator(def, null, def.parameters, false, gen);
+            var comments = ConvertFirstStringToComments(def.body.stmts);
+            gen.CurrentMemberComments.AddRange(comments);
+            mgen.Xlat(def.body);
         }
 
         public CodeAttributeDeclaration VisitDecorator(Decorator d)

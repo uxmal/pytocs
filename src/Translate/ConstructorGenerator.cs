@@ -58,7 +58,7 @@ namespace Pytocs.Translate
             var method = appl.Method as CodeFieldReferenceExpression;
             if (method == null || method.FieldName != "__init__")
                 return;
-            var ctor = (CodeConstructor) gen.CurrentMethod;
+            var ctor = (CodeConstructor) gen.CurrentMember;
             ctor.Comments.AddRange(comments);
             ctor.BaseConstructorArgs.AddRange(appl.Arguments.Skip(1));
             gen.Scope.RemoveAt(0);

@@ -46,7 +46,9 @@ namespace Pytocs.CodeModel
         }
 
         public List<CodeStatement> Scope { get;  private set; }
-        public CodeMemberMethod CurrentMethod { get; set; }
+        public CodeMember CurrentMember { get; private set; }
+        public List<CodeStatement> CurrentMemberStatements { get; private set; }
+        public List<CodeCommentStatement> CurrentMemberComments { get; private set; }
         public CodeNamespace CurrentNamespace { get; set; }
         public CodeTypeDeclaration CurrentType { get; set; }
 
@@ -93,13 +95,20 @@ namespace Pytocs.CodeModel
             }
             c.BaseTypes.AddRange(baseClasses.Select(b => new CodeTypeReference(b)).ToArray());
             var old = CurrentType;
-            var oldMethod = CurrentMethod;
+            var oldMethod = CurrentMember;
+            var oldStmts = CurrentMemberStatements;
+            var oldComments = CurrentMemberComments;
             var oldIsInit = isInit;
             CurrentType = c;
-            CurrentMethod = null;
+            CurrentMember = null;
+            CurrentMemberStatements = null;
+            CurrentMemberComments = null;
             isInit = false;
             body();
-            CurrentMethod = oldMethod;
+            CurrentMember = oldMethod;
+            CurrentMemberStatements = oldStmts;
+            CurrentMemberComments = oldComments;
+
             CurrentType = old;
             isInit = oldIsInit;
             return c;
@@ -149,6 +158,22 @@ namespace Pytocs.CodeModel
             return new CodeApplicationExpression(
                 this.MethodRef(obj, method),
                 args);
+        }
+
+        public void SetCurrentMethod(CodeMemberMethod method)
+        {
+            this.CurrentMember = method;
+            this.CurrentMemberStatements = method.Statements;
+            this.CurrentMemberComments = method.Comments;
+        }
+
+        public void SetCurrentPropertyAccessor(
+            CodeMemberProperty property,
+            List<CodeStatement> stmts)
+        {
+            this.CurrentMember = property;
+            this.CurrentMemberStatements = stmts;
+            this.CurrentMemberComments = property.Comments;
         }
 
         public CodeStatement SideEffect(CodeExpression exp)
@@ -212,12 +237,16 @@ namespace Pytocs.CodeModel
         private void GenerateMethodBody(CodeMemberMethod method, Action body)
         {
             var old = Scope;
-            var oldMethod = CurrentMethod;
-            CurrentMethod = method;
+            var oldMethod = CurrentMember;
+            var oldStatements = CurrentMemberStatements;
+            var oldComments = CurrentMemberComments;
+            SetCurrentMethod(method);
             Scope = method.Statements;
             body();
             Scope = old;
-            CurrentMethod = oldMethod;
+            CurrentMember = oldMethod;
+            CurrentMemberStatements = oldStatements;
+            CurrentMemberComments = oldComments;
         }
 
         internal CodeParameterDeclarationExpression Param(Type type, string name)
@@ -467,15 +496,25 @@ namespace Pytocs.CodeModel
             };
             var mem = new System.CodeDom.CodeMemberProperty();
             var old = Scope;
+            var oldMethod = CurrentMember;
+            var oldStatements = CurrentMemberStatements;
+            var oldComments = CurrentMemberComments;
+
+            SetCurrentPropertyAccessor(prop, prop.GetStatements);
             this.Scope = prop.GetStatements;
             generatePropertyGetter();
             if (generatePropertySetter != null)
             {
+                SetCurrentPropertyAccessor(prop, prop.SetStatements);
                 this.Scope = prop.SetStatements;
                 generatePropertySetter();
             }
-            Scope = old;
             CurrentType.Members.Add(prop);
+            this.Scope = old;
+            this.CurrentMember = oldMethod;
+            this.CurrentMemberStatements = oldStatements;
+            this.CurrentMemberComments = oldComments;
+
             return prop;
         }
     }

@@ -46,14 +46,13 @@ namespace Pytocs.Translate
             this.args = args;
             this.isStatic = isStatic;
             this.gen = gen;
+            this.gensym = new SymbolGenerator();
+            this.xlat = new ExpTranslator(gen, gensym);
+            this.stmtXlat = new StatementTranslator(gen, gensym);
         }
 
         public CodeMemberMethod Generate()
         {
-            this.gensym = new SymbolGenerator();
-            this.xlat = new ExpTranslator(gen, gensym);
-            this.stmtXlat = new StatementTranslator(gen, gensym);
-
             return Generate(CreateFunctionParameters(args)); // () => bodyGenerator(f.body));
         }
 
@@ -96,11 +95,11 @@ namespace Pytocs.Translate
             });
         }
 
-        protected void Xlat(SuiteStatement suite)
+        public void Xlat(SuiteStatement suite)
         {
             var comments = StatementTranslator.ConvertFirstStringToComments(suite.stmts);
             stmtXlat.Xlat(suite);
-            gen.CurrentMethod.Comments.AddRange(comments);
+            gen.CurrentMemberComments.AddRange(comments);
         }
 
         private CodeParameterDeclarationExpression[] CreateFunctionParameters(IEnumerable<Parameter> parameters)

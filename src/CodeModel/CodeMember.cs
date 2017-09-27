@@ -27,11 +27,13 @@ namespace Pytocs.CodeModel
         public CodeMember()
         {
             this.CustomAttributes = new List<CodeAttributeDeclaration>();
+            this.Comments = new List<CodeCommentStatement>();
         }
 
         public string Name { get; set; }
         public List<CodeAttributeDeclaration> CustomAttributes { get; private set; }
         public MemberAttributes Attributes { get; set; }
+        public List<CodeCommentStatement> Comments { get; private set; }
 
         public abstract T Accept<T>(ICodeMemberVisitor<T> visitor);
     }

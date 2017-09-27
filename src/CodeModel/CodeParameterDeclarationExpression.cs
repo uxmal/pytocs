@@ -27,6 +27,12 @@ namespace Pytocs.CodeModel
         {
         }
 
+        public CodeParameterDeclarationExpression(CodeTypeReference type, string name)
+        {
+            this.ParameterType = type;
+            this.ParameterName = name;
+        }
+
         public CodeParameterDeclarationExpression(Type type, string name)
         {
             this.ParameterType = new CodeTypeReference(type);

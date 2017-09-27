@@ -28,18 +28,28 @@ namespace Pytocs.Translate
         private Dictionary<CodeStatement, List<CodeStatement>> parentOf;
         private List<CodeStatement> path;
         private Dictionary<CodeVariableReferenceExpression, List<List<CodeStatement>>> paths;
-        private CodeMemberMethod method;
+        private List<CodeParameterDeclarationExpression> parameters;
+        private List<CodeStatement> statements;
 
         public static void Generate(CodeMemberMethod method)
         {
-            var gen = new LocalVariableGenerator(method);
+            var gen = new LocalVariableGenerator(method.Parameters, method.Statements);
             gen.Analyze(new List<CodeStatement>(), method.Statements);
             gen.Generate();
         }
 
-        private LocalVariableGenerator(CodeMemberMethod method)
+        public static void Generate(List<CodeParameterDeclarationExpression> parameters, List<CodeStatement> statements)
         {
-            this.method = method;
+            parameters = parameters ?? new List<CodeParameterDeclarationExpression>();
+            var gen = new LocalVariableGenerator(parameters, statements);
+            gen.Analyze(new List<CodeStatement>(), statements);
+            gen.Generate();
+        }
+
+        private LocalVariableGenerator(List<CodeParameterDeclarationExpression> parameters, List<CodeStatement> statements)
+        {
+            this.parameters = parameters;
+            this.statements = statements;
             this.parentOf = new Dictionary<CodeStatement, List<CodeStatement>>();
             this.paths = new Dictionary<CodeVariableReferenceExpression, List<List<CodeStatement>>>(
                 new IdCmp());
@@ -60,7 +70,7 @@ namespace Pytocs.Translate
         private void Generate()
         {
             var paramNames = new HashSet<string>(
-                method.Parameters
+                parameters
                 .Select(p => p.ParameterName));
             foreach (var de in paths.Where(
                 d => !paramNames.Contains(d.Key.Name)))
@@ -126,7 +136,7 @@ namespace Pytocs.Translate
                     }
                 }
             }
-            method.Statements.Insert(
+            statements.Insert(
                 0,
                 new CodeVariableDeclarationStatement("object", id.Name));
         }

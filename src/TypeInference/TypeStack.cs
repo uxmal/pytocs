@@ -59,7 +59,6 @@ namespace Pytocs.TypeInference
                 }
             }
             return false;
-
         }
     }
 }

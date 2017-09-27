@@ -28,14 +28,12 @@ namespace Pytocs.CodeModel
         {
             this.Parameters = new List<CodeParameterDeclarationExpression>();
             this.Statements = new List<CodeStatement>();
-            this.Comments = new List<CodeCommentStatement>();
         }
 
         public List<CodeParameterDeclarationExpression> Parameters { get; private set; }
         public CodeTypeReference ReturnType { get; set; }
 
         public List<CodeStatement> Statements { get; private set; }
-        public List<CodeCommentStatement> Comments { get; private set; }
 
         public override T Accept<T>(ICodeMemberVisitor<T> visitor)
         {
