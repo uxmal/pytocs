@@ -68,25 +68,50 @@ namespace Pytocs.Translate
             {
                 foreach (var decoration in dec.Decorations)
                 {
-                    if (decoration.className.segs.Count == 1 &&
-                        decoration.className.segs[0].Name == "property")
+                    if (IsGetterDecorator(decoration))
                     {
                         var def = (FunctionDef)dec.Statement;
-                        PropertyDefinition propdef;
-                        if (!propdefs.TryGetValue(def.name.Name, out propdef))
-                        {
-                            propdef = new PropertyDefinition(def.name.Name);
-                            propdefs.Add(def.name.Name, propdef);
-                        }
+                        var propdef = EnsurePropertyDefinition(propdefs, def);
                         result[dec] = propdef;
                         propdef.Getter = dec;
                         propdef.GetterDecoration = decoration;
+                    } 
+                    if (IsSetterDecorator(decoration))
+                    {
+                        var def = (FunctionDef)dec.Statement;
+                        var propdef = EnsurePropertyDefinition(propdefs, def);
+                        result[dec] = propdef;
+                        propdef.Setter = dec;
+                        propdef.SetterDecoration = decoration;
                     }
                 }
             }
             return result;
         }
 
+        private static PropertyDefinition  EnsurePropertyDefinition(Dictionary<string, PropertyDefinition> propdefs, FunctionDef def)
+        {
+            PropertyDefinition propdef;
+            if (!propdefs.TryGetValue(def.name.Name, out propdef))
+            {
+                propdef = new PropertyDefinition(def.name.Name);
+                propdefs.Add(def.name.Name, propdef);
+            }
+            return propdef;
+        }
+
+        private static bool IsGetterDecorator(Decorator decoration)
+        {
+            return decoration.className.segs.Count == 1 &&
+                                    decoration.className.segs[0].Name == "property";
+        }
+
+        private static bool IsSetterDecorator(Decorator decorator)
+        {
+            if (decorator.className.segs.Count != 2)
+                return false;
+            return decorator.className.segs[1].Name == "setter";
+        }
         public static IEnumerable<CodeCommentStatement> ConvertFirstStringToComments(List<Statement> statements)
         {
             var nothing = new CodeCommentStatement[0];

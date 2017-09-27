@@ -1234,6 +1234,64 @@ c.de = ""f"";
 ";
             Assert.AreEqual(sExp, XlatModule(pySrc));
         }
+
+        [Test]
+        public void Stmt_Property_Setter()
+        {
+            var pySrc =
+@"class foo:
+
+    @property
+    def size():
+        ''' DocComment '''
+        return self.x
+    @size.setter
+    def size(val):
+        self.x = val
+";
+            var sExp =
+@"public static class testModule {
+    
+    public class foo {
+        
+        //  DocComment 
+        public object size {
+            get {
+                return this.x;
+            }
+            set {
+                this.x = val;
+            }
+        }
+    }
+}
+";
+            Assert.AreEqual(sExp, XlatModule(pySrc));
+        }
+
+        [Test]
+        public void Stmt_Long_ArgList()
+        {
+            var pySrc =
+@"def foo(arg1, arg2, arg3, arg4, arg5):
+    return arg1[arg2] + arg3[arg4] + arg5
+";
+            var sExp =
+@"public static class testModule {
+    
+    public static object foo(
+        object arg1,
+        object arg2,
+        object arg3,
+        object arg4,
+        object arg5) {
+        return arg1[arg2] + arg3[arg4] + arg5;
+    }
+}
+";
+            Assert.AreEqual(sExp, XlatModule(pySrc));
+        }
+
     }
 }
 #endif

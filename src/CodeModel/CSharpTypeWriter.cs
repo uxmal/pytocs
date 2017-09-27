@@ -112,12 +112,30 @@ namespace Pytocs.CodeModel
         private void WriteMethodParameters(CodeMemberMethod method)
         {
             writer.Write("(");
-            var sep = "";
-            foreach (var param in method.Parameters)
+            if (method.Parameters.Count > 4)
             {
-                writer.Write(sep);
-                sep = ", ";
-                WriteParameter(param);
+                // Poor man's pretty printer
+                ++writer.IndentLevel;
+                writer.WriteLine();
+                for (int i = 0; i < method.Parameters.Count; ++i)
+                {
+                    WriteParameter(method.Parameters[i]);
+                    if (i < method.Parameters.Count - 1)
+                    {
+                        writer.WriteLine(",");
+                    }
+                }
+                --writer.IndentLevel;
+            }
+            else
+            {
+                var sep = "";
+                foreach (var param in method.Parameters)
+                {
+                    writer.Write(sep);
+                    sep = ", ";
+                    WriteParameter(param);
+                }
             }
             writer.WriteName(")");
         }
