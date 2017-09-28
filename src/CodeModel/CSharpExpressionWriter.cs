@@ -470,6 +470,11 @@ namespace Pytocs.CodeModel
                         writer.Write("0x{0}{1}", s[i + 2], s[i + 3]);
                         i += 3;
                     }
+                    else if (s[i + 1] == '0')
+                    {
+                        writer.Write("\\0");
+                        i += 1;
+                    }
                     else if (s[i + 1] == '\\')
                     {
                         writer.Write("(byte)'\\\\'");
@@ -477,7 +482,7 @@ namespace Pytocs.CodeModel
                     }
                     else
                     {
-                        throw new NotImplementedException();
+                        throw new NotImplementedException(string.Format("Not implemented {0}{1}", s[i], s[i+1]));
                     }
                 }
                 else if (' ' <= s[i] && s[i] <= '~')

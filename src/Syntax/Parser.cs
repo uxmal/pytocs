@@ -1044,22 +1044,25 @@ eval_input: testlist NEWLINE* ENDMARKER
             if (!Peek(stmt_follow))
             {
                 exToRaise = test();
-                posEnd = exToRaise.End;
-                if (PeekAndDiscard(TokenType.From))
+                if (exToRaise != null)
                 {
-                    exOriginal = test();
-                    posEnd = exOriginal.End;
-                }
-                else if (PeekAndDiscard(TokenType.COMMA))
-                {
-                    Exp ex2 = test();
-                    Exp ex3 = new NoneExp(filename, ex2.End, ex2.End);
-                    if (PeekAndDiscard(TokenType.COMMA))
+                    posEnd = exToRaise.End;
+                    if (PeekAndDiscard(TokenType.From))
                     {
-                        ex3 = test();
+                        exOriginal = test();
+                        posEnd = exOriginal.End;
                     }
-                    exOriginal = new PyTuple(new List<Exp> { ex2, ex3 }, filename, posStart, (ex3 ?? ex2).End);
-                    posEnd = exOriginal.End;
+                    else if (PeekAndDiscard(TokenType.COMMA))
+                    {
+                        Exp ex2 = test();
+                        Exp ex3 = new NoneExp(filename, ex2.End, ex2.End);
+                        if (PeekAndDiscard(TokenType.COMMA))
+                        {
+                            ex3 = test();
+                        }
+                        exOriginal = new PyTuple(new List<Exp> { ex2, ex3 }, filename, posStart, (ex3 ?? ex2).End);
+                        posEnd = exOriginal.End;
+                    }
                 }
             }
             return new RaiseStatement(exToRaise, exOriginal, filename, posStart, posEnd);
