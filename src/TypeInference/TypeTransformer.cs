@@ -128,7 +128,7 @@ namespace Pytocs.TypeInference
                 if (!returned)
                 {
                     retType = UnionType.Union(retType, t);
-                    if (!UnionType.Contains(t, DataType.Cont))
+                     if (!UnionType.Contains(t, DataType.Cont))
                     {
                         returned = true;
                         retType = UnionType.remove(retType, DataType.Cont);
@@ -165,11 +165,11 @@ namespace Pytocs.TypeInference
                     hash[k.name.Name] = k.defval.Accept(this);
                 }
             }
-            var dtKw = c.kwargs == null ? null : c.kwargs.Accept(this);
-            var dtStar = c.stargs == null ? null : c.stargs.Accept(this);
-            if (fun is UnionType)
+            var dtKw = c.kwargs?.Accept(this);
+            var dtStar = c.stargs?.Accept(this);
+            if (fun is UnionType un)
             {
-                ISet<DataType> types = ((UnionType) fun).types;
+                ISet<DataType> types = un.types;
                 DataType retType = DataType.Unknown;
                 foreach (DataType ft in types)
                 {
@@ -192,9 +192,8 @@ namespace Pytocs.TypeInference
             DataType kw,
             DataType star)
         {
-            if (fun is FunType)
+            if (fun is FunType ft)
             {
-                FunType ft = (FunType) fun;
                 return Apply(analyzer, ft, pos, hash, kw, star, c);
             }
             else if (fun is ClassType)
@@ -212,12 +211,11 @@ namespace Pytocs.TypeInference
 
         public static void ApplyConstructor(Analyzer analyzer, InstanceType i, Application call, List<DataType> args)
         {
-            var initFunc = i.Table.LookupAttributeType("__init__") as FunType;
-            if (initFunc != null && initFunc.Definition != null)
+            if (i.Table.LookupAttributeType("__init__") is FunType initFunc && initFunc.Definition != null)
             {
-                ((FunType) initFunc).SelfType = i;
-                TypeTransformer.Apply(analyzer, (FunType) initFunc, args, null, null, null, call);
-                ((FunType) initFunc).SelfType = null;
+                initFunc.SelfType = i;
+                Apply(analyzer, initFunc, args, null, null, null, call);
+                initFunc.SelfType = null;
             }
         }
 
@@ -594,8 +592,7 @@ namespace Pytocs.TypeInference
             foreach (var n in d.Expressions.AsList())
             {
                 n.Accept(this);
-                var id = n as Identifier;
-                if (id != null)
+                if (n is Identifier id)
                 {
                     scope.Remove(id.Name);
                 }
@@ -912,8 +909,10 @@ namespace Pytocs.TypeInference
                     }
                     else
                     {
-                        List<Identifier> ext = new List<Identifier>(i.DottedName.segs);
-                        ext.Add(first);
+                        List<Identifier> ext = new List<Identifier>(i.DottedName.segs)
+                        {
+                            first
+                        };
                         DataType mod2 = analyzer.LoadModule(ext, scope);
                         if (mod2 != null)
                         {
@@ -1013,8 +1012,7 @@ namespace Pytocs.TypeInference
             foreach (var exp in l.elts)
             {
                 listType.add(exp.Accept(this));
-                var sExp = exp as Str;
-                if (sExp != null)
+                if (exp is Str sExp)
                 {
                     listType.addValue(sExp.s);
                 }
@@ -1082,7 +1080,7 @@ namespace Pytocs.TypeInference
             if (b != null)
             {
                 analyzer.putRef(id, b);
-                analyzer.resolved.Add(id);
+                analyzer.Resolved.Add(id);
                 analyzer.unresolved.Remove(id);
                 return State.MakeUnion(b);
             }
@@ -1250,9 +1248,8 @@ namespace Pytocs.TypeInference
             {
                 return getListSubscript(s, ((TupleType)vt).toListType(), st);
             }
-            else if (vt is DictType)
+            else if (vt is DictType dt)
             {
-                DictType dt = (DictType)vt;
                 if (!dt.keyType.Equals(st))
                 {
                     AddWarning(s, "Possible KeyError (wrong type for subscript)");
@@ -1452,7 +1449,7 @@ namespace Pytocs.TypeInference
                 var ret = new List<DataType>();
                 foreach (var n in nodes)
                 {
-                    var dt = n != null ? n.Accept(this) : null;
+                    var dt = n?.Accept(this);
                     ret.Add(dt);
                 }
                 return ret;

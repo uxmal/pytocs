@@ -49,6 +49,22 @@ namespace Pytocs.TypeInference
             if (sExp != sActual)
             {
                 Console.WriteLine(sActual);
+                var split = new string[] { nl };
+                var opt = StringSplitOptions.None;
+                var aExp = sExp.Split(split, opt);
+                var aActual = sActual.Split(split, opt);
+                int i;
+                for (i = 0; i < Math.Min(aExp.Length, aActual.Length); ++i)
+                {
+                    Assert.AreEqual(aExp[i], aActual[i], string.Format($"Mismatch on line {i + 1}"));
+                }
+                if (i < aExp.Length)
+                {
+                    Assert.Fail($"Fewer than the expected {aExp.Length} lines.");
+                } else if (i > aExp.Length)
+                { 
+                    Assert.Fail($"More than the expected {aExp.Length} lines.");
+                }
                 Assert.AreEqual(sExp, BindingsToString());
             }
         }
@@ -263,7 +279,6 @@ def bar(point):
         }
 
         [Test]
-        [Ignore]
         public void TypeAn_Dirs()
         {
             fs.Dir("sys_q")
@@ -272,7 +287,7 @@ def bar(point):
                     .File("parser.py",
 @"
 class Parser(object):
-    def parse(self, file):
+    def parse(self, phile):
         pass
 ")
                 .End()
@@ -280,9 +295,9 @@ class Parser(object):
 @"
 from parsing.parser import Parser
 
-def mane_lupe(file):
+def mane_lupe(phile):
     p = Parser()
-    p.parse(file)
+    p.parse(phile)
 ");
             an.Analyze(@"\sys_q");
             an.Finish();
@@ -290,19 +305,18 @@ def mane_lupe(file):
 @"(binding:kind=MODULE:node=(module:\sys_q\parsing\__init__.py):type=:qname=:refs=[])" + nl +
 @"(binding:kind=MODULE:node=(module:\sys_q\parsing\parser.py):type=parser:qname=.sys_q.parsing.parser:refs=[])" + nl +
 @"(binding:kind=CLASS:node=Parser:type=<Parser>:qname=.sys_q.parsing.parser.Parser:refs=[Parser,Parser])" + nl +
-@"(binding:kind=METHOD:node=parse:type=(Parser, ? -> file) -> None:qname=.sys_q.parsing.parser.Parser.parse:refs=[p.parse])" + nl +
+@"(binding:kind=METHOD:node=parse:type=(Parser, ?) -> None:qname=.sys_q.parsing.parser.Parser.parse:refs=[p.parse])" + nl +
 
 @"(binding:kind=MODULE:node=(module:\sys_q\main.py):type=main:qname=.sys_q.main:refs=[])" + nl +
 @"(binding:kind=VARIABLE:node=parsing:type=:qname=:refs=[])" + nl +
 @"(binding:kind=VARIABLE:node=parser:type=parser:qname=.sys_q.parsing.parser:refs=[])" + nl +
 @"(binding:kind=FUNCTION:node=mane_lupe:type=? -> None:qname=.sys_q.main.mane_lupe:refs=[])" + nl +
-@"(binding:kind=SCOPE:node=parser:type=Parser:qname=.sys_q.main.mane_lupe.parser:refs=[parser])" + nl +
+@"(binding:kind=SCOPE:node=p:type=Parser:qname=.sys_q.main.mane_lupe.p:refs=[p])" + nl +
 @"(binding:kind=PARAMETER:node=self:type=Parser:qname=.sys_q.parsing.parser.Parser.parse.self:refs=[])" + nl +
-@"(binding:kind=PARAMETER:node=file:type=?:qname=.sys_q.parsing.parser.Parser.parse.file:refs=[])" + nl +
-@"(binding:kind=PARAMETER:node=file:type=?:qname=.sys_q.main.mane_lupe.file:refs=[file])" + nl +
-@"(binding:kind=VARIABLE:node=parser:type=?:qname=.sys_q.main.mane_lupe.parser:refs=[parser])" + nl;
-            Console.Write(BindingsToString());
-            Assert.AreEqual(sExp, BindingsToString());
+@"(binding:kind=PARAMETER:node=phile:type=?:qname=.sys_q.parsing.parser.Parser.parse.phile:refs=[])" + nl +
+@"(binding:kind=PARAMETER:node=phile:type=?:qname=.sys_q.main.mane_lupe.phile:refs=[phile])" + nl +
+@"(binding:kind=VARIABLE:node=p:type=Parser:qname=.sys_q.main.mane_lupe.p:refs=[p])" + nl;
+            ExpectBindings(sExp);
         }
 
         [Test]

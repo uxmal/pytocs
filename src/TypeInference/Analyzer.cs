@@ -32,7 +32,7 @@ namespace Pytocs.TypeInference
         DataTypeFactory TypeFactory { get; }
         int nCalled { get; set; }
         State globaltable { get; }
-        HashSet<Name> resolved { get; }
+        HashSet<Name> Resolved { get; }
         HashSet<Name> unresolved { get; }
 
         DataType LoadFile(string path);
@@ -103,7 +103,7 @@ namespace Pytocs.TypeInference
             this.logger = logger;
             this.TypeFactory = new DataTypeFactory(this);
             this.globaltable = new State(null, State.StateType.GLOBAL);
-            this.resolved = new HashSet<Name>();
+            this.Resolved = new HashSet<Name>();
             this.unresolved = new HashSet<Name>();
 
             if (options != null)
@@ -128,7 +128,7 @@ namespace Pytocs.TypeInference
         public DataTypeFactory TypeFactory { get; private set; }
         public int nCalled { get; set; }
         public State globaltable { get; private set; }
-        public HashSet<Name> resolved { get; private set; }
+        public HashSet<Name> Resolved { get; private set; }
         public HashSet<Name> unresolved { get; private set; }
         public Builtins Builtins { get; private set; }
         public State ModuleTable = new State(null, State.StateType.GLOBAL);
@@ -143,10 +143,9 @@ namespace Pytocs.TypeInference
             LoadFileRecursive(upath);
         }
 
-        public bool hasOption(string option)
+        public bool HasOption(string option)
         {
-            object op;
-            if (options.TryGetValue(option, out op) && (bool) op)
+            if (options.TryGetValue(option, out object op) && (bool) op)
                 return true;
             else
                 return false;
@@ -250,7 +249,6 @@ namespace Pytocs.TypeInference
             return importStack.Contains(f);
         }
 
-
         public void pushImportStack(object f)
         {
             importStack.Add(f);
@@ -317,8 +315,7 @@ namespace Pytocs.TypeInference
 
         public List<Diagnostic> GetDiagnosticsForFile(string file)
         {
-            List<Diagnostic> errs;
-            if (semanticErrors.TryGetValue(file, out errs))
+            if (semanticErrors.TryGetValue(file, out var errs))
             {
                 return errs;
             }
@@ -329,8 +326,7 @@ namespace Pytocs.TypeInference
         {
             if (!(node is Url))
             {
-                List<Binding> bindings;
-                if (!references.TryGetValue(node, out bindings))
+                if (!references.TryGetValue(node, out var bindings))
                 {
                     bindings = new List<Binding>(1);
                     references[node] = bindings;
@@ -348,8 +344,7 @@ namespace Pytocs.TypeInference
 
         public void putRef(Node node, Binding b)
         {
-            List<Binding> bs = new List<Binding>();
-            bs.Add(b);
+            List<Binding> bs = new List<Binding> { b };
             putRef(node, bs);
         }
 
@@ -384,8 +379,7 @@ namespace Pytocs.TypeInference
 
         List<Diagnostic> getFileErrs(string file, Dictionary<string, List<Diagnostic>> map)
         {
-            List<Diagnostic> msgs;
-            if (!map.TryGetValue(file, out msgs))
+            if (!map.TryGetValue(file, out var msgs))
             {
                 msgs = new List<Diagnostic>();
                 map[file] = msgs;
@@ -624,7 +618,7 @@ namespace Pytocs.TypeInference
             int count = countFileRecursive(fullname);
             if (loadingProgress == null)
             {
-                loadingProgress = new Progress(this, count, 50, this.hasOption("quiet"));
+                loadingProgress = new Progress(this, count, 50, this.HasOption("quiet"));
             }
 
             string file_or_dir = fullname;
@@ -699,7 +693,7 @@ namespace Pytocs.TypeInference
 
         public void msg(string m)
         {
-            if (hasOption("quiet"))
+            if (HasOption("quiet"))
             {
                 Console.WriteLine(m);
             }
@@ -707,7 +701,7 @@ namespace Pytocs.TypeInference
 
         public void msg_(string m)
         {
-            if (hasOption("quiet"))
+            if (HasOption("quiet"))
             {
                 Console.Write(m);
             }
@@ -728,7 +722,7 @@ namespace Pytocs.TypeInference
 
         public void ApplyUncalled()
         {
-            IProgress progress = new Progress(this, uncalled.Count, 50, this.hasOption("quiet"));
+            IProgress progress = new Progress(this, uncalled.Count, 50, this.HasOption("quiet"));
 
             while (uncalled.Count != 0)
             {
@@ -771,7 +765,7 @@ namespace Pytocs.TypeInference
             sb.Append("\n- number of cross references: " + nXRef);
             sb.Append("\n- number of references: " + getReferences().Count);
 
-            long resolved = this.resolved.Count;
+            long resolved = this.Resolved.Count;
             long unresolved = this.unresolved.Count;
             sb.Append("\n- resolved names: " + resolved);
             sb.Append("\n- unresolved names: " + unresolved);

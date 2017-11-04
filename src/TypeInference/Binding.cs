@@ -71,9 +71,8 @@ namespace Pytocs.TypeInference
             else
             {
                 fileOrUrl = node.Filename;
-                var idNode = node as Identifier;
-                if (idNode != null)
-                    name= node.Name;
+                if (node is Identifier idNode)
+                    name = node.Name;
             }
             SetLocationInfo(node);
         }
@@ -91,9 +90,8 @@ namespace Pytocs.TypeInference
                 this.bodyEnd = parent.End;
                 return;
             }
-            var modNode = node as Module;
-            if (modNode != null)
-            { 
+            if (node is Module modNode)
+            {
                 name = modNode.Name;
                 this.start = 0;
                 this.end = 0;
@@ -153,7 +151,7 @@ namespace Pytocs.TypeInference
             if (bt is ModuleType)
             {
                 file = bt.asModuleType().file;
-                return file != null ? file : "<built-in module>";
+                return file ?? "<built-in module>";
             }
 
             file = getFile();

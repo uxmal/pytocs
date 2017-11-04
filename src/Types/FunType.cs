@@ -61,28 +61,27 @@ namespace Pytocs.Types
 
         public void addMapping(DataType from, DataType to)
         {
-            if (from is TupleType)
+            if (from is TupleType tuple)
             {
-                from = simplifySelf((TupleType) from);
+                from = simplifySelf(tuple);
             }
 
             if (arrows.Count < 5)
             {
                 arrows[from] = to;
-                IDictionary<DataType, DataType> oldArrows = arrows;
-                arrows = compressArrows(arrows);
+                var oldArrows = this.arrows;
+                this.arrows = compressArrows(arrows);
 
                 if (ToString().Length > 900)
                 {
-                    arrows = oldArrows;
+                    this.arrows = oldArrows;
                 }
             }
         }
 
         public DataType getMapping(DataType from)
         {
-            DataType to;
-            return arrows.TryGetValue(from, out to)
+            return arrows.TryGetValue(from, out var to)
                 ? to
                 : null;
         }
@@ -106,9 +105,8 @@ namespace Pytocs.Types
 
         public override bool Equals(object other)
         {
-            if (other is FunType)
+            if (other is FunType fo)
             {
-                FunType fo = (FunType) other;
                 return fo.Table.Path.Equals(Table.Path) || object.ReferenceEquals(this , other);
             }
             else
@@ -159,9 +157,9 @@ namespace Pytocs.Types
                 return true;
             }
 
-            if (type1 is ListType && type2 is ListType)
+            if (type1 is ListType list1 && type2 is ListType list2)
             {
-                return subsumedInner(((ListType) type1).toTupleType(), ((ListType) type2).toTupleType(), typeStack);
+                return subsumedInner(list1.toTupleType(), list2.toTupleType(), typeStack);
             }
             return false;
         }
@@ -214,7 +212,5 @@ namespace Pytocs.Types
             }
             return simplified;
         }
-
-
     }
 }

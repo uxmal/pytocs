@@ -91,7 +91,7 @@ namespace Pytocs.Types
 
             StringBuilder sb = new StringBuilder();
 
-            int? num = ctr.visit(f);
+            int? num = ctr.Visit(f);
             if (num.HasValue)
             {
                 sb.Append("#").Append(num.Value);
@@ -106,7 +106,7 @@ namespace Pytocs.Types
                 foreach (var e in f.arrows)
                 {
                     DataType from = e.Key;
-                    string sArrow = from.Accept(this) + " -> " + e.Value.Accept(this);
+                    string sArrow = $"{from.Accept(this)} -> {e.Value.Accept(this)}";
                     if (!seen.Contains(sArrow))
                     {
                         if (i != 0)
@@ -150,7 +150,7 @@ namespace Pytocs.Types
         {
             StringBuilder sb = new StringBuilder();
 
-            int? num = ctr.visit(l);
+            int? num = ctr.Visit(l);
             if (num != null)
             {
                 sb.Append("#").Append(num.Value);
@@ -197,7 +197,7 @@ namespace Pytocs.Types
         {
             StringBuilder sb = new StringBuilder();
 
-            int? num = ctr.visit(t);
+            int? num = ctr.Visit(t);
             if (num != null)
             {
                 sb.Append("#").Append(num.Value);
@@ -239,7 +239,7 @@ namespace Pytocs.Types
         {
             StringBuilder sb = new StringBuilder();
 
-            int? num = ctr.visit(u);
+            int? num = ctr.Visit(u);
             if (num != null)
             {
                 sb.Append("#").Append(num.Value);
@@ -294,10 +294,9 @@ namespace Pytocs.Types
                 used.Remove(t);
             }
 
-            public int? visit(DataType t)
+            public int? Visit(DataType t)
             {
-                int i;
-                if (elements.TryGetValue(t, out i))
+                if (elements.TryGetValue(t, out int i))
                 {
                     used.Add(t);
                     return i;
