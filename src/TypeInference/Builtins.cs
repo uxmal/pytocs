@@ -454,8 +454,7 @@ namespace Pytocs.TypeInference
 
         private ModuleType getModule(string name)
         {
-            NativeModule wrap;
-            if (!modules.TryGetValue(name, out wrap))
+            if (!modules.TryGetValue(name, out var wrap))
                 return null;
             else
                 return wrap.getModule();

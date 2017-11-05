@@ -548,7 +548,7 @@ namespace Pytocs.TypeInference
                 }
                 else if (rvalue is DictType)
                 {
-                    Bind(analyzer, xs, ((DictType) rvalue).toTupleType(xs.Count), kind);
+                    Bind(analyzer, xs, ((DictType) rvalue).ToTupleType(xs.Count), kind);
                 }
                 else if (rvalue.isUnknownType())
                 {
@@ -613,7 +613,7 @@ namespace Pytocs.TypeInference
                         }
                         else
                         {
-                            this.Bind(analyzer, target, ((FunType) ent.type).getReturnType(), kind);
+                            this.Bind(analyzer, target, ((FunType) ent.type).GetReturnType(), kind);
                         }
                     }
                 }

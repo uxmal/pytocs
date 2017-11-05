@@ -84,16 +84,16 @@ namespace Pytocs.Types
             var dtOther = other as DataType;
             if (dtOther == null)
                 return false;
-            if (typeStack.contains(this, dtOther))
+            if (typeStack.Contains(this, dtOther))
             {
                 return true;
             }
             else if (other is ListType)
             {
                 ListType co = (ListType) other;
-                typeStack.push(this, co);
+                typeStack.Push(this, co);
                 bool ret = co.eltType.Equals(eltType);
-                typeStack.pop(this, other);
+                typeStack.Pop(this, other);
                 return ret;
             }
             else

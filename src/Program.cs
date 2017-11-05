@@ -47,8 +47,9 @@ namespace Pytocs
 
             if (args[0].ToLower() == "-r")
             {
-#if READY_FOR_TYPES
-                var typeAnalysis = new Pytocs.TypeInference.AnalyzerImpl(fs, logger, new Dictionary<string, object>(), DateTime.Now);
+#if !NOT_READY_FOR_TYPES
+                var options = new Dictionary<string, object>();
+                var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
                 typeAnalysis.Analyze(".");
                 TranslateModules(typeAnalysis);
 #else

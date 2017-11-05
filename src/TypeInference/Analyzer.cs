@@ -86,7 +86,7 @@ namespace Pytocs.TypeInference
         private HashSet<string> failedToParse = new HashSet<string>();
         private IProgress loadingProgress;
         private string projectDir;
-        private string suffix;
+        private readonly string suffix;
         private ILogger logger;
 
         public Dictionary<string, object> options;

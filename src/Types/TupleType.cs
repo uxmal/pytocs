@@ -93,7 +93,7 @@ namespace Pytocs.Types
             var dtOther = other as DataType;
             if (dtOther == null)
                 return false;
-            if (typeStack.contains(this, dtOther))
+            if (typeStack.Contains(this, dtOther))
             {
                 return true;
             }
@@ -104,16 +104,16 @@ namespace Pytocs.Types
 
                 if (types1.Count != types2.Count)
                     return false;
-                typeStack.push(this, dtOther);
+                typeStack.Push(this, dtOther);
                 for (int i = 0; i < types1.Count; i++)
                 {
                     if (!types1[i].Equals(types2[i]))
                     {
-                        typeStack.pop(this, other);
+                        typeStack.Pop(this, other);
                         return false;
                     }
                 }
-                typeStack.pop(this, other);
+                typeStack.Pop(this, other);
                 return true;
             }
             else

@@ -63,7 +63,7 @@ namespace Pytocs.Types
         {
             if (from is TupleType tuple)
             {
-                from = simplifySelf(tuple);
+                from = SimplifySelf(tuple);
             }
 
             if (arrows.Count < 5)
@@ -86,7 +86,7 @@ namespace Pytocs.Types
                 : null;
         }
 
-        public DataType getReturnType()
+        public DataType GetReturnType()
         {
             if (arrows.Count != 0)
             {
@@ -127,7 +127,7 @@ namespace Pytocs.Types
 
         private bool subsumedInner(DataType type1, DataType type2, TypeStack typeStack)
         {
-            if (typeStack.contains(type1, type2))
+            if (typeStack.Contains(type1, type2))
             {
                 return true;
             }
@@ -144,12 +144,12 @@ namespace Pytocs.Types
 
                 if (elems1.Count == elems2.Count)
                 {
-                    typeStack.push(type1, type2);
+                    typeStack.Push(type1, type2);
                     for (int i = 0; i < elems1.Count; i++)
                     {
                         if (!subsumedInner(elems1[i], elems2[i], typeStack))
                         {
-                            typeStack.pop(type1, type2);
+                            typeStack.Pop(type1, type2);
                             return false;
                         }
                     }
@@ -191,7 +191,7 @@ namespace Pytocs.Types
         /// This is for display purpose only, it may not be logically
         /// correct wrt some pathological programs
         /// </summary>
-        private TupleType simplifySelf(TupleType from)
+        private TupleType SimplifySelf(TupleType from)
         {
             TupleType simplified = new TupleType();     //$NO regs
             if (from.eltTypes.Count > 0)

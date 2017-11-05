@@ -20,13 +20,13 @@ namespace Pytocs.Types
 {
     public class DictType : DataType
     {
-        public DataType keyType;
-        public DataType valueType;
+        public DataType KeyType;
+        public DataType ValueType;
 
         public DictType(DataType key0, DataType val0)
         {
-            keyType = key0;
-            valueType = val0;
+            KeyType = key0;
+            ValueType = val0;
         }
 
         public override T Accept<T>(IDataTypeVisitor<T> visitor)
@@ -34,18 +34,18 @@ namespace Pytocs.Types
             return visitor.VisitDict(this);
         }
         
-        public void add(DataType key, DataType val)
+        public void Add(DataType key, DataType val)
         {
-            keyType = UnionType.Union(keyType, key);
-            valueType = UnionType.Union(valueType, val);
+            KeyType = UnionType.Union(KeyType, key);
+            ValueType = UnionType.Union(ValueType, val);
         }
 
-        public TupleType toTupleType(int n)
+        public TupleType ToTupleType(int n)
         {
             TupleType ret = new TupleType();        //$ NO registation. Badness?
             for (int i = 0; i < n; i++)
             {
-                ret.add(keyType);
+                ret.add(KeyType);
             }
             return ret;
         }
@@ -55,17 +55,17 @@ namespace Pytocs.Types
             var dtOther = other as DataType;
             if (dtOther == null)
                 return false;
-            if (typeStack.contains(this, dtOther))
+            if (typeStack.Contains(this, dtOther))
             {
                 return true;
             }
             else if (other is DictType)
             {
-                typeStack.push(this, dtOther);
+                typeStack.Push(this, dtOther);
                 DictType co = (DictType) other;
-                bool ret = (co.keyType.Equals(keyType) &&
-                        co.valueType.Equals(valueType));
-                typeStack.pop(this, other);
+                bool ret = (co.KeyType.Equals(KeyType) &&
+                        co.ValueType.Equals(ValueType));
+                typeStack.Pop(this, other);
                 return ret;
             }
             else
@@ -78,7 +78,5 @@ namespace Pytocs.Types
         {
             return "DictType".GetHashCode();
         }
-
-
     }
 }

@@ -36,17 +36,17 @@ namespace Pytocs.TypeInference
 
         private List<Pair> stack = new List<Pair>();
 
-        public void push(DataType first, DataType second)
+        public void Push(DataType first, DataType second)
         {
             stack.Add(new Pair(first, second));
         }
 
-        public void pop(object first, object second)
+        public void Pop(object first, object second)
         {
             stack.RemoveAt(stack.Count - 1);
         }
 
-        public bool contains(DataType first, DataType second)
+        public bool Contains(DataType first, DataType second)
         {
             foreach (Pair p in stack)
             {

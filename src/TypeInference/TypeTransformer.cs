@@ -244,7 +244,7 @@ namespace Pytocs.TypeInference
             if (func.Definition == null)
             {
                 // func without definition (possibly builtins)
-                return func.getReturnType();
+                return func.GetReturnType();
             }
             else if (call != null && analyzer.inStack(call))
             {
@@ -353,9 +353,9 @@ namespace Pytocs.TypeInference
             int dSize = dTypes == null ? 0 : dTypes.Count;
             int nPos = pSize - dSize;
 
-            if (star != null && star is ListType)
+            if (star != null && star is ListType list)
             {
-                star = ((ListType) star).toTupleType();
+                star = list.toTupleType();
             }
 
             for (int i = 0, j = 0; i < pSize; i++)
@@ -401,23 +401,21 @@ namespace Pytocs.TypeInference
 
             if (restKw != null)
             {
+                DataType dt;
                 if (hash != null && hash.Count > 0)
                 {
                     DataType hashType = UnionType.newUnion(hash.Values);
-                    funcTable.Bind(
-                            analyzer,
-                            restKw,
-                            analyzer.TypeFactory.CreateDict(DataType.Str, hashType),
-                            BindingKind.PARAMETER);
+                    dt = analyzer.TypeFactory.CreateDict(DataType.Str, hashType);
                 }
                 else
                 {
-                    funcTable.Bind(
-                        analyzer,
-                            restKw,
-                            DataType.Unknown,
-                            BindingKind.PARAMETER);
+                    dt = DataType.Unknown;
                 }
+                funcTable.Bind(
+                        analyzer,
+                        restKw,
+                        dt,
+                        BindingKind.PARAMETER);
             }
 
             if (rest != null)
@@ -445,9 +443,9 @@ namespace Pytocs.TypeInference
             bool hasNone = false;
             bool hasOther = false;
 
-            if (toType is UnionType)
+            if (toType is UnionType ut)
             {
-                foreach (DataType t in ((UnionType) toType).types)
+                foreach (DataType t in ut.types)
                 {
                     if (t == DataType.None || t == DataType.Cont)
                     {
@@ -507,20 +505,20 @@ namespace Pytocs.TypeInference
             foreach (var @base in c.args)
             {
                 DataType baseType = @base.Accept(this);
-                if (baseType is ClassType)
+                switch (baseType)
                 {
+                case ClassType _:
                     classType.addSuper(baseType);
-                }
-                else if (baseType is UnionType)
-                {
-                    foreach (DataType parent in ((UnionType) baseType).types)
+                    break;
+                case UnionType ut:
+                    foreach (DataType parent in ut.types)
                     {
                         classType.addSuper(parent);
                     }
-                }
-                else
-                {
+                    break;
+                default:
                     analyzer.putProblem(@base, @base + " is not a class");
+                    break;
                 }
                 baseTypes.Add(baseType);
             }
@@ -1250,11 +1248,11 @@ namespace Pytocs.TypeInference
             }
             else if (vt is DictType dt)
             {
-                if (!dt.keyType.Equals(st))
+                if (!dt.KeyType.Equals(st))
                 {
                     AddWarning(s, "Possible KeyError (wrong type for subscript)");
                 }
-                return ((DictType)vt).valueType;
+                return ((DictType)vt).ValueType;
             }
             else if (vt == DataType.Str)
             {
@@ -1291,7 +1289,7 @@ namespace Pytocs.TypeInference
                     DataType sliceFunc = vt.Table.LookupAttributeType("__getslice__");
                     if (sliceFunc == null)
                     {
-                        addError(s, "The type can't be sliced: " + vt);
+                        AddError(s, "The type can't be sliced: " + vt);
                         return DataType.Unknown;
                     }
                     else if (sliceFunc is FunType)
@@ -1300,7 +1298,7 @@ namespace Pytocs.TypeInference
                     }
                     else
                     {
-                        addError(s, "The type's __getslice__ method is not a function: " + sliceFunc);
+                        AddError(s, "The type's __getslice__ method is not a function: " + sliceFunc);
                         return DataType.Unknown;
                     }
                 }
@@ -1425,7 +1423,7 @@ namespace Pytocs.TypeInference
                 return DataType.None;
         }
 
-        protected void addError(Node n, string msg)
+        protected void AddError(Node n, string msg)
         {
             analyzer.putProblem(n, msg);
         }
