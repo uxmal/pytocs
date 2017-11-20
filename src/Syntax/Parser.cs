@@ -1297,19 +1297,18 @@ eval_input: testlist NEWLINE* ENDMARKER
             var ts = suite();
             var stack = new Stack<Tuple<int, Exp, SuiteStatement>>();
             stack.Push(Tuple.Create(posStart, t, ts));
-            Token token;
-            while (PeekAndDiscard(TokenType.Elif, out token))
+            while (PeekAndDiscard(TokenType.Elif, out var token))
             {
                 t = test();
                 Expect(TokenType.COLON);
                 ts = suite();
                 stack.Push(Tuple.Create(token.Start, t, ts));
             }
-            if (PeekAndDiscard(TokenType.Else, out token))
+            if (PeekAndDiscard(TokenType.Else, out var token2))
             {
                 Expect(TokenType.COLON);
                 ts = suite();
-                stack.Push(new Tuple<int, Exp, SuiteStatement>(token.Start, null, ts));
+                stack.Push(new Tuple<int, Exp, SuiteStatement>(token2.Start, null, ts));
             }
 
             SuiteStatement es = null;
