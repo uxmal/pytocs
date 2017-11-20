@@ -848,27 +848,11 @@ namespace Pytocs.Translate
             {
                 //if (varList.Expressions.Count != 2)
                 //    throw new InvalidOperationException("Variable list should contain one or two variables.");
-                var tyArgs = Enumerable.Range(0, varList.Expressions.Count).Select(e => "object").ToArray();
-                var tpl = gensym.GenSymParameter("_tup_", m.TypeRef("Tuple", tyArgs));
-                var anonymousCtor = new CodeObjectCreateExpression
-                {
-                    Initializer = new CodeObjectInitializer()
-                };
+                var args = varList.Expressions.Select((e, i) => Tuple.Create(e, string.Format($"Item{i+1}")))
+                    .ToDictionary(d => d.Item1, d => d.Item2);
+                var tpl = gensym.GenSymAutomatic("_tup_", null, false);
 
-                list = m.Appl(
-                    m.MethodRef(list, "Select"),
-                    m.Lambda(
-                        new CodeExpression[] { tpl },
-                        new CodeObjectInitializer
-                        {
-                            MemberDeclarators = varList.Expressions.Select((e, i) => new MemberDeclarator
-                            {
-                                Name = e.ToString(),
-                                Expression = m.Access(tpl, string.Format("Item{0}", i + 1))
-                            }).ToList()
-                        }));
-
-                gensym.PushIdMappings(varList.Expressions.ToDictionary(e => e.ToString(), e => m.Access(tpl, e.ToString())));
+                gensym.PushIdMappings(varList.Expressions.ToDictionary(e => e.ToString(), e => m.Access(tpl, args[e])));
 
                 var kValue = dc.key.Accept(this);
                 var vValue = dc.value.Accept(this);
@@ -893,11 +877,32 @@ namespace Pytocs.Translate
             var tuple = dc.source.variable as PyTuple;
             if (tuple != null)
             {
-                //TODO: tuples, especially nested tuples, are hard.
-                return m.Prim("!!!{" +
-                    dc.key.Accept(this) +
-                    ": " +
-                    dc.value.Accept(this));
+                if (tuple.values.Count != 2)
+                {
+                    //TODO: tuples, especially nested tuples, are hard.
+                    return m.Prim("!!!{" +
+                        dc.key.Accept(this) +
+                        ": " +
+                        dc.value.Accept(this));
+                }
+
+                var enumvar = gensym.GenSymAutomatic("_de", null, false);
+                gensym.PushIdMappings(new Dictionary<string, CodeExpression>
+                {
+                    { tuple.values[0].ToString(), m.Access(enumvar, "Key") },
+                    { tuple.values[1].ToString(), m.Access(enumvar, "Value") },
+                });
+
+                var kValue = dc.key.Accept(this);
+                var vValue = dc.value.Accept(this);
+
+                gensym.PopIdMappings();
+
+                return m.Appl(
+                    m.MethodRef(list, "ToDictionary"),
+                    m.Lambda(new CodeExpression[] { enumvar }, kValue),
+                    m.Lambda(new CodeExpression[] { enumvar }, vValue));
+
             }
 
             throw new NotImplementedException();

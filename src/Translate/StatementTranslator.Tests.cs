@@ -1291,7 +1291,6 @@ c.de = ""f"";
 ";
             Assert.AreEqual(sExp, XlatModule(pySrc));
         }
-
     }
 }
 #endif

@@ -307,10 +307,7 @@ namespace Pytocs.Translate
         {
             var pySrc = "{ k:copy.copy(v) for k, v in path.info.iteritems() }";
             string sExp = "path.info" +
-                ".Select(_tup_1 => new {" + nl +
-                "    k = _tup_1.Item1," + nl +
-                "    v = _tup_1.Item2})" +
-                ".ToDictionary(_tup_1 => _tup_1.k, _tup_1 => copy.copy(_tup_1.v))";
+                ".ToDictionary(_tup_1 => _tup_1.Item1, _tup_1 => copy.copy(_tup_1.Item2))";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
 
@@ -327,11 +324,7 @@ namespace Pytocs.Translate
         {
             var pySrc = "{ a + b: b + c for a, b, c in path }";
             string sExp = "path" +
-                ".Select(_tup_1 => new {" + nl +
-                "    a = _tup_1.Item1," + nl +
-                "    b = _tup_1.Item2," + nl +
-                "    c = _tup_1.Item3})" +
-                ".ToDictionary(_tup_1 => _tup_1.a + _tup_1.b, _tup_1 => _tup_1.b + _tup_1.c)";
+                ".ToDictionary(_tup_1 => _tup_1.Item1 + _tup_1.Item2, _tup_1 => _tup_1.Item2 + _tup_1.Item3)";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
 
@@ -548,6 +541,14 @@ namespace Pytocs.Translate
             var pysrc = "{a for a in function.endpoints if a.addr == endpoint_addr}";
             var sExp = "function.endpoints.Where(a => a.addr == endpoint_addr).ToHashSet()";
             Assert.AreEqual(sExp, Xlat(pysrc));
+        }
+
+        [Test]
+        public void Ex_dict_Comprehension()
+        {
+            var pySrc = "{AT.from_rva(v, self).to_mva(): k for (k, v) in self._plt.iteritems()}";
+            var sExp = "this._plt.ToDictionary(_de1 => AT.from_rva(_de1.Value, this).to_mva(), _de1 => _de1.Key)";
+            Assert.AreEqual(sExp, Xlat(pySrc));
         }
     }
 }
