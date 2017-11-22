@@ -916,8 +916,8 @@ eval_input: testlist NEWLINE* ENDMARKER
                     for (; ; )
                     {
                         var tok = lexer.Peek();
-                        if (tok.Type == TokenType.EOF &&
-                            tok.Type == TokenType.NEWLINE &&
+                        if (tok.Type == TokenType.EOF ||
+                            tok.Type == TokenType.NEWLINE ||
                             tok.Type == TokenType.SEMI)
                             break;
                         var a = test();
