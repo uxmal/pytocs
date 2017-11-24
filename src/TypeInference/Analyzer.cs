@@ -139,7 +139,7 @@ namespace Pytocs.TypeInference
         public void Analyze(string path)
         {
             string upath = FileSystem.GetFullPath(path);
-            projectDir = FileSystem.DirectoryExists(upath) ? upath : FileSystem.GetDirectoryName(upath);
+            this.projectDir = FileSystem.DirectoryExists(upath) ? upath : FileSystem.GetDirectoryName(upath);
             LoadFileRecursive(upath);
         }
 
@@ -188,13 +188,21 @@ namespace Pytocs.TypeInference
             string path = Environment.GetEnvironmentVariable("PYTHONPATH");
             if (path != null)
             {
-                //$BUG: Unix-specific?
-                string[] segments = path.Split(':');
+                var pathseparator = ':';
+                if (Array.IndexOf(System.IO.Path.GetInvalidPathChars(), ':') >= 0)
+                    pathseparator = ';';
+
+                string[] segments = path.Split(pathseparator);
                 foreach (string p in segments)
                 {
                     addPath(p);
                 }
             }
+        }
+
+        private object GetPathSeparator(PlatformID platform)
+        {
+            throw new NotImplementedException();
         }
 
         private void CopyModels()
@@ -433,7 +441,7 @@ namespace Pytocs.TypeInference
             }
             else
             {
-                DataType type = new TypeTransformer(ModuleTable, this).VisitModule(ast);
+                var type = new TypeTransformer(ModuleTable, this).VisitModule(ast);
                 loadedFiles.Add(file);
                 return type;
             }
@@ -537,16 +545,14 @@ namespace Pytocs.TypeInference
             if (mt != null)
             {
                 state.Insert(
-                        this,
-                        name[0].Name,
-                        new Url(Builtins.LIBRARY_URL + mt.Table.Path + ".html"),
-                        mt, BindingKind.SCOPE);
+                    this,
+                    name[0].Name,
+                    new Url(Builtins.LIBRARY_URL + mt.Table.Path + ".html"),
+                    mt, BindingKind.SCOPE);
                 return mt;
             }
 
-            // If there are more than one segment
-            // load the packages first
-            DataType prev = null;
+            // If there are more than one segment load the packages first
             string startPath = locateModule(name[0].Name);
 
             if (startPath == null)
@@ -554,6 +560,7 @@ namespace Pytocs.TypeInference
                 return null;
             }
 
+            DataType prev = null;
             string path = startPath;
             for (int i = 0; i < name.Count; i++)
             {
@@ -582,7 +589,7 @@ namespace Pytocs.TypeInference
                 else if (i == name.Count - 1)
                 {
                     string startFile = path + suffix;
-                    if (FileSystem.FileExists( startFile))
+                    if (FileSystem.FileExists(startFile))
                     {
                         DataType mod = LoadFile(startFile);
                         if (mod == null)
@@ -615,7 +622,7 @@ namespace Pytocs.TypeInference
         /// </summary>
         public void LoadFileRecursive(string fullname)
         {
-            int count = countFileRecursive(fullname);
+            int count = CountFileRecursive(fullname);
             if (loadingProgress == null)
             {
                 loadingProgress = new Progress(this, count, 50, this.HasOption("quiet"));
@@ -644,7 +651,7 @@ namespace Pytocs.TypeInference
         /// </summary>
         /// <param name="fullname"></param>
         /// <returns></returns>
-        public int countFileRecursive(string fullname)
+        public int CountFileRecursive(string fullname)
         {
             string file_or_dir = fullname;
             int sum = 0;
@@ -653,7 +660,7 @@ namespace Pytocs.TypeInference
             {
                 foreach (string file in FileSystem.GetFileSystemEntries(file_or_dir))
                 {
-                    sum += countFileRecursive(file);
+                    sum += CountFileRecursive(file);
                 }
             }
             else
@@ -693,15 +700,16 @@ namespace Pytocs.TypeInference
 
         public void msg(string m)
         {
-            if (HasOption("quiet"))
+            if (!HasOption("quiet"))
             {
+                Debug.Print(m);
                 Console.WriteLine(m);
             }
         }
 
         public void msg_(string m)
         {
-            if (HasOption("quiet"))
+            if (!HasOption("quiet"))
             {
                 Console.Write(m);
             }
