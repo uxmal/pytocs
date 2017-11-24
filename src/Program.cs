@@ -47,10 +47,11 @@ namespace Pytocs
 
             if (args[0].ToLower() == "-r")
             {
-#if !NOT_READY_FOR_TYPES
+#if NOT_READY_FOR_TYPES
                 var options = new Dictionary<string, object>();
                 var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
                 typeAnalysis.Analyze(".");
+                typeAnalysis.Finish();
                 TranslateModules(typeAnalysis);
 #else
                 var walker = new DirectoryWalker("*.py");

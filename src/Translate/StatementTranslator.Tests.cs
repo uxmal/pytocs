@@ -687,7 +687,7 @@ public static object foo() {
         public void Class_ComputedSlots()
         {
             var pyCls =
-@"class MyClass:
+@"class MyClass():
     __slots__ = [x for x, _ in meta.fields]
 ";
 

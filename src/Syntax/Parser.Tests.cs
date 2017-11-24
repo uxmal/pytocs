@@ -551,5 +551,19 @@ def wrapper():
 ";
             Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
         }
+
+        [Test]
+        public void Parse_SetNamedArgumentValue()
+        {
+            var pySrc =
+@"def print_no_end(text):
+    print(text, end = '')
+";
+            var sExp =
+@"def print_no_end(text):
+    print text, end=""""
+";
+            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+        }
     }
 }

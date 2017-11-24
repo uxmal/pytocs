@@ -892,8 +892,8 @@ eval_input: testlist NEWLINE* ENDMARKER
             Exp outputStream = null;    // default to stdout.
             bool trailing_comma = false;
 
-            Token token = Expect(TokenType.ID);
-            int posEnd = token.End;
+            Identifier printId = id();
+            int posEnd = printId.End;
             if (!Peek(TokenType.NEWLINE))
             {
                 if (PeekAndDiscard(TokenType.OP_SHR))
@@ -910,6 +910,12 @@ eval_input: testlist NEWLINE* ENDMARKER
                         }
                         posEnd = args.Last().End;
                     }
+                }
+                else if (Peek(TokenType.LPAREN))
+                {
+                    var tok = lexer.Get();
+                    args = arglist(printId, tok.Start).args;
+                    Expect(TokenType.RPAREN);
                 }
                 else
                 {
@@ -933,7 +939,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                     }
                 }
             }
-            return new PrintStatement(outputStream, args, trailing_comma, filename, token.Start, posEnd );
+            return new PrintStatement(outputStream, args, trailing_comma, filename, printId.Start, posEnd );
         }
 
         //testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
@@ -1873,7 +1879,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 while (Peek(TokenType.STRING))
                 {
                     t = lexer.Get();
-                    byteStr = new Bytes(str.s + t.Value, filename, start, t.End);
+                    byteStr = new Bytes(byteStr.s + ((Bytes)t.Value).s, filename, start, t.End);
                 }
                 return byteStr;
             case TokenType.INTEGER:
@@ -2166,7 +2172,10 @@ eval_input: testlist NEWLINE* ENDMARKER
         public List<Exp> dotted_name_list()
         {
             var list = new List<Exp>();
-            list.Add(test());
+            var exp = test();
+            if (exp == null)
+                return list;
+            list.Add(exp);
             while (PeekAndDiscard(TokenType.COMMA))
             {
                 if (Peek(TokenType.RPAREN))

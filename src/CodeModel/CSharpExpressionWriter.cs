@@ -480,6 +480,16 @@ namespace Pytocs.CodeModel
                         writer.Write("(byte)'\\\\'");
                         i += 1;
                     }
+                    else if (s[i + 1] == 'n')
+                    {
+                        writer.Write("\\n");
+                        i += 1;
+                    }
+                    else if (s[i + 1] == 't')
+                    {
+                        writer.Write("\\t");
+                        i += 1;
+                    }
                     else
                     {
                         throw new NotImplementedException(string.Format("Not implemented {0}{1}", s[i], s[i+1]));

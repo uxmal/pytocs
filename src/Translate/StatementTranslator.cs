@@ -694,7 +694,7 @@ namespace Pytocs.Translate
 
         public void VisitNonLocal(NonlocalStatement n)
         {
-            throw new NotImplementedException();
+            gen.Comment("LOCAL " + string.Join(", ", n.names));
         }
 
         public void VisitWhile(WhileStatement w)
