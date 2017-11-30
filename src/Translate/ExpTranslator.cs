@@ -133,8 +133,7 @@ namespace Pytocs.Translate
             Debug.Print("appl: {0}", appl.fn);
             var fn = appl.fn.Accept(this);
             var args = TranslateArgs(appl).ToArray();
-            var id = fn as CodeVariableReferenceExpression;
-            if (id != null)
+            if (fn is CodeVariableReferenceExpression id)
             {
                 if (id.Name == "isinstance" && appl.args.Count == 2)
                 {
@@ -260,8 +259,7 @@ namespace Pytocs.Translate
             }
             else
             {
-                var field = fn as CodeFieldReferenceExpression;
-                if (field != null)
+                if (fn is CodeFieldReferenceExpression field)
                 {
                     if (field.FieldName == "iteritems")
                     {
@@ -310,8 +308,7 @@ namespace Pytocs.Translate
                 k => ((CodeVariableReferenceExpression)k.exp1).Name,
                 v => v.exp2);
 
-            CodeExpression tmp;
-            if (namedArgs.TryGetValue("cmp", out tmp))
+            if (namedArgs.TryGetValue("cmp", out var tmp))
                 cmp = tmp;
             if (namedArgs.TryGetValue("key", out tmp))
                 key = tmp;
@@ -332,8 +329,7 @@ namespace Pytocs.Translate
         {
             if (rev == null)
                 return false;
-            var p = rev as CodePrimitiveExpression;
-            if (p != null)
+            if (rev is CodePrimitiveExpression p)
             {
                 if (p.Value is bool)
                 {
@@ -404,8 +400,7 @@ namespace Pytocs.Translate
             }
             else
             {
-                var compFor = a.defval as CompFor;
-                if (compFor != null)
+                if (a.defval is CompFor compFor)
                 {
                     var v = compFor.variable.Accept(this);
                     var c = Translate(v, compFor);
@@ -421,9 +416,7 @@ namespace Pytocs.Translate
                 {
                     return new CodeNamedArgument(
                         a.name.Accept(this),
-                        a.defval != null
-                            ? a.defval.Accept(this)
-                            : null);
+                        a.defval?.Accept(this));
                 }
             }
         }
@@ -576,8 +569,7 @@ namespace Pytocs.Translate
 
             var l = bin.l.Accept(this);
             var r = bin.r.Accept(this);
-            CodeOperatorType opDst;
-            if (mppyoptocsop.TryGetValue(bin.op, out opDst))
+            if (mppyoptocsop.TryGetValue(bin.op, out var opDst))
             {
                 return m.BinOp(l, opDst, r);
             }
@@ -628,8 +620,7 @@ namespace Pytocs.Translate
             var args = new List<CodeExpression>();
             args.Add(formatString.Accept(this));
 
-            var tuple = pyArgs as PyTuple;
-            if (tuple != null)
+            if (pyArgs is PyTuple tuple)
             {
                 args.AddRange(tuple.values
                     .Select(e => e.Accept(this)));
@@ -684,13 +675,11 @@ namespace Pytocs.Translate
             var c = compFor.collection.Accept(this);
             if (compFor.next != null)
             {
-                var filter = compFor.next as CompIf;
-                if (filter != null)
+                if (compFor.next is CompIf filter)
                 {
-                    c = Where(c, v, filter.test.Accept(this));
+                    return Where(c, v, filter.test.Accept(this));
                 }
-                var join = compFor.next as CompFor;
-                if (join != null)
+                if (compFor.next is CompFor join)
                 {
                     //var pySrc = "((a, s) for a in stackframe.alocs.values() for s in a._segment_list)";
                     //string sExp = "stackframe.alocs.SelectMany(aa => aa._segment_list, (a, s) => Tuple.Create( a, s ))";
@@ -843,68 +832,66 @@ namespace Pytocs.Translate
             //string sExp = "path.info.iteritems.ToDictionary(k => k, v => copy.copy(v))";
 
             var list = dc.source.collection.Accept(this);
-            var varList = dc.source.variable as ExpList;
-            if (varList != null)
+            switch (dc.source.variable)
             {
-                //if (varList.Expressions.Count != 2)
-                //    throw new InvalidOperationException("Variable list should contain one or two variables.");
-                var args = varList.Expressions.Select((e, i) => Tuple.Create(e, string.Format($"Item{i+1}")))
-                    .ToDictionary(d => d.Item1, d => d.Item2);
-                var tpl = gensym.GenSymAutomatic("_tup_", null, false);
-
-                gensym.PushIdMappings(varList.Expressions.ToDictionary(e => e.ToString(), e => m.Access(tpl, args[e])));
-
-                var kValue = dc.key.Accept(this);
-                var vValue = dc.value.Accept(this);
-
-                gensym.PopIdMappings();
-
-                return m.Appl(
-                    m.MethodRef(list, "ToDictionary"),
-                    m.Lambda(new CodeExpression[] { tpl }, kValue),
-                    m.Lambda(new CodeExpression[] { tpl }, vValue));
-            }
-            var id = dc.source.variable as Identifier;
-            if (id != null)
-            { 
-                var kValue = dc.key.Accept(this);
-                var vValue = dc.value.Accept(this);
-                return m.Appl(
-                    m.MethodRef(list, "ToDictionary"),
-                    m.Lambda(new CodeExpression[] { id.Accept(this) }, kValue),
-                    m.Lambda(new CodeExpression[] { id.Accept(this) }, vValue));
-            }
-            var tuple = dc.source.variable as PyTuple;
-            if (tuple != null)
-            {
-                if (tuple.values.Count != 2)
+            case ExpList varList:
                 {
-                    //TODO: tuples, especially nested tuples, are hard.
-                    return m.Prim("!!!{" +
-                        dc.key.Accept(this) +
-                        ": " +
-                        dc.value.Accept(this));
-                }
+                    //if (varList.Expressions.Count != 2)
+                    //    throw new InvalidOperationException("Variable list should contain one or two variables.");
+                    var args = varList.Expressions.Select((e, i) => Tuple.Create(e, string.Format($"Item{i + 1}")))
+                        .ToDictionary(d => d.Item1, d => d.Item2);
+                    var tpl = gensym.GenSymAutomatic("_tup_", null, false);
 
-                var enumvar = gensym.GenSymAutomatic("_de", null, false);
-                gensym.PushIdMappings(new Dictionary<string, CodeExpression>
+                    gensym.PushIdMappings(varList.Expressions.ToDictionary(e => e.ToString(), e => m.Access(tpl, args[e])));
+
+                    var kValue = dc.key.Accept(this);
+                    var vValue = dc.value.Accept(this);
+
+                    gensym.PopIdMappings();
+
+                    return m.Appl(
+                        m.MethodRef(list, "ToDictionary"),
+                        m.Lambda(new CodeExpression[] { tpl }, kValue),
+                        m.Lambda(new CodeExpression[] { tpl }, vValue));
+                }
+            case Identifier id:
+                {
+                    var kValue = dc.key.Accept(this);
+                    var vValue = dc.value.Accept(this);
+                    return m.Appl(
+                        m.MethodRef(list, "ToDictionary"),
+                        m.Lambda(new CodeExpression[] { id.Accept(this) }, kValue),
+                        m.Lambda(new CodeExpression[] { id.Accept(this) }, vValue));
+                }
+            case PyTuple tuple:
+                {
+                    if (tuple.values.Count != 2)
+                    {
+                        //TODO: tuples, especially nested tuples, are hard.
+                        return m.Prim("!!!{" +
+                            dc.key.Accept(this) +
+                            ": " +
+                            dc.value.Accept(this));
+                    }
+
+                    var enumvar = gensym.GenSymAutomatic("_de", null, false);
+                    gensym.PushIdMappings(new Dictionary<string, CodeExpression>
                 {
                     { tuple.values[0].ToString(), m.Access(enumvar, "Key") },
                     { tuple.values[1].ToString(), m.Access(enumvar, "Value") },
                 });
 
-                var kValue = dc.key.Accept(this);
-                var vValue = dc.value.Accept(this);
+                    var kValue = dc.key.Accept(this);
+                    var vValue = dc.value.Accept(this);
 
-                gensym.PopIdMappings();
+                    gensym.PopIdMappings();
 
-                return m.Appl(
-                    m.MethodRef(list, "ToDictionary"),
-                    m.Lambda(new CodeExpression[] { enumvar }, kValue),
-                    m.Lambda(new CodeExpression[] { enumvar }, vValue));
-
+                    return m.Appl(
+                        m.MethodRef(list, "ToDictionary"),
+                        m.Lambda(new CodeExpression[] { enumvar }, kValue),
+                        m.Lambda(new CodeExpression[] { enumvar }, vValue));
+                }
             }
-
             throw new NotImplementedException();
         }
     }

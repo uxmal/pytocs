@@ -91,8 +91,7 @@ namespace Pytocs.Translate
 
         private static PropertyDefinition  EnsurePropertyDefinition(Dictionary<string, PropertyDefinition> propdefs, FunctionDef def)
         {
-            PropertyDefinition propdef;
-            if (!propdefs.TryGetValue(def.name.Name, out propdef))
+            if (!propdefs.TryGetValue(def.name.Name, out var propdef))
             {
                 propdef = new PropertyDefinition(def.name.Name);
                 propdefs.Add(def.name.Name, propdef);
@@ -149,8 +148,7 @@ namespace Pytocs.Translate
 
         private CodeCatchClause GenerateClause(ExceptHandler eh)
         {
-            var ex = eh.type as Identifier;
-            if (ex != null)
+            if (eh.type is Identifier ex)
             {
                 return gen.CatchClause(
                     null,
@@ -199,18 +197,16 @@ namespace Pytocs.Translate
 
         public void VisitExp(ExpStatement e)
         {
-            var ass = e.Expression as AssignExp;
-            if (ass != null)
+            if (e.Expression is AssignExp ass)
             {
-                var idDst = ass.Dst as Identifier;
-                if (idDst != null)
-                    gensym.EnsureLocalVariable(idDst.Name, new CodeTypeReference(typeof(object)), false);
-
-                var dstTuple = ass.Dst as ExpList;
-                if (dstTuple != null)
+                if (ass.Dst is Identifier idDst)
                 {
-                    var srcTuple = ass.Src as ExpList;
-                    if (srcTuple != null)
+                    gensym.EnsureLocalVariable(idDst.Name, new CodeTypeReference(typeof(object)), false);
+                }
+
+                if (ass.Dst is ExpList dstTuple)
+                {
+                    if (ass.Src is ExpList srcTuple)
                     {
                         EmitTupleToTupleAssignment(dstTuple.Expressions, srcTuple.Expressions);
                     }
@@ -236,8 +232,7 @@ namespace Pytocs.Translate
                 }
                 else
                 {
-                    var id = ass.Dst as Identifier;
-                    if (id != null)
+                    if (ass.Dst is Identifier id)
                     {
                         ClassTranslator_GenerateField(id, xlat, ass);
                     }
@@ -274,8 +269,7 @@ namespace Pytocs.Translate
             //$TODO cycle detection
             foreach (var pyAss in dstTuple.Zip(srcTuple, (a, b) => new { Dst = a, Src = b }))
             {
-                var id = pyAss.Dst as Identifier;
-                if (id != null)
+                if (pyAss.Dst is Identifier id)
                 {
                     gensym.EnsureLocalVariable(id.Name, gen.TypeRef("object"), false);
                 }
@@ -292,8 +286,7 @@ namespace Pytocs.Translate
                 if (value == null || value.Name == "_")
                     continue;
                 var tupleField = gen.Access(tup, "Item" + i);
-                var id = value as Identifier;
-                if (id != null)
+                if (value is Identifier id)
                 {
                     gensym.EnsureLocalVariable(id.Name, new CodeTypeReference(typeof(object)), false);
                     gen.Assign(new CodeVariableReferenceExpression(id.Name), tupleField);
@@ -332,13 +325,11 @@ namespace Pytocs.Translate
         private void ClassTranslator_GenerateField(Identifier id, ExpTranslator xlat, AssignExp ass)
         {
             IEnumerable<Exp> slotNames = null;
-            var srcList = ass.Src as PyList;
-            if (srcList != null)
+            if (ass.Src is PyList srcList )
             {
                 slotNames= srcList.elts;
             }
-            var srcTuple = ass.Src as PyTuple;
-            if (srcTuple != null)
+            else if (ass.Src is PyTuple srcTuple)
             {
                 slotNames = srcTuple.values;
             }
@@ -382,14 +373,12 @@ namespace Pytocs.Translate
                 gen.Foreach(exp, v, () => f.Body.Accept(this));
                 return;
             }
-            var expList = f.exprs as ExpList;
-            if (expList != null)
+            if (f.exprs is ExpList expList)
             {
                 GenerateForTuple(f, expList.Expressions);
                 return;
             }
-            var tuple = f.exprs as PyTuple;
-            if (tuple != null)
+            if (f.exprs is PyTuple tuple)
             {
                 GenerateForTuple(f, tuple.values);
                 return;
@@ -601,8 +590,7 @@ namespace Pytocs.Translate
         public void VisitDecorated(Decorated d)
         {
             var decorators = d.Decorations.ToList();
-            PropertyDefinition propdef;
-            if (this.properties.TryGetValue(d, out propdef))
+            if (this.properties.TryGetValue(d, out var propdef))
             {
                 if (propdef.IsTranslated)
                     return;
@@ -664,21 +652,19 @@ namespace Pytocs.Translate
             var exprList = d.Expressions.AsList()
                 .Select(e => e.Accept(xlat))
                 .ToList();
-            if (exprList.Count == 1)
+            if (exprList.Count == 1 &&
+                exprList[0] is CodeArrayIndexerExpression aref &&
+                aref.Indices.Length == 1)
             {
-                var aref = exprList[0] as CodeArrayIndexerExpression;
-                if (aref != null && aref.Indices.Length == 1)
-                {
-                    // del foo[bar] is likely
-                    // foo.Remove(bar)
-                    gen.SideEffect(
-                        gen.Appl(
-                            gen.MethodRef(
-                                aref.TargetObject,
-                                "Remove"),
-                            aref.Indices[0]));
-                    return;
-                }
+                // del foo[bar] is likely
+                // foo.Remove(bar)
+                gen.SideEffect(
+                    gen.Appl(
+                        gen.MethodRef(
+                            aref.TargetObject,
+                            "Remove"),
+                        aref.Indices[0]));
+                return;
             }
             var fn = new CodeVariableReferenceExpression("WONKO_del");
             foreach (var exp in exprList)

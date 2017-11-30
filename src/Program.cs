@@ -47,14 +47,17 @@ namespace Pytocs
 
             if (args[0].ToLower() == "-r")
             {
-#if NOT_READY_FOR_TYPES
+#if !NOT_READY_FOR_TYPES
                 var options = new Dictionary<string, object>();
                 var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
                 typeAnalysis.Analyze(".");
                 typeAnalysis.Finish();
                 TranslateModules(typeAnalysis);
 #else
-                var walker = new DirectoryWalker("*.py");
+                var startDir = args.Length == 2
+                    ? args[1]
+                    : Directory.GetCurrentDirectory();
+                var walker = new DirectoryWalker(fs, startDir, "*.py");
                 walker.Enumerate();
 #endif
             }
@@ -64,8 +67,8 @@ namespace Pytocs
                 {
                     var xlator = new Translator(
                         "", 
-                        Path.GetFileNameWithoutExtension(fileName),
-                        new FileSystem(),
+                        fs.GetFileNameWithoutExtension(fileName),
+                        fs,
                         new ConsoleLogger());
                     xlator.TranslateFile(fileName, fileName + ".cs");
                 }
@@ -75,6 +78,7 @@ namespace Pytocs
         private static void TranslateModules(Analyzer typeAnalysis)
         {
             var bind = typeAnalysis.GetModuleBindings().ToArray();
+
             throw new NotImplementedException();
         }
     }

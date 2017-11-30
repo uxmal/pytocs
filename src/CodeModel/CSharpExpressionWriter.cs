@@ -607,8 +607,7 @@ namespace Pytocs.CodeModel
                 writer.Write("void");
             else
             {
-                string csharpName;
-                if (csharpTypenames.TryGetValue(typeName, out csharpName))
+                if (csharpTypenames.TryGetValue(typeName, out var csharpName))
                     writer.Write(csharpName);
                 else
                     writer.WriteName(typeName);

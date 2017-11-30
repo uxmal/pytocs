@@ -1079,7 +1079,7 @@ namespace Pytocs.TypeInference
             {
                 analyzer.putRef(id, b);
                 analyzer.Resolved.Add(id);
-                analyzer.unresolved.Remove(id);
+                analyzer.Unresolved.Remove(id);
                 return State.MakeUnion(b);
             }
             else if (id.Name == "True" || id.Name == "False")
@@ -1089,7 +1089,7 @@ namespace Pytocs.TypeInference
             else
             {
                 analyzer.putProblem(id, "unbound variable " + id.Name);
-                analyzer.unresolved.Add(id);
+                analyzer.Unresolved.Add(id);
                 DataType t = DataType.Unknown;
                 t.Table.Path = scope.extendPath(analyzer, id.Name);
                 return t;

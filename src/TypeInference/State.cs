@@ -224,8 +224,7 @@ namespace Pytocs.TypeInference
         /// </summary>
         public ISet<Binding> LookupLocal(string name)
         {
-            ISet<Binding> bs;
-            if (table.TryGetValue(name, out bs))
+            if (table.TryGetValue(name, out var bs))
                 return bs;
             else 
                 return null;
@@ -442,34 +441,30 @@ namespace Pytocs.TypeInference
         /// </summary>
         public void Bind(Analyzer analyzer, Exp target, DataType rvalue, BindingKind kind)
         {
-            if (target is Identifier)
+            if (target is Identifier id)
             {
-                this.Bind(analyzer, (Identifier) target, rvalue, kind);
+                this.Bind(analyzer, id, rvalue, kind);
             }
-            else if (target is PyTuple)
+            else if (target is PyTuple tup)
             {
-                this.Bind(analyzer, ((PyTuple) target).values, rvalue, kind);
+                this.Bind(analyzer, tup.values, rvalue, kind);
             }
-            else if (target is PyList)
+            else if (target is PyList list)
             {
-                this.Bind(analyzer, ((PyList) target).elts, rvalue, kind);
+                this.Bind(analyzer, list.elts, rvalue, kind);
             }
-            else if (target is AttributeAccess)
+            else if (target is AttributeAccess attr)
             {
-                var attr = (AttributeAccess) target;
                 DataType targetType = transformExpr(analyzer, attr.Expression, this);
                 setAttr(analyzer, attr, rvalue, targetType);
             }
-            else if (target is ArrayRef)
+            else if (target is ArrayRef sub)
             {
-                ArrayRef sub = (ArrayRef) target;
-
                 DataType valueType = transformExpr(analyzer, sub.array, this);
                 var xform = new TypeTransformer(this, analyzer);
                 transformExprs(analyzer, sub.subs, this);
-                if (valueType is ListType)
+                if (valueType is ListType t)
                 {
-                    ListType t = (ListType) valueType;
                     t.setElementType(UnionType.Union(t.eltType, rvalue));
                 }
             }

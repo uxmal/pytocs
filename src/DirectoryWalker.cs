@@ -27,15 +27,21 @@ namespace Pytocs
 {
     public class DirectoryWalker
     {
+        private IFileSystem fs;
         private string rootDirectory;
         private string pattern;
 
-        public DirectoryWalker(string pattern) : this(Directory.GetCurrentDirectory(), pattern)
-        {
-        }
+        //public DirectoryWalker(string pattern) : this(Directory.GetCurrentDirectory(), pattern)
+        //{
+        //}
 
-        public DirectoryWalker(string directory, string pattern)
+        //public DirectoryWalker(string directory, string pattern) : this(new FileSystem(), directory, pattern)
+        //{
+        //}
+
+        public DirectoryWalker(IFileSystem fs, string directory, string pattern) 
         {
+            this.fs = fs;
             this.rootDirectory = directory;
             this.pattern = pattern;
         }
@@ -62,7 +68,7 @@ namespace Pytocs
                 stack.Push(e);
                 var state = e.Current;
                 ProcessDirectoryFiles(state);
-                e = (Directory.GetDirectories(state.DirectoryName, "*", SearchOption.TopDirectoryOnly)
+                e = (fs.GetDirectories(state.DirectoryName, "*", SearchOption.TopDirectoryOnly)
                      .Select(d => new EnumerationState
                      {
                          DirectoryName = d,
@@ -72,9 +78,9 @@ namespace Pytocs
             }
         }
 
-        private static string GenerateNamespace(EnumerationState state, string dirname)
+        private string GenerateNamespace(EnumerationState state, string dirname)
         {
-            dirname = Path.GetFileName(dirname)
+            dirname = fs.GetFileName(dirname)
                 .Replace('-', '_')
                 .Replace('.', '_');
             return string.Format(
@@ -85,11 +91,11 @@ namespace Pytocs
 
         public void ProcessDirectoryFiles(EnumerationState state)
         {
-            foreach (var file in Directory.GetFiles(state.DirectoryName, "*.py", SearchOption.TopDirectoryOnly))
+            foreach (var file in fs.GetFiles(state.DirectoryName, "*.py", SearchOption.TopDirectoryOnly))
             {
                 var xlator = new Translator(
                     state.Namespace, 
-                    Path.GetFileNameWithoutExtension(file),
+                    fs.GetFileNameWithoutExtension(file),
                     new FileSystem(),
                     new ConsoleLogger());
                 xlator.TranslateFile(file, file + ".cs");

@@ -185,6 +185,15 @@ namespace Pytocs.TypeInference
             return ReadFile(path).GetHashCode().ToString();
         }
 
+        public IEnumerable<string> GetDirectories(string path, string pattern, SearchOption option)
+        {
+            throw new NotImplementedException();
+        }
+        public IEnumerable<string> GetFiles(string path, string pattern, SearchOption option)
+        {
+            throw new NotImplementedException();
+        }
+
         public string[] GetFileSystemEntries(string path)
         {
             var segs = path.Split(new[] { this.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
@@ -203,6 +212,17 @@ namespace Pytocs.TypeInference
         {
             var segs = path.Split(new[] { this.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
             return segs.Last();
+        }
+
+        public string GetFileNameWithoutExtension(string path)
+        {
+            var filename = GetFileName(path);
+            int i = filename.LastIndexOf('.');
+            if (i > 0)
+            {
+                filename = filename.Remove(i);
+            }
+            return filename;
         }
 
         public string makePathString(params string[] files)

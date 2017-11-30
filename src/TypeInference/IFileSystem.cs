@@ -48,6 +48,9 @@ namespace Pytocs.TypeInference
         void DeleteFile(string path);
         TextWriter CreateStreamWriter(Stream stm, Encoding encoding);
         Stream CreateFileStream(string outputFileName, FileMode mode, FileAccess access);
+        IEnumerable<string> GetDirectories(string directoryName, string v, SearchOption option);
+        IEnumerable<string> GetFiles(string directoryName, string v, SearchOption option);
+        string GetFileNameWithoutExtension(string file);
     }
 
     public class FileSystem : IFileSystem
@@ -106,8 +109,20 @@ namespace Pytocs.TypeInference
             return tmp + sep;
         }
 
+        public IEnumerable<string> GetDirectories(string directory, string searchPattern, SearchOption options)
+        {
+            return Directory.GetDirectories(directory, searchPattern, options);
+        }
+
+        public IEnumerable<string> GetFiles(string directory, string searchPattern, SearchOption options)
+        {
+            return Directory.GetFiles(directory, searchPattern, options);
+        }
+
         public string GetDirectoryName(string filePath) { return Path.GetDirectoryName(filePath); }
         public string GetFileName(string filePath) { return Path.GetFileName(filePath); }
+        public string GetFileNameWithoutExtension(string filePath) { return Path.GetFileNameWithoutExtension(filePath); }
+
         public string[] GetFileSystemEntries(string dirPath) { return Directory.GetFileSystemEntries(dirPath); } 
         
         public string makePathString(params string[] files)

@@ -28,12 +28,12 @@ namespace Pytocs.TypeInference
 {
     public interface Analyzer
     {
-        IFileSystem FileSystem { get; }
+        //IFileSystem FileSystem { get; }
         DataTypeFactory TypeFactory { get; }
         int nCalled { get; set; }
         State globaltable { get; }
         HashSet<Name> Resolved { get; }
-        HashSet<Name> unresolved { get; }
+        HashSet<Name> Unresolved { get; }
 
         DataType LoadFile(string path);
         DataType LoadModule(List<Name> name, State state);
@@ -88,6 +88,7 @@ namespace Pytocs.TypeInference
         private string projectDir;
         private readonly string suffix;
         private ILogger logger;
+        private IFileSystem FileSystem;
 
         public Dictionary<string, object> options;
         private DateTime startTime;
@@ -104,7 +105,7 @@ namespace Pytocs.TypeInference
             this.TypeFactory = new DataTypeFactory(this);
             this.globaltable = new State(null, State.StateType.GLOBAL);
             this.Resolved = new HashSet<Name>();
-            this.unresolved = new HashSet<Name>();
+            this.Unresolved = new HashSet<Name>();
 
             if (options != null)
             {
@@ -124,12 +125,11 @@ namespace Pytocs.TypeInference
             GetAstCache();
         }
 
-        public IFileSystem FileSystem { get; private set; }
         public DataTypeFactory TypeFactory { get; private set; }
         public int nCalled { get; set; }
         public State globaltable { get; private set; }
         public HashSet<Name> Resolved { get; private set; }
-        public HashSet<Name> unresolved { get; private set; }
+        public HashSet<Name> Unresolved { get; private set; }
         public Builtins Builtins { get; private set; }
         public State ModuleTable = new State(null, State.StateType.GLOBAL);
 
@@ -421,30 +421,23 @@ namespace Pytocs.TypeInference
             setCWD(FileSystem.GetDirectoryName(path));
 
             pushImportStack(path);
-            DataType type = parseAndResolve(path);
+            loadingProgress.Tick();
+            var ast = getAstForFile(path);
+            DataType type = null;
+            if (ast == null)
+            {
+                failedToParse.Add(path);
+            }
+            else
+            {
+                loadedFiles.Add(path);
+                type = new TypeTransformer(ModuleTable, this).VisitModule(ast);
+            }
             popImportStack(path);
 
             // restore old CWD
             setCWD(oldcwd);
             return type;
-        }
-
-        private DataType parseAndResolve(string file)
-        {
-            loadingProgress.Tick();
-            Module ast = getAstForFile(file);
-
-            if (ast == null)
-            {
-                failedToParse.Add(file);
-                return null;
-            }
-            else
-            {
-                var type = new TypeTransformer(ModuleTable, this).VisitModule(ast);
-                loadedFiles.Add(file);
-                return type;
-            }
         }
 
         private void CreateCacheDirectory()
@@ -511,7 +504,7 @@ namespace Pytocs.TypeInference
         /// Find the path that contains modname. Used to find the starting point of locating a qname.
         /// </summary>
         /// <param name="headName">first module name segment</param>
-        public string locateModule(string headName)
+        public string LocateModule(string headName)
         {
             List<string> loadPath = getLoadPath();
             foreach (string p in loadPath)
@@ -553,7 +546,7 @@ namespace Pytocs.TypeInference
             }
 
             // If there are more than one segment load the packages first
-            string startPath = locateModule(name[0].Name);
+            string startPath = LocateModule(name[0].Name);
 
             if (startPath == null)
             {
@@ -774,7 +767,7 @@ namespace Pytocs.TypeInference
             sb.Append("\n- number of references: " + getReferences().Count);
 
             long resolved = this.Resolved.Count;
-            long unresolved = this.unresolved.Count;
+            long unresolved = this.Unresolved.Count;
             sb.Append("\n- resolved names: " + resolved);
             sb.Append("\n- unresolved names: " + unresolved);
             sb.Append("\n- name resolve rate: " + Percent(resolved, resolved + unresolved));

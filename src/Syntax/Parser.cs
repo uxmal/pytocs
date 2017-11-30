@@ -28,6 +28,7 @@ namespace Pytocs.Syntax
     /// </summary>
     public class Parser
     {
+#pragma warning disable IDE1006 // Naming Styles
         #region Python 3.4 grammar
         /*
 # Grammar for Python
@@ -403,8 +404,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             var posStart = Expect(TokenType.AT).Start;
             var dn = dotted_name();
             List<Argument> args = new List<Argument>();
-            Token token;
-            if (PeekAndDiscard(TokenType.LPAREN, out token))
+            if (PeekAndDiscard(TokenType.LPAREN, out var token))
             {
                 if (!Peek(TokenType.RPAREN))
                 {
@@ -519,8 +519,8 @@ eval_input: testlist NEWLINE* ENDMARKER
             return new FunctionDef(
                 fnName, 
                 parms,
-                vararg!= null? vararg.Id : null, 
-                kwarg != null ? kwarg.Id : null,
+                vararg?.Id, 
+                kwarg?.Id,
                 t,
                 s, 
                 filename, start, s.End);
@@ -1115,8 +1115,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             Expect(TokenType.Import);
             int posEnd;
             List<AliasedName> aliasNames = null;
-            Token token;
-            if (PeekAndDiscard(TokenType.OP_STAR, out token))
+            if (PeekAndDiscard(TokenType.OP_STAR, out var token))
             {
                 aliasNames = new List<AliasedName>();
                 posEnd = token.End;
@@ -1398,8 +1397,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             var exHandlers = new List<ExceptHandler>();
             Statement elseHandler = null;
             Statement finallyHandler = null;
-            Token token;
-            while (Peek(TokenType.Except, out token))
+            while (Peek(TokenType.Except, out var token))
             {
                 var ec = except_clause();
                 Expect(TokenType.COLON);
@@ -1605,8 +1603,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         //not_test: 'not' not_test | comparison
         public Exp not_test()
         {
-            Token token = default(Token);
-            if (PeekAndDiscard(TokenType.Not, out token))
+            if (PeekAndDiscard(TokenType.Not, out var token))
             {
                 var test = not_test();
                 return new UnaryExp ( Op.Not, test, filename, token.Start, test.End);
@@ -2089,11 +2086,10 @@ eval_input: testlist NEWLINE* ENDMARKER
         //                  (test (comp_for | (',' test)* [','])) )
         public Exp dictorsetmaker(int posStart)
         {
-            Token token;
             var kvs = new List<KeyValuePair<Exp, Exp>>();
             while (PeekAndDiscard(TokenType.COMMENT))
                 ;
-            if (Peek(TokenType.RBRACE, out token))
+            if (Peek(TokenType.RBRACE, out var token))
                 return new DictInitializer(kvs, filename, posStart, token.End);
 
             var k = test();
@@ -2200,8 +2196,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             var keywords = new List<Argument>();
             Exp stargs = null;
             Exp kwargs = null;
-            Token token;
-            if (Peek(TokenType.RPAREN, out token))
+            if (Peek(TokenType.RPAREN, out var token))
                 return new Application(core, args, keywords, stargs, kwargs, filename, core.Start, token.End);
             for (;;)
             {
@@ -2333,4 +2328,5 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
         }
     }
+#pragma warning restore IDE1006 // Naming Styles
 }

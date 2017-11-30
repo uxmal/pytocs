@@ -52,6 +52,11 @@ namespace Pytocs
             var lex = new Lexer(filename, input);
             var par = new Parser(filename, lex);
             var stm = par.Parse();
+            TranslateModuleStatements(stm, output);
+        }
+
+        private void TranslateModuleStatements(IEnumerable<Statement> stm, TextWriter output)
+        {
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, nmspace, Path.GetFileNameWithoutExtension(moduleName));
             var xlt = new ModuleTranslator(gen);
