@@ -691,7 +691,7 @@ namespace Pytocs.Syntax
                 case State.QuoteString:
                     switch (ch)
                     {
-                    case '"': Advance();  return Token(TokenType.STRING, CreateStringLiteral(false));
+                    case '"': return EatChToken(TokenType.STRING, CreateStringLiteral(false));
                     case '\\':
                         oldState = st;
                         Accum(ch, (rawString) ? st : State.StringEscape);
@@ -894,19 +894,25 @@ namespace Pytocs.Syntax
 
         private Exp CreateStringLiteral(bool longLiteral)
         {
+            Exp e;
             if (binaryString)
             {
-                return new Bytes(sb.ToString(), filename, posStart, posEnd);
+                e = new Bytes(sb.ToString(), filename, posStart, posEnd);
             }
             else
             {
-                return new Str(sb.ToString(), filename, posStart, posEnd)
+                e = new Str(sb.ToString(), filename, posStart, posEnd)
                 {
                     Raw = rawString,
                     Unicode = unicodeString,
                     Long = longLiteral,
                 };
             }
+            binaryString = false;
+            rawString = false;
+            unicodeString = false;
+            longLiteral = false;
+            return e;
         }
 
         private bool IsLogicalNewLine()
@@ -976,9 +982,8 @@ namespace Pytocs.Syntax
 
         private Token LookupId()
         {
-            TokenType type;
             string value = sb.ToString();
-            if (keywords.TryGetValue(value, out type))
+            if (keywords.TryGetValue(value, out var type))
                 return Token(type);
             return Token(TokenType.ID, value);
         }

@@ -389,6 +389,15 @@ namespace Pytocs.Syntax
             Lex(".68",
                 TokenType.REAL, TokenType.EOF);
         }
+
+        [Test]
+        public void Lex_Mixed_ByteStrings_Strings()
+        {
+            var tok = Lex("b\"bytes\" \"chars\"");
+            Assert.IsAssignableFrom<Bytes>(tok.Value);
+            tok = LexMore();
+            Assert.IsAssignableFrom<Str>(tok.Value);
+        }
     }
 }
 #endif
