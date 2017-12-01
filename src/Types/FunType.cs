@@ -72,7 +72,7 @@ namespace Pytocs.Types
                 var oldArrows = this.arrows;
                 this.arrows = compressArrows(arrows);
 
-                if (ToString().Length > 900)
+                if (arrows.Count > 10)
                 {
                     this.arrows = oldArrows;
                 }
@@ -98,7 +98,7 @@ namespace Pytocs.Types
             }
         }
 
-        public void setDefaultTypes(List<DataType> defaultTypes)
+        public void SetDefaultTypes(List<DataType> defaultTypes)
         {
             this.defaultTypes = defaultTypes;
         }

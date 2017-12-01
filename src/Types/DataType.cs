@@ -16,6 +16,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using State = Pytocs.TypeInference.State;
 using TypeStack = Pytocs.TypeInference.TypeStack;
 
@@ -58,11 +59,6 @@ namespace Pytocs.Types
             return !a.Equals(b);
         }
     
-        public void setFile(string file)
-        {
-            this.file = file;
-        }
-
         public bool isNumType()
         {
             return this is IntType || this is FloatType;
@@ -75,28 +71,17 @@ namespace Pytocs.Types
 
         public ModuleType asModuleType()
         {
-            if (this is UnionType)
+            switch (this)
             {
-                foreach (DataType t in ((UnionType) this).types)
-                {
-                    if (t is ModuleType)
-                    {
-                        return t.asModuleType();
-                    }
-                }
-                throw new InvalidOperationException("Does not contain a ModuleType.");
-                // can't get here, just to make the annotation happy
-                //return new ModuleType(null, null, null, null);
-            }
-            else if (this is ModuleType)
-            {
-                return (ModuleType) this;
-            }
-            else
-            {
+            case UnionType ut:
+                var mut = ut.types.OfType<ModuleType>().FirstOrDefault();
+                if (mut == null)
+                    throw new InvalidOperationException("Does not contain a ModuleType.");
+                return mut;
+            case ModuleType mt:
+                return mt;
+            default:
                 throw new InvalidOperationException("This is not a ModuleType.");
-                // can't get here, just to make the annotation happy
-                //return new ModuleType(null, null, null, null);
             }
         }
 

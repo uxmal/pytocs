@@ -105,7 +105,7 @@ namespace Pytocs.TypeInference
 
         private void Write(EventLogEntryType et, string message)
         {
-            Console.WriteLine("{0}: {1}: {1}", title, et, message);
+            Console.WriteLine("{0}: {1}: {2}", title, et, message);
         }
     }
 }

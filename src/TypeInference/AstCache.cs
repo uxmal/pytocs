@@ -58,7 +58,7 @@ namespace Pytocs.TypeInference
         /// <returns>
         /// true if all cached AST files were removed
         /// </returns>
-        public bool clearDiskCache()
+        public bool ClearDiskCache()
         {
             try
             {
@@ -72,7 +72,7 @@ namespace Pytocs.TypeInference
             }
         }
 
-        public void close()
+        public void Close()
         {
             //        clearDiskCache();
         }
@@ -87,8 +87,7 @@ namespace Pytocs.TypeInference
         public Module getAST(string path)
         {
             // Cache stores null value if the parse failed.
-            Module module;
-            if (cache.TryGetValue(path, out module))
+            if (cache.TryGetValue(path, out var module))
             {
                 return module;
             }
@@ -133,7 +132,7 @@ namespace Pytocs.TypeInference
         /// checksum of the source file.  All that is needed is the MD5, but the
         /// file's base name is included for ease of debugging.
         /// </summary>
-        public string getCachePath(string sourcePath)
+        public string GetCachePath(string sourcePath)
         {
             return fs.makePathString(cacheDir, fs.getFileHash(sourcePath));
         }
@@ -145,16 +144,16 @@ namespace Pytocs.TypeInference
             {
                 return null;
             }
-            var cached = getCachePath(sourcePath);
+            var cached = GetCachePath(sourcePath);
             if (!File.Exists(cached))
             {
                 return null;
             }
-            return deserialize(sourcePath);
+            return Deserialize(sourcePath);
         }
 
         // package-private for testing
-        Module deserialize(string sourcePath)
+        Module Deserialize(string sourcePath)
         {
 #if NEVER
         string cachePath = getCachePath(sourcePath);

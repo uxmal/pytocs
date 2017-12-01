@@ -21,6 +21,8 @@ using Pytocs.Types;
 
 namespace Pytocs.TypeInference
 {
+#pragma warning disable IDE1006 // Naming Styles
+
     //$REVIEW: This file is messy. Should clean up.
     /// <summary>
     /// Metadata for all Python builtin functions.
@@ -127,7 +129,7 @@ namespace Pytocs.TypeInference
 
         ModuleType newModule(string name)
         {
-            return new ModuleType(name, null, name, analyzer.globaltable);
+            return new ModuleType(name, null, name, analyzer.GlobalTable);
         }
 
         ClassType newException(string name, State t)
@@ -863,7 +865,7 @@ namespace Pytocs.TypeInference
                 foreach (string f in builtin_exception_types)
                 {
                     addClass(f, newDataModelUrl("org/yinwang/pysonar/types"),
-                            outer.newClass(f, outer.analyzer.globaltable, outer.objectType));
+                            outer.newClass(f, outer.analyzer.GlobalTable, outer.objectType));
                 }
                 outer.BaseException = (ClassType) table.lookupType("BaseException");
 
@@ -876,8 +878,8 @@ namespace Pytocs.TypeInference
                 addFunction("open", newTutUrl("inputoutput.html#reading-and-writing-files"), outer.BaseFileInst);
                 addFunction("__import__", newLibUrl("functions"), outer.newModule("<?>"));
 
-                outer.analyzer.globaltable.Insert(outer.analyzer, "__builtins__", liburl(), module, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                outer.analyzer.globaltable.putAll(table);
+                outer.analyzer.GlobalTable.Insert(outer.analyzer, "__builtins__", liburl(), module, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                outer.analyzer.GlobalTable.putAll(table);
             }
         }
 
@@ -2625,4 +2627,5 @@ namespace Pytocs.TypeInference
             }
         }
     }
+#pragma warning restore IDE1006 // Naming Styles
 }

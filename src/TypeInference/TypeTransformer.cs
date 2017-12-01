@@ -237,7 +237,7 @@ namespace Pytocs.TypeInference
 
             if (func.Definition != null && !func.Definition.called)
             {
-                analyzer.nCalled++;
+                analyzer.CalledFunctions++;
                 func.Definition.called = true;
             }
 
@@ -489,7 +489,7 @@ namespace Pytocs.TypeInference
             b.IsStatic = true;
         }
 
-        public void addSpecialAttribute(State s, string name, DataType proptype)
+        public void AddSpecialAttribute(State s, string name, DataType proptype)
         {
             Binding b = analyzer.CreateBinding(name, Builtins.newTutUrl("classes.html"), proptype, BindingKind.ATTRIBUTE);
             s.Update(name, b);
@@ -525,12 +525,12 @@ namespace Pytocs.TypeInference
 
             // XXX: Not sure if we should add "bases", "name" and "dict" here. They
             // must be added _somewhere_ but I'm just not sure if it should be HERE.
-            addSpecialAttribute(classType.Table, "__bases__", analyzer.TypeFactory.CreateTuple(baseTypes.ToArray()));
-            addSpecialAttribute(classType.Table, "__name__", DataType.Str);
-            addSpecialAttribute(classType.Table, "__dict__",
+            AddSpecialAttribute(classType.Table, "__bases__", analyzer.TypeFactory.CreateTuple(baseTypes.ToArray()));
+            AddSpecialAttribute(classType.Table, "__name__", DataType.Str);
+            AddSpecialAttribute(classType.Table, "__dict__",
                     analyzer.TypeFactory.CreateDict(DataType.Str, DataType.Unknown));
-            addSpecialAttribute(classType.Table, "__module__", DataType.Str);
-            addSpecialAttribute(classType.Table, "__doc__", DataType.Str);
+            AddSpecialAttribute(classType.Table, "__module__", DataType.Str);
+            AddSpecialAttribute(classType.Table, "__doc__", DataType.Str);
 
             // Bind ClassType to name here before resolving the body because the
             // methods need this type as self.
@@ -700,7 +700,7 @@ namespace Pytocs.TypeInference
             var fun = new FunType(lambda, env);
             fun.Table.Parent = this.scope;
             fun.Table.Path = scope.extendPath(analyzer, "{lambda}");
-            fun.setDefaultTypes(ResolveList(lambda.args.Select(p => p.test)));
+            fun.SetDefaultTypes(ResolveList(lambda.args.Select(p => p.test)));
             analyzer.AddUncalled(fun);
             return fun;
         }
@@ -711,7 +711,7 @@ namespace Pytocs.TypeInference
             FunType fun = new FunType(f, env);
             fun.Table.Parent = this.scope;
             fun.Table.Path = scope.extendPath(analyzer, f.name.Name);
-            fun.setDefaultTypes(ResolveList(f.parameters
+            fun.SetDefaultTypes(ResolveList(f.parameters
                 .Where(p => p.test != null)
                 .Select(p => p.test)));
             analyzer.AddUncalled(fun);
@@ -936,7 +936,7 @@ namespace Pytocs.TypeInference
                 return;
             }
 
-            Module node = analyzer.getAstForFile(mt.file);
+            Module node = analyzer.GetAstForFile(mt.file);
             if (node == null)
             {
                 return;
@@ -1059,7 +1059,7 @@ namespace Pytocs.TypeInference
                 qname = m.Name;
             }
 
-            ModuleType mt = analyzer.TypeFactory.CreateModule(m.Name, m.Filename, qname, analyzer.globaltable);
+            ModuleType mt = analyzer.TypeFactory.CreateModule(m.Name, m.Filename, qname, analyzer.GlobalTable);
 
             scope.Insert(analyzer, analyzer.GetModuleQname(m.Filename), m, mt, BindingKind.MODULE);
             if (m.body != null)
@@ -1242,9 +1242,9 @@ namespace Pytocs.TypeInference
             {
                 return getListSubscript(s, vt, st);
             }
-            else if (vt is TupleType)
+            else if (vt is TupleType tup)
             {
-                return getListSubscript(s, ((TupleType)vt).toListType(), st);
+                return getListSubscript(s, tup.toListType(), st);
             }
             else if (vt is DictType dt)
             {
@@ -1252,7 +1252,7 @@ namespace Pytocs.TypeInference
                 {
                     AddWarning(s, "Possible KeyError (wrong type for subscript)");
                 }
-                return ((DictType)vt).ValueType;
+                return dt.ValueType;
             }
             else if (vt == DataType.Str)
             {

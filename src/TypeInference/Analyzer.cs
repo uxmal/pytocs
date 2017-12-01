@@ -28,16 +28,14 @@ namespace Pytocs.TypeInference
 {
     public interface Analyzer
     {
-        //IFileSystem FileSystem { get; }
         DataTypeFactory TypeFactory { get; }
-        int nCalled { get; set; }
-        State globaltable { get; }
+        int CalledFunctions { get; set; }
+        State GlobalTable { get; }
         HashSet<Name> Resolved { get; }
         HashSet<Name> Unresolved { get; }
 
-        DataType LoadFile(string path);
         DataType LoadModule(List<Name> name, State state);
-        Module getAstForFile(string file);
+        Module GetAstForFile(string file);
         string GetModuleQname(string file);
         IEnumerable<Binding> GetModuleBindings();
 
@@ -103,7 +101,7 @@ namespace Pytocs.TypeInference
             this.FileSystem = fs;
             this.logger = logger;
             this.TypeFactory = new DataTypeFactory(this);
-            this.globaltable = new State(null, State.StateType.GLOBAL);
+            this.GlobalTable = new State(null, State.StateType.GLOBAL);
             this.Resolved = new HashSet<Name>();
             this.Unresolved = new HashSet<Name>();
 
@@ -126,8 +124,8 @@ namespace Pytocs.TypeInference
         }
 
         public DataTypeFactory TypeFactory { get; private set; }
-        public int nCalled { get; set; }
-        public State globaltable { get; private set; }
+        public int CalledFunctions { get; set; }
+        public State GlobalTable { get; private set; }
         public HashSet<Name> Resolved { get; private set; }
         public HashSet<Name> Unresolved { get; private set; }
         public Builtins Builtins { get; private set; }
@@ -164,6 +162,7 @@ namespace Pytocs.TypeInference
             }
         }
 
+#if NOT_USED // This code doesn't seem to be used anywhere
         public void addPaths(List<string> p)
         {
             foreach (string s in p)
@@ -172,15 +171,17 @@ namespace Pytocs.TypeInference
             }
         }
 
-        public void addPath(string p)
-        {
-            path.Add(FileSystem.GetFullPath(p));
-        }
+
 
         public void setPath(List<string> path)
         {
             this.path = new List<string>(path.Count);
             addPaths(path);
+        }
+#endif
+        private void addPath(string p)
+        {
+            path.Add(FileSystem.GetFullPath(p));
         }
 
         private void AddPythonPath()
@@ -198,11 +199,6 @@ namespace Pytocs.TypeInference
                     addPath(p);
                 }
             }
-        }
-
-        private object GetPathSeparator(PlatformID platform)
-        {
-            throw new NotImplementedException();
         }
 
         private void CopyModels()
@@ -352,7 +348,7 @@ namespace Pytocs.TypeInference
 
         public void putRef(Node node, Binding b)
         {
-            List<Binding> bs = new List<Binding> { b };
+            var bs = new List<Binding> { b };
             putRef(node, bs);
         }
 
@@ -366,7 +362,7 @@ namespace Pytocs.TypeInference
             string file = loc.Filename;
             if (file != null)
             {
-                addFileErr(file, loc.Start, loc.End, msg);
+                AddFileError(file, loc.Start, loc.End, msg);
             }
         }
 
@@ -375,11 +371,11 @@ namespace Pytocs.TypeInference
         {
             if (file != null)
             {
-                addFileErr(file, begin, end, msg);
+                AddFileError(file, begin, end, msg);
             }
         }
 
-        void addFileErr(string file, int begin, int end, string msg)
+        private void AddFileError(string file, int begin, int end, string msg)
         {
             var d = new Diagnostic(file, Diagnostic.Category.ERROR, begin, end, msg);
             getFileErrs(file, semanticErrors).Add(d);
@@ -422,7 +418,7 @@ namespace Pytocs.TypeInference
 
             pushImportStack(path);
             loadingProgress.Tick();
-            var ast = getAstForFile(path);
+            var ast = GetAstForFile(path);
             DataType type = null;
             if (ast == null)
             {
@@ -472,7 +468,7 @@ namespace Pytocs.TypeInference
         /// <summary>
         /// Returns the syntax tree for {@code file}. <p>
         /// </summary>
-        public Module getAstForFile(string file)
+        public Module GetAstForFile(string file)
         {
             return GetAstCache().getAST(file);
         }
@@ -668,7 +664,7 @@ namespace Pytocs.TypeInference
 
         public void Finish()
         {
-            msg("\nFinished loading files. " + nCalled + " functions were called.");
+            msg("\nFinished loading files. " + CalledFunctions + " functions were called.");
             msg("Analyzing uncalled functions");
             ApplyUncalled();
 
@@ -688,7 +684,7 @@ namespace Pytocs.TypeInference
 
         public void close()
         {
-            astCache.close();
+            astCache.Close();
         }
 
         public void msg(string m)

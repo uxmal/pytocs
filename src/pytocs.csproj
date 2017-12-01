@@ -108,7 +108,6 @@
     <Compile Include="CodeModel\ICodeExpressionVisitor.cs" />
     <Compile Include="CodeModel\ICodeMemberVisitor.cs" />
     <Compile Include="CodeModel\ICodeStatementVisitor.cs" />
-    <Compile Include="CodeModel\ICodeTypeDefinitionVisitor.cs" />
     <Compile Include="CodeModel\IndentingTextWriter.cs" />
     <Compile Include="CodeModel\MemberAttributes.cs" />
     <Compile Include="CodeModel\UnaryCodeExpression.cs" />
@@ -175,7 +174,6 @@
     <Compile Include="TypeInference\FakeLogger.cs" />
     <Compile Include="TypeInference\IFileSystem.cs" />
     <Compile Include="TypeInference\ILogger.cs" />
-    <Compile Include="TypeInference\JsonTools.cs" />
     <Compile Include="TypeInference\Options.cs" />
     <Compile Include="TypeInference\Progress.cs" />
     <Compile Include="TypeInference\State.cs" />

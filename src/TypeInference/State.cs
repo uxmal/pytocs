@@ -111,7 +111,7 @@ namespace Pytocs.TypeInference
             }
         }
 
-        public static State merge(State state1, State state2)
+        public static State Merge(State state1, State state2)
         {
             State ret = state1.Clone();
             ret.Merge(state2);
@@ -455,14 +455,14 @@ namespace Pytocs.TypeInference
             }
             else if (target is AttributeAccess attr)
             {
-                DataType targetType = transformExpr(analyzer, attr.Expression, this);
+                DataType targetType = TransformExp(analyzer, attr.Expression, this);
                 setAttr(analyzer, attr, rvalue, targetType);
             }
             else if (target is ArrayRef sub)
             {
-                DataType valueType = transformExpr(analyzer, sub.array, this);
+                DataType valueType = TransformExp(analyzer, sub.array, this);
                 var xform = new TypeTransformer(this, analyzer);
-                transformExprs(analyzer, sub.subs, this);
+                TransformExprs(analyzer, sub.subs, this);
                 if (valueType is ListType t)
                 {
                     t.setElementType(UnionType.Union(t.eltType, rvalue));
@@ -650,7 +650,7 @@ namespace Pytocs.TypeInference
             targetType.Table.Insert(analyzer, attr.FieldName.Name, attr, attrType, BindingKind.ATTRIBUTE);
         }
 
-        public static void transformExprs(Analyzer analyzer, List<Slice> exprs, State s)
+        public static void TransformExprs(Analyzer analyzer, List<Slice> exprs, State s)
         {
             var x = new TypeTransformer(s, analyzer);
             foreach (var e in exprs)
@@ -659,7 +659,7 @@ namespace Pytocs.TypeInference
             }
         }
 
-        public static DataType transformExpr(Analyzer analyzer, Exp n, State s)
+        public static DataType TransformExp(Analyzer analyzer, Exp n, State s)
         {
             return n.Accept(new TypeTransformer(s, analyzer));
         }

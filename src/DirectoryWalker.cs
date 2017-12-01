@@ -31,14 +31,6 @@ namespace Pytocs
         private string rootDirectory;
         private string pattern;
 
-        //public DirectoryWalker(string pattern) : this(Directory.GetCurrentDirectory(), pattern)
-        //{
-        //}
-
-        //public DirectoryWalker(string directory, string pattern) : this(new FileSystem(), directory, pattern)
-        //{
-        //}
-
         public DirectoryWalker(IFileSystem fs, string directory, string pattern) 
         {
             this.fs = fs;
