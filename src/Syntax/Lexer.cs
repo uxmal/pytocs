@@ -17,6 +17,7 @@
 using NUnit.Framework;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -990,7 +991,7 @@ namespace Pytocs.Syntax
 
         private Token Real()
         {
-            return Token(TokenType.REAL, Convert.ToDouble(sb.ToString()), State.Base);
+            return Token(TokenType.REAL, Convert.ToDouble(sb.ToString(), CultureInfo.InvariantCulture), State.Base);
         }
     }
 }
