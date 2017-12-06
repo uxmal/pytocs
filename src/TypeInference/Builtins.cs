@@ -118,11 +118,11 @@ namespace Pytocs.TypeInference
         ClassType newClass(string name, State table,
                            ClassType superClass, params ClassType[] moreSupers)
         {
-            var path = table.extendPath(analyzer, name);
+            var path = table.ExtendPath(analyzer, name);
             ClassType t = new ClassType(name, table, path, superClass);
             foreach (ClassType c in moreSupers)
             {
-                t.addSuper(c);
+                t.AddSuper(c);
             }
             return t;
         }
@@ -1392,7 +1392,7 @@ namespace Pytocs.TypeInference
 
             public override void initBindings()
             {
-                var path = table.extendPath(outer.analyzer, "dbm");
+                var path = table.ExtendPath(outer.analyzer, "dbm");
                 ClassType dbm = new ClassType("dbm", table, path, outer.BaseDict);
                 addClass("dbm", liburl(), dbm);
                 addClass("error", liburl(), outer.newException("error", table));
@@ -1549,7 +1549,7 @@ namespace Pytocs.TypeInference
             {
                 addClass("error", liburl(), outer.newException("error", table));
 
-                var path = table.extendPath(outer.analyzer, name);
+                var path = table.ExtendPath(outer.analyzer, name);
                 ClassType gdbm = new ClassType("gdbm", table, path, outer.BaseDict);
                 gdbm.Table.Insert(outer.analyzer, "firstkey", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
                 gdbm.Table.Insert(outer.analyzer, "nextkey", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;

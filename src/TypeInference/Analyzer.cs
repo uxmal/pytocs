@@ -473,7 +473,7 @@ namespace Pytocs.TypeInference
             return GetAstCache().getAST(file);
         }
 
-        public ModuleType getBuiltinModule(string qname)
+        public ModuleType GetBuiltinModule(string qname)
         {
             return Builtins.get(qname);
         }
@@ -530,7 +530,7 @@ namespace Pytocs.TypeInference
             }
 
             string qname = MakeQname(name);
-            DataType mt = getBuiltinModule(qname);
+            DataType mt = GetBuiltinModule(qname);
             if (mt != null)
             {
                 state.Insert(
@@ -720,11 +720,9 @@ namespace Pytocs.TypeInference
         public void ApplyUncalled()
         {
             IProgress progress = new Progress(this, uncalled.Count, 50, this.HasOption("quiet"));
-
             while (uncalled.Count != 0)
             {
-                List<FunType> uncalledDup = new List<FunType>(uncalled);
-
+                var uncalledDup = uncalled.ToList();
                 foreach (FunType cl in uncalledDup)
                 {
                     progress.Tick();
@@ -740,9 +738,9 @@ namespace Pytocs.TypeInference
 
         public string getAnalysisSummary()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.AppendLine();
-            sb.Append("\n" + banner("Analysis summary"));
+            sb.AppendLine(banner("Analysis summary"));
 
             string duration = FormatTime(DateTime.Now  - this.startTime);
             sb.Append("\n- total time: " + duration);

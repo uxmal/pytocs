@@ -53,10 +53,10 @@ namespace Pytocs.TypeInference
                 return a.FieldName.Accept(this);
             }
 
-            DataType targetType = a.Expression.Accept(this);
-            if (targetType is UnionType)
+            var targetType = a.Expression.Accept(this);
+            if (targetType is UnionType ut)
             {
-                ISet<DataType> types = ((UnionType) targetType).types;
+                ISet<DataType> types = ut.types;
                 DataType retType = DataType.Unknown;
                 foreach (DataType tt in types)
                 {
@@ -77,7 +77,7 @@ namespace Pytocs.TypeInference
             {
                 analyzer.putProblem(a.FieldName, "attribute not found in type: " + targetType);
                 DataType t = DataType.Unknown;
-                t.Table.Path = targetType.Table.extendPath(analyzer, a.FieldName.Name);
+                t.Table.Path = targetType.Table.ExtendPath(analyzer, a.FieldName.Name);
                 return t;
             }
             else
@@ -280,7 +280,7 @@ namespace Pytocs.TypeInference
             State funcTable = new State(func.env, State.StateType.FUNCTION);
             if (func.Table.Parent != null)
             {
-                funcTable.Path = func.Table.Parent.extendPath(analyzer, func.Definition.name.Name);
+                funcTable.Path = func.Table.Parent.ExtendPath(analyzer, func.Definition.name.Name);
             }
             else
             {
@@ -355,7 +355,7 @@ namespace Pytocs.TypeInference
 
             if (star != null && star is ListType list)
             {
-                star = list.toTupleType();
+                star = list.ToTupleType();
             }
 
             for (int i = 0, j = 0; i < pSize; i++)
@@ -379,10 +379,11 @@ namespace Pytocs.TypeInference
                     }
                     else
                     {
-                        if (star != null && star is TupleType &&
-                                j < ((TupleType) star).eltTypes.Count)
+                        if (star != null && star is TupleType tup &&
+                                j < tup.eltTypes.Count)
                         {
-                            aType = ((TupleType) star).get(j++);
+                            aType = tup.get(j);
+                            ++j;
                         }
                         else
                         {
@@ -422,7 +423,7 @@ namespace Pytocs.TypeInference
             {
                 if (pTypes.Count > pSize)
                 {
-                    DataType restType = analyzer.TypeFactory.CreateTuple(pTypes.subList(pSize, pTypes.Count).ToArray());
+                    DataType restType = analyzer.TypeFactory.CreateTuple(pTypes.SubList(pSize, pTypes.Count).ToArray());
                     funcTable.Bind(analyzer, rest, restType, BindingKind.PARAMETER);
                 }
                 else
@@ -436,7 +437,6 @@ namespace Pytocs.TypeInference
             }
             return fromType;
         }
-
 
         static bool missingReturn(DataType toType)
         {
@@ -499,21 +499,21 @@ namespace Pytocs.TypeInference
 
         public DataType VisitClass(ClassDef c)
         {
-            var path = scope.extendPath(analyzer, c.name.Name);
-            ClassType classType = new ClassType(c.name.Name, scope, path);
-            List<DataType> baseTypes = new List<DataType>();
+            var path = scope.ExtendPath(analyzer, c.name.Name);
+            var classType = new ClassType(c.name.Name, scope, path);
+            var baseTypes = new List<DataType>();
             foreach (var @base in c.args)
             {
                 DataType baseType = @base.Accept(this);
                 switch (baseType)
                 {
                 case ClassType _:
-                    classType.addSuper(baseType);
+                    classType.AddSuper(baseType);
                     break;
                 case UnionType ut:
                     foreach (DataType parent in ut.types)
                     {
-                        classType.addSuper(parent);
+                        classType.AddSuper(parent);
                     }
                     break;
                 default:
@@ -699,7 +699,7 @@ namespace Pytocs.TypeInference
             State env = scope.getForwarding();
             var fun = new FunType(lambda, env);
             fun.Table.Parent = this.scope;
-            fun.Table.Path = scope.extendPath(analyzer, "{lambda}");
+            fun.Table.Path = scope.ExtendPath(analyzer, "{lambda}");
             fun.SetDefaultTypes(ResolveList(lambda.args.Select(p => p.test)));
             analyzer.AddUncalled(fun);
             return fun;
@@ -710,13 +710,13 @@ namespace Pytocs.TypeInference
             State env = scope.getForwarding();
             FunType fun = new FunType(f, env);
             fun.Table.Parent = this.scope;
-            fun.Table.Path = scope.extendPath(analyzer, f.name.Name);
+            fun.Table.Path = scope.ExtendPath(analyzer, f.name.Name);
             fun.SetDefaultTypes(ResolveList(f.parameters
                 .Where(p => p.test != null)
                 .Select(p => p.test)));
             analyzer.AddUncalled(fun);
-            BindingKind funkind;
 
+            BindingKind funkind;
             if (scope.stateType == State.StateType.CLASS)
             {
                 if ("__init__" == f.name.Name)
@@ -733,10 +733,9 @@ namespace Pytocs.TypeInference
                 funkind = BindingKind.FUNCTION;
             }
 
-            DataType outType = scope.Type;
-            if (outType is ClassType)
+            if (scope.Type is ClassType ct)
             {
-                fun.Class = ((ClassType) outType);
+                fun.Class = ct;
             }
 
             scope.Bind(analyzer, f.name, fun, funkind);
@@ -942,19 +941,14 @@ namespace Pytocs.TypeInference
                 return;
             }
 
-            List<string> names = new List<string>();
             DataType allType = mt.Table.lookupType("__all__");
 
-            if (allType != null && allType is ListType)
+            List<string> names = new List<string>();
+            if (allType != null && allType is ListType lt)
             {
-                ListType lt = (ListType) allType;
-
-                foreach (object o in lt.values)
+                foreach (var s in lt.values.OfType<string>()) 
                 {
-                    if (o is string)
-                    {
-                        names.Add((string) o);
-                    }
+                    names.Add(s);
                 }
             }
 
@@ -970,8 +964,8 @@ namespace Pytocs.TypeInference
                     }
                     else
                     {
-                        List<Identifier> m2 = new List<Identifier>(i.DottedName.segs);
-                        Identifier fakeName = new Identifier(name, i.Filename, start, start + name.Length);
+                        var m2 = new List<Identifier>(i.DottedName.segs);
+                        var fakeName = new Identifier(name, i.Filename, start, start + name.Length);
                         m2.Add(fakeName);
                         DataType type = analyzer.LoadModule(m2, scope);
                         if (type != null)
@@ -1009,7 +1003,7 @@ namespace Pytocs.TypeInference
                 return listType;  // list of unknown.
             foreach (var exp in l.elts)
             {
-                listType.add(exp.Accept(this));
+                listType.Add(exp.Accept(this));
                 if (exp is Str sExp)
                 {
                     listType.addValue(sExp.s);
@@ -1059,7 +1053,7 @@ namespace Pytocs.TypeInference
                 qname = m.Name;
             }
 
-            ModuleType mt = analyzer.TypeFactory.CreateModule(m.Name, m.Filename, qname, analyzer.GlobalTable);
+            var mt = analyzer.TypeFactory.CreateModule(m.Name, m.Filename, qname, analyzer.GlobalTable);
 
             scope.Insert(analyzer, analyzer.GetModuleQname(m.Filename), m, mt, BindingKind.MODULE);
             if (m.body != null)
@@ -1091,7 +1085,7 @@ namespace Pytocs.TypeInference
                 analyzer.putProblem(id, "unbound variable " + id.Name);
                 analyzer.Unresolved.Add(id);
                 DataType t = DataType.Unknown;
-                t.Table.Path = scope.extendPath(analyzer, id.Name);
+                t.Table.Path = scope.ExtendPath(analyzer, id.Name);
                 return t;
             }
         }
@@ -1473,7 +1467,7 @@ namespace Pytocs.TypeInference
 
     public static class ListEx
     {
-        public static List<T> subList<T>(this List<T> list, int iMin, int iMac)
+        public static List<T> SubList<T>(this List<T> list, int iMin, int iMac)
         {
             return list.Skip(iMin).Take(iMac - iMin).ToList();
         }

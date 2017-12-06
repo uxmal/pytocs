@@ -97,7 +97,7 @@ namespace Pytocs.TypeInference
         {
             foreach (var e2 in other.table)
             {
-                ISet<Binding> b1 = table[e2.Key];
+                ISet<Binding> b1 = table.ContainsKey(e2.Key) ? table[e2.Key] : null;
                 ISet<Binding> b2 = e2.Value;
 
                 if (b1 != null && b2 != null)
@@ -113,7 +113,7 @@ namespace Pytocs.TypeInference
 
         public static State Merge(State state1, State state2)
         {
-            State ret = state1.Clone();
+            var ret = state1.Clone();
             ret.Merge(state2);
             return ret;
         }
@@ -198,7 +198,7 @@ namespace Pytocs.TypeInference
             }
             else
             {
-                b.qname = extendPath(analyzer, id);
+                b.qname = ExtendPath(analyzer, id);
             }
             Update(id, b);
             return b;
@@ -426,7 +426,7 @@ namespace Pytocs.TypeInference
             return table;
         }
 
-        public string extendPath(Analyzer analyzer, string pathname)
+        public string ExtendPath(Analyzer analyzer, string pathname)
         {
             return analyzer.ExtendPath(this.Path, pathname); 
         }

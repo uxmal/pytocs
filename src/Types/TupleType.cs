@@ -83,7 +83,7 @@ namespace Pytocs.Types
             ListType t = new ListType();        //$ no call to factory.
             foreach (DataType e in eltTypes)
             {
-                t.add(e);
+                t.Add(e);
             }
             return t;
         }

@@ -159,7 +159,7 @@ namespace Pytocs.Types
 
             if (type1 is ListType list1 && type2 is ListType list2)
             {
-                return subsumedInner(list1.toTupleType(), list2.toTupleType(), typeStack);
+                return subsumedInner(list1.ToTupleType(), list2.ToTupleType(), typeStack);
             }
             return false;
         }

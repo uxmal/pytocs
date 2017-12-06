@@ -27,8 +27,7 @@ namespace Pytocs.Types
         public ClassType(string name, State parent, string path)
         {
             this.name = name;
-            this.Table = new State(parent, State.StateType.CLASS);
-            this.Table.Type = this;
+            this.Table = new State(parent, State.StateType.CLASS) { Type = this };
             if (parent != null)
             {
                 Table.Path = path;
@@ -44,7 +43,7 @@ namespace Pytocs.Types
         {
             if (superClass != null)
             {
-                addSuper(superClass);
+                AddSuper(superClass);
             }
         }
 
@@ -58,7 +57,7 @@ namespace Pytocs.Types
             this.name = name;
         }
 
-        public void addSuper(DataType superclass)
+        public void AddSuper(DataType superclass)
         {
             this.superclass = superclass;
             Table.addSuper(superclass.Table);

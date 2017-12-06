@@ -47,7 +47,7 @@ namespace Pytocs.Types
             this.eltType = eltType;
         }
 
-        public void add(DataType another)
+        public void Add(DataType another)
         {
             eltType = UnionType.Union(eltType, another);
             positional.Add(another);
@@ -74,7 +74,7 @@ namespace Pytocs.Types
             return ret;
         }
 
-        public TupleType toTupleType()
+        public TupleType ToTupleType()
         {
             return new TupleType(positional);
         }
