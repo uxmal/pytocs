@@ -16,6 +16,9 @@
 
 namespace Pytocs.Types
 {
+    /// <summary>
+    /// Represents a complex number (a + bi)
+    /// </summary>
     public class ComplexType : DataType
     {
         public override T Accept<T>(IDataTypeVisitor<T> visitor)

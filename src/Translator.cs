@@ -52,14 +52,29 @@ namespace Pytocs
             var lex = new Lexer(filename, input);
             var par = new Parser(filename, lex);
             var stm = par.Parse();
-            TranslateModuleStatements(stm, output);
+            TranslateModuleStatements(stm, null, output);
         }
 
-        private void TranslateModuleStatements(IEnumerable<Statement> stm, TextWriter output)
+        public void TranslateModuleStatements(IEnumerable<Statement> stm, State moduleScope, string outputFileName)
+        {
+            TextWriter writer;
+            try
+            {
+                writer = fs.CreateStreamWriter(fs.CreateFileStream(outputFileName, FileMode.Create, FileAccess.Write), new UTF8Encoding(false));
+            }
+            catch (IOException ex)
+            {
+                logger.Error(ex, "Unable to open file {0} for writing.", outputFileName);
+                return;
+            }
+            TranslateModuleStatements(stm, moduleScope, writer);
+        }
+
+        public void TranslateModuleStatements(IEnumerable<Statement> stm, State moduleScope, TextWriter output)
         {
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, nmspace, Path.GetFileNameWithoutExtension(moduleName));
-            var xlt = new ModuleTranslator(gen);
+            var xlt = new ModuleTranslator(moduleScope, gen);
             xlt.Translate(stm);
             var pvd = new CSharpCodeProvider();
             pvd.GenerateCodeFromCompileUnit(unt, output, new CodeGeneratorOptions { });

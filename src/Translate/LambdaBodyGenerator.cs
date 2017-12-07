@@ -1,10 +1,12 @@
-﻿using System;
+﻿using Pytocs.CodeModel;
+using Pytocs.Syntax;
+using Pytocs.TypeInference;
+using Pytocs.Types;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Pytocs.CodeModel;
-using Pytocs.Syntax;
 
 namespace Pytocs.Translate
 {

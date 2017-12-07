@@ -44,7 +44,7 @@ namespace Pytocs
             public string Namespace;
         }
 
-        public void Enumerate()
+        public void Enumerate(Action<EnumerationState> transformer)
         {
             var stack = new Stack<IEnumerator<EnumerationState>>();
             stack.Push(new List<EnumerationState>{new EnumerationState 
@@ -59,7 +59,7 @@ namespace Pytocs
                     continue;
                 stack.Push(e);
                 var state = e.Current;
-                ProcessDirectoryFiles(state);
+                transformer(state);
                 e = (fs.GetDirectories(state.DirectoryName, "*", SearchOption.TopDirectoryOnly)
                      .Select(d => new EnumerationState
                      {
@@ -85,10 +85,11 @@ namespace Pytocs
         {
             foreach (var file in fs.GetFiles(state.DirectoryName, "*.py", SearchOption.TopDirectoryOnly))
             {
+                Debug.Print($" ======== {file} ==");
                 var xlator = new Translator(
                     state.Namespace, 
                     fs.GetFileNameWithoutExtension(file),
-                    new FileSystem(),
+                    fs,
                     new ConsoleLogger());
                 xlator.TranslateFile(file, file + ".cs");
             }

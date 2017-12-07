@@ -25,6 +25,7 @@ using System.Linq;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Pytocs.TypeInference;
 
 namespace Pytocs.Acceptance
 {
@@ -32,6 +33,13 @@ namespace Pytocs.Acceptance
     public class ParserAcceptanceTests
     {
         private static readonly string nl = Environment.NewLine;
+        private State scope;
+
+        [SetUp]
+        public void Setup()
+        {
+            this.scope = new State(null, State.StateType.MODULE);
+        }
 
         private string XlatModule(string pyModule)
         {
@@ -41,7 +49,7 @@ namespace Pytocs.Acceptance
             var stm = par.Parse(); ;
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
-            var xlt = new ModuleTranslator(gen);
+            var xlt = new ModuleTranslator(scope, gen);
             xlt.Translate(stm);
 
             var pvd = new CSharpCodeProvider();

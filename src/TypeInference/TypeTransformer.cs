@@ -301,7 +301,7 @@ namespace Pytocs.TypeInference
             else
             {
                 DataType toType = func.Definition.body.Accept(new TypeTransformer(funcTable, analyzer));
-                if (missingReturn(toType))
+                if (MissingReturn(toType))
                 {
                     analyzer.putProblem(func.Definition.name, "Function doesn't always return a value");
                     if (call != null)
@@ -438,7 +438,7 @@ namespace Pytocs.TypeInference
             return fromType;
         }
 
-        static bool missingReturn(DataType toType)
+        static bool MissingReturn(DataType toType)
         {
             bool hasNone = false;
             bool hasOther = false;
@@ -883,7 +883,7 @@ namespace Pytocs.TypeInference
             }
             else if (i.isImportStar())
             {
-                importStar(i, dtModule);
+                ImportStar(i, dtModule);
             }
             else
             {
@@ -928,7 +928,7 @@ namespace Pytocs.TypeInference
             return DataType.Cont;
         }
 
-        private void importStar(FromStatement i, DataType mt)
+        private void ImportStar(FromStatement i, DataType mt)
         {
             if (mt == null || mt.file == null)
             {
@@ -1268,7 +1268,7 @@ namespace Pytocs.TypeInference
 
         private DataType getListSubscript(ArrayRef s, DataType vt, DataType st)
         {
-            if (vt is ListType)
+            if (vt is ListType list)
             {
                 if (st != null && st is ListType)
                 {
@@ -1276,7 +1276,7 @@ namespace Pytocs.TypeInference
                 }
                 else if (st == null || st.isNumType())
                 {
-                    return ((ListType)vt).eltType;
+                    return list.eltType;
                 }
                 else
                 {
@@ -1286,9 +1286,9 @@ namespace Pytocs.TypeInference
                         AddError(s, "The type can't be sliced: " + vt);
                         return DataType.Unknown;
                     }
-                    else if (sliceFunc is FunType)
+                    else if (sliceFunc is FunType ft)
                     {
-                        return Apply(analyzer, (FunType)sliceFunc, null, null, null, null, s);
+                        return Apply(analyzer, ft, null, null, null, null, s);
                     }
                     else
                     {
@@ -1438,13 +1438,9 @@ namespace Pytocs.TypeInference
             }
             else
             {
-                var ret = new List<DataType>();
-                foreach (var n in nodes)
-                {
-                    var dt = n?.Accept(this);
-                    ret.Add(dt);
-                }
-                return ret;
+                return nodes
+                    .Select(n => n?.Accept(this))
+                    .ToList();
             }
         }
 

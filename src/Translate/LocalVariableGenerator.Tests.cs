@@ -17,6 +17,7 @@
 #if DEBUG
 using NUnit.Framework;
 using Pytocs.CodeModel;
+using Pytocs.TypeInference;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -29,6 +30,11 @@ namespace Pytocs.Translate
     [TestFixture]
     public class LocalVariableTranslator
     {
+        [SetUp]
+        public void Setup()
+        {
+        }
+
         private string XlatModule(string pyModule)
         {
             var rdr = new StringReader(pyModule);

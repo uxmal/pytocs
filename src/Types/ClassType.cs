@@ -22,7 +22,6 @@ namespace Pytocs.Types
     {
         public string name;
         public InstanceType canon;
-        public DataType superclass;
 
         public ClassType(string name, State parent, string path)
         {
@@ -52,14 +51,8 @@ namespace Pytocs.Types
             return visitor.VisitClass(this);
         }
 
-        public void setName(string name)
-        {
-            this.name = name;
-        }
-
         public void AddSuper(DataType superclass)
         {
-            this.superclass = superclass;
             Table.addSuper(superclass.Table);
         }
 

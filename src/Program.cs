@@ -52,7 +52,29 @@ namespace Pytocs
                 var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
                 typeAnalysis.Analyze(".");
                 typeAnalysis.Finish();
-                TranslateModules(typeAnalysis);
+
+                var startDir = args.Length == 2
+                    ? args[1]
+                    : Directory.GetCurrentDirectory();
+                var walker = new DirectoryWalker(fs, startDir, "*.py");
+                walker.Enumerate(state =>
+                {
+                    foreach (var file in fs.GetFiles(state.DirectoryName, "*.py", SearchOption.TopDirectoryOnly))
+                    {
+                        var path = fs.GetFullPath(file);
+                        var xlator = new Translator(
+                             state.Namespace,
+                             fs.GetFileNameWithoutExtension(file),
+                             fs,
+                             new ConsoleLogger());
+                        var module = typeAnalysis.GetAstForFile(path);
+                        var moduleBinding = typeAnalysis.ModuleTable.Values.SelectMany(s => s).FirstOrDefault(b => b.node == module);
+                        xlator.TranslateModuleStatements(
+                            module.body.stmts,
+                            moduleBinding.type.Table, 
+                            Path.ChangeExtension(path, ".cs"));
+                    }
+                });
 #else
                 var startDir = args.Length == 2
                     ? args[1]
@@ -75,10 +97,8 @@ namespace Pytocs
             }
         }
 
-        private static void TranslateModules(Analyzer typeAnalysis)
+        private void TranslateDirModules(DirectoryWalker.EnumerationState state)
         {
-            var bind = typeAnalysis.GetModuleBindings().ToArray();
-
             throw new NotImplementedException();
         }
     }

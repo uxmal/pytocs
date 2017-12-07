@@ -16,6 +16,8 @@
 
 using Pytocs.CodeModel;
 using Pytocs.Syntax;
+using Pytocs.TypeInference;
+using Pytocs.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -619,7 +621,7 @@ namespace Pytocs.Translate
         private void GeneratePropertyGetter(Decorated getter)
         {
             var def = (FunctionDef)getter.Statement;
-            var mgen = new MethodGenerator(def, null, def.parameters, false, gen);
+            var mgen = new MethodGenerator(def,  null, def.parameters, false, gen);
             var comments = ConvertFirstStringToComments(def.body.stmts);
             gen.CurrentMemberComments.AddRange(comments);
             mgen.Xlat(def.body);

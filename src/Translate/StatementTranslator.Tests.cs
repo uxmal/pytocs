@@ -24,6 +24,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pytocs.TypeInference;
 
 namespace Pytocs.Translate
 {
@@ -31,6 +32,13 @@ namespace Pytocs.Translate
     public class StatementTranslatorTests
     {
         private static readonly string nl = Environment.NewLine;
+
+        private State scope;
+
+        public void  Setup()
+        {
+            scope = new State(null, State.StateType.MODULE);
+        }
 
         private string XlatStmts(string pyStmt)
         {

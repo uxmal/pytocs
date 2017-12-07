@@ -16,6 +16,8 @@
 
 using Pytocs.CodeModel;
 using Pytocs.Syntax;
+using Pytocs.TypeInference;
+using Pytocs.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;

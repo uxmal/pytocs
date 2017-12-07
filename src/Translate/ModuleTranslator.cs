@@ -16,6 +16,7 @@
 
 using Pytocs.CodeModel;
 using Pytocs.Syntax;
+using Pytocs.TypeInference;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -26,10 +27,12 @@ namespace Pytocs.Translate
 {
     public class ModuleTranslator : StatementTranslator
     {
+        private State scope;
         private CodeGenerator gen;
 
-        public ModuleTranslator(CodeGenerator gen) : base(gen, new SymbolGenerator())
+        public ModuleTranslator(State scope, CodeGenerator gen) : base(gen, new SymbolGenerator())
         {
+            this.scope = scope;
             this.gen = gen;
         }
 
@@ -38,8 +41,7 @@ namespace Pytocs.Translate
             int c = 0;
             foreach (var s in statements)
             {
-                Str lit;
-                if (c == 0 && IsStringStatement(s, out lit))
+                if (c == 0 && IsStringStatement(s, out Str lit))
                 {
                     GenerateDocComment(lit.s, gen.CurrentNamespace.Comments);
                 }

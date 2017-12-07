@@ -70,7 +70,6 @@ namespace Pytocs.TypeInference
         //public const string MODEL_LOCATION = "org/yinwang/pysonar/models";
         private List<string> loadedFiles = new List<string>();
         private List<Binding> allBindings = new List<Binding>();
-        private Dictionary<Node, List<Binding>> references = new Dictionary<Node, List<Binding>>(); 
         private Dictionary<string, List<Diagnostic>> semanticErrors = new Dictionary<string, List<Diagnostic>>();
         private Dictionary<string, List<Diagnostic>> parseErrors = new Dictionary<string, List<Diagnostic>>();
         private string cwd = null;
@@ -104,6 +103,7 @@ namespace Pytocs.TypeInference
             this.GlobalTable = new State(null, State.StateType.GLOBAL);
             this.Resolved = new HashSet<Name>();
             this.Unresolved = new HashSet<Name>();
+            this.References = new Dictionary<Node, List<Binding>>();
 
             if (options != null)
             {
@@ -120,7 +120,10 @@ namespace Pytocs.TypeInference
             AddPythonPath();
             CopyModels();
             CreateCacheDirectory();
-            GetAstCache();
+            if (astCache == null)
+            {
+                astCache = new AstCache(this, FileSystem, logger, cacheDir);
+            }
         }
 
         public DataTypeFactory TypeFactory { get; private set; }
@@ -129,6 +132,8 @@ namespace Pytocs.TypeInference
         public HashSet<Name> Resolved { get; private set; }
         public HashSet<Name> Unresolved { get; private set; }
         public Builtins Builtins { get; private set; }
+        public Dictionary<Node, List<Binding>> References { get; private set; }
+
         public State ModuleTable = new State(null, State.StateType.GLOBAL);
 
         /// <summary>
@@ -179,7 +184,7 @@ namespace Pytocs.TypeInference
             addPaths(path);
         }
 #endif
-        private void addPath(string p)
+        private void AddPath(string p)
         {
             path.Add(FileSystem.GetFullPath(p));
         }
@@ -196,7 +201,7 @@ namespace Pytocs.TypeInference
                 string[] segments = path.Split(pathseparator);
                 foreach (string p in segments)
                 {
-                    addPath(p);
+                    AddPath(p);
                 }
             }
         }
@@ -220,7 +225,7 @@ namespace Pytocs.TypeInference
 
         public List<string> getLoadPath()
         {
-            List<string> loadPath = new List<string>();
+            var loadPath = new List<string>();
             if (cwd != null)
             {
                 loadPath.Add(cwd);
@@ -253,7 +258,7 @@ namespace Pytocs.TypeInference
             return importStack.Contains(f);
         }
 
-        public void pushImportStack(object f)
+        public void PushImportStack(object f)
         {
             importStack.Add(f);
         }
@@ -283,20 +288,20 @@ namespace Pytocs.TypeInference
             {
                 return null;
             }
-            else if (t is UnionType)
+            else if (t is UnionType ut)
             {
-                foreach (DataType tt in ((UnionType) t).types)
+                foreach (DataType tt in ut.types)
                 {
-                    if (tt is ModuleType)
+                    if (tt is ModuleType mt)
                     {
-                        return (ModuleType) tt;
+                        return mt;
                     }
                 }
                 return null;
             }
-            else if (t is ModuleType)
+            else if (t is ModuleType mt)
             {
-                return (ModuleType) t;
+                return mt;
             }
             else
             {
@@ -330,10 +335,10 @@ namespace Pytocs.TypeInference
         {
             if (!(node is Url))
             {
-                if (!references.TryGetValue(node, out var bindings))
+                if (!References.TryGetValue(node, out var bindings))
                 {
                     bindings = new List<Binding>(1);
-                    references[node] = bindings;
+                    References[node] = bindings;
                 }
                 foreach (Binding b in bs)
                 {
@@ -352,10 +357,7 @@ namespace Pytocs.TypeInference
             putRef(node, bs);
         }
 
-        public Dictionary<Node, List<Binding>> getReferences()
-        {
-            return references;
-        }
+
 
         public void putProblem(Node loc, string msg)
         {
@@ -416,8 +418,9 @@ namespace Pytocs.TypeInference
             string oldcwd = cwd;
             setCWD(FileSystem.GetDirectoryName(path));
 
-            pushImportStack(path);
+            PushImportStack(path);
             loadingProgress.Tick();
+            Debug.Print($"*** Path {path}");
             var ast = GetAstForFile(path);
             DataType type = null;
             if (ast == null)
@@ -457,20 +460,12 @@ namespace Pytocs.TypeInference
             }
         }
 
-
-        private AstCache GetAstCache()
-        {
-            if (astCache == null)
-                astCache = new AstCache(this, FileSystem, logger, cacheDir);
-            return astCache;
-        }
-
         /// <summary>
         /// Returns the syntax tree for {@code file}. <p>
         /// </summary>
         public Module GetAstForFile(string file)
         {
-            return GetAstCache().getAST(file);
+            return astCache.getAST(file);
         }
 
         public ModuleType GetBuiltinModule(string qname)
@@ -758,7 +753,7 @@ namespace Pytocs.TypeInference
 
             sb.Append("\n- number of definitions: " + nDef);
             sb.Append("\n- number of cross references: " + nXRef);
-            sb.Append("\n- number of references: " + getReferences().Count);
+            sb.Append("\n- number of references: " + References.Count);
 
             long resolved = this.Resolved.Count;
             long unresolved = this.Unresolved.Count;
@@ -796,13 +791,13 @@ namespace Pytocs.TypeInference
         {
             return "(analyzer:" +
                     "[" + allBindings.Count + " bindings] " +
-                    "[" + references.Count + " refs] " +
+                    "[" + References.Count + " refs] " +
                     "[" + loadedFiles.Count + " files] " +
                     ")";
         }
 
         /// <summary>
-        /// Given an absolute {@code path} to a file (not a directory), 
+        /// Given an absolute <paramref name="path"/> to a file (not a directory), 
         /// returns the module name for the file.  If the file is an __init__.py, 
         /// returns the last component of the file's parent directory, else 
         /// returns the filename without path or extension. 

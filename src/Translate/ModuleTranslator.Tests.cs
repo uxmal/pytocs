@@ -23,12 +23,21 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pytocs.TypeInference;
 
 namespace Pytocs.Translate
 {
     [TestFixture]
     public class ModuleTranslatorTests
     {
+        private State scope;
+
+        [SetUp]
+        public void Setup()
+        {
+            this.scope = new State(null, State.StateType.MODULE);
+        }
+
         private string XlatModule(string pyModule, string filename = "module.py")
         {
             var rdr = new StringReader(pyModule);
@@ -37,7 +46,7 @@ namespace Pytocs.Translate
             var stm = par.Parse();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", Path.GetFileNameWithoutExtension(filename));
-            var xlt = new ModuleTranslator(gen);
+            var xlt = new ModuleTranslator(scope, gen);
             xlt.Translate(stm);
 
             var pvd = new CSharpCodeProvider();

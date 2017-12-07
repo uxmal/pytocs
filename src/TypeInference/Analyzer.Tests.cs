@@ -372,6 +372,52 @@ def bar():
 
             ExpectBindings(sExp);
         }
+
+        [Test]
+        public void TypeAn_Bool_Local()
+        {
+            fs.Dir("foo")
+                .File("test.py",
+@"def fn():
+    ret = True
+    return ret
+");
+            an.Analyze(@"\foo");
+            an.Finish();
+            var sExp =
+@"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
+@"(binding:kind=FUNCTION:node=fn:type=() -> bool:qname=.foo.test.fn:refs=[])" + nl +
+@"(binding:kind=SCOPE:node=ret:type=bool:qname=.foo.test.fn.ret:refs=[ret])" + nl +
+@"(binding:kind=VARIABLE:node=ret:type=bool:qname=.foo.test.fn.ret:refs=[ret])" + nl;
+
+            ExpectBindings(sExp);
+        }
+
+
+        [Test]
+        public void TypeAn_Inherit_field()
+        {
+            fs.Dir("foo")
+                .File("test.py",
+@"class Base():
+    def __init__():
+        this.field = ""hello""
+
+class Derived(Base):
+    def foo():
+        print(this.field)
+");
+            an.Analyze(@"\foo");
+            an.Finish();
+            var sExp =
+@"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
+@"(binding:kind=CLASS:node=Base:type=<Base>:qname=.foo.test.Base:refs=[Base])" + nl +
+@"(binding:kind=CONSTRUCTOR:node=__init__:type=() -> None:qname=.foo.test.Base.__init__:refs=[])" + nl +
+@"(binding:kind=CLASS:node=Derived:type=<Derived>:qname=.foo.test.Derived:refs=[])" + nl +
+@"(binding:kind=METHOD:node=foo:type=() -> None:qname=.foo.test.Derived.foo:refs=[])" + nl;
+
+            ExpectBindings(sExp);
+        }
     }
 }
 

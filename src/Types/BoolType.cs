@@ -37,11 +37,6 @@ namespace Pytocs.Types
             return visitor.VisitBool(this);
         }
 
-        public void setValue(Value value)
-        {
-            this.value = value;
-        }
-
         public override bool Equals(object other)
         {
             return (other is BoolType);
