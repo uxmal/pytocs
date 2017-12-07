@@ -60,17 +60,17 @@ namespace Pytocs.TypeInference
                 DataType retType = DataType.Unknown;
                 foreach (DataType tt in types)
                 {
-                    retType = UnionType.Union(retType, getAttrType(a, tt));
+                    retType = UnionType.Union(retType, GetAttrType(a, tt));
                 }
                 return retType;
             }
             else
             {
-                return getAttrType(a, targetType);
+                return GetAttrType(a, targetType);
             }
         }
 
-        public DataType getAttrType(AttributeAccess a, DataType targetType)
+        public DataType GetAttrType(AttributeAccess a, DataType targetType)
         {
             ISet<Binding> bs = targetType.Table.LookupAttribute(a.FieldName.Name);
             if (bs == null)
@@ -292,8 +292,7 @@ namespace Pytocs.TypeInference
                 func.Definition.vararg, func.Definition.kwarg,
                 pTypes, func.defaultTypes, hash, kw, star);
 
-            DataType cachedTo = func.getMapping(fromType);
-            if (cachedTo != null)
+            if (func.arrows.TryGetValue(fromType, out var cachedTo))
             {
                 func.SelfType = null;
                 return cachedTo;
@@ -1216,17 +1215,17 @@ namespace Pytocs.TypeInference
                 DataType retType = DataType.Unknown;
                 foreach (DataType t in ((UnionType)vt).types)
                 {
-                    retType = UnionType.Union( retType, getSubscript(s, t, st));
+                    retType = UnionType.Union( retType, GetSubscript(s, t, st));
                 }
                 return retType;
             }
             else
             {
-                return getSubscript(s, vt, st);
+                return GetSubscript(s, vt, st);
             }
         }
 
-        public DataType getSubscript(ArrayRef s, DataType vt, DataType st)
+        public DataType GetSubscript(ArrayRef s, DataType vt, DataType st)
         {
             if (vt.isUnknownType())
             {
@@ -1234,11 +1233,11 @@ namespace Pytocs.TypeInference
             }
             else if (vt is ListType)
             {
-                return getListSubscript(s, vt, st);
+                return GetListSubscript(s, vt, st);
             }
             else if (vt is TupleType tup)
             {
-                return getListSubscript(s, tup.toListType(), st);
+                return GetListSubscript(s, tup.toListType(), st);
             }
             else if (vt is DictType dt)
             {
@@ -1266,7 +1265,7 @@ namespace Pytocs.TypeInference
             }
         }
 
-        private DataType getListSubscript(ArrayRef s, DataType vt, DataType st)
+        private DataType GetListSubscript(ArrayRef s, DataType vt, DataType st)
         {
             if (vt is ListType list)
             {

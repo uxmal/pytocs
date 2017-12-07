@@ -33,6 +33,7 @@ namespace Pytocs.TypeInference
         State GlobalTable { get; }
         HashSet<Name> Resolved { get; }
         HashSet<Name> Unresolved { get; }
+        Dictionary<Node,List<Binding>> References { get; }
 
         DataType LoadModule(List<Name> name, State state);
         Module GetAstForFile(string file);
@@ -357,8 +358,6 @@ namespace Pytocs.TypeInference
             putRef(node, bs);
         }
 
-
-
         public void putProblem(Node loc, string msg)
         {
             string file = loc.Filename;
@@ -674,10 +673,10 @@ namespace Pytocs.TypeInference
                     putProblem(b.node, "Unused variable: " + b.name);
                 }
             }
-            msg(getAnalysisSummary());
+            msg(GetAnalysisSummary());
         }
 
-        public void close()
+        public void Close()
         {
             astCache.Close();
         }
@@ -731,17 +730,17 @@ namespace Pytocs.TypeInference
             return string.Format("{0:hh\\:mm\\:ss}", span);
         }
 
-        public string getAnalysisSummary()
+        public string GetAnalysisSummary()
         {
             var sb = new StringBuilder();
             sb.AppendLine();
-            sb.AppendLine(banner("Analysis summary"));
+            sb.AppendLine(Banner("Analysis summary"));
 
             string duration = FormatTime(DateTime.Now  - this.startTime);
-            sb.Append("\n- total time: " + duration);
-            sb.Append("\n- modules loaded: " + loadedFiles.Count);
-            sb.Append("\n- semantic problems: " + semanticErrors.Count);
-            sb.Append("\n- failed to parse: " + failedToParse.Count);
+            sb.AppendLine($"- total time: {duration}");
+            sb.AppendLine($"- modules loaded: {loadedFiles.Count}");
+            sb.AppendLine($"- semantic problems: {semanticErrors.Count}");
+            sb.AppendLine($"- failed to parse: {failedToParse.Count}");
 
             // calculate number of defs, refs, xrefs
             int nDef = 0, nXRef = 0;
@@ -751,25 +750,25 @@ namespace Pytocs.TypeInference
                 nXRef += b.refs.Count;
             }
 
-            sb.Append("\n- number of definitions: " + nDef);
-            sb.Append("\n- number of cross references: " + nXRef);
-            sb.Append("\n- number of references: " + References.Count);
+            sb.Append($"- number of definitions: {nDef}");
+            sb.Append($"- number of cross references: {nXRef}");
+            sb.Append($"- number of references: {References.Count}");
 
             long resolved = this.Resolved.Count;
             long unresolved = this.Unresolved.Count;
-            sb.Append("\n- resolved names: " + resolved);
-            sb.Append("\n- unresolved names: " + unresolved);
-            sb.Append("\n- name resolve rate: " + Percent(resolved, resolved + unresolved));
+            sb.Append($"- resolved names: {resolved}");
+            sb.Append($"- unresolved names: {unresolved}");
+            sb.Append($"- name resolve rate: {Percent(resolved, resolved + unresolved)}");
 
             return sb.ToString();
         }
 
-        public string banner(string msg)
+        public string Banner(string msg)
         {
             return "---------------- " + msg + " ----------------";
         }
 
-        public List<string> getLoadedFiles()
+        public List<string> GetLoadedFiles()
         {
             List<string> files = new List<string>();
             foreach (string file in loadedFiles)

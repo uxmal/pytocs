@@ -118,8 +118,7 @@ namespace Pytocs.Translate
                 var i = stms.IndexOf(codeStatement);
                 if (i >= 0)
                 {
-                    var ass = codeStatement as CodeAssignStatement;
-                    if (ass != null)
+                    if (codeStatement is CodeAssignStatement ass)
                     {
                         // An assignment of type 'name = <exp>'. If the value
                         // assigned is null, use object type 'object', otherwise
@@ -143,8 +142,7 @@ namespace Pytocs.Translate
 
         private void EnsurePath(CodeVariableReferenceExpression id)
         {
-            List<List<CodeStatement>> paths;
-            if (!this.paths.TryGetValue(id, out paths))
+            if (!this.paths.TryGetValue(id, out var paths))
             {
                 paths = new List<List<CodeStatement>>();
                 this.paths.Add(id, paths);

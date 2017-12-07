@@ -70,7 +70,7 @@ namespace Pytocs.Types
             {
                 arrows[from] = to;
                 var oldArrows = this.arrows;
-                this.arrows = compressArrows(arrows);
+                this.arrows = CompressArrows(arrows);
 
                 if (arrows.Count > 10)
                 {
@@ -79,7 +79,7 @@ namespace Pytocs.Types
             }
         }
 
-        public DataType getMapping(DataType from)
+        public DataType GetMapping(DataType from)
         {
             return arrows.TryGetValue(from, out var to)
                 ? to
@@ -120,12 +120,12 @@ namespace Pytocs.Types
             return "FunType".GetHashCode();
         }
 
-        private bool subsumed(DataType type1, DataType type2)
+        private bool Subsumed(DataType type1, DataType type2)
         {
-            return subsumedInner(type1, type2, new TypeStack());
+            return SubsumedInner(type1, type2, new TypeStack());
         }
 
-        private bool subsumedInner(DataType type1, DataType type2, TypeStack typeStack)
+        private bool SubsumedInner(DataType type1, DataType type2, TypeStack typeStack)
         {
             if (typeStack.Contains(type1, type2))
             {
@@ -147,7 +147,7 @@ namespace Pytocs.Types
                     typeStack.Push(type1, type2);
                     for (int i = 0; i < elems1.Count; i++)
                     {
-                        if (!subsumedInner(elems1[i], elems2[i], typeStack))
+                        if (!SubsumedInner(elems1[i], elems2[i], typeStack))
                         {
                             typeStack.Pop(type1, type2);
                             return false;
@@ -159,12 +159,12 @@ namespace Pytocs.Types
 
             if (type1 is ListType list1 && type2 is ListType list2)
             {
-                return subsumedInner(list1.ToTupleType(), list2.ToTupleType(), typeStack);
+                return SubsumedInner(list1.ToTupleType(), list2.ToTupleType(), typeStack);
             }
             return false;
         }
 
-        private IDictionary<DataType, DataType> compressArrows(IDictionary<DataType, DataType> arrows)
+        private IDictionary<DataType, DataType> CompressArrows(IDictionary<DataType, DataType> arrows)
         {
             IDictionary<DataType, DataType> ret = new Dictionary<DataType, DataType>();
             foreach (var e1 in arrows)
@@ -172,7 +172,7 @@ namespace Pytocs.Types
                 bool fSubsumed = false;
                 foreach (var e2 in arrows)
                 {
-                    if (e1.Key != e2.Key && subsumed(e1.Key, e2.Key))
+                    if (e1.Key != e2.Key && Subsumed(e1.Key, e2.Key))
                     {
                         fSubsumed = true;
                         break;
