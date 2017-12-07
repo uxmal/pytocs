@@ -178,7 +178,6 @@ namespace Pytocs.Translate
             { Op.AugAdd, CsAssignOp.AugAdd },
         };
 
-
         public void VisitExec(ExecStatement e)
         {
             var args = new List<CodeExpression>();

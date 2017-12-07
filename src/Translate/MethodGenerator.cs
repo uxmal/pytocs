@@ -140,9 +140,7 @@ namespace Pytocs.Translate
                 ParameterType = parameterType,
                 ParameterName = ta.Id.Name,
                 IsVarargs = ta.vararg,
-                DefaultValue = ta.test != null
-                    ? ta.test.Accept(this.xlat)
-                    : null,
+                DefaultValue = ta.test?.Accept(this.xlat)
             };
         }
 
@@ -169,7 +167,6 @@ namespace Pytocs.Translate
                     ? new CodeVariableReferenceExpression(args[i].Id.Name)
                     : args[i].test.Accept(xlat));
             }
-
             GenerateDefaultArgMethod(argList.ToArray(), paramList.ToArray());
         }
 
