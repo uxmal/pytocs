@@ -1299,6 +1299,30 @@ c.de = ""f"";
 ";
             Assert.AreEqual(sExp, XlatModule(pySrc));
         }
+
+        [Test]
+        public void Stmt_Method_Comments()
+        {
+            var pySrc =
+@"class Foo:
+    # method comment
+    def method(self):
+        pass
+";
+            var sExp =
+@"public static class testModule {
+    
+    public class Foo {
+        
+        // method comment
+        public virtual object method() {
+        }
+    }
+}
+";
+            Assert.AreEqual(sExp, XlatModule(pySrc));
+
+        }
     }
 }
 #endif

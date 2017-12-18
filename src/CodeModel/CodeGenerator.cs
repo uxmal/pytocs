@@ -78,6 +78,9 @@ namespace Pytocs.CodeModel
             IEnumerable<string> baseClasses, 
             Action body)
         {
+            var oldScope = Scope;
+            Scope = new List<CodeStatement>();
+
             var c = new CodeTypeDeclaration
             {
                 IsClass = true,
@@ -91,7 +94,7 @@ namespace Pytocs.CodeModel
             }
             else
             {
-                CurrentType.Members.Add(c);
+                AddMemberWithComments(c);
             }
             c.BaseTypes.AddRange(baseClasses.Select(b => new CodeTypeReference(b)).ToArray());
             var old = CurrentType;
@@ -111,7 +114,15 @@ namespace Pytocs.CodeModel
 
             CurrentType = old;
             isInit = oldIsInit;
+            Scope = oldScope;
             return c;
+        }
+
+        private void AddMemberWithComments(CodeMember c)
+        {
+            c.Comments.AddRange(Scope.OfType<CodeCommentStatement>());
+            Scope.RemoveAll(s => s is CodeCommentStatement);
+            CurrentType.Members.Add(c);
         }
 
         public CodeAssignStatement Assign(CodeExpression lhs, CodeExpression rhs)
@@ -190,7 +201,7 @@ namespace Pytocs.CodeModel
                 Attributes = MemberAttributes.Public | MemberAttributes.Final
             };
             cons.Parameters.AddRange(parms.ToArray());
-            CurrentType.Members.Add(cons);
+            AddMemberWithComments(cons);
 
             GenerateMethodBody(cons, body);
             return cons;
@@ -205,7 +216,7 @@ namespace Pytocs.CodeModel
                 ReturnType = new CodeTypeReference(typeof(object))
             };
             method.Parameters.AddRange(parms.ToArray());
-            CurrentType.Members.Add(method);
+            AddMemberWithComments(method);
 
             GenerateMethodBody(method, body);
             return method;
@@ -220,7 +231,7 @@ namespace Pytocs.CodeModel
                 ReturnType = new CodeTypeReference(typeof(object))
             };
             method.Parameters.AddRange(parms.ToArray());
-            CurrentType.Members.Add(method);
+            AddMemberWithComments(method);
 
             GenerateMethodBody(method, body);
             return method;
@@ -290,7 +301,7 @@ namespace Pytocs.CodeModel
             {
                 Attributes = MemberAttributes.Public,
             };
-            CurrentType.Members.Add(field);
+            AddMemberWithComments(field);
             return field;
         }
 
@@ -301,7 +312,7 @@ namespace Pytocs.CodeModel
                 Attributes = MemberAttributes.Public,
                 InitExpression = initializer,
             };
-            CurrentType.Members.Add(field);
+            AddMemberWithComments(field);
             return field;
         }
 
@@ -509,7 +520,7 @@ namespace Pytocs.CodeModel
                 this.Scope = prop.SetStatements;
                 generatePropertySetter();
             }
-            CurrentType.Members.Add(prop);
+            AddMemberWithComments(prop);
             this.Scope = old;
             this.CurrentMember = oldMethod;
             this.CurrentMemberStatements = oldStatements;
