@@ -116,9 +116,18 @@ namespace Pytocs.Translate
         public static IEnumerable<CodeCommentStatement> ConvertFirstStringToComments(List<Statement> statements)
         {
             var nothing = new CodeCommentStatement[0];
-            if (statements.Count == 0)
+            int i = 0;
+            for (; i < statements.Count; ++i)
+            {
+                if (statements[i] is SuiteStatement ste)
+                {
+                    if (!(ste.stmts[0] is CommentStatement))
+                        break;
+                }
+            }
+            if (i >= statements.Count)
                 return nothing;
-            var suiteStmt = statements[0] as SuiteStatement;
+            var suiteStmt = statements[i] as SuiteStatement;
             if (suiteStmt == null)
                 return nothing;
             var expStm  = suiteStmt.stmts[0] as ExpStatement;
@@ -127,7 +136,7 @@ namespace Pytocs.Translate
             var str = expStm.Expression as Str;
             if (str == null)
                 return nothing;
-            statements.RemoveAt(0);
+            statements.RemoveAt(i);
             return str.s.Replace("\r\n", "\n").Split('\r', '\n').Select(line => new CodeCommentStatement(" " + line));
         }
 

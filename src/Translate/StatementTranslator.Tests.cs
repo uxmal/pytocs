@@ -1377,6 +1377,30 @@ else:
 ";
             Assert.AreEqual(sExp, XlatStmts(pySrc));
         }
+
+        [Test]
+        public void Stmt_DocComment_And_Comment()
+        {
+            var pySrc =
+@"def func():
+    # fnord
+    '''
+    doc comment
+    '''
+    return 0
+";
+            var sExp =
+@"// 
+//     doc comment
+//     
+public static object func() {
+    // fnord
+    return 0;
+}
+
+"; 
+            Assert.AreEqual(sExp, XlatMember(pySrc));
+        }
     }
 }
 #endif
