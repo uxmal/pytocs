@@ -440,7 +440,7 @@ namespace Pytocs.TypeInference
 
         private void CreateCacheDirectory()
         {
-            var p = FileSystem.CombinePath(FileSystem.getSystemTempDir(), "pysonar2");
+            var p = FileSystem.CombinePath(FileSystem.getSystemTempDir(), "pytocs");
             cacheDir =FileSystem.CombinePath(p, "ast_cache");
             string f = cacheDir;
             msg("AST cache is at: " + cacheDir);

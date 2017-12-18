@@ -39,12 +39,6 @@ namespace Pytocs
                 return;
             }
 
-            if (args[0].ToLower() == "-d")
-            {
-   //             org.yinwang.pysonar.demos.Demo.DemoMain(args);
-                return;
-            }
-
             if (args[0].ToLower() == "-r")
             {
 #if !NOT_READY_FOR_TYPES
@@ -71,7 +65,7 @@ namespace Pytocs
                         var moduleBinding = typeAnalysis.ModuleTable.Values.SelectMany(s => s).FirstOrDefault(b => b.node == module);
                         xlator.TranslateModuleStatements(
                             module.body.stmts,
-                            moduleBinding.type.Table, 
+                            moduleBinding.type.Table,
                             Path.ChangeExtension(path, ".cs"));
                     }
                 });
@@ -88,18 +82,13 @@ namespace Pytocs
                 foreach (var fileName in args)
                 {
                     var xlator = new Translator(
-                        "", 
+                        "",
                         fs.GetFileNameWithoutExtension(fileName),
                         fs,
                         new ConsoleLogger());
                     xlator.TranslateFile(fileName, fileName + ".cs");
                 }
             }
-        }
-
-        private void TranslateDirModules(DirectoryWalker.EnumerationState state)
-        {
-            throw new NotImplementedException();
         }
     }
 }

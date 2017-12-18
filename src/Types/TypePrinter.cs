@@ -14,7 +14,6 @@
 //  limitations under the License.
 #endregion
 
-using org.yinwang.pysonar;
 using System;
 using System.Collections.Generic;
 using System.Linq;

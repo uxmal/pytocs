@@ -14,7 +14,6 @@
 //  limitations under the License.
 #endregion
 
-using org.yinwang.pysonar;
 using State = Pytocs.TypeInference.State;
 
 namespace Pytocs.Types

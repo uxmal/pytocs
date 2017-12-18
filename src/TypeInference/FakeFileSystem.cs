@@ -23,7 +23,6 @@ using System.Linq;
 using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
-using org.yinwang.pysonar;
 
 namespace Pytocs.TypeInference
 {

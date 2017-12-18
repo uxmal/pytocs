@@ -151,11 +151,11 @@ namespace Pytocs.Types
 
         /// <summary>
         /// Returns the first alternate whose type is not unknown and
-        /// is not {@link org.yinwang.pysonar.Analyzer.idx.builtins.None}.
+        /// is not None.
         /// 
         /// @return the first non-unknown, non-{@code None} alternate, or {@code null} if none found
         /// </summary>
-        public DataType firstUseful()
+        public DataType FirstUseful()
         {
             return types
                 .Where(type => (!type.isUnknownType() && type != DataType.None))
