@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2021 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,11 +35,8 @@ namespace Pytocs.Acceptance
     {
         private static readonly string nl = Environment.NewLine;
 
-        private State scope;
-
         public ParserAcceptanceTests()
         {
-            this.scope = new State(null, State.StateType.MODULE);
         }
 
         private string XlatModule(string pyModule)

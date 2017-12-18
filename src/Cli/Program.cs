@@ -90,9 +90,9 @@ namespace Pytocs.Cli
                 {
                     var path = fs.GetFullPath(file);
                     var xlator = new Translator(
-                         "",
+                        "",
                          fs.GetFileNameWithoutExtension(file),
-                         fs,
+                        fs,
                          logger);
                     var module = typeAnalysis.GetAstForFile(path);
                     xlator.TranslateModuleStatements(
@@ -102,5 +102,5 @@ namespace Pytocs.Cli
                 }
             }
         }
-    }
+        }
 }

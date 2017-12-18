@@ -34,11 +34,9 @@ namespace Pytocs.UnitTests.Translate
     {
         private static readonly string nl = Environment.NewLine;
 
-        private State scope;
 
         public StatementTranslatorTests()
         {
-            scope = new State(null, State.StateType.MODULE);
         }
 
         private string XlatStmts(string pyStmt)

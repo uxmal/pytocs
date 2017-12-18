@@ -67,5 +67,5 @@ namespace Pytocs.Core.Translate
             ctor.BaseConstructorArgs.AddRange(appl.Arguments.Skip(1));
             gen.Scope.RemoveAt(0);
         }
-    }
+        }
 }

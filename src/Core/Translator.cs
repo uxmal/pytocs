@@ -76,7 +76,7 @@ namespace Pytocs.Core
             try
             {
                 TranslateModuleStatements(stm, types, writer);
-            }
+        }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
@@ -85,7 +85,7 @@ namespace Pytocs.Core
             finally
             {
                 writer.Close();
-            }
+        }
         }
 
         public void TranslateModuleStatements(
@@ -95,13 +95,13 @@ namespace Pytocs.Core
         {
             try
             {
-                var unt = new CodeCompileUnit();
-                var gen = new CodeGenerator(unt, nmspace, Path.GetFileNameWithoutExtension(moduleName));
+            var unt = new CodeCompileUnit();
+            var gen = new CodeGenerator(unt, nmspace, Path.GetFileNameWithoutExtension(moduleName));
                 var xlt = new ModuleTranslator(types, gen);
-                xlt.Translate(stm);
-                var pvd = new CSharpCodeProvider();
-                pvd.GenerateCodeFromCompileUnit(unt, output, new CodeGeneratorOptions { });
-            }
+            xlt.Translate(stm);
+            var pvd = new CSharpCodeProvider();
+            pvd.GenerateCodeFromCompileUnit(unt, output, new CodeGeneratorOptions { });
+        }
             catch (NodeException nex)
             {
                 logger.Error($"{nex.Node.Filename}({nex.Node.Start}): {nex.Message}");
@@ -150,7 +150,7 @@ namespace Pytocs.Core
             {
                 Translate("Program", reader, writer);
                 writer.Flush();
-            }
+    }
 
             return stringBuilder.ToString();
         }

@@ -33,6 +33,7 @@ namespace Pytocs.Core.Translate
     {
         private readonly ClassDef? classDef;
         protected readonly FunctionDef f;
+        protected Analyzer analyzer;
         protected readonly string? fnName;
         protected readonly List<Parameter> args;
         private readonly bool isStatic;
@@ -197,5 +198,5 @@ namespace Pytocs.Core.Translate
                 : new CodeTypeReference(typeof(object)));
             return new CodeTypeReference("Tuple", types.ToArray());
         }
-    }
+            }
 }

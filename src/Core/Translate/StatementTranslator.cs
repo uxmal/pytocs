@@ -40,7 +40,12 @@ namespace Pytocs.Core.Translate
         private CodeConstructor? classConstructor;
         private bool async;
 
-        public StatementTranslator(ClassDef? classDef, TypeReferenceTranslator types, CodeGenerator gen, SymbolGenerator gensym, HashSet<string> globals)
+        public StatementTranslator(
+            ClassDef? classDef,
+            TypeReferenceTranslator types,
+            CodeGenerator gen,
+            SymbolGenerator gensym,
+            HashSet<string> globals)
         {
             this.classDef = classDef;
             this.types = types;
@@ -136,7 +141,7 @@ namespace Pytocs.Core.Translate
             return result;
         }
 
-        private static PropertyDefinition EnsurePropertyDefinition(Dictionary<string, PropertyDefinition> propdefs, FunctionDef def)
+        private static PropertyDefinition  EnsurePropertyDefinition(Dictionary<string, PropertyDefinition> propdefs, FunctionDef def)
         {
             if (!propdefs.TryGetValue(def.name.Name, out var propdef))
             {
@@ -149,7 +154,7 @@ namespace Pytocs.Core.Translate
         private static bool IsGetterDecorator(Decorator decoration)
         {
             return decoration.className.segs.Count == 1 &&
-                   decoration.className.segs[0].Name == "property";
+                                    decoration.className.segs[0].Name == "property";
         }
 
         private static bool IsSetterDecorator(Decorator decorator)
@@ -176,7 +181,7 @@ namespace Pytocs.Core.Translate
             var suiteStmt = statements[i] as SuiteStatement;
             if (suiteStmt == null)
                 return nothing;
-            var expStm = suiteStmt.stmts[0] as ExpStatement;
+            var expStm  = suiteStmt.stmts[0] as ExpStatement;
             if (expStm == null)
                 return nothing;
             var str = expStm.Expression as Str;
@@ -219,7 +224,7 @@ namespace Pytocs.Core.Translate
             {
                 gen.If(successVar,
                     () => t.elseHandler!.Accept(this));
-            }
+        }
         }
 
         private CodeCatchClause GenerateClause(ExceptHandler eh)
@@ -297,8 +302,8 @@ namespace Pytocs.Core.Translate
                     {
                         if (rhs != null)
                         {
-                            gen.Assign(lhs, rhs);
-                        }
+                        gen.Assign(lhs, rhs);
+                    }
                     }
                     else
                     {
@@ -316,10 +321,10 @@ namespace Pytocs.Core.Translate
                         //$TODO: declarations
                         if (rhs != null)
                         {
-                            EnsureClassConstructor().Statements.Add(
-                                new CodeAssignStatement(lhs, rhs));
-                        }
+                        EnsureClassConstructor().Statements.Add(
+                            new CodeAssignStatement(lhs, rhs));
                     }
+                }
                 }
                 return;
             }
@@ -348,10 +353,10 @@ namespace Pytocs.Core.Translate
             }
             else if (lhs.Count == 1)
             {
-                var tup = GenSymLocalTuple();
-                gen.Assign(tup, rhs);
-                EmitTupleFieldAssignments(lhs, tup);
-            }
+            var tup = GenSymLocalTuple();
+            gen.Assign(tup, rhs);
+            EmitTupleFieldAssignments(lhs, tup);
+        }
             else
             {
                 var tup = gen.ValueTuple(lhs.Select(e => e.Accept(xlat)));
@@ -464,22 +469,22 @@ namespace Pytocs.Core.Translate
                 // We should already have analyzed the slots in 
                 // the type inference phase, so we ignore __slots__.
                 return;
-            }
-            else
-            {
-                if (GenerateFieldForAssignment)
+                }
+                else
                 {
+                if (GenerateFieldForAssignment)
+                    {
                     var (fieldType, nmspcs) = types.TranslateTypeOf(id);
                     gen.EnsureImports(nmspcs);
 
                     GenerateField(id.Name, fieldType, ass.Src?.Accept(xlat));
-                }
+                    }
                 else if (ass.Src is not null)
                 {
                     gen.Assign(gensym.MapLocalReference(id.Name), ass.Src.Accept(xlat));
                 }
             }
-        }
+            }
 
         protected virtual CodeMemberField GenerateField(string name, CodeTypeReference type, CodeExpression? value)
         {
@@ -584,13 +589,13 @@ namespace Pytocs.Core.Translate
             //$TODO: move into generate
             if (fn is CodeMember m)
             {
-                m.Attributes |= attrs;
-                if (customAttrs != null)
-                {
-                    m.CustomAttributes.AddRange(this.customAttrs);
-                    customAttrs = null;
-                }
+            m.Attributes |= attrs;
+            if (customAttrs != null)
+            {
+                m.CustomAttributes.AddRange(this.customAttrs);
+                customAttrs = null;
             }
+        }
         }
 
         private void GenerateLocalFunction(FunctionDef f)
@@ -617,13 +622,13 @@ namespace Pytocs.Core.Translate
                     if (alias.alias == null)
                     {
                         aliasName = total.Last();
-                    }
+                }
                     else
                     {
                         aliasName = alias.alias.Name;
-                    }
+            }
                     gen.Using(aliasName, string.Join(".", total));
-                }
+        }
             }
         }
 
@@ -701,8 +706,8 @@ namespace Pytocs.Core.Translate
                 }
                 else
                 {
-                    gen.Throw(r.exToRaise.Accept(xlat));
-                }
+                gen.Throw(r.exToRaise.Accept(xlat));
+            }
             }
             else
             {
@@ -863,7 +868,7 @@ namespace Pytocs.Core.Translate
             foreach (var name in g.names)
             {
                 globals.Add(name.Name);
-            }
+        }
         }
 
         public void VisitNonLocal(NonlocalStatement n)
