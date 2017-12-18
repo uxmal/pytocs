@@ -48,7 +48,7 @@ namespace Pytocs.TypeInference
         void RemoveUncalled(FunType f);
         void pushStack(Exp v);
         void popStack(Exp v);
-        bool inStack(Exp v);
+        bool InStack(Exp v);
 
         string ModuleName(string path);
         string ExtendPath(string path, string name);
@@ -239,7 +239,7 @@ namespace Pytocs.TypeInference
             return loadPath;
         }
 
-        public bool inStack(Exp f)
+        public bool InStack(Exp f)
         {
             return callStack.Contains(f);
         }
@@ -254,17 +254,17 @@ namespace Pytocs.TypeInference
             callStack.Remove(f);
         }
 
-        public bool inImportStack(object f)
+        public bool InImportStack(string f)
         {
             return importStack.Contains(f);
         }
 
-        public void PushImportStack(object f)
+        public void PushImportStack(string f)
         {
             importStack.Add(f);
         }
 
-        public void popImportStack(object f)
+        public void PopImportStack(string f)
         {
             importStack.Remove(f);
         }
@@ -408,7 +408,7 @@ namespace Pytocs.TypeInference
             }
 
             // detect circular import
-            if (inImportStack(path))
+            if (InImportStack(path))
             {
                 return null;
             }
@@ -431,7 +431,7 @@ namespace Pytocs.TypeInference
                 loadedFiles.Add(path);
                 type = new TypeTransformer(ModuleTable, this).VisitModule(ast);
             }
-            popImportStack(path);
+            PopImportStack(path);
 
             // restore old CWD
             setCWD(oldcwd);

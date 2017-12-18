@@ -246,7 +246,7 @@ namespace Pytocs.TypeInference
                 // func without definition (possibly builtins)
                 return func.GetReturnType();
             }
-            else if (call != null && analyzer.inStack(call))
+            else if (call != null && analyzer.InStack(call))
             {
                 // Recursive call, ignore.
                 func.SelfType = null;
