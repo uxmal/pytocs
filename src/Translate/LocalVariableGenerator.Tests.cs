@@ -45,7 +45,7 @@ namespace Pytocs.Translate
             var gen = new CodeGenerator(unt, "test", "testModule");
             var sym = new SymbolGenerator();
             var xlt = new StatementTranslator(gen, sym);
-            stm.Accept(xlt);
+            stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
             foreach (CodeNamespace ns in unt.Namespaces)
@@ -77,7 +77,7 @@ namespace Pytocs.Translate
             var gen = new CodeGenerator(unt, "test", "testModule");
             var sym = new SymbolGenerator();
             var xlt = new StatementTranslator(gen, sym);
-            stm.Accept(xlt);
+            stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
             foreach (CodeNamespace ns in unt.Namespaces)

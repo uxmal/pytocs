@@ -333,7 +333,10 @@ yield_expr: 'yield' [testlist]
             {
                 if (PeekAndDiscard(TokenType.NEWLINE))
                     continue;
-                yield return stmt();
+                foreach (var stm in stmt())
+                {
+                    yield return stm;
+                }
             }
         }
 
@@ -473,7 +476,7 @@ eval_input: testlist NEWLINE* ENDMARKER
 
         //decorated: decorators (classdef | funcdef)
 
-        public Decorated decorated()
+        public List<Statement> decorated()
         {
             var decs = decorators();
             Statement d = null;
@@ -481,12 +484,12 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 if (Peek(TokenType.Def))
                 {
-                    d = funcdef();
+                    d = funcdef()[0];
                     break;
                 }
                 else if (Peek(TokenType.Class))
                 {
-                    d = classdef();
+                    d = classdef()[0];
                     break;
                 }
                 else if (!Peek(TokenType.COMMENT, TokenType.NEWLINE))
@@ -496,11 +499,13 @@ eval_input: testlist NEWLINE* ENDMARKER
                 //$TODO: keep the comments.
                 lexer.Get();
             }
-            return new Decorated(d, decs, filename, decs[0].Start, d.End);
+            return new List<Statement> {
+                new Decorated(d, decs, filename, decs[0].Start, d.End)
+            };
         }
 
         // funcdef: 'def' NAME parameters ['->' test] ':' suite
-        public FunctionDef funcdef()
+        public List<Statement> funcdef()
         {
             var start = Expect(TokenType.Def).Start;
             var token = Expect(TokenType.ID);
@@ -516,7 +521,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             var s = suite();
             var vararg = parms.Where(p => p.vararg).SingleOrDefault();
             var kwarg = parms.Where(p => p.keyarg).SingleOrDefault();
-            return new FunctionDef(
+            var fndef = new FunctionDef(
                 fnName, 
                 parms,
                 vararg?.Id, 
@@ -524,6 +529,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 t,
                 s, 
                 filename, start, s.End);
+            return new List<Statement> { fndef };
         }
 
         // parameters: '(' [typedargslist] ')'
@@ -775,7 +781,7 @@ eval_input: testlist NEWLINE* ENDMARKER
 
 
         // stmt: simple_stmt | compound_stmt
-        public Statement stmt()
+        public List<Statement> stmt()
         {
             if (Peek(compoundStatement_first))
             {
@@ -788,7 +794,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         }
 
         //simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
-        public Statement simple_stmt()
+        public List<Statement> simple_stmt()
         {
             List<Statement> stmts = new List<Statement>();
             var s = small_stmt();
@@ -799,7 +805,9 @@ eval_input: testlist NEWLINE* ENDMARKER
                     break;
                 if (PeekAndDiscard(TokenType.NEWLINE))
                 {
-                    return new SuiteStatement(stmts, filename, stmts[0].Start, stmts.Last().End);
+                    return new List<Statement> {
+                        new SuiteStatement(stmts, filename, stmts[0].Start, stmts.Last().End)
+                    };
                 }
                 s = small_stmt();
                 stmts.Add(s);
@@ -813,7 +821,10 @@ eval_input: testlist NEWLINE* ENDMARKER
                 }
                 Expect(TokenType.NEWLINE);
             }
-            return new SuiteStatement(stmts, filename, stmts[0].Start, stmts.Last().End) { comment = comment };
+            return new List<Statement>
+            {
+                new SuiteStatement(stmts, filename, stmts[0].Start, stmts.Last().End) { comment = comment }
+            };
         }
 
         //small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt |
@@ -1277,7 +1288,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         }
 
         //compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated
-        public Statement compound_stmt()
+        public List<Statement> compound_stmt()
         {
             switch (lexer.Peek().Type)
             {
@@ -1294,7 +1305,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         }
 
         //if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
-        public IfStatement if_stmt()
+        public List<Statement> if_stmt()
         {
             var posStart = Expect(TokenType.If).Start;
             var t = test();
@@ -1302,17 +1313,22 @@ eval_input: testlist NEWLINE* ENDMARKER
             var ts = suite();
             var stack = new Stack<Tuple<int, Exp, SuiteStatement>>();
             stack.Push(Tuple.Create(posStart, t, ts));
+            var comments = CollectComments();
             while (PeekAndDiscard(TokenType.Elif, out var token))
             {
                 t = test();
                 Expect(TokenType.COLON);
                 ts = suite();
+                ts.stmts.InsertRange(0, comments);
                 stack.Push(Tuple.Create(token.Start, t, ts));
+                comments = CollectComments();
             }
             if (PeekAndDiscard(TokenType.Else, out var token2))
             {
                 Expect(TokenType.COLON);
                 ts = suite();
+                ts.stmts.InsertRange(0, comments);
+                comments.Clear();
                 stack.Push(new Tuple<int, Exp, SuiteStatement>(token2.Start, null, ts));
             }
 
@@ -1332,11 +1348,13 @@ eval_input: testlist NEWLINE* ENDMARKER
                     filename, item.Item1, item.Item3.End);
                 es = new SuiteStatement(new List<Statement> { ifStmt }, filename, ifStmt.Start, ifStmt.End);
             } while (stack.Count > 0);
-            return ifStmt;
+            var result = new List<Statement> { ifStmt };
+            result.AddRange(comments);
+            return result;
         }
 
         //while_stmt: 'while' test ':' suite ['else' ':' suite]
-        public WhileStatement while_stmt()
+        public List<Statement> while_stmt()
         {
             var posStart = Expect(TokenType.While).Start;
             var t = test();
@@ -1350,15 +1368,17 @@ eval_input: testlist NEWLINE* ENDMARKER
                 es = suite();
                 posEnd = es.End;
             }
-            return new WhileStatement(filename, posStart, posEnd)
+            var w = new WhileStatement(filename, posStart, posEnd)
             {
                 Test = t,
                 Body = s,
                 Else = es,
             };
+            return new List<Statement> { w };
         }
+
         //for_stmt: 'for' exprlist 'in' testlist ':' suite ['else' ':' suite]
-        public ForStatement for_stmt()
+        public List<Statement> for_stmt()
         {
             var posStart = Expect(TokenType.For).Start;
             var ell = exprlist();
@@ -1374,7 +1394,8 @@ eval_input: testlist NEWLINE* ENDMARKER
                 es = suite();
                 posEnd = es.End;
             }
-            return new ForStatement(ell, tl, body, es, filename, posStart, posEnd);
+            var f = new ForStatement(ell, tl, body, es, filename, posStart, posEnd);
+            return new List<Statement> { f };
         }
 
         //try_stmt: ('try' ':' suite
@@ -1382,7 +1403,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         //            ['else' ':' suite]
         //            ['finally' ':' suite] |
         //           'finally' ':' suite))
-        public TryStatement try_stmt()
+        public List<Statement> try_stmt()
         {
             var posStart = Expect(TokenType.Try).Start;
             Expect(TokenType.COLON);
@@ -1397,11 +1418,15 @@ eval_input: testlist NEWLINE* ENDMARKER
             var exHandlers = new List<ExceptHandler>();
             Statement elseHandler = null;
             Statement finallyHandler = null;
+
+            // Collect comments right before the except/finally.
+            var comments = CollectComments();
             while (Peek(TokenType.Except, out var token))
             {
                 var ec = except_clause();
                 Expect(TokenType.COLON);
                 var handler = suite();
+                handler.stmts.InsertRange(0, comments);
                 posEnd = handler.End;
                 exHandlers.Add(new ExceptHandler(ec.exp, ec.alias, handler, filename, token.Start, posEnd));
                 if (PeekAndDiscard(TokenType.Else))
@@ -1410,6 +1435,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                     elseHandler = suite();
                     posEnd = elseHandler.End;
                 }
+                comments = CollectComments();
             }
             if (PeekAndDiscard(TokenType.Finally))
             {
@@ -1419,10 +1445,27 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             if (exHandlers.Count == 0 && finallyHandler == null)
                 throw new InvalidOperationException("Expected at least one except clause or a finally clause.");
-            return new TryStatement(body, exHandlers, elseHandler, finallyHandler, filename, posStart, posEnd);
+            var t = new TryStatement(body, exHandlers, elseHandler, finallyHandler, filename, posStart, posEnd);
+            return new List<Statement> { t };
+        }
+
+        private List<CommentStatement> CollectComments()
+        {
+            var cmts = new List<CommentStatement>();
+            while (Peek(TokenType.COMMENT, out var token))
+            {
+                Expect(TokenType.COMMENT);
+                cmts.Add(new CommentStatement(filename, token.Start, token.End)
+                {
+                    comment = (string)token.Value
+                });
+                Expect(TokenType.NEWLINE);
+            }
+            return cmts;
+
         }
         //with_stmt: 'with' with_item (',' with_item)*  ':' suite
-        public WithStatement with_stmt()
+        public List<Statement> with_stmt()
         {
             var posStart = Expect(TokenType.With).Start;
             var ws = new List<WithItem>();
@@ -1431,8 +1474,11 @@ eval_input: testlist NEWLINE* ENDMARKER
                 ws.Add(with_item());
             Expect(TokenType.COLON);
             var s = suite();
-            return new WithStatement(ws, s, filename, posStart, s.End);
+            return new List<Statement> {
+                new WithStatement(ws, s, filename, posStart, s.End)
+            };
         }
+
         //with_item: test ['as' expr]
         public WithItem with_item()
         {
@@ -1489,13 +1535,13 @@ eval_input: testlist NEWLINE* ENDMARKER
                 Expect(TokenType.INDENT);
                 while (!Peek(TokenType.EOF) && !PeekAndDiscard(TokenType.DEDENT))
                 {
-                    stmts.Add(stmt());
+                    stmts.AddRange(stmt());
                 }
             }
             else
             {
                 var stmt = simple_stmt();
-                stmts.Add(stmt);
+                stmts.AddRange(stmt);
             }
             return new SuiteStatement(stmts, filename, stmts[0].Start, stmts.Last().End);
         }
@@ -2148,7 +2194,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         }
 
         //classdef: 'class' NAME ['(' [arglist] ')'] ':' suite
-        public ClassDef classdef()
+        public List<Statement> classdef()
         {
             var posStart = Expect(TokenType.Class).Start;
             var name = id();
@@ -2162,7 +2208,10 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             Expect(TokenType.COLON);
             var body = suite();
-            return new ClassDef(name, args, body, filename, posStart, body.End);
+            return new List<Statement>
+            {
+                new ClassDef(name, args, body, filename, posStart, body.End)
+            };
         }
 
         public List<Exp> dotted_name_list()

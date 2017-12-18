@@ -207,7 +207,6 @@ namespace Pytocs.Syntax
                     case '\t': Advance(); indent = (indent & ~7) + 8; break;
                     case '\r': Transition(State.BlankLineCr); indent = 0; break;
                     case '\n': Advance(); ++LineNumber; indent = 0; break;
-                    case '#': Transition(State.Comment); break;
                     default:
                         int lastIndent = indents.Peek();
                         if (indent > lastIndent)

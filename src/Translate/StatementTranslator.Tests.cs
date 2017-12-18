@@ -35,7 +35,7 @@ namespace Pytocs.Translate
 
         private State scope;
 
-        public void  Setup()
+        public void Setup()
         {
             scope = new State(null, State.StateType.MODULE);
         }
@@ -49,7 +49,7 @@ namespace Pytocs.Translate
             var gen = new CodeGenerator(new CodeCompileUnit(), "", "module");
             gen.SetCurrentMethod(new CodeMemberMethod());
             var xlt = new StatementTranslator(gen, new SymbolGenerator());
-            stm.Accept(xlt);
+            stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
             foreach (CodeStatement csStmt in gen.Scope)
@@ -73,7 +73,7 @@ namespace Pytocs.Translate
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
             var xlt = new StatementTranslator(gen, new SymbolGenerator());
-            stm.Accept(xlt);
+            stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
             foreach (CodeNamespace ns in unt.Namespaces)
@@ -116,7 +116,7 @@ namespace Pytocs.Translate
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
             var xlt = new StatementTranslator(gen, new SymbolGenerator());
-            stm.Accept(xlt);
+            stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
             foreach (CodeNamespace ns in unt.Namespaces)
@@ -755,8 +755,8 @@ public static object foo() {
             var sExp =
 @"try {
     bonehead();
-    //if toast whine.
 } catch {
+    //if toast whine.
     whine();
 }
 ";
@@ -978,7 +978,7 @@ yx = _tup_1.Item1;
 @"def foo():
     bar = 4
 
-" + "#" + @" inner fn should become C# lambda
+    " + "#" + @" inner fn should become C# lambda
     def baz(a, b):
         print (""Bar squared"" + bar * bar)
         return False
@@ -1322,6 +1322,60 @@ c.de = ""f"";
 ";
             Assert.AreEqual(sExp, XlatModule(pySrc));
 
+        }
+
+        [Test]
+        public void Stmt_Multiple_Method_Comments()
+        {
+            var pySrc =
+@"class Foo:
+    # method comment
+    def method(self):
+        pass
+    # another method
+    def method(self, arg1):
+        return arg1 + 1
+";
+            var sExp =
+@"public static class testModule {
+    
+    public class Foo {
+        
+        // method comment
+        public virtual object method() {
+        }
+        
+        // another method
+        public virtual object method(object arg1) {
+            return arg1 + 1;
+        }
+    }
+}
+";
+            Assert.AreEqual(sExp, XlatModule(pySrc));
+
+        }
+
+
+        [Test]
+        public void Stmt_Comment_Before_Else_Clause()
+        {
+            var pySrc =
+@"if foo:
+    foonicate()
+# wasn't foo, try bar
+else:
+    barnicate()
+";
+            var sExp =
+@"if (foo) {
+    foonicate();
+} else {
+    // wasn't foo, try bar
+    barnicate();
+}
+";
+            Assert.AreEqual(sExp, XlatStmts(pySrc));
         }
     }
 }

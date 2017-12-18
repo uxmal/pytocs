@@ -41,7 +41,7 @@ namespace Pytocs.Syntax
             return par.test();
         }
 
-        private Statement ParseStmt(string input)
+        private List<Statement> ParseStmt(string input)
         {
             var lex = Lex(input);
             var par = new Parser("foo.py", lex);
@@ -60,7 +60,25 @@ namespace Pytocs.Syntax
         {
             var lex = Lex(input);
             var par = new Parser("foo.py", lex);
-            return par.funcdef();
+            return par.funcdef()[0];
+        }
+
+        private void AssertExp(string sExp, Exp exp)
+        {
+            Assert.AreEqual(sExp, exp.ToString());
+        }
+
+        private void AssertStmt(string sExp, List<Statement> stmts)
+        {
+            var sb = new StringBuilder();
+            var sep = false;
+            foreach (var stmt in stmts)
+            {
+                if (sep)
+                    sb.AppendLine();
+                sb.Append(stmt);
+            }
+            Assert.AreEqual(sExp, sb.ToString());
         }
 
         [Test]
@@ -68,28 +86,28 @@ namespace Pytocs.Syntax
         {
             var parser = new Parser("foo.py", Lex("foo.bar.baz,"));
             var exp = parser.expr();
-            Assert.AreEqual("foo.bar.baz", exp.ToString());
+            AssertExp("foo.bar.baz", exp);
         }
 
         [Test]
         public void Parse_ExpressionWithString()
         {
             var exp = ParseExp(@"menuitem.connect(""realize"", self.on_menuitem_realize, refactoring)");
-            Assert.AreEqual("menuitem.connect(\"realize\",self.on_menuitem_realize,refactoring)", exp.ToString());
+            AssertExp("menuitem.connect(\"realize\",self.on_menuitem_realize,refactoring)", exp);
         }
 
         [Test(Description = "We do this for backwards compatability")]
         public void Parse_PrintStatement()
         {
             var stmt = ParseStmt("print \"Hello\"\n");
-            Assert.AreEqual("print \"Hello\"" + nl, stmt.ToString());
+            AssertStmt("print \"Hello\"" + nl, stmt);
         }
 
         [Test]
         public void Parse_EmptyPrintStatement()
         {
             var stmt = ParseStmt("print\n");
-            Assert.AreEqual("print" + nl, stmt.ToString());
+            AssertStmt("print" + nl, stmt);
         }
 
         [Test]
@@ -102,14 +120,14 @@ baz(),
 ]
 ");
             var sExp = "foo=[bar(),baz()]\r\n";
-            Assert.AreEqual(sExp, stmt.ToString());
+            AssertStmt(sExp, stmt);
         }
 
         [Test]
         public void Lex_IdWithUnderscore()
         {
             var exp = ParseExp("__init__");
-            Assert.AreEqual("__init__", exp.ToString());
+            AssertExp("__init__", exp);
         }
 
         [Test]
@@ -121,7 +139,7 @@ baz(),
     'minor'  : '7',   
 }
 ");
-            Assert.AreEqual("r={ \"major\" : \"2\", \"minor\" : \"7\",  }\r\n", pyExpr.ToString());
+            AssertStmt("r={ \"major\" : \"2\", \"minor\" : \"7\",  }\r\n", pyExpr);
         }
 
         [Test]
@@ -132,7 +150,7 @@ baz(),
 @"for x in L:
     s += x
 ";
-            Assert.AreEqual(sExp, pyStm.ToString());
+            AssertStmt(sExp, pyStm);
 
         }
 
@@ -141,7 +159,7 @@ baz(),
         {
             var pyStm = ParseStmt("return bit >> BitSet.LOG_BITS\r\n");
             var sExp = "return (bit  >>  BitSet.LOG_BITS)\r\n";
-            Assert.AreEqual(sExp, pyStm.ToString());
+            AssertStmt(sExp, pyStm);
         }
 
         [Test]
@@ -149,14 +167,14 @@ baz(),
         {
             var pyStm = ParseStmt("return (1L << pos)\r\n");
             var sExp = "return (1L  <<  pos)\r\n";
-            Assert.AreEqual(sExp, pyStm.ToString());
+            AssertStmt(sExp, pyStm);
         }
 
         [Test]
         public void Parse_print_to_stderr()
         {
             var pyStm = ParseStmt("print >> sys.stderr,\"Hello\"\r\n");
-            Assert.AreEqual("print >> sys.stderr, \"Hello\""+nl, pyStm.ToString());
+            AssertStmt("print >> sys.stderr, \"Hello\"" + nl, pyStm);
         }
 
         [Test]
@@ -170,7 +188,7 @@ baz(),
         public void Parse_Eof()
         {
             var pyStm = ParseStmt("return");
-            Assert.AreEqual("return\r\n", pyStm.ToString());
+            AssertStmt("return\r\n", pyStm);
         }
 
         [Test]
@@ -183,7 +201,7 @@ baz(),
         [Test]
         public void Parse_MultipleExceptClauses()
         {
-            var pyStm = (TryStatement) ParseStmt(
+            var pyStm = (TryStatement)ParseStmt(
 @"try:
     foo()
 except Foo:
@@ -192,7 +210,7 @@ except Bar:
     b = 'b'
 except:
     c = ''
-");
+")[0];
             Assert.AreEqual(3, pyStm.exHandlers.Count);
         }
 
@@ -200,14 +218,14 @@ except:
         public void Parse_Raise_ObsoleteSyntax()
         {
             var pyStm = ParseStmt("raise AttributeError, \"widget %s not found\" % name\n");
-            Assert.AreEqual("raise AttributeError, ((\"widget %s not found\" % name),None)\r\n", pyStm.ToString());
+            AssertStmt("raise AttributeError, ((\"widget %s not found\" % name),None)\r\n", pyStm);
         }
 
         [Test]
         public void Parse_Print_TrailingComma()
         {
             var pyStm = ParseStmt("print 'foo',\n");
-            Assert.AreEqual("print \"foo\",\r\n", pyStm.ToString());
+            AssertStmt("print \"foo\",\r\n", pyStm);
         }
 
         [Test]
@@ -225,14 +243,14 @@ except:
         public void Parse_Exec()
         {
             var pyStm = ParseStmt("exec code in globals_, locals_\n");
-            Assert.AreEqual("exec code in globals_, locals_\r\n", pyStm.ToString());
+            AssertStmt("exec code in globals_, locals_\r\n", pyStm);
         }
 
         [Test]
         public void Parse_DefaultArgValue()
         {
             var pyStm = ParseStmt("def foo(bar = baz.naz): pass\n");
-            var funcDef = (FunctionDef) pyStm;
+            var funcDef = (FunctionDef)pyStm[0];
             Assert.AreEqual("bar=baz.naz", funcDef.parameters[0].ToString());
         }
 
@@ -240,13 +258,13 @@ except:
         public void Parse_ListInitializer_SingleValue()
         {
             var pyStm = ParseStmt("a = [ 'Hello' ]\n");
-            Assert.AreEqual("a=[\"Hello\"]\r\n", pyStm.ToString());
+            AssertStmt("a=[\"Hello\"]\r\n", pyStm);
         }
 
         [Test]
         public void Parse_StaggeredComment()
         {
-            var pyStm = (FunctionDef) ParseFuncdef("def x():\n  version = 1\n  #foo\n    #bar\n");
+            var pyStm = (FunctionDef)ParseFuncdef("def x():\n  version = 1\n  #foo\n    #bar\n");
             Assert.AreEqual("version=1\r\n#foo\r\n#bar\r\n", pyStm.body.ToString());
         }
 
@@ -267,7 +285,7 @@ except:
     #  bar
     foo=bar
 ";
-            Assert.AreEqual(sExp, pyStm.ToString());
+            AssertStmt(sExp, pyStm);
         }
 
         [Test]
@@ -290,16 +308,16 @@ except antlr.RecognitionException, e:
 @"try:
     if self._returnToken:
         raise antlr.TryAgain
-        ### option { testLiterals=true }
     
+    ### option { testLiterals=true }
     self.testForLiteral(self._returnToken)
     ### return token to caller
     return self._returnToken
-    ### handle lexical errors ....
 except antlr.RecognitionException as e:
+    ### handle lexical errors ....
     raise hell
 ";
-            Assert.AreEqual(sExp, pyStm.ToString());
+            AssertStmt(sExp, pyStm);
         }
 
         [Test]
@@ -324,7 +342,7 @@ else:
     # bazitude
     do_baz()
 ";
-            Assert.AreEqual(sExp, ParseStmt(pyStm).ToString());
+            AssertStmt(sExp, ParseStmt(pyStm));
         }
 
         [Test]
@@ -332,7 +350,7 @@ else:
         {
             var pySrc = "[int2byte(b) for b in bytelist]";
             var sExp = "[int2byte(b) for b in bytelist]";
-            Assert.AreEqual(sExp, ParseExp(pySrc).ToString());
+            AssertExp(sExp, ParseExp(pySrc));
         }
 
         [Test]
@@ -340,7 +358,7 @@ else:
         {
             var pySrc = "sum(int2byte(b) for b in bytelist)";
             var sExp = "sum(int2byte(b) for b in bytelist)";
-            Assert.AreEqual(sExp, ParseExp(pySrc).ToString());
+            AssertExp(sExp, ParseExp(pySrc));
         }
 
         [Test]
@@ -348,7 +366,7 @@ else:
         {
             var pySrc = "x if foo else y";
             var sExp = "x if foo else y";
-            Assert.AreEqual(sExp, ParseExp(pySrc).ToString());
+            AssertExp(sExp, ParseExp(pySrc));
         }
 
         [Test]
@@ -364,7 +382,7 @@ def wrapper(*args, **kwargs):
 def wrapper():
     pass
 ";
-            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+            AssertStmt(sExp, ParseStmt(pySrc));
         }
 
         [Test]
@@ -378,7 +396,7 @@ def wrapper():
 @"with foo():
     bar()
 ";
-            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+            AssertStmt(sExp, ParseStmt(pySrc));
         }
 
         [Test]
@@ -394,7 +412,7 @@ def wrapper():
     yield from bar
     yield from baz
 ";
-            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+            AssertStmt(sExp, ParseStmt(pySrc));
         }
 
         [Test]
@@ -402,7 +420,7 @@ def wrapper():
         {
             var pySrc = "func(a, b=c, *d, **e)";
             var sExp = "func(a,b=c,*d,**e)";
-            Assert.AreEqual(sExp, ParseExp(pySrc).ToString());
+            AssertExp(sExp, ParseExp(pySrc));
         }
 
         [Test]
@@ -419,7 +437,7 @@ def wrapper():
         {
             var pySrc = "{self._path_merge_points[addr]}";
             var e = ParseExp(pySrc);
-            Assert.AreEqual("{ self._path_merge_points[addr] }", e.ToString());
+            AssertExp("{ self._path_merge_points[addr] }", e);
         }
 
         [Test]
@@ -427,7 +445,7 @@ def wrapper():
         {
             var pySrc = "a[::]";
             var e = ParseExp(pySrc);
-            Assert.AreEqual("a[::]", e.ToString());
+            AssertExp("a[::]", e);
         }
 
         [Test]
@@ -442,31 +460,31 @@ def wrapper():
 @"if (((dt.address = action.addr).model is True) and (dt.bits.ast = action.size.ast)):
     data_taint=dt
 ";
-            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+            AssertStmt(sExp, ParseStmt(pySrc));
         }
 
         [Test]
         public void Parse_Regression2()
         {
-            var pySrc = 
+            var pySrc =
 @"segs = sorted(all_segments, key=lambda (_, seg): seg.offset)
 ";
             var sExp =
 @"segs=sorted(all_segments,key=lambda (_,seg): seg.offset)
-"; 
-            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
         }
 
         [Test]
         public void Parse_Regression3()
         {
-            var pySrc = 
+            var pySrc =
 @"flags = ['#', '0', r'\-', r' ', r'\+', r'\'', 'I']
 ";
             var sExp =
 @"flags=[""#"",""0"",r""\-"",r"" "",r""\+"",r""\'"",""I""]
 ";
-            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+            AssertStmt(sExp, ParseStmt(pySrc));
         }
 
         [Test]
@@ -474,21 +492,21 @@ def wrapper():
         {
             var pySrc = "{ id(e) for e in self._breakpoints[t] }";
             var sExp = "{id(e) for e in self._breakpoints[t]}";
-            Assert.AreEqual(sExp, ParseExp(pySrc).ToString());
+            AssertExp(sExp, ParseExp(pySrc));
         }
 
         [Test]
         public void Parse_TupleArguments()
         {
-            var pySrc = 
+            var pySrc =
 @"def foo(self, (value, sort)):
     self.value = value
 ";
-            var sExp = 
+            var sExp =
 @"def foo(self,(value,sort)):
     self.value=value
 ";
-            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+            AssertStmt(sExp, ParseStmt(pySrc));
         }
 
         [Test]
@@ -500,7 +518,7 @@ def wrapper():
             var sExp =
 @"Base=lambda *args,**kwargs: None
 ";
-            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+            AssertStmt(sExp, ParseStmt(pySrc));
         }
 
         [Test]
@@ -511,11 +529,11 @@ def wrapper():
     ble, bla):
     pass
 ";
-            var sExp = 
+            var sExp =
 @"def foo(bar,ble,bla):
     pass
 ";
-            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+            AssertStmt(sExp, ParseStmt(pySrc));
         }
 
         [Test]
@@ -531,7 +549,7 @@ def wrapper():
     logger.debug((""DAA:  % x % x % x % x - addtup is None"" % (C,H,upop,loop)))
     return
 ";
-            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+            AssertStmt(sExp, ParseStmt(pySrc));
         }
 
         [Test]
@@ -549,7 +567,7 @@ def wrapper():
 @"def foo(arch_options=None,start=None,end=None,**extra_arch_options):
     return 3
 ";
-            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+            AssertStmt(sExp, ParseStmt(pySrc));
         }
 
         [Test]
@@ -563,7 +581,71 @@ def wrapper():
 @"def print_no_end(text):
     print text, end=""""
 ";
-            Assert.AreEqual(sExp, ParseStmt(pySrc).ToString());
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
+
+        [Test]
+        public void Parse_Comment_Before_Else_Clause()
+        {
+            var pySrc =
+@"if foo:
+    foonicate()
+# wasn't foo, try bar
+else:
+    barnicate()
+";
+            var sExp =
+@"if foo:
+    foonicate()
+else:
+    # wasn't foo, try bar
+    barnicate()
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
+
+        [Test]
+        public void Parse_Trailing_Comments_After_If()
+        {
+            var pySrc =
+@"if foo:
+    foonicate()
+# wasn't foo, continue
+";
+            var sExp =
+@"if foo:
+    foonicate()
+# wasn't foo, continue";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
+
+
+        [Test]
+        public void Parse_NestedDef()
+        {
+            var pySrc =
+@"def foo():
+    bar = 4
+
+    " + "#" + @" inner fn
+    def baz(a, b):
+        print (""Bar squared"" + bar * bar)
+        return False
+
+    baz('3', 4)
+";
+            var sExp =
+@"def foo():
+    bar=4
+    " + "#" + @" inner fn
+    def baz(a,b):
+        print (""Bar squared""  +  (bar  *  bar))
+        return False
+    
+    baz(""3"",4)
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+
         }
     }
 }

@@ -109,7 +109,7 @@ namespace Pytocs
             
             finally
             {
-                if (writer != null) writer.Dispose();
+                if (writer != null) { writer.Flush(); writer.Dispose(); }
                 if (reader != null) reader.Dispose();
             }
         }
