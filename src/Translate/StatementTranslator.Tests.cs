@@ -1305,7 +1305,7 @@ c.de = ""f"";
         {
             var pySrc =
 @"class Foo:
-    # method comment
+    " + @"# method comment
     def method(self):
         pass
 ";
@@ -1329,10 +1329,10 @@ c.de = ""f"";
         {
             var pySrc =
 @"class Foo:
-    # method comment
+    " + @"# method comment
     def method(self):
         pass
-    # another method
+    " + @"# another method
     def method(self, arg1):
         return arg1 + 1
 ";
@@ -1363,7 +1363,7 @@ c.de = ""f"";
             var pySrc =
 @"if foo:
     foonicate()
-# wasn't foo, try bar
+" + @"# wasn't foo, try bar
 else:
     barnicate()
 ";
@@ -1383,7 +1383,7 @@ else:
         {
             var pySrc =
 @"def func():
-    # fnord
+    " + @"# fnord
     '''
     doc comment
     '''
@@ -1401,6 +1401,30 @@ public static object func() {
 "; 
             Assert.AreEqual(sExp, XlatMember(pySrc));
         }
+
+        [Test]
+        public void Stmt_Regression()
+        {
+            var pySrc = @"
+def func(cfg_node):  # line-end comment
+    """"""
+    This is a doc comment
+    """"""
+    raise Dep()
+";
+            var sExp =
+@"// 
+//     This is a doc comment
+//     
+public static object func(object cfg_node) {
+    // line-end comment
+    throw Dep();
+}
+
+";
+            Assert.AreEqual(sExp, XlatMember(pySrc));
+        }
+
     }
 }
 #endif
