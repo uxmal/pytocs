@@ -106,6 +106,7 @@ namespace Pytocs.Syntax
         private bool rawString;
         private bool unicodeString;
         private bool binaryString;
+        private bool formatString;
         private int hexDigits;
         private int charConst;
 
@@ -188,6 +189,7 @@ namespace Pytocs.Syntax
             UnicodeStringPrefix,
             StringEscapeHex,
             BinaryStringPrefix,
+            FormatStringPrefix,
         }
 
         private Token GetToken()
@@ -295,6 +297,8 @@ namespace Pytocs.Syntax
                     case 'U': sb.Append(ch); st = State.UnicodeStringPrefix; break;
                     case 'b':
                     case 'B': sb.Append(ch); st = State.BinaryStringPrefix; break;
+                    case 'f':
+                    case 'F': sb.Append(ch); st = State.FormatStringPrefix; break;
                     case '\"': rawString = false; unicodeString = false; st = State.Quote; break;
                     case '\'': rawString = false; unicodeString = false; st = State.Apos; break;
                     case '\\': st = State.BackSlash; break;
@@ -649,6 +653,14 @@ namespace Pytocs.Syntax
                     default: st = State.Id; break;
                     }
                     break;
+                case State.FormatStringPrefix:
+                    switch (ch)
+                    {
+                    case '"': formatString = true; sb.Clear(); Transition(State.Quote); break;
+                    case '\'': formatString = true; sb.Clear(); Transition(State.Apos); break;
+                    default: st = State.Id; break;
+                    }
+                    break;
 
                 case State.Quote:
                     switch (ch)
@@ -906,12 +918,14 @@ namespace Pytocs.Syntax
                     Raw = rawString,
                     Unicode = unicodeString,
                     Long = longLiteral,
+                    Format = formatString,
                 };
             }
             binaryString = false;
             rawString = false;
             unicodeString = false;
             longLiteral = false;
+            formatString = false;
             return e;
         }
 

@@ -399,6 +399,14 @@ namespace Pytocs.Syntax
             tok = LexMore();
             Assert.IsAssignableFrom<Str>(tok.Value);
         }
+
+        [Test]
+        public void Lex_FString()
+        {
+            var tok = Lex("f'Message: {msg}'");
+            var str = (Str)tok.Value;
+            Assert.IsTrue(str.Format);
+        }
     }
 }
 #endif

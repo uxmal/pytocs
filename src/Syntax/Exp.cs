@@ -173,6 +173,8 @@ namespace Pytocs.Syntax
         public bool Raw;
         public bool Unicode;
         public bool Long;
+        public bool Format; // true if this is a format string.
+
 
         public Str(string str, string filename, int start, int end) : base(filename, start, end) 
         {
