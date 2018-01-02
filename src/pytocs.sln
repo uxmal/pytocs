@@ -1,11 +1,13 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27130.2010
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "pytocs", "pytocs.csproj", "{89D2BF67-423A-4C7D-B4E8-C34BA9E83152}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{55CBDA16-9AF7-42BC-BBCF-6A59E81F7BC3}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Runtime", "..\Runtime\Runtime.csproj", "{647CB7EB-ED52-4926-91BC-2760A515F056}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -17,8 +19,15 @@ Global
 		{89D2BF67-423A-4C7D-B4E8-C34BA9E83152}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{89D2BF67-423A-4C7D-B4E8-C34BA9E83152}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{89D2BF67-423A-4C7D-B4E8-C34BA9E83152}.Release|Any CPU.Build.0 = Release|Any CPU
+		{647CB7EB-ED52-4926-91BC-2760A515F056}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{647CB7EB-ED52-4926-91BC-2760A515F056}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{647CB7EB-ED52-4926-91BC-2760A515F056}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{647CB7EB-ED52-4926-91BC-2760A515F056}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {398BE0C7-28BC-428C-BD32-BE594FCA65FA}
 	EndGlobalSection
 EndGlobal
