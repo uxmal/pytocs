@@ -27,7 +27,7 @@ namespace pytocs.runtime
         public static T unpack<T>(string format, byte[] buffer)
         {
             bool littleEndian = BitConverter.IsLittleEndian;
-            int count = 0;
+            int c = 0;
             var oTuple = new List<object>();
             var i = 0;
             foreach (var ch in format)
@@ -36,13 +36,27 @@ namespace pytocs.runtime
                 {
                 case '<': littleEndian = true; break;
                 case '>': littleEndian = false; break;
-                case 'i': oTuple.Add(ReadInt32(littleEndian, buffer, ref i)); break;
-                case 'I': oTuple.Add((uint)ReadInt32(littleEndian, buffer, ref i)); break;
-                case 'h': oTuple.Add(ReadInt16(littleEndian, buffer, ref i)); break;
-                case 'H': oTuple.Add((ushort)ReadInt16(littleEndian, buffer, ref i)); break;
+                case 'x': i += Count(c); c = 0;  break; // skip padding.
+                case 'i': oTuple.Add(ReadInt32(littleEndian, buffer, ref i)); c = 0;  break;
+                case 'I': oTuple.Add((uint)ReadInt32(littleEndian, buffer, ref i)); c = 0; break;
+                case 'h': oTuple.Add(ReadInt16(littleEndian, buffer, ref i)); c = 0; break;
+                case 'H': oTuple.Add((ushort)ReadInt16(littleEndian, buffer, ref i)); c = 0; break;
+                case 's': oTuple.Add(ReadString(Count(c), buffer,  ref i)); c = 0; break;
+                default:
+                    if (char.IsDigit(ch))
+                    {
+                        c = c * 10 + (ch - '0');
+                        break;
+                    }
+                    throw new ArgumentException($"Unsupported format character '{ch}'.");
                 }
             }
             return (T)Activator.CreateInstance(typeof(T), oTuple.ToArray());
+        }
+
+        private static int Count(int n)
+        {
+            return n != 0 ? n : 1;
         }
 
         private static int ReadInt32(bool littleEndian, byte[] buffer, ref int i)
@@ -103,6 +117,14 @@ namespace pytocs.runtime
                     buffer[i + 3];
             i += 4;
             return n;
+        }
+
+        private static string ReadString(int count, byte[] buffer, ref int i)
+        {
+            //$TODO: what encoding? or should it be byte[]?
+            var s = Encoding.UTF8.GetString(buffer, i, count);
+            i += count;
+            return s;
         }
     }
 }

@@ -53,13 +53,27 @@ namespace pytocs.runtime
             Assert.AreEqual(0x12345678, tup.Item1);
         }
 
-
         [Test]
         public void Struct_unpack_BEint_ushort()
         {
             var tup = @struct.unpack<Tuple<int,ushort>>(">iH", hex("12345678FCB0"));
             Assert.AreEqual(0x12345678, tup.Item1);
             Assert.AreEqual((ushort)0xFCB0, tup.Item2);
+        }
+
+        [Test]
+        public void Struct_unpack_padchars()
+        {
+            var tup = @struct.unpack<Tuple<uint>>(">4xI", hex("5041440012345678"));
+            Assert.AreEqual(0x12345678u, tup.Item1);
+        }
+
+        [Test]
+        public void Struct_unpack_string()
+        {
+            var tup = @struct.unpack<Tuple<string, int>>(">4si", hex("5041434B00123456"));
+            Assert.AreEqual("PACK", tup.Item1);
+            Assert.AreEqual(0x00123456, tup.Item2);
         }
     }
 }
