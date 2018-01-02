@@ -550,5 +550,13 @@ namespace Pytocs.Translate
             var sExp = "this._plt.ToDictionary(_de1 => AT.from_rva(_de1.Value, this).to_mva(), _de1 => _de1.Key)";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
+
+        [Test]
+        public void Ex_struct_unpack()
+        {
+            var pySrc = "struct.unpack('3x', buffer)";
+            var sExp = "@@@";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
     }
 }

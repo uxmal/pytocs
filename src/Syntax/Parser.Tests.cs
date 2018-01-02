@@ -647,5 +647,45 @@ else:
             AssertStmt(sExp, ParseStmt(pySrc));
 
         }
+
+        [Test]
+        [Ignore("Stacks of comments are tricky, consult with Python community")]
+        public void Parse_Blank_Lines()
+        {
+            var pySrc =
+@"def get_whitelisted_statements(blob, addr):
+	""""""
+	:returns: True if all statements are whitelisted
+	""""""
+	if addr in blob._run_statement_whitelist:
+		if blob._run_statement_whitelist[addr] is True:
+			return None # This is the default value used to say
+						# we execute all statements in this basic block. A
+						# little weird...
+	
+		else:
+			return blob._run_statement_whitelist[addr]
+
+	else:
+		return []";
+
+            var sExp =
+@"def get_whitelisted_statements(blob,addr):
+    ""
+	:returns: True if all statements are whitelisted
+	""
+    if (addr in blob._run_statement_whitelist):
+        if (blob._run_statement_whitelist[addr] is True):
+            return None
+            # we execute all statements in this basic block. A
+            # little weird...
+        
+        else:
+            return blob._run_statement_whitelist[addr]
+    else:
+        return []
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
     }
 }
