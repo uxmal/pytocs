@@ -341,9 +341,8 @@ namespace Pytocs.Translate
 
         private CodeExpression TranslateIsinstance(Application appl)
         {
-            var tuple = appl.args[1].defval as PyTuple;
             List<Exp> types;
-            if (tuple != null)
+            if (appl.args[1].defval is PyTuple tuple)
             {
                 types = tuple.values.ToList();
             }
