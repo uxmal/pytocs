@@ -159,6 +159,7 @@
     <Compile Include="Translate\ModuleNameDiscovery.cs" />
     <Compile Include="Translate\ModuleTranslator.cs" />
     <Compile Include="Translate\ModuleTranslator.Tests.cs" />
+    <Compile Include="Translate\Special\StructTranslator.cs" />
     <Compile Include="Translate\StatementNameDiscovery.cs" />
     <Compile Include="Translate\StatementTranslator.cs" />
     <Compile Include="Translate\StatementTranslator.Tests.cs" />

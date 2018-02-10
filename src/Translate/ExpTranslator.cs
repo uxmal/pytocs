@@ -261,6 +261,14 @@ namespace Pytocs.Translate
             {
                 if (fn is CodeFieldReferenceExpression field)
                 {
+                    var specialTranslator = GetSpecialTranslator(field);
+                    if (specialTranslator != null)
+                    {
+                        var special = specialTranslator(m, field, args);
+                        if (special != null)
+                            return special;
+                    }
+
                     if (field.FieldName == "iteritems")
                     {
                         if (args.Length == 0)
@@ -288,6 +296,19 @@ namespace Pytocs.Translate
                 }
             }
             return m.Appl(fn, args);
+        }
+
+        private Func<CodeGenerator, CodeFieldReferenceExpression, CodeExpression[], CodeExpression> GetSpecialTranslator(
+            CodeFieldReferenceExpression field)
+        {
+            if (field.Expression is CodeVariableReferenceExpression id)
+            {
+                if (id.Name == "struct")
+                {
+                    return new Special.StructTranslator().Translate;
+                }
+            }
+            return null;
         }
 
         private CodeExpression TranslateSorted( CodeExpression[] args)

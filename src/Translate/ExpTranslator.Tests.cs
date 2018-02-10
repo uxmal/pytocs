@@ -14,6 +14,7 @@
 //  limitations under the License.
 #endregion
 
+#if DEBUG
 using NUnit.Framework;
 using Pytocs.CodeModel;
 using System;
@@ -555,8 +556,17 @@ namespace Pytocs.Translate
         public void Ex_struct_unpack()
         {
             var pySrc = "struct.unpack('3x', buffer)";
-            var sExp = "@@@";
+            var sExp = "@struct.unpack(\"3x\", buffer)";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
+
+        [Test]
+        public void Ex_ScientificNotation()
+        {
+            var pySrc = "1E-5";
+            var sExp = "1E-05";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
     }
 }
+#endif
