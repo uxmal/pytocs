@@ -222,7 +222,7 @@ namespace Pytocs.Syntax
                             indents.Pop();
                             lastIndent = indents.Peek();
                             if (indent > lastIndent)
-                                throw new FormatException(string.Format("Indentation of line {0} is incorrect.", LineNumber));
+                                throw Error("Indentation of line is incorrect.");
                             return Token(TokenType.DEDENT, State.Start);
                         }
                         st = State.Base;
@@ -726,7 +726,7 @@ namespace Pytocs.Syntax
                         break;
                     default:
                         if (c < 0)
-                            throw new FormatException(string.Format("Unexpected end of input on line {0}.", LineNumber));
+                            throw Error("Unexpected end of input.");
                         Accum(ch, State.QuoteString);
                         break;
                     }
@@ -741,7 +741,7 @@ namespace Pytocs.Syntax
                         break;
                     default:
                         if (c < 0)
-                            throw new FormatException("Unexpected end of input.");
+                            throw Error("Unexpected end of input.");
                         Accum(ch, State.AposString);
                         break;
                     }
@@ -816,7 +816,7 @@ namespace Pytocs.Syntax
                 case State.StringEscape:
                     if (c < 0)
                     {
-                        throw new FormatException("Unterminated string constant.");
+                        throw Error("Unterminated string constant.");
                     }
                     Accum(ch, oldState);
                     break;
@@ -915,9 +915,14 @@ namespace Pytocs.Syntax
                     default: this.token = Token(TokenType.DOT); return Token(TokenType.DOT);
                     }
                 default:
-                    throw new InvalidOperationException(string.Format("Unhandled state {0}.", st));
+                    throw Error($"Unhandled state {st}.");
                 }
             }
+        }
+
+        private Exception Error(string errorMsg)
+        {
+            return new FormatException($"{this.filename}({this.LineNumber}): error: {errorMsg}");
         }
 
         private Exp CreateStringLiteral(bool longLiteral)
@@ -979,15 +984,15 @@ namespace Pytocs.Syntax
         private void AccumString(int c, State st)
         {
             if (c < 0)
-                throw new FormatException("Unexpected end of string constant.");
+                throw Error("Unexpected end of string constant.");
             Advance();
             this.sb.Append((char) c);
             this.st = st;
         }
 
-        private static FormatException Invalid(int c, char ch)
+        private Exception Invalid(int c, char ch)
         {
-            throw new FormatException(string.Format("Invalid character '{0}' (U+{1:X4}).", ch, c));
+            throw Error($"Invalid character '{ch}' (U+{c:X4}).");
         }
 
         private Token EatChToken(TokenType t, object value = null)

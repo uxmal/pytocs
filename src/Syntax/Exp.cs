@@ -48,12 +48,12 @@ namespace Pytocs.Syntax
             switch (op)
             {
             default: throw new NotSupportedException(string.Format("Unknown op {0}.", op));
-            case Op.Ge: return "@";
-            case Op.Le: return "@";
-            case Op.Lt: return "@";
-            case Op.Gt: return "@";
+            case Op.Ge: return " >= ";
+            case Op.Le: return " <= ";
+            case Op.Lt: return " < ";
+            case Op.Gt: return " > ";
             case Op.Eq: return "=";
-            case Op.Ne: return "@";
+            case Op.Ne: return " != ";
             case Op.In: return "in";
             case Op.NotIn: return "@";
             case Op.Is: return "is";
@@ -66,26 +66,26 @@ namespace Pytocs.Syntax
             case Op.Add: return " + ";
             case Op.Sub: return " - ";
             case Op.Mul: return " * ";
-            case Op.Div: return "@";
-            case Op.IDiv: return "@";
+            case Op.Div: return " /";
+            case Op.IDiv: return " // ";
             case Op.Mod: return "%";
-            case Op.Complement: return "@";
+            case Op.Complement: return "~";
             case Op.AugAdd: return " += ";
-            case Op.AugSub: return "@";
-            case Op.AugMul: return "@";
-            case Op.AugDiv: return "@";
-            case Op.AugMod: return "@";
-            case Op.AugAnd: return "@";
-            case Op.AugOr: return "@";
-            case Op.AugXor: return "@";
-            case Op.AugShl: return "@";
-            case Op.AugShr: return "@";
-            case Op.AugExp: return "@";
+            case Op.AugSub: return " -= ";
+            case Op.AugMul: return " *= ";
+            case Op.AugDiv: return " /= ";
+            case Op.AugMod: return " %= ";
+            case Op.AugAnd: return " &= ";
+            case Op.AugOr: return " |= ";
+            case Op.AugXor: return " ^= ";
+            case Op.AugShl: return " <<= ";
+            case Op.AugShr: return " >>= ";
+            case Op.AugExp: return " **= ";
             case Op.AugIDiv: return "@";
             case Op.BitAnd: return "&";
             case Op.BitOr: return "|";
-            case Op.Not: return "@";
-            case Op.Exp: return "@";
+            case Op.Not: return "not ";
+            case Op.Exp: return " ** ";
             case Op.Assign: return "=";
             }
         }

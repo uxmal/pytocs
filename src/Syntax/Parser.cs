@@ -364,9 +364,9 @@ yield_expr: 'yield' [testlist]
             return true;
         }
 
-        private void Error(string str)
+        private Exception Error(string str)
         {
-            throw new InvalidOperationException(str);
+            throw new InvalidOperationException($"{filename}({lexer.LineNumber}): {str}");
         }
 
         private Exception Unexpected()
@@ -376,7 +376,7 @@ yield_expr: 'yield' [testlist]
 
         private Exception Unexpected(Token token)
         {
-            throw new FormatException(string.Format("Unexpected token {0} on line {1}.", token, token.LineNumber));
+            return Error($"Unexpected token {token}.");
         }
 
 #if NEVER
@@ -457,7 +457,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             if (t.Type != tokenType)
             {
                 Debug.Print("Expect failed: {0} {1}", filename, t.LineNumber);
-                throw new FormatException(string.Format("{0} ({1}): Expected token type {2}, but saw {3}.", filename, t.LineNumber, tokenType, t.Type));
+                throw Error($"Expected token type {tokenType}, but saw {t.Type}.");
             }
             return lexer.Get();
         }
@@ -619,7 +619,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                     return args;
                 }
             }
-            throw new NotFiniteNumberException();
+            throw Unexpected();
         }
 
         public List<Parameter> typedarglist()
@@ -737,14 +737,9 @@ eval_input: testlist NEWLINE* ENDMARKER
                 if (PeekAndDiscard(TokenType.COMMA))
                 {
                     if (!PeekAndDiscard(TokenType.OP_STARSTAR))
-                    {
-                        throw new NotImplementedException();
-                    }
-                    else
-                    {
-                        args.Add(VarArg.Keyword(vfpdef()));
-                        return args;
-                    }
+                        throw Unexpected();
+                    args.Add(VarArg.Keyword(vfpdef()));
+                    return args;
                 }
                 break;
             case TokenType.OP_STARSTAR:
@@ -990,7 +985,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             case TokenType.SHREQ: return Op.AugShr;
             case TokenType.EXPEQ: return Op.AugExp;
             case TokenType.IDIVEQ: return Op.AugIDiv;
-            default: throw new InvalidOperationException();
+            default: throw Unexpected();
             }
         }
 
@@ -1300,7 +1295,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             case TokenType.Def: return funcdef();
             case TokenType.Class: return classdef();
             case TokenType.AT: return decorated();
-            default: throw new InvalidOperationException();
+            default: throw Unexpected();
             }
         }
 
@@ -1444,7 +1439,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 posEnd = finallyHandler.End;
             }
             if (exHandlers.Count == 0 && finallyHandler == null)
-                throw new InvalidOperationException("Expected at least one except clause or a finally clause.");
+                throw Error("Expected at least one except clause or a finally clause.");
             var t = new TryStatement(body, exHandlers, elseHandler, finallyHandler, filename, posStart, posEnd);
             return new List<Statement> { t };
         }
@@ -1616,7 +1611,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 var r = and_test();
                 if (r == null)
-                    Unexpected();
+                    throw Unexpected();
                 e = new BinExp(Op.LogOr, e, r, filename, e.Start, r.End);
             }
             return e;
@@ -1640,7 +1635,7 @@ eval_input: testlist NEWLINE* ENDMARKER
 
                 var r = not_test();
                 if (r == null)
-                    Unexpected();
+                    throw Unexpected();
                 e = new BinExp(Op.LogAnd, e, r, filename, e.Start, r.End);
             }
             return e;
@@ -1723,7 +1718,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 var r = xor_expr();
                 if (r == null)
-                    Unexpected();
+                    throw Unexpected();
                 e = new BinExp (Op.BitOr, e, r, filename, e.Start, r.End);
             }
             return e;
@@ -1739,7 +1734,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 var r = and_expr();
                 if (r == null)
-                    Unexpected();
+                    throw Unexpected();
                 e = new BinExp(Op.Xor, e, r, filename, e.Start, r.End);
             }
             return e;
@@ -1755,7 +1750,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 var r = shift_expr();
                 if (r == null)
-                    Unexpected();
+                    throw Unexpected();
                 e = new BinExp(Op.BitAnd, e, r, filename, e.Start, r.End);
             }
             return e;
@@ -1778,7 +1773,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 }
                 var r = arith_expr();
                 if (r == null)
-                    Unexpected();
+                    throw Unexpected();
                 e = new BinExp(op, e, r, filename, e.Start, r.End);
             }
         }
@@ -1801,7 +1796,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 lexer.Get();
                 var r = term();
                 if (r == null)
-                    Unexpected();
+                    throw Unexpected();
                 e = new BinExp(op, e, r, filename, e.Start, r.End);
             }
         }
@@ -1826,7 +1821,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 lexer.Get();
                 var r = factor();
                 if (r == null)
-                    Unexpected();
+                    throw Unexpected();
                 e = new BinExp(op, e, r, filename, e.Start, r.End);
             }
         }
@@ -1845,7 +1840,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             var e = factor();
             if (e == null)
-                Unexpected();
+                throw Unexpected();
             return new UnaryExp(op, e, filename, posStart, e.End);
         }
 
@@ -1863,7 +1858,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 var r = factor();
                 if (r == null)
-                    Unexpected();
+                    throw Unexpected();
                 e = new BinExp(Op.Exp, e, r, filename, e.Start, r.End);
             }
             return e;
@@ -2041,7 +2036,8 @@ eval_input: testlist NEWLINE* ENDMARKER
                 tok = Expect(TokenType.ID);
                 var id = new Identifier((string) tok.Value, filename, core.Start, tok.End);
                 return new AttributeAccess(core, id, filename, core.Start, tok.End);
-            default: throw new InvalidOperationException();
+            default:
+                throw Unexpected();
             }
         }
         //subscriptlist: subscript (',' subscript)* [',']
@@ -2252,13 +2248,13 @@ eval_input: testlist NEWLINE* ENDMARKER
                 if (PeekAndDiscard(TokenType.OP_STAR))
                 {
                     if (stargs != null)
-                        throw new NotSupportedException("More than one stargs.");
+                        throw Error("More than one stargs.");
                     stargs = test();
                 }
                 else if (PeekAndDiscard(TokenType.OP_STARSTAR))
                 {
                     if (kwargs != null)
-                        throw new NotSupportedException("More than one kwargs.");
+                        throw Error("More than one kwargs.");
                     kwargs = test();
                 }
                 else 
