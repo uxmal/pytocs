@@ -407,6 +407,22 @@ namespace Pytocs.Syntax
             var str = (Str)tok.Value;
             Assert.IsTrue(str.Format);
         }
+
+        [Test]
+        public void Lex_Float_ScientificNotation()
+        {
+            var tok = Lex("1E-5");
+            var str = (double)tok.Value;
+            Assert.AreEqual("1E-05", str.ToString());
+        }
+
+        [Test]
+        public void Lex_Float_ScientificNotation_Zero()
+        {
+            var tok = Lex("0E0");
+            var str = (double)tok.Value;
+            Assert.AreEqual("0", str.ToString());
+        }
     }
 }
 #endif

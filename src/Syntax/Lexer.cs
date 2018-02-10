@@ -34,7 +34,6 @@ namespace Pytocs.Syntax
         private TextReader rdr;
         private Token token;
         private StringBuilder sb;
-        private long integer;
         private Stack<int> indents;
         private int indent;
         private State st;
@@ -186,6 +185,7 @@ namespace Pytocs.Syntax
             RawStringPrefix,
             RealFraction,
             RealExponent,
+            RealExponentDigits,
             UnicodeStringPrefix,
             StringEscapeHex,
             BinaryStringPrefix,
@@ -279,8 +279,7 @@ namespace Pytocs.Syntax
                     case '.': st = State.Dot; break;
                     case ';': return Token(TokenType.SEMI);
                     case '@': return Token(TokenType.AT);
-                    case '0':
-                        integer = 0; st = State.Zero; break;
+                    case '0': sb.Append(ch); st = State.Zero; break;
                     case '1':
                     case '2':
                     case '3':
@@ -290,7 +289,7 @@ namespace Pytocs.Syntax
                     case '7':
                     case '8':
                     case '9':
-                        integer = ch - '0'; st = State.Decimal; break;
+                        sb.Append(ch); st = State.Decimal; break;
                     case 'r':
                     case 'R': sb.Append(ch); st = State.RawStringPrefix; break;
                     case 'u':
@@ -481,41 +480,47 @@ namespace Pytocs.Syntax
                     case 'b':
                     case 'B':
                         Transition(State.Binary); break;
+                    case 'e':
+                    case 'E':
+                        Accum(ch, State.RealExponent);
+                        break;
                     case 'L':
                     case 'l':
-                        return EatChToken(TokenType.LONGINTEGER, (object) integer);
+                        return EatChToken(TokenType.LONGINTEGER, Convert.ToInt64(sb.ToString()));
                     case '.':
-                        sb.Append("0."); Transition(State.RealFraction);
+                        Accum(ch, State.RealFraction);
                         break;
                     default:
                         if (Char.IsDigit(ch))
                         {
-                            integer = ch - '0';
-                            Advance();
-                            st = State.Decimal;
+                            Accum(ch, State.Decimal);
                             break;
                         }
                         return Token(TokenType.INTEGER, (object) 0);
                     }
                     break;
                 case State.Decimal:
-                    if (Char.IsDigit(ch))
+                    switch (ch)
                     {
-                        integer = integer * 10 + (ch - '0');
-                        Advance();
+                    case 'L':
+                    case 'l':
+                        return EatChToken(TokenType.LONGINTEGER, Convert.ToInt64(sb.ToString()));
+                    case 'e':
+                    case 'E':
+                        Accum(ch, State.RealExponent);
                         break;
-                    }
-                    else if (ch == 'L' || ch == 'l')
-                    {
-                        return EatChToken(TokenType.LONGINTEGER, integer);
-                    }
-                    else if (ch == '.')
-                    {
-                        sb.AppendFormat("{0}.", integer);
-                        Transition(State.RealFraction);
+                    case '.':
+                        Accum(ch, State.RealFraction);
                         break;
+                    default:
+                        if (Char.IsDigit(ch))
+                        {
+                            Accum(ch, State.Decimal);
+                            break;
+                        }
+                        return Token(TokenType.INTEGER, Convert.ToInt32(sb.ToString()));
                     }
-                    return Token(TokenType.INTEGER, (int) integer);
+                    break;
                 case State.RealFraction:
                     if (c < 0)
                     {
@@ -539,6 +544,26 @@ namespace Pytocs.Syntax
                         break;
                     }
                     break;
+                case State.RealExponent:
+                    if (c < 0)
+                        return Real();
+                    if (c == '+' || c == '-')
+                    {
+                        Accum(ch, State.RealExponentDigits);
+                    }
+                    else if (char.IsDigit(ch))
+                    {
+                        Accum(ch, State.RealExponentDigits);
+                    }
+                    else
+                        Invalid(c, ch);
+                    break;
+                case State.RealExponentDigits:
+                    if (c >= 0 && char.IsDigit(ch))
+                    {
+                        Accum(ch, State.RealExponentDigits);
+                    }
+                    return Real();
                 case State.Hex:
                     switch (ch)
                     {
@@ -552,32 +577,25 @@ namespace Pytocs.Syntax
                     case '7':
                     case '8':
                     case '9':
-                        integer = integer * 16 + (ch - '0');
-                        Advance();
-                        break;
                     case 'A':
                     case 'B':
                     case 'C':
                     case 'D':
                     case 'E':
                     case 'F':
-                        integer = integer * 16 + (ch - 'A') + 10;
-                        Advance();
-                        break;
                     case 'a':
                     case 'b':
                     case 'c':
                     case 'd':
                     case 'e':
                     case 'f':
-                        integer = integer * 16 + (ch - 'a') + 10;
-                        Advance();
+                        Accum(ch, State.Hex);
                         break;
                     case 'L':
                     case 'l':
-                        return EatChToken(TokenType.LONGINTEGER, integer);
+                        return EatChToken(TokenType.LONGINTEGER, Convert.ToInt64(sb.ToString(), 16));
                     default:
-                        return Token(TokenType.INTEGER, (int) integer);
+                        return Token(TokenType.INTEGER, Convert.ToInt32(sb.ToString(), 16));
                     }
                     break;
                 case State.Octal:
@@ -591,14 +609,13 @@ namespace Pytocs.Syntax
                     case '5':
                     case '6':
                     case '7':
-                        integer = integer * 8 + (ch - '0');
-                        Advance();
+                        Accum(ch, State.Octal);
                         break;
                     case 'L':
                     case 'l':
-                        return EatChToken(TokenType.LONGINTEGER, integer);
+                        return EatChToken(TokenType.LONGINTEGER, Convert.ToInt64(sb.ToString(), 8));
                     default:
-                        return Token(TokenType.INTEGER, (int) integer);
+                        return Token(TokenType.INTEGER, Convert.ToInt32(sb.ToString(), 8));
                     }
                     break;
                 case State.Binary:
@@ -606,14 +623,13 @@ namespace Pytocs.Syntax
                     {
                     case '0':
                     case '1':
-                        integer = integer * 2 + (ch - '0');
-                        Advance();
+                        Accum(ch, State.Binary);
                         break;
                     case 'L':
                     case 'l':
-                        return EatChToken(TokenType.LONGINTEGER, integer);
+                        return EatChToken(TokenType.LONGINTEGER, ConvertBinaryToInt(sb.ToString()));
                     default:
-                        return Token(TokenType.INTEGER, (int) integer);
+                        return Token(TokenType.INTEGER, (int)ConvertBinaryToInt(sb.ToString()));
                     }
                     break;
                 case State.BlankLineComment:
@@ -927,6 +943,16 @@ namespace Pytocs.Syntax
             longLiteral = false;
             formatString = false;
             return e;
+        }
+
+        private long ConvertBinaryToInt(string binaryString)
+        {
+            long n = 0;
+            foreach (var ch in binaryString)
+            {
+                n = (n << 1) | (ch == '1' ? 1L : 0L);
+            }
+            return n;
         }
 
         private bool IsLogicalNewLine()
