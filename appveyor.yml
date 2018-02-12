@@ -23,7 +23,7 @@ after_build:
         ;
         <# zip pytocs.exe, append version and short hash #>;
         "[after_build] compressing Pytocs...";
-        7z a $env:artifacts_dir/pytocs-$version-$shortHash.zip ./src/Drivers/WindowsDecompiler/bin/$env:PLATFORM/$env:CONFIGURATION/.;
+        7z a $env:artifacts_dir/pytocs-$version-$shortHash.zip ./src/bin/$env:CONFIGURATION/.;
         ;
 
 test_script:
