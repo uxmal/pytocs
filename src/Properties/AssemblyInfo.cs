@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("")]
 [assembly: AssemblyProduct("pytocs")]
-[assembly: AssemblyCopyright("Copyright ©  John Källén 2013-2015")]
+[assembly: AssemblyCopyright("Copyright ©  John Källén 2013-2018")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
