@@ -27,7 +27,6 @@ after_build:
         ;
 
 test_script:
-  - cmd: nunit-console-x86.exe ./src/tools/c2xml/bin/%CONFIGURATION%/c2xml.exe -exclude=FailedTests /framework:net-4.5
   - cmd: nunit-console-x86.exe ./src/bin/%CONFIGURATION%/pytocs.exe /framework:net-4.5
  # - cmd: python ./subjects/regressionTests.py --check-output --configuration=%CONFIGURATION%
 
