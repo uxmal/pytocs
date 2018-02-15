@@ -308,8 +308,8 @@ except antlr.RecognitionException, e:
 @"try:
     if self._returnToken:
         raise antlr.TryAgain
+        ### option { testLiterals=true }
     
-    ### option { testLiterals=true }
     self.testForLiteral(self._returnToken)
     ### return token to caller
     return self._returnToken
@@ -649,7 +649,6 @@ else:
         }
 
         [Test]
-        [Ignore("Stacks of comments are tricky, consult with Python community")]
         public void Parse_Blank_Lines()
         {
             var pySrc =
@@ -679,11 +678,12 @@ else:
             return None
             # we execute all statements in this basic block. A
             # little weird...
-        
         else:
             return blob._run_statement_whitelist[addr]
+        
     else:
         return []
+    
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
         }

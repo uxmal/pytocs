@@ -1330,10 +1330,10 @@ c.de = ""f"";
             var pySrc =
 @"class Foo:
     " + @"# method comment
-    def method(self):
+    def method1(self):
         pass
     " + @"# another method
-    def method(self, arg1):
+    def method2(self, arg1):
         return arg1 + 1
 ";
             var sExp =
@@ -1342,11 +1342,11 @@ c.de = ""f"";
     public class Foo {
         
         // method comment
-        public virtual object method() {
+        public virtual object method1() {
         }
         
         // another method
-        public virtual object method(object arg1) {
+        public virtual object method2(object arg1) {
             return arg1 + 1;
         }
     }

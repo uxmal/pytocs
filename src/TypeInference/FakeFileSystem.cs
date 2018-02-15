@@ -273,7 +273,7 @@ namespace Pytocs.TypeInference
     public class FakeFileSystemTests
     {
         [Test]
-        public void Add()
+        public void Filesys_Add()
         {
             var fs = new FakeFileSystem()
                 .Dir("foo")

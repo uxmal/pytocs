@@ -151,7 +151,8 @@ namespace Pytocs.Syntax
         public void LexComment()
         {
             Lex("  foo # hello\nfoo\n",
-                TokenType.INDENT, TokenType.ID, TokenType.COMMENT, TokenType.NEWLINE, TokenType.DEDENT, TokenType.ID, TokenType.NEWLINE, TokenType.EOF);
+                TokenType.INDENT, TokenType.ID, TokenType.COMMENT, TokenType.NEWLINE,
+                TokenType.DEDENT, TokenType.ID, TokenType.NEWLINE, TokenType.EOF);
         }
         [Test]
         public void LexBlankLineComment()
@@ -325,8 +326,8 @@ namespace Pytocs.Syntax
         {
             Lex("#foo\n  #bar\n#baz\n",
                 TokenType.COMMENT, TokenType.NEWLINE,
-                TokenType.INDENT, TokenType.COMMENT, TokenType.NEWLINE,
-                TokenType.DEDENT, TokenType.COMMENT, TokenType.NEWLINE, TokenType.EOF);
+                TokenType.COMMENT, TokenType.NEWLINE,
+                TokenType.COMMENT, TokenType.NEWLINE, TokenType.EOF);
         }
 
         [Test]

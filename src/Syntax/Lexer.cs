@@ -42,6 +42,8 @@ namespace Pytocs.Syntax
         private int nestedBraces;
         private int posStart;
         private int posEnd;
+        private TokenType lastTokenType;
+        private bool lastLineEndedInComment;
 
         public Lexer(string filename, TextReader rdr)
         {
@@ -54,6 +56,8 @@ namespace Pytocs.Syntax
             this.posStart = 0;
             this.posEnd = 0;
             this.st = State.Start;
+            this.lastTokenType = TokenType.NONE;
+            this.lastLineEndedInComment = false;
         }
 
         public int LineNumber { get; private set; }
@@ -210,20 +214,23 @@ namespace Pytocs.Syntax
                     case '\r': Transition(State.BlankLineCr); indent = 0; break;
                     case '\n': Advance(); ++LineNumber; indent = 0; break;
                     default:
-                        int lastIndent = indents.Peek();
-                        if (indent > lastIndent)
+                        if (ch != '#' || !lastLineEndedInComment)
                         {
-                            st = State.Base;
-                            indents.Push(indent);
-                            return Token(TokenType.INDENT);
-                        }
-                        else if (indent < lastIndent)
-                        {
-                            indents.Pop();
-                            lastIndent = indents.Peek();
+                            int lastIndent = indents.Peek();
                             if (indent > lastIndent)
-                                throw Error("Indentation of line is incorrect.");
-                            return Token(TokenType.DEDENT, State.Start);
+                            {
+                                st = State.Base;
+                                indents.Push(indent);
+                                return Token(TokenType.INDENT);
+                            }
+                            else if (indent < lastIndent)
+                            {
+                                indents.Pop();
+                                lastIndent = indents.Peek();
+                                if (indent > lastIndent)
+                                    throw Error("Indentation of line is incorrect.");
+                                return Token(TokenType.DEDENT, State.Start);
+                            }
                         }
                         st = State.Base;
                         break;
@@ -1007,9 +1014,14 @@ namespace Pytocs.Syntax
         private Token Token(TokenType t, object value) { return Token(t, value, State.Base); }
         private Token Token(TokenType t, object value, State newState)
         {
+            if (t == TokenType.NEWLINE)
+            {
+                this.lastLineEndedInComment = (this.lastTokenType == TokenType.COMMENT);
+            }
             this.st = newState;
             var token = new Token(LineNumber, t, value, posStart, posEnd);
             posStart = posEnd;
+            this.lastTokenType = t;
             return token;
         }
 
