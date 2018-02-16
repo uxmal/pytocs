@@ -687,5 +687,44 @@ else:
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
         }
+
+        [Test]
+        public void Parse_Trailing_Comment()
+        {
+            var pySrc =
+@"if foo:
+    stack.append(bar)
+
+   #subgraph = stack
+    subgraph = None
+";
+            var sExp =
+@"if foo:
+    stack.append(bar)
+    #subgraph = stack
+    subgraph=None
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
+
+        [Test]
+        public void Parse_Trailing_Tuple()
+        {
+            var pySrc =
+@"class bar:
+    def foo():
+        code()
+
+        return 1,2,3,4
+";
+            var sExp =
+@"class bar:
+    def foo():
+        code()
+        return 1,2,3,4
+    
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
     }
 }

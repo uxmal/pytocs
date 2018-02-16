@@ -446,6 +446,13 @@ namespace Pytocs.CodeModel
 
         internal CodePrimitiveExpression Prim(object o)
         {
+            if (o is long l)
+            {
+                if (int.MinValue <= l && l < int.MaxValue)
+                {
+                    o = (int)l;
+                }
+            }
             return new CodePrimitiveExpression(o);
         }
 

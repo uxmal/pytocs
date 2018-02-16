@@ -214,10 +214,12 @@ namespace Pytocs.Syntax
                     case '\r': Transition(State.BlankLineCr); indent = 0; break;
                     case '\n': Advance(); ++LineNumber; indent = 0; break;
                     default:
+                        if (filename.EndsWith("strcmp.py") && LineNumber == 0x73)   //$DEBUG
+                            filename.ToString();
                         if (ch != '#' || !lastLineEndedInComment)
                         {
                             int lastIndent = indents.Peek();
-                            if (indent > lastIndent)
+                            if (indent > lastIndent && ch != '#')
                             {
                                 st = State.Base;
                                 indents.Push(indent);
@@ -225,11 +227,18 @@ namespace Pytocs.Syntax
                             }
                             else if (indent < lastIndent)
                             {
-                                indents.Pop();
-                                lastIndent = indents.Peek();
-                                if (indent > lastIndent)
-                                    throw Error("Indentation of line is incorrect.");
-                                return Token(TokenType.DEDENT, State.Start);
+                                var oldIndent = indents.Pop();
+                                if (indent > indents.Peek())
+                                {
+                                    if (ch != '#')
+                                        throw Error("Indentation of line is incorrect.");
+                                    indents.Push(oldIndent);
+                                }
+                                else
+                                {
+                                    lastIndent = indents.Peek();
+                                    return Token(TokenType.DEDENT, State.Start);
+                                }
                             }
                         }
                         st = State.Base;
@@ -503,7 +512,7 @@ namespace Pytocs.Syntax
                             Accum(ch, State.Decimal);
                             break;
                         }
-                        return Token(TokenType.INTEGER, (object) 0);
+                        return Token(TokenType.INTEGER, (object) 0L);
                     }
                     break;
                 case State.Decimal:
@@ -525,7 +534,7 @@ namespace Pytocs.Syntax
                             Accum(ch, State.Decimal);
                             break;
                         }
-                        return Token(TokenType.INTEGER, Convert.ToInt32(sb.ToString()));
+                        return Token(TokenType.INTEGER, Convert.ToInt64(sb.ToString()));
                     }
                     break;
                 case State.RealFraction:
@@ -602,7 +611,7 @@ namespace Pytocs.Syntax
                     case 'l':
                         return EatChToken(TokenType.LONGINTEGER, Convert.ToInt64(sb.ToString(), 16));
                     default:
-                        return Token(TokenType.INTEGER, Convert.ToInt32(sb.ToString(), 16));
+                        return Token(TokenType.INTEGER, Convert.ToInt64(sb.ToString(), 16));
                     }
                     break;
                 case State.Octal:
@@ -622,7 +631,7 @@ namespace Pytocs.Syntax
                     case 'l':
                         return EatChToken(TokenType.LONGINTEGER, Convert.ToInt64(sb.ToString(), 8));
                     default:
-                        return Token(TokenType.INTEGER, Convert.ToInt32(sb.ToString(), 8));
+                        return Token(TokenType.INTEGER, Convert.ToInt64(sb.ToString(), 8));
                     }
                     break;
                 case State.Binary:
@@ -636,7 +645,7 @@ namespace Pytocs.Syntax
                     case 'l':
                         return EatChToken(TokenType.LONGINTEGER, ConvertBinaryToInt(sb.ToString()));
                     default:
-                        return Token(TokenType.INTEGER, (int)ConvertBinaryToInt(sb.ToString()));
+                        return Token(TokenType.INTEGER, (long)ConvertBinaryToInt(sb.ToString()));
                     }
                     break;
                 case State.BlankLineComment:

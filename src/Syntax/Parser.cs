@@ -793,7 +793,10 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             List<Statement> stmts = new List<Statement>();
             var s = small_stmt();
-            stmts.Add(s);
+            if (s != null)
+            {
+                stmts.Add(s);
+            }
             while (PeekAndDiscard(TokenType.SEMI))
             {
                 if (Peek(TokenType.EOF))
@@ -805,21 +808,31 @@ eval_input: testlist NEWLINE* ENDMARKER
                     };
                 }
                 s = small_stmt();
-                stmts.Add(s);
+                if (s != null)
+                {
+                    stmts.Add(s);
+                }
             }
             string comment = null;
             if (!Peek(TokenType.EOF))
             {
                 if (Peek(TokenType.COMMENT))
                 {
-                    comment = (string) Expect(TokenType.COMMENT).Value;
+                    comment = (string)Expect(TokenType.COMMENT).Value;
                 }
                 Expect(TokenType.NEWLINE);
             }
-            return new List<Statement>
+            if (stmts.Count == 0)
             {
-                new SuiteStatement(stmts, filename, stmts[0].Start, stmts.Last().End) { comment = comment }
-            };
+                return new List<Statement>();
+            }
+            else
+            {
+                return new List<Statement>
+                {
+                    new SuiteStatement(stmts, filename, stmts[0].Start, stmts.Last().End) { comment = comment }
+                };
+            }
         }
 
         //small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt |
@@ -844,12 +857,23 @@ eval_input: testlist NEWLINE* ENDMARKER
             case TokenType.COMMENT: return comment_stmt();
             case TokenType.INDENT:
                 Expect(TokenType.INDENT);
-                var c = Expect(TokenType.COMMENT);
-                return new CommentStatement(filename, c.Start, c.End) { comment = (string) c.Value };
+                if (PeekAndDiscard(TokenType.COMMENT, out var c))
+                {
+                    return new CommentStatement(filename, c.Start, c.End) { comment = (string)c.Value };
+                }
+                else
+                {
+                    return null;
+                }
             case TokenType.DEDENT:
                 Expect(TokenType.DEDENT);
-                var cc = Expect(TokenType.COMMENT);
-                return new CommentStatement(filename, cc.Start, cc.End) { comment = (string)cc.Value };
+                if (PeekAndDiscard(TokenType.COMMENT, out var cc)){
+                    return new CommentStatement(filename, cc.Start, cc.End) { comment = (string)cc.Value };
+                }
+                else
+                {
+                    return null;
+                }
             default: return expr_stmt();
             }
         }
@@ -1922,7 +1946,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 return byteStr;
             case TokenType.INTEGER:
                 t = lexer.Get();
-                return new IntLiteral((int) t.Value, filename, t.Start, t.End);
+                return new IntLiteral((long) t.Value, filename, t.Start, t.End);
             case TokenType.LONGINTEGER:
                 t = lexer.Get();
                 return new LongLiteral((long) t.Value, filename, t.Start, t.End);

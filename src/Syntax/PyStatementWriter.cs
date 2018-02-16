@@ -46,7 +46,19 @@ namespace Pytocs.Syntax
 
         public void VisitClass(ClassDef c)
         {
-            throw new NotImplementedException();
+            w.Write("class");
+            w.Write(" ");
+            w.Write(c.name.Name);
+            if (c.args != null && c.args.Count > 0)
+            {
+                w.Write("(");
+                w.Write(string.Join(",", c.args.Select(e => e.ToString())));
+                w.Write(")");
+            }
+            w.WriteLine(":");
+            ++w.IndentLevel;
+            c.body.Accept(this);
+            --w.IndentLevel;
         }
 
         public void VisitComment(CommentStatement c)

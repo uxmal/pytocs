@@ -203,9 +203,9 @@ namespace Pytocs.Syntax
 
     public class IntLiteral : Exp
     {
-        public readonly int Value;
+        public readonly long Value;
 
-        public IntLiteral(int p, string filename, int start, int end) : base(filename, start, end) 
+        public IntLiteral(long p, string filename, int start, int end) : base(filename, start, end) 
         {
             this.Value = p;
         }

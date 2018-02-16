@@ -158,22 +158,22 @@ namespace Pytocs.Syntax
         public void LexBlankLineComment()
         {
             Lex("  # hello\nfoo\n",
-                TokenType.INDENT, TokenType.COMMENT, TokenType.NEWLINE,
-                TokenType.DEDENT, TokenType.ID, TokenType.NEWLINE, TokenType.EOF);
+                TokenType.COMMENT, TokenType.NEWLINE,
+                TokenType.ID, TokenType.NEWLINE, TokenType.EOF);
         }
 
         [Test]
         public void LexInt()
         {
-            Assert.AreEqual(0, (int)Lex("0").Value);
-            Assert.AreEqual(1, (int)Lex("1").Value);
-            Assert.AreEqual(30, (int)Lex("30").Value);
-            Assert.AreEqual(0xF, (int)Lex("0xF").Value);
-            Assert.AreEqual(0xed, (int)Lex("0xed").Value);
-            Assert.AreEqual(10, (int)Lex("0o12").Value);
-            Assert.AreEqual(13, (int)Lex("0O15").Value);
-            Assert.AreEqual(0xA, (int)Lex("0b1010").Value);
-            Assert.AreEqual(0xA, (int)Lex("0B1010").Value);
+            Assert.AreEqual(0, (long)Lex("0").Value);
+            Assert.AreEqual(1, (long)Lex("1").Value);
+            Assert.AreEqual(30, (long)Lex("30").Value);
+            Assert.AreEqual(0xF, (long)Lex("0xF").Value);
+            Assert.AreEqual(0xed, (long)Lex("0xed").Value);
+            Assert.AreEqual(10, (long)Lex("0o12").Value);
+            Assert.AreEqual(13, (long)Lex("0O15").Value);
+            Assert.AreEqual(0xA, (long)Lex("0b1010").Value);
+            Assert.AreEqual(0xA, (long)Lex("0B1010").Value);
         }
 
         private string LexString(string pyStr)
@@ -314,8 +314,8 @@ namespace Pytocs.Syntax
         {
             Lex("if x :\n    #foo\n    hi\n",
                 TokenType.If, TokenType.ID, TokenType.COLON, TokenType.NEWLINE,
-                TokenType.INDENT, TokenType.COMMENT, TokenType.NEWLINE,
-                TokenType.ID, TokenType.NEWLINE,
+                TokenType.COMMENT, TokenType.NEWLINE,
+                TokenType.INDENT, TokenType.ID, TokenType.NEWLINE,
                 TokenType.DEDENT,
                 TokenType.EOF);
 
