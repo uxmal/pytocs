@@ -19,6 +19,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -430,6 +431,10 @@ namespace Pytocs.CodeModel
                 if (!s.Contains('.') && !s.Contains('e') && !s.Contains('E'))
                     s += ".0";
                 writer.Write(s);
+            }
+            else if (p.Value is BigInteger)
+            {
+                writer.Write($"new BigInteger({p.Value})");
             }
             else if (p.Value is Syntax.Str)
                 WriteStringLiteral((Syntax.Str)p.Value);

@@ -69,7 +69,7 @@ namespace Pytocs.Translate.Special
             {
                 return s.s;
             }
-            throw new NotImplementedException();
+            return null;
         }
     }
 }

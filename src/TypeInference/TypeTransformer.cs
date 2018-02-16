@@ -990,6 +990,11 @@ namespace Pytocs.TypeInference
             return arg.defval.Accept(this);
         }
 
+        public DataType VisitBigLiteral(BigLiteral i)
+        {
+            return DataType.Int;
+        }
+
         public DataType VisitIntLiteral(IntLiteral i)
         {
             return DataType.Int;

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -315,9 +316,9 @@ yield_expr: 'yield' [testlist]
         #endregion
 
         private string filename;
-        private Lexer lexer;
+        private ILexer lexer;
 
-        public Parser(string filename, Lexer lexer)
+        public Parser(string filename, ILexer lexer)
         {
             this.filename = filename;
             this.lexer = lexer;
@@ -793,7 +794,10 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             List<Statement> stmts = new List<Statement>();
             var s = small_stmt();
+            if (s != null)
+            {
             stmts.Add(s);
+            }
             while (PeekAndDiscard(TokenType.SEMI))
             {
                 if (Peek(TokenType.EOF))
@@ -805,21 +809,31 @@ eval_input: testlist NEWLINE* ENDMARKER
                     };
                 }
                 s = small_stmt();
+                if (s != null)
+                {
                 stmts.Add(s);
+            }
             }
             string comment = null;
             if (!Peek(TokenType.EOF))
             {
                 if (Peek(TokenType.COMMENT))
                 {
-                    comment = (string) Expect(TokenType.COMMENT).Value;
+                    comment = (string)Expect(TokenType.COMMENT).Value;
                 }
                 Expect(TokenType.NEWLINE);
             }
+            if (stmts.Count == 0)
+            {
+                return new List<Statement>();
+            }
+            else
+            {
             return new List<Statement>
             {
                 new SuiteStatement(stmts, filename, stmts[0].Start, stmts.Last().End) { comment = comment }
             };
+        }
         }
 
         //small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt |
@@ -844,12 +858,23 @@ eval_input: testlist NEWLINE* ENDMARKER
             case TokenType.COMMENT: return comment_stmt();
             case TokenType.INDENT:
                 Expect(TokenType.INDENT);
-                var c = Expect(TokenType.COMMENT);
-                return new CommentStatement(filename, c.Start, c.End) { comment = (string) c.Value };
+                if (PeekAndDiscard(TokenType.COMMENT, out var c))
+                {
+                    return new CommentStatement(filename, c.Start, c.End) { comment = (string)c.Value };
+                }
+                else
+                {
+                    return null;
+                }
             case TokenType.DEDENT:
                 Expect(TokenType.DEDENT);
-                var cc = Expect(TokenType.COMMENT);
+                if (PeekAndDiscard(TokenType.COMMENT, out var cc)){
                 return new CommentStatement(filename, cc.Start, cc.End) { comment = (string)cc.Value };
+                }
+                else
+                {
+                    return null;
+                }
             default: return expr_stmt();
             }
         }
@@ -1921,11 +1946,9 @@ eval_input: testlist NEWLINE* ENDMARKER
                 }
                 return byteStr;
             case TokenType.INTEGER:
-                t = lexer.Get();
-                return new IntLiteral((int) t.Value, filename, t.Start, t.End);
             case TokenType.LONGINTEGER:
                 t = lexer.Get();
-                return new LongLiteral((long) t.Value, filename, t.Start, t.End);
+                return NumericLiteral(t);
             case TokenType.REAL:
                 t = lexer.Get();
                 return new RealLiteral((double) t.Value, filename, t.Start, t.End);
@@ -1947,6 +1970,24 @@ eval_input: testlist NEWLINE* ENDMARKER
             default:
                 return null;
             }
+        }
+
+        private Exp NumericLiteral(Token t)
+        {
+            if (t.Value is BigInteger bignum)
+            {
+                return new BigLiteral(bignum, filename, t.Start, t.End);
+            }
+            else if (t.Value is long l)
+            {
+                return new LongLiteral(l, filename, t.Start, t.End);
+            }
+            else if (t.Value is int i)
+            {
+                return new IntLiteral(i, filename, t.Start, t.End);
+            }
+            else
+                throw new FormatException($"Unparseable long integer token {t}.");
         }
 
         //testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )

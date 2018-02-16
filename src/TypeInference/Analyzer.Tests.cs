@@ -70,13 +70,13 @@ namespace Pytocs.TypeInference
         }
 
         [Test]
-        public void Empty()
+        public void TypeAn_Empty()
         {
             an.Analyze("\\foo");
         }
 
         [Test]
-        public void StrDef()
+        public void TypeAn_StrDef()
         {
             fs.Dir("foo")
                 .File("test.py", "x = 'hello world'\n");

@@ -66,7 +66,6 @@ namespace Pytocs.Acceptance
         [Test]
         public void Accept1()
         {
-            Assert.IsTrue(Object.Equals(null, null));
             var s = XlatModule(
         @"'''Refactor and view menus.'''
 
@@ -305,6 +304,34 @@ namespace test {
 }
 ";
             Console.WriteLine(s);
+            Assert.AreEqual(sExp, s);
+        }
+
+        [Test]
+        public void Accept2()
+        {
+            var s = XlatModule(
+@"
+class foo:
+    def widen(self, others):
+        return self._combine(others)
+
+### HEAP MANAGEMENT
+
+    def get_max_sinkhole(self, length):
+        '''
+        Find a sinkhole which is large enough to support `length` bytes.
+
+        This uses first - fit.The first sinkhole(ordered in descending order by their address)
+        which can hold `length` bytes is chosen.If there are more than `length` bytes in the
+        sinkhole, a new sinkhole is created representing the remaining bytes while the old
+        sinkhole is removed.
+        '''
+
+        ordered_sinks = sorted(list(self.sinkholes), key =operator.itemgetter(0), reverse = True)
+
+");
+            var sExp = "@@@";
             Assert.AreEqual(sExp, s);
         }
     }
