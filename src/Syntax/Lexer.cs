@@ -533,7 +533,7 @@ namespace Pytocs.Syntax
                             Accum(ch, State.Decimal);
                             break;
                         }
-                        return Token(TokenType.INTEGER, Convert.ToInt64(sb.ToString()));
+                        return Token(TokenType.INTEGER, Convert.ToInt32(sb.ToString()));
                     }
                     break;
                 case State.RealFraction:

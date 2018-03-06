@@ -310,9 +310,9 @@ except antlr.RecognitionException, e:
 @"try:
     if self._returnToken:
         raise antlr.TryAgain
-        ### option { testLiterals=true }
     
     self.testForLiteral(self._returnToken)
+    ### option { testLiterals=true }
     ### return token to caller
     return self._returnToken
     ### handle lexical errors ....
@@ -612,13 +612,13 @@ else:
             var pySrc =
 @"def test():
     if foo:
-    foonicate()
+        foonicate()
     # wasn't foo, continue
 ";
             var sExp =
 @"def test():
     if foo:
-    foonicate()
+        foonicate()
         # wasn't foo, continue
     
 ";
