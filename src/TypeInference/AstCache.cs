@@ -106,7 +106,8 @@ namespace Pytocs.TypeInference
             {
                 LOG.Verbose("parsing " + path);
                 var lexer = new Lexer(path, fs.CreateStreamReader(path));
-                var parser = new Parser(path, lexer);
+                var filter = new CommentFilter(lexer);
+                var parser = new Parser(path, filter);
                 var moduleStmts = parser.Parse().ToList();
                 int posStart = 0;
                 int posEnd = 0;

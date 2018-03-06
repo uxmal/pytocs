@@ -218,7 +218,7 @@ namespace Pytocs.Syntax
                         if (ch != '#')
                         {
                             int lastIndent = indents.Peek();
-                            if (indent > lastIndent && ch != '#')
+                            if (indent > lastIndent)
                             {
                                 st = State.Base;
                                 indents.Push(indent);
@@ -226,18 +226,9 @@ namespace Pytocs.Syntax
                             }
                             else if (indent < lastIndent)
                             {
-                                var oldIndent = indents.Pop();
-                                if (indent > indents.Peek())
-                                {
-                                    if (ch != '#')
-                                        throw Error("Indentation of line is incorrect.");
-                                    indents.Push(oldIndent);
-                                }
-                                else
-                                {
-                                    lastIndent = indents.Peek();
-                                    return Token(TokenType.DEDENT, State.Start);
-                                }
+                                indents.Pop();
+                                lastIndent = indents.Peek();
+                                return Token(TokenType.DEDENT, State.Start);
                             }
                         }
                         st = State.Base;

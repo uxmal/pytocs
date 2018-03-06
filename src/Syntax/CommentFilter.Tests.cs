@@ -50,6 +50,10 @@ namespace Pytocs.Syntax
                 }
                 switch (encodedTokens[i])
                 {
+                case '(': Assert.AreEqual(TokenType.LPAREN, tok.Type); break;
+                case ')': Assert.AreEqual(TokenType.RPAREN, tok.Type); break;
+                case ':': Assert.AreEqual(TokenType.COLON, tok.Type); break;
+                case 'd': Assert.AreEqual(TokenType.Def, tok.Type); break;
                 case 'i': Assert.AreEqual(TokenType.ID, tok.Type); break;
                 case 'N': Assert.AreEqual(TokenType.NEWLINE, tok.Type); break;
                 case 'I': Assert.AreEqual(TokenType.INDENT, tok.Type); break;
@@ -100,6 +104,14 @@ namespace Pytocs.Syntax
             var pySrc = "one\n  two\n  #dedent\nthree\n";
             Create_CommentFilter(pySrc);
             AssertTokens("iNIiN#NDiN");
+        }
+
+        [Test]
+        public void Comfil_DedentAfterDef()
+        {
+            var pySrc = "def f():\n    id\n\n# comment\ndef g():\n";
+            Create_CommentFilter(pySrc);
+            AssertTokens("di():NIiND#Ndi():N");
         }
     }
 }

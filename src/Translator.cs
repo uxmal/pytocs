@@ -50,7 +50,8 @@ namespace Pytocs
         {
             Debug.Print("Translating module {0} in namespace {1}", moduleName, nmspace);
             var lex = new Lexer(filename, input);
-            var par = new Parser(filename, lex);
+            var flt = new CommentFilter(lex);
+            var par = new Parser(filename, flt);
             var stm = par.Parse();
             TranslateModuleStatements(stm, null, output);
         }
@@ -67,7 +68,15 @@ namespace Pytocs
                 logger.Error(ex, "Unable to open file {0} for writing.", outputFileName);
                 return;
             }
-            TranslateModuleStatements(stm, moduleScope, writer);
+            try
+            {
+                TranslateModuleStatements(stm, moduleScope, writer);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error: {ex.Message}");
+                Console.WriteLine(ex.StackTrace);
+            }
         }
 
         public void TranslateModuleStatements(IEnumerable<Statement> stm, State moduleScope, TextWriter output)

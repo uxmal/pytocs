@@ -120,18 +120,12 @@ namespace Pytocs.Syntax
             case TokenType.DEDENT:
                 if (lines[0].Tokens[0].Indent == lastLine.Tokens[0].Indent)
                 {
-                    lastLine = lines[lines.Count - 1];
-                    lastLine.ReplaceEof();
-                    // Dedent all comment lines.
-                    var xx = lines.Skip(lines.Count - 1)
-                        .Concat(lines.Take(lines.Count - 1))
-                        .SelectMany(l => l.Tokens);
-                    queue.AddRange(xx);
+                    // IF the preceding comment's indentation was the same
+                    // as that of the dedent, we want to move the dedent.
+                    var dedent = lastLine.RemoveFirst(TokenType.DEDENT);
+                    lines[0].Tokens.InsertRange(0, dedent);
                 }
-                else
-                {
-                    queue.AddRange(lines.SelectMany(l => l.Tokens));
-                }
+                queue.AddRange(lines.SelectMany(l => l.Tokens));
                 break;
             default:
                 queue.AddRange(lines.SelectMany(l => l.Tokens));
@@ -183,6 +177,20 @@ namespace Pytocs.Syntax
                     Tokens[i].Type == TokenType.NEWLINE;
 
                 throw new NotImplementedException();
+            }
+
+            public List<Token> RemoveFirst(TokenType type)
+            {
+                var iStart = this.Tokens.FindIndex(t => t.Type == type);
+                if (iStart < 0)
+                    return new List<Token>();
+                var iEnd = this.Tokens.FindIndex(iStart, t => t.Type != type);
+                if (iEnd < 0)
+                    iEnd = this.Tokens.Count;
+                var range = this.Tokens.GetRange(iStart, iEnd - iStart);
+                this.Tokens.RemoveRange(iStart, iEnd - iStart);
+                Debug.Assert(range.All(t => t.Type == type));
+                return range;
             }
 
             public void ReplaceEof()

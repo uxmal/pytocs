@@ -1347,8 +1347,8 @@ c.de = ""f"";
         public virtual object method1() {
         }
         
+        // another method
         public virtual object method2(object arg1) {
-            // another method
             return arg1 + 1;
         }
     }
@@ -1427,6 +1427,44 @@ public static object func(object cfg_node) {
             Assert.AreEqual(sExp, XlatMember(pySrc));
         }
 
+        [Test]
+        public void Stmt_Regress4()
+        {
+            var pySrc =
+@"class foo:
+    def __repr__(self):
+        return 'foo'
+
+    " + @"#
+    " + @"# Compatibility
+    " + @"#
+
+    @property
+    @deprecated(replacement='simos')
+    def _simos(self):
+        return self.simos
+";
+            var sExp =
+            #region Expected
+@"public static class testModule {
+    
+    public class foo {
+        
+        public virtual object @__repr__() {
+            return ""foo"";
+        }
+        
+        public object _simos {
+            get {
+                return this.simos;
+            }
+        }
+    }
+}
+";
+            #endregion
+            Assert.AreEqual(sExp, XlatModule(pySrc));
+        }
     }
 }
 #endif

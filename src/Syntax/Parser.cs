@@ -466,6 +466,8 @@ eval_input: testlist NEWLINE* ENDMARKER
         //decorators: decorator+
         public List<Decorator> decorators()
         {
+            if (filename.Contains("project.py") && 640 <= lexer.LineNumber && lexer.LineNumber <= 660)
+                filename.ToArray(); //$DEBUG
             var decs = new List<Decorator>();
             decs.Add(decorator());
             while (Peek(TokenType.AT))
@@ -481,7 +483,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             var decs = decorators();
             Statement d = null;
-            for (; ; )
+            for (;;)
             {
                 if (Peek(TokenType.Def))
                 {
@@ -495,7 +497,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 }
                 else if (!Peek(TokenType.COMMENT, TokenType.NEWLINE))
                 {
-                    Error("Expected function or class defnition.");
+                    Error($"Expected function or class definition, but saw {lexer.Peek()}.");
                 }
                 //$TODO: keep the comments.
                 lexer.Get();
@@ -2285,7 +2287,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             Exp kwargs = null;
             if (Peek(TokenType.RPAREN, out var token))
                 return new Application(core, args, keywords, stargs, kwargs, filename, core.Start, token.End);
-            for (; ; )
+            for (;;)
             {
                 if (PeekAndDiscard(TokenType.OP_STAR))
                 {

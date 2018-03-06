@@ -316,7 +316,7 @@ class foo:
     def widen(self, others):
         return self._combine(others)
 
-### HEAP MANAGEMENT
+" + @"### HEAP MANAGEMENT
 
     def get_max_sinkhole(self, length):
         '''

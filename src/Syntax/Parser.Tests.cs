@@ -311,8 +311,8 @@ except antlr.RecognitionException, e:
     if self._returnToken:
         raise antlr.TryAgain
     
-    self.testForLiteral(self._returnToken)
     ### option { testLiterals=true }
+    self.testForLiteral(self._returnToken)
     ### return token to caller
     return self._returnToken
     ### handle lexical errors ....
@@ -728,6 +728,33 @@ else:
     def foo():
         code()
         return 1,2,3,4
+    
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
+
+        [Test]
+        public void Parser_DeeplyNestedStatementFollowedByComment()
+        {
+            var pySrc =
+@"class foo:
+    def bar():
+        for i in blox:
+            blah(i)
+    # next method
+    def next():
+        pass
+";
+            var sExp =
+@"class foo:
+    def bar():
+        for i in blox:
+            blah(i)
+        
+    
+    # next method
+    def next():
+        pass
     
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
