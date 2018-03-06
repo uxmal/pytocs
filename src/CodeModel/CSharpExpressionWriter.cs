@@ -27,7 +27,8 @@ namespace Pytocs.CodeModel
 {
     public class CSharpExpressionWriter : ICodeExpressionVisitor
     {
-        private const int PrecPrimary = 14;
+        private const int PrecPrimary = 15;
+        private const int PrecPostfix = 14;
         private const int PrecUnary = 13;
         private const int PrecMultplicative = 12;
         private const int PrecAdditive = 11;
@@ -246,7 +247,7 @@ namespace Pytocs.CodeModel
 
         public void VisitFieldReference(CodeFieldReferenceExpression field)
         {
-            field.Expression.Accept(this);
+            Write(field.Expression, PrecPostfix);
             writer.Write(".");
             writer.WriteName(field.FieldName);
         }
