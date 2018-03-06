@@ -583,6 +583,14 @@ namespace Pytocs.Translate
             var sExp = "(x + y + z).Count";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
+
+        [Test(Description = "Reported in Github issue #17")]
+        public void Ex_Associativity()
+        {
+            string pySrc = "a - (b + c)";
+            string sExp = "a - (b + c)";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
     }
 }
 #endif
