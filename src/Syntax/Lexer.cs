@@ -524,7 +524,19 @@ namespace Pytocs.Syntax
                             Accum(ch, State.Decimal);
                             break;
                         }
-                        return Token(TokenType.INTEGER, Convert.ToInt32(sb.ToString()));
+                        if (int.TryParse(sb.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var num))
+                        {
+                            return Token(TokenType.INTEGER, num);
+                        }
+                        else if (long.TryParse(sb.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var lnum))
+                        {
+                            return Token(TokenType.LONGINTEGER, lnum);
+                        }
+                        else if (BigInteger.TryParse(sb.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var bignum))
+                        {
+                            return Token(TokenType.LONGINTEGER, bignum);
+                        }
+                        break;
                     }
                     break;
                 case State.RealFraction:
