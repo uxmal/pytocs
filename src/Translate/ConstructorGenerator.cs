@@ -37,7 +37,7 @@ namespace Pytocs.Translate
         {
             var cons = gen.Constructor(parms, () => XlatConstructor(f.body));
             GenerateTupleParameterUnpackers(cons);
-            LocalVariableGenerator.Generate(cons);
+            LocalVariableGenerator.Generate(cons, globals);
             return cons;
         }
 

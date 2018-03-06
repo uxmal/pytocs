@@ -40,6 +40,7 @@ namespace Pytocs.Translate
         protected CodeGenerator gen;
         private Dictionary<Parameter, CodeParameterDeclarationExpression> mpPyParamToCs;
         private SymbolGenerator gensym;
+        protected HashSet<string> globals;
 
         public MethodGenerator(FunctionDef f, string fnName, List<Parameter> args, bool isStatic, CodeGenerator gen)
         {
@@ -50,7 +51,8 @@ namespace Pytocs.Translate
             this.gen = gen;
             this.gensym = new SymbolGenerator();
             this.xlat = new ExpTranslator(gen, gensym);
-            this.stmtXlat = new StatementTranslator(gen, gensym);
+            this.globals = new HashSet<string>();
+            this.stmtXlat = new StatementTranslator(gen, gensym, globals);
         }
 
         public CodeMemberMethod Generate()
@@ -70,7 +72,7 @@ namespace Pytocs.Translate
                 method = gen.Method(fnName, parms, () => Xlat(f.body));
             }
             GenerateTupleParameterUnpackers(method);
-            LocalVariableGenerator.Generate(method);
+            LocalVariableGenerator.Generate(method, globals);
             return method;
         }
 

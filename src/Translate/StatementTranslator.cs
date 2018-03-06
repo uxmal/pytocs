@@ -34,14 +34,16 @@ namespace Pytocs.Translate
         private ClassDef currentClass;
         private IEnumerable<CodeAttributeDeclaration> customAttrs;
         private Dictionary<Decorated, PropertyDefinition> properties;
+        private HashSet<string> globals;
         private CodeConstructor classConstructor;
 
-        public StatementTranslator(CodeGenerator gen, SymbolGenerator gensym)
+        public StatementTranslator(CodeGenerator gen, SymbolGenerator gensym, HashSet<string> globals)
         {
             this.gen = gen;
             this.gensym = gensym;
             this.xlat = new ExpTranslator(gen, gensym);
             this.properties = new Dictionary<Decorated, PropertyDefinition>();
+            this.globals = globals;
         }
 
         public void VisitClass(ClassDef c)
@@ -49,7 +51,7 @@ namespace Pytocs.Translate
             var baseClasses = c.args.Select(a => GenerateBaseClassName(a)).ToList();
             var comments = ConvertFirstStringToComments(c.body.stmts);
             var gensym = new SymbolGenerator();
-            var stmtXlt = new StatementTranslator(gen, gensym);
+            var stmtXlt = new StatementTranslator(gen, gensym, new HashSet<string>());
             stmtXlt.currentClass = c;
             stmtXlt.properties = FindProperties(c.body.stmts);
             var csClass = gen.Class(c.name.Name, baseClasses, () => c.body.Accept(stmtXlt));
@@ -611,12 +613,13 @@ namespace Pytocs.Translate
                     propdef.Name,
                     () => GeneratePropertyGetter(propdef.Getter),
                     () => GeneratePropertySetter(propdef.Setter));
-                LocalVariableGenerator.Generate(null, prop.GetStatements);
+                LocalVariableGenerator.Generate(null, prop.GetStatements, globals);
                 LocalVariableGenerator.Generate(
                     new List<CodeParameterDeclarationExpression> {
                         new CodeParameterDeclarationExpression(prop.PropertyType, "value"),
                     },
-                    prop.SetStatements);
+                    prop.SetStatements,
+                    globals);
                 propdef.IsTranslated = true;
             }
             else
@@ -685,7 +688,10 @@ namespace Pytocs.Translate
 
         public void VisitGlobal(GlobalStatement g)
         {
-            gen.Comment("GLOBAL " + string.Join(", ", g.names));
+            foreach (var name in g.names)
+            {
+                globals.Add(name.Name);
+            }
         }
 
         public void VisitNonLocal(NonlocalStatement n)

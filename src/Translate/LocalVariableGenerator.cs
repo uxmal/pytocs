@@ -30,26 +30,31 @@ namespace Pytocs.Translate
         private Dictionary<CodeVariableReferenceExpression, List<List<CodeStatement>>> paths;
         private List<CodeParameterDeclarationExpression> parameters;
         private List<CodeStatement> statements;
+        private HashSet<string> globals;
 
-        public static void Generate(CodeMemberMethod method)
+        public static void Generate(CodeMemberMethod method, HashSet<string> globals)
         {
-            var gen = new LocalVariableGenerator(method.Parameters, method.Statements);
+            var gen = new LocalVariableGenerator(method.Parameters, method.Statements, globals);
             gen.Analyze(new List<CodeStatement>(), method.Statements);
             gen.Generate();
         }
 
-        public static void Generate(List<CodeParameterDeclarationExpression> parameters, List<CodeStatement> statements)
+        public static void Generate(List<CodeParameterDeclarationExpression> parameters, List<CodeStatement> statements, HashSet<string> globals)
         {
             parameters = parameters ?? new List<CodeParameterDeclarationExpression>();
-            var gen = new LocalVariableGenerator(parameters, statements);
+            var gen = new LocalVariableGenerator(parameters, statements, globals);
             gen.Analyze(new List<CodeStatement>(), statements);
             gen.Generate();
         }
 
-        private LocalVariableGenerator(List<CodeParameterDeclarationExpression> parameters, List<CodeStatement> statements)
+        private LocalVariableGenerator(
+            List<CodeParameterDeclarationExpression> parameters,
+            List<CodeStatement> statements,
+            HashSet<string> globals)
         {
             this.parameters = parameters;
             this.statements = statements;
+            this.globals = globals;
             this.parentOf = new Dictionary<CodeStatement, List<CodeStatement>>();
             this.paths = new Dictionary<CodeVariableReferenceExpression, List<List<CodeStatement>>>(
                 new IdCmp());
@@ -154,6 +159,8 @@ namespace Pytocs.Translate
         {
             var id = ass.Destination as CodeVariableReferenceExpression;
             if (id == null)
+                return 0;
+            if (this.globals.Contains(id.Name))
                 return 0;
             EnsurePath(id);
             return 0;

@@ -44,7 +44,7 @@ namespace Pytocs.Translate
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
             var sym = new SymbolGenerator();
-            var xlt = new StatementTranslator(gen, sym);
+            var xlt = new StatementTranslator(gen, sym, new HashSet<string>());
             stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -76,7 +76,7 @@ namespace Pytocs.Translate
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
             var sym = new SymbolGenerator();
-            var xlt = new StatementTranslator(gen, sym);
+            var xlt = new StatementTranslator(gen, sym, new HashSet<string>());
             stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();

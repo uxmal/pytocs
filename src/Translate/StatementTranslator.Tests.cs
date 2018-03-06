@@ -49,7 +49,7 @@ namespace Pytocs.Translate
             var stm = par.stmt();
             var gen = new CodeGenerator(new CodeCompileUnit(), "", "module");
             gen.SetCurrentMethod(new CodeMemberMethod());
-            var xlt = new StatementTranslator(gen, new SymbolGenerator());
+            var xlt = new StatementTranslator(gen, new SymbolGenerator(), new HashSet<string>());
             stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -74,7 +74,7 @@ namespace Pytocs.Translate
             var stm = par.stmt();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
-            var xlt = new StatementTranslator(gen, new SymbolGenerator());
+            var xlt = new StatementTranslator(gen, new SymbolGenerator(), new HashSet<string>());
             stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -117,7 +117,7 @@ namespace Pytocs.Translate
             var stm = par.stmt();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
-            var xlt = new StatementTranslator(gen, new SymbolGenerator());
+            var xlt = new StatementTranslator(gen, new SymbolGenerator(), new HashSet<string>());
             stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -1458,6 +1458,35 @@ public static object func(object cfg_node) {
             get {
                 return this.simos;
             }
+        }
+    }
+}
+";
+            #endregion
+            Assert.AreEqual(sExp, XlatModule(pySrc));
+        }
+
+        [Test(Description = "Reported in GitHub #15")]
+        public void Stmt_Global()
+        {
+            var pySrc =
+@"class foo:
+    g = 42
+
+    def fn():
+        global g
+        g = 0
+";
+            var sExp =
+            #region Expected 
+@"public static class testModule {
+    
+    public class foo {
+        
+        public object g = 42;
+        
+        public static object fn() {
+            g = 0;
         }
     }
 }

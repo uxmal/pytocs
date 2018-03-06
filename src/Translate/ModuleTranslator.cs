@@ -30,7 +30,7 @@ namespace Pytocs.Translate
         private State scope;
         private CodeGenerator gen;
 
-        public ModuleTranslator(State scope, CodeGenerator gen) : base(gen, new SymbolGenerator())
+        public ModuleTranslator(State scope, CodeGenerator gen) : base(gen, new SymbolGenerator(), new HashSet<string>())
         {
             this.scope = scope;
             this.gen = gen;

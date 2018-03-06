@@ -21,7 +21,7 @@ namespace Pytocs.Translate
         {
             var method = gen.LambdaMethod(parms, () => Xlat(f.body));
             GenerateTupleParameterUnpackers(method);
-            LocalVariableGenerator.Generate(method);
+            LocalVariableGenerator.Generate(method, globals);
             return method;
         }
 
