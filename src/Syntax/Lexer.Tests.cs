@@ -165,11 +165,11 @@ namespace Pytocs.Syntax
         [Test]
         public void LexInt()
         {
-            Assert.AreEqual(0, (long)Lex("0").Value);
-            Assert.AreEqual(1, (long)Lex("1").Value);
-            Assert.AreEqual(30, (long)Lex("30").Value);
-            Assert.AreEqual(0xF, (long)Lex("0xF").Value);
-            Assert.AreEqual(0xed, (long)Lex("0xed").Value);
+            Assert.AreEqual(0, (int)Lex("0").Value);
+            Assert.AreEqual(1, (int)Lex("1").Value);
+            Assert.AreEqual(30, (int)Lex("30").Value);
+            Assert.AreEqual(0xF, (int)Lex("0xF").Value);
+            Assert.AreEqual(0xed, (int)Lex("0xed").Value);
             Assert.AreEqual(10, (long)Lex("0o12").Value);
             Assert.AreEqual(13, (long)Lex("0O15").Value);
             Assert.AreEqual(0xA, (long)Lex("0b1010").Value);

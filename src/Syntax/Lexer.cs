@@ -200,11 +200,11 @@ namespace Pytocs.Syntax
         private Token GetToken()
         {
             this.sb = new StringBuilder();
-            State oldState = (State)( -1);
+            State oldState = (State)(-1);
             for (; ; )
             {
                 int c = rdr.Peek();
-                char ch = (char) c;
+                char ch = (char)c;
                 switch (st)
                 {
                 case State.Start:
@@ -218,7 +218,7 @@ namespace Pytocs.Syntax
                         if (ch != '#')
                         {
                             int lastIndent = indents.Peek();
-                            if (indent > lastIndent && ch != '#')
+                            if (indent > lastIndent)
                             {
                                 st = State.Base;
                                 indents.Push(indent);
@@ -226,15 +226,7 @@ namespace Pytocs.Syntax
                             }
                             else if (indent < lastIndent)
                             {
-                                var oldIndent = indents.Pop();
-                                if (indent > indents.Peek())
-                                {
-                                    if (ch != '#')
-                                        throw Error("Indentation of line is incorrect.");
-                                    indents.Push(oldIndent);
-                                }
-                                else
-                                {
+                                indents.Pop();
                                 lastIndent = indents.Peek();
                                 if (indent > lastIndent)
                                     throw Error("Indentation of line is incorrect.");
@@ -512,7 +504,7 @@ namespace Pytocs.Syntax
                             Accum(ch, State.Decimal);
                             break;
                         }
-                        return Token(TokenType.INTEGER, (object) 0L);
+                        return Token(TokenType.INTEGER, (object)0);
                     }
                     break;
                 case State.Decimal:
@@ -534,7 +526,7 @@ namespace Pytocs.Syntax
                             Accum(ch, State.Decimal);
                             break;
                         }
-                        return Token(TokenType.INTEGER, Convert.ToInt64(sb.ToString()));
+                        return Token(TokenType.INTEGER, Convert.ToInt32(sb.ToString()));
                     }
                     break;
                 case State.RealFraction:
@@ -666,7 +658,7 @@ namespace Pytocs.Syntax
                 case State.BlankLineComment:
                     switch (ch)
                     {
-                    case '\r': indent = 0; return Token(TokenType.COMMENT, sb.ToString(), State.Base); 
+                    case '\r': indent = 0; return Token(TokenType.COMMENT, sb.ToString(), State.Base);
                     case '\n': indent = 0; return Token(TokenType.COMMENT, sb.ToString(), State.Base);
                     default:
                         if (c < 0)
@@ -687,7 +679,7 @@ namespace Pytocs.Syntax
                 case State.UnicodeStringPrefix:
                     switch (ch)
                     {
-                    case '"':  unicodeString = true; sb.Clear(); Transition(State.Quote); break;
+                    case '"': unicodeString = true; sb.Clear(); Transition(State.Quote); break;
                     case '\'': unicodeString = true; sb.Clear(); Transition(State.Apos); break;
                     default: st = State.Id; break;
                     }
@@ -801,7 +793,7 @@ namespace Pytocs.Syntax
                     switch (ch)
                     {
                     case '\'': Transition(State.EQuote); break;
-                    case '\r': ++LineNumber;  AccumString(c, st); break;
+                    case '\r': ++LineNumber; AccumString(c, st); break;
                     default: AccumString(c, State.QuoteString3); break;
                     }
                     break;
@@ -851,29 +843,29 @@ namespace Pytocs.Syntax
                     }
                     Accum(ch, oldState);
                     break;
-                    //switch (ch)
-                    //{
-                    //case '\n': st = oldState; Advance(); break;
-                    //case '\\': Accum(ch, oldState); break;
-                    //case '\'': Accum(ch, oldState); break;
-                    //case '\"': Accum(ch, oldState); break;
-                    //case 'a': Accum('\a', oldState); break;
-                    //case 'b': Accum('\b', oldState); break;
-                    //case 'f': Accum('\f', oldState); break;
-                    //case 'n': Accum('\n', oldState); break;
-                    //case 'r': Accum('\r', oldState); break;
-                    //case 't': Accum('\t', oldState); break;
-                    //case 'u': sb.Append(ch);  hexDigits = 4; charConst = 0; Transition(State.StringEscapeHex); break;
-                    //case 'v': Accum('\v', oldState); break;
-                    //case '0':
-                    //case '3': 
-                    //    st = oldState;
-                    //    sbEscapedCode = new StringBuilder(); 
-                    //    sbEscapedCode.Append(ch);
-                    //    Transition(State.StringEscapeDecimal);
-                    //    break;
-                    //default: throw new FormatException(string.Format("Unrecognized string escape character {0} (U+{1:X4}).", ch, c));
-                    //}
+                //switch (ch)
+                //{
+                //case '\n': st = oldState; Advance(); break;
+                //case '\\': Accum(ch, oldState); break;
+                //case '\'': Accum(ch, oldState); break;
+                //case '\"': Accum(ch, oldState); break;
+                //case 'a': Accum('\a', oldState); break;
+                //case 'b': Accum('\b', oldState); break;
+                //case 'f': Accum('\f', oldState); break;
+                //case 'n': Accum('\n', oldState); break;
+                //case 'r': Accum('\r', oldState); break;
+                //case 't': Accum('\t', oldState); break;
+                //case 'u': sb.Append(ch);  hexDigits = 4; charConst = 0; Transition(State.StringEscapeHex); break;
+                //case 'v': Accum('\v', oldState); break;
+                //case '0':
+                //case '3': 
+                //    st = oldState;
+                //    sbEscapedCode = new StringBuilder(); 
+                //    sbEscapedCode.Append(ch);
+                //    Transition(State.StringEscapeDecimal);
+                //    break;
+                //default: throw new FormatException(string.Format("Unrecognized string escape character {0} (U+{1:X4}).", ch, c));
+                //}
                 case State.StringEscapeHex:
                     switch (ch)
                     {
@@ -886,12 +878,12 @@ namespace Pytocs.Syntax
                     case '6':
                     case '7':
                     case '8':
-                    case '9': 
-                        charConst = charConst * 16 + (ch-'0'); 
+                    case '9':
+                        charConst = charConst * 16 + (ch - '0');
                         Advance();
                         if (--hexDigits == 0)
                         {
-                            sb.Append((char) charConst);
+                            sb.Append((char)charConst);
                             st = oldState;
                         }
                         break;
@@ -905,7 +897,7 @@ namespace Pytocs.Syntax
                         Advance();
                         if (--hexDigits == 0)
                         {
-                            sb.Append((char) charConst);
+                            sb.Append((char)charConst);
                             st = oldState;
                         }
                         break;
@@ -919,7 +911,7 @@ namespace Pytocs.Syntax
                         Advance();
                         if (--hexDigits == 0)
                         {
-                            sb.Append((char) charConst);
+                            sb.Append((char)charConst);
                             st = oldState;
                         }
                         break;

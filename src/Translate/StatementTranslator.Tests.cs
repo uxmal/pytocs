@@ -1347,9 +1347,8 @@ c.de = ""f"";
         public virtual object method1() {
         }
         
-        public virtual object method(object arg1) {
-            // another method
         public virtual object method2(object arg1) {
+            // another method
             return arg1 + 1;
         }
     }
