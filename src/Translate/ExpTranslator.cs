@@ -579,6 +579,11 @@ namespace Pytocs.Translate
             return new CodeUnaryOperatorExpression(mppyoptocsop[u.op], e);
         }
 
+        public CodeExpression VisitBigLiteral(BigLiteral bigLiteral)
+        {
+            return m.Prim(bigLiteral.Value);
+        }
+
         public CodeExpression VisitBinExp(BinExp bin)
         {
             if (bin.op == Op.Mod &&

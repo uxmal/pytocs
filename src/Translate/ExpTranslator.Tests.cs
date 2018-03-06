@@ -567,6 +567,14 @@ namespace Pytocs.Translate
             var sExp = "1E-05";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
+
+        [Test]
+        public void Ex_SmallInteger()
+        {
+            var pySrc = "128";
+            var sExp = "128";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
     }
 }
 #endif

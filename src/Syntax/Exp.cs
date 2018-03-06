@@ -20,6 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Diagnostics;
 using System.Text;
+using System.Numerics;
 
 namespace Pytocs.Syntax
 {
@@ -248,6 +249,33 @@ namespace Pytocs.Syntax
         {
             writer.Write("{0}L", Value);
         }
+    }
+
+    public class BigLiteral : Exp
+    {
+        public BigInteger Value { get; }
+
+        public BigLiteral(BigInteger p, string filename, int start, int end) : base(filename, start, end)
+        {
+            this.Value = p;
+        }
+
+
+        public override T Accept<T>(IExpVisitor<T> v)
+        {
+            return v.VisitBigLiteral(this);
+        }
+
+        public override void Accept(IExpVisitor v)
+        {
+            v.VisitBigLiteral(this);
+        }
+
+        public override void Write(TextWriter writer)
+        {
+            writer.Write("{0}", Value);
+        }
+
     }
 
     public class RealLiteral : Exp

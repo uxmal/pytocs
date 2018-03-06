@@ -122,12 +122,15 @@
     <Compile Include="Syntax\AliasedName.cs" />
     <Compile Include="Syntax\Argument.cs" />
     <Compile Include="Syntax\ClassDef.cs" />
+    <Compile Include="Syntax\CommentFilter.cs" />
+    <Compile Include="Syntax\CommentFilter.Tests.cs" />
     <Compile Include="Syntax\Decorator.cs" />
     <Compile Include="Syntax\DottedName.cs" />
     <Compile Include="Syntax\ExceptHandler.cs" />
     <Compile Include="Syntax\Exp.cs" />
     <Compile Include="Syntax\FunctionDef.cs" />
     <Compile Include="Syntax\IExpVisitor.cs" />
+    <Compile Include="Syntax\ILexer.cs" />
     <Compile Include="Syntax\IStatementVisitor.cs" />
     <Compile Include="Syntax\Lexer.cs" />
     <Compile Include="Syntax\Lexer.Tests.cs" />

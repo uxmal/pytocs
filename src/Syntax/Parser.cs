@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -315,9 +316,9 @@ yield_expr: 'yield' [testlist]
         #endregion
 
         private string filename;
-        private Lexer lexer;
+        private ILexer lexer;
 
-        public Parser(string filename, Lexer lexer)
+        public Parser(string filename, ILexer lexer)
         {
             this.filename = filename;
             this.lexer = lexer;
@@ -416,7 +417,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 Expect(TokenType.RPAREN);
             }
             var posEnd = Expect(TokenType.NEWLINE).Start;
-            return new Decorator(dn, args,filename, posStart, posEnd);
+            return new Decorator(dn, args, filename, posStart, posEnd);
         }
 
         private bool Peek(TokenType tokenType)
@@ -433,7 +434,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         private bool Peek(TokenType tokenType, object value)
         {
             var token = lexer.Peek();
-            return 
+            return
                 (token.Type == tokenType &&
                 value.Equals(token.Value));
         }
@@ -480,7 +481,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             var decs = decorators();
             Statement d = null;
-            for (;;)
+            for (; ; )
             {
                 if (Peek(TokenType.Def))
                 {
@@ -509,7 +510,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             var start = Expect(TokenType.Def).Start;
             var token = Expect(TokenType.ID);
-            var fnName = new Identifier((string) token.Value, filename, token.Start, token.End);
+            var fnName = new Identifier((string)token.Value, filename, token.Start, token.End);
             Debug.Print("  Parsing {0}", fnName.Name);
             List<Parameter> parms = parameters();
             Exp t = null;
@@ -522,12 +523,12 @@ eval_input: testlist NEWLINE* ENDMARKER
             var vararg = parms.Where(p => p.vararg).SingleOrDefault();
             var kwarg = parms.Where(p => p.keyarg).SingleOrDefault();
             var fndef = new FunctionDef(
-                fnName, 
+                fnName,
                 parms,
-                vararg?.Id, 
+                vararg?.Id,
                 kwarg?.Id,
                 t,
-                s, 
+                s,
                 filename, start, s.End);
             return new List<Statement> { fndef };
         }
@@ -652,7 +653,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             return args;
         }
 
-// fpdef: NAME | '(' fplist ')'
+        // fpdef: NAME | '(' fplist ')'
         // tfpdef: NAME [':' test]
         Parameter fpdef()
         {
@@ -699,10 +700,10 @@ eval_input: testlist NEWLINE* ENDMARKER
             return p;
         }
 
-//varargslist: 
-//        (vfpdef ['=' test] (',' vfpdef ['=' test])* [',' ['*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] | '**' vfpdef]]
-//        |  '*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] 
-//        | '**' vfpdef)
+        //varargslist: 
+        //        (vfpdef ['=' test] (',' vfpdef ['=' test])* [',' ['*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] | '**' vfpdef]]
+        //        |  '*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] 
+        //        | '**' vfpdef)
         public List<VarArg> varargslist()
         {
             var args = new List<VarArg>();
@@ -748,7 +749,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             return args;
         }
-//vfpdef: NAME
+        //vfpdef: NAME
         public Identifier vfpdef()
         {
             var token = Expect(TokenType.ID);
@@ -757,7 +758,7 @@ eval_input: testlist NEWLINE* ENDMARKER
 
 
         static HashSet<TokenType> compoundStatement_first = new HashSet<TokenType>() {
-            TokenType.If, TokenType.While, TokenType.For, TokenType.Try, TokenType.With, 
+            TokenType.If, TokenType.While, TokenType.For, TokenType.Try, TokenType.With,
             TokenType.Def, TokenType.Class, TokenType.AT
         };
 
@@ -867,7 +868,8 @@ eval_input: testlist NEWLINE* ENDMARKER
                 }
             case TokenType.DEDENT:
                 Expect(TokenType.DEDENT);
-                if (PeekAndDiscard(TokenType.COMMENT, out var cc)){
+                if (PeekAndDiscard(TokenType.COMMENT, out var cc))
+                {
                     return new CommentStatement(filename, cc.Start, cc.End) { comment = (string)cc.Value };
                 }
                 else
@@ -894,18 +896,18 @@ eval_input: testlist NEWLINE* ENDMARKER
                 Exp e2;
                 if (Peek(TokenType.Yield))
                     e2 = yield_expr();
-                else 
+                else
                     e2 = testlist();
                 lhs = new AssignExp(lhs, op, e2, filename, lhs.Start, e2.End);
             }
-            else 
+            else
             {
                 Exp rhs = null;
                 while (PeekAndDiscard(TokenType.EQ))
                 {
                     if (Peek(TokenType.Yield))
                         rhs = yield_expr();
-                    else 
+                    else
                         rhs = testlist_star_expr();
                 }
                 if (rhs != null)
@@ -969,7 +971,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                     }
                 }
             }
-            return new PrintStatement(outputStream, args, trailing_comma, filename, printId.Start, posEnd );
+            return new PrintStatement(outputStream, args, trailing_comma, filename, printId.Start, posEnd);
         }
 
         //testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
@@ -991,7 +993,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             return exprs.Count == 1 ? exprs[0] : new ExpList(exprs, filename, 0, 0);
         }
-//augassign: ('+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' |
+        //augassign: ('+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' |
         //            '<<=' | '>>=' | '**=' | '//=')
         public Op augassign()
         {
@@ -1013,8 +1015,8 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
         }
 
-// For normal assignments, additional restrictions enforced by the interpreter
-// del_stmt: 'del' exprlist
+        // For normal assignments, additional restrictions enforced by the interpreter
+        // del_stmt: 'del' exprlist
         public Statement del_stmt()
         {
             var posStart = Expect(TokenType.Del).Start;
@@ -1061,15 +1063,15 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             return new ReturnStatement(e, filename, posStart, posEnd);
         }
-//yield_stmt: yield_expr
+        //yield_stmt: yield_expr
         public Statement yield_stmt()
         {
             var e =  yield_expr();
             return new YieldStatement(e, filename, e.Start, e.End);
         }
 
-//raise_stmt: 'raise' [test ['from' test]]
-//raise_stmt: 'raise' [test [',' test [',' Test]]]
+        //raise_stmt: 'raise' [test ['from' test]]
+        //raise_stmt: 'raise' [test [',' test [',' Test]]]
         public Statement raise_stmt()
         {
             Exp exToRaise = null;
@@ -1121,8 +1123,8 @@ eval_input: testlist NEWLINE* ENDMARKER
             return new ImportStatement(names, filename, posStart, names.Last().End);
         }
 
-// note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
-//import_from: ('from' (('.' | '...')* dotted_name | ('.' | '...')+)
+        // note below: the ('.' | '...') is necessary because '...' is tokenized as ELLIPSIS
+        //import_from: ('from' (('.' | '...')* dotted_name | ('.' | '...')+)
         //              'import' ('*' | '(' import_as_names ')' | import_as_names))
         public Statement import_from()
         {
@@ -1163,7 +1165,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             return new FromStatement(name, aliasNames, filename, posStart, posEnd);
         }
 
-//import_as_name: NAME ['as' NAME]
+        //import_as_name: NAME ['as' NAME]
         public AliasedName import_as_name()
         {
             var orig = id();
@@ -1173,7 +1175,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             return new AliasedName(orig,  alias, filename, orig.Start, alias.End);
         }
 
-//dotted_as_name: dotted_name ['as' NAME]
+        //dotted_as_name: dotted_name ['as' NAME]
         public AliasedName dotted_as_name()
         {
             var orig = dotted_name();
@@ -1188,7 +1190,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
         }
 
-//import_as_names: import_as_name (',' import_as_name)* [',']
+        //import_as_names: import_as_name (',' import_as_name)* [',']
         public List<AliasedName> import_as_names()
         {
             var aliases = new List<AliasedName>();
@@ -1201,7 +1203,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             return aliases;
         }
-//dotted_as_names: dotted_as_name (',' dotted_as_name)*
+        //dotted_as_names: dotted_as_name (',' dotted_as_name)*
         public List<AliasedName> dotted_as_names()
         {
             var aliases = new List<AliasedName>();
@@ -1213,7 +1215,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             return aliases;
         }
 
-//dotted_name: NAME ('.' NAME)*
+        //dotted_name: NAME ('.' NAME)*
         public DottedName dotted_name()
         {
             var segs = new List<Identifier>();
@@ -1230,7 +1232,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             return new DottedName(segs, filename, posStart, posEnd);
         }
 
-//global_stmt: 'global' NAME (',' NAME)*
+        //global_stmt: 'global' NAME (',' NAME)*
         public Statement global_stmt()
         {
             var posStart = Expect(TokenType.Global).Start;
@@ -1247,7 +1249,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             return new GlobalStatement(names, filename, posStart, posEnd);
         }
 
-//nonlocal_stmt: 'nonlocal' NAME (',' NAME)*
+        //nonlocal_stmt: 'nonlocal' NAME (',' NAME)*
         public Statement nonlocal_stmt()
         {
             var posStart = Expect(TokenType.Nonlocal).Start;
@@ -1263,7 +1265,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             return new NonlocalStatement(names, filename, posStart, posEnd);
         }
-//assert_stmt: 'assert' test [',' test]
+        //assert_stmt: 'assert' test [',' test]
         public Statement assert_stmt()
         {
             var posStart = Expect(TokenType.Assert).Start;
@@ -1276,7 +1278,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             return new AssertStatement(tests, filename, posStart, tests.Last().End);
         }
 
-//exec_stmt: 'exec' expr ['in' test [',' test]]
+        //exec_stmt: 'exec' expr ['in' test [',' test]]
         public ExecStatement exec_stmt()
         {
             var posStart = Expect(TokenType.Exec).Start;
@@ -1302,7 +1304,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             var token = Expect(TokenType.COMMENT);
             return new CommentStatement(filename, token.Start, token.End)
             {
-                comment = (string) token.Value
+                comment = (string)token.Value
             };
         }
 
@@ -1361,7 +1363,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 var item = stack.Pop();
                 ifStmt = new IfStatement(
-                    item.Item2, 
+                    item.Item2,
                     item.Item3,
                     es,
                     filename, item.Item1, item.Item3.End);
@@ -1488,7 +1490,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             var posStart = Expect(TokenType.With).Start;
             var ws = new List<WithItem>();
-            ws.Add( with_item());
+            ws.Add(with_item());
             while (PeekAndDiscard(TokenType.COMMA))
                 ws.Add(with_item());
             Expect(TokenType.COLON);
@@ -1507,7 +1509,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 e = expr();
             return new WithItem(t, e, filename, t.Start, (e ?? t).End);
         }
-        
+
         // NB compile.c makes sure that the default except clause is last
         //except_clause: 'except' [test ['as' NAME]]
         public AliasedExp except_clause()
@@ -1548,7 +1550,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 while (!Peek(TokenType.INDENT))
                 {
                     var token = Expect(TokenType.COMMENT);
-                    stmts.Add(new CommentStatement(filename, token.Start, token.End) { comment = (string) token.Value });
+                    stmts.Add(new CommentStatement(filename, token.Start, token.End) { comment = (string)token.Value });
                     Expect(TokenType.NEWLINE);
                 }
                 Expect(TokenType.INDENT);
@@ -1671,7 +1673,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             if (PeekAndDiscard(TokenType.Not, out var token))
             {
                 var test = not_test();
-                return new UnaryExp ( Op.Not, test, filename, token.Start, test.End);
+                return new UnaryExp(Op.Not, test, filename, token.Start, test.End);
             }
             else
             {
@@ -1743,7 +1745,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 var r = xor_expr();
                 if (r == null)
                     throw Unexpected();
-                e = new BinExp (Op.BitOr, e, r, filename, e.Start, r.End);
+                e = new BinExp(Op.BitOr, e, r, filename, e.Start, r.End);
             }
             return e;
         }
@@ -1945,17 +1947,15 @@ eval_input: testlist NEWLINE* ENDMARKER
                 }
                 return byteStr;
             case TokenType.INTEGER:
-                t = lexer.Get();
-                return new IntLiteral((long) t.Value, filename, t.Start, t.End);
             case TokenType.LONGINTEGER:
                 t = lexer.Get();
-                return new LongLiteral((long) t.Value, filename, t.Start, t.End);
+                return NumericLiteral(t);
             case TokenType.REAL:
                 t = lexer.Get();
-                return new RealLiteral((double) t.Value, filename, t.Start, t.End);
+                return new RealLiteral((double)t.Value, filename, t.Start, t.End);
             case TokenType.IMAG:
                 t = lexer.Get();
-                return new ImaginaryLiteral((double) t.Value, filename, t.Start, t.End);
+                return new ImaginaryLiteral((double)t.Value, filename, t.Start, t.End);
             case TokenType.ELLIPSIS:
                 t = lexer.Get();
                 return new Ellipsis(filename, t.Start, t.End);
@@ -1971,6 +1971,24 @@ eval_input: testlist NEWLINE* ENDMARKER
             default:
                 return null;
             }
+        }
+
+        private Exp NumericLiteral(Token t)
+        {
+            if (t.Value is BigInteger bignum)
+            {
+                return new BigLiteral(bignum, filename, t.Start, t.End);
+            }
+            else if (t.Value is long l)
+            {
+                return new LongLiteral(l, filename, t.Start, t.End);
+            }
+            else if (t.Value is int i)
+            {
+                return new IntLiteral(i, filename, t.Start, t.End);
+            }
+            else
+                throw new FormatException($"Unparseable long integer token {t}.");
         }
 
         //testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
@@ -2058,7 +2076,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             case TokenType.DOT:
                 lexer.Get();
                 tok = Expect(TokenType.ID);
-                var id = new Identifier((string) tok.Value, filename, core.Start, tok.End);
+                var id = new Identifier((string)tok.Value, filename, core.Start, tok.End);
                 return new AttributeAccess(core, id, filename, core.Start, tok.End);
             default:
                 throw Unexpected();
@@ -2253,7 +2271,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         public Identifier id()
         {
             var token = Expect(TokenType.ID);
-            return new Identifier((string) token.Value, filename, token.Start, token.End);
+            return new Identifier((string)token.Value, filename, token.Start, token.End);
         }
 
         //arglist: (argument ',')* (argument [',']
@@ -2267,7 +2285,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             Exp kwargs = null;
             if (Peek(TokenType.RPAREN, out var token))
                 return new Application(core, args, keywords, stargs, kwargs, filename, core.Start, token.End);
-            for (;;)
+            for (; ; )
             {
                 if (PeekAndDiscard(TokenType.OP_STAR))
                 {
@@ -2281,7 +2299,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                         throw Error("More than one kwargs.");
                     kwargs = test();
                 }
-                else 
+                else
                 {
                     var arg = argument();
                     if (arg != null)
@@ -2390,7 +2408,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 var t = test();
                 return new YieldFromExp(t, filename, posStart, t.End);
             }
-            else 
+            else
             {
                 var tl = testlist();
                 return new YieldExp(tl, filename, posStart, tl.End);

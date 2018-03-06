@@ -44,7 +44,8 @@ namespace Pytocs.Translate
         {
             var rdr = new StringReader(pyStmt);
             var lex = new Syntax.Lexer("foo.py", rdr);
-            var par = new Syntax.Parser("foo.py", lex);
+            var flt = new Syntax.CommentFilter(lex);
+            var par = new Syntax.Parser("foo.py", flt);
             var stm = par.stmt();
             var gen = new CodeGenerator(new CodeCompileUnit(), "", "module");
             gen.SetCurrentMethod(new CodeMemberMethod());
@@ -68,7 +69,8 @@ namespace Pytocs.Translate
         {
             var rdr = new StringReader(pyModule);
             var lex = new Syntax.Lexer("foo.py", rdr);
-            var par = new Syntax.Parser("foo.py", lex);
+            var flt = new Syntax.CommentFilter(lex);
+            var par = new Syntax.Parser("foo.py", flt);
             var stm = par.stmt();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
@@ -1345,8 +1347,8 @@ c.de = ""f"";
         public virtual object method1() {
         }
         
-        // another method
         public virtual object method2(object arg1) {
+            // another method
             return arg1 + 1;
         }
     }

@@ -47,6 +47,11 @@ namespace Pytocs.Translate
             throw new NotImplementedException();
         }
 
+        public void VisitBigLiteral(BigLiteral bigLiteral)
+        {
+            throw new NotImplementedException();
+        }
+
         public void VisitBinExp(BinExp bin)
         {
             throw new NotImplementedException();

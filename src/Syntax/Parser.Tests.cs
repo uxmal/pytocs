@@ -29,9 +29,12 @@ namespace Pytocs.Syntax
     {
         private static readonly string nl = Environment.NewLine;
 
-        private Lexer Lex(string input)
+        private ILexer Lex(string input)
         {
-            return new Lexer("foo.py", new StringReader(input));
+            return new CommentFilter(
+                new Lexer(
+                    "foo.py",
+                    new StringReader(input)));
         }
 
         private Exp ParseExp(string input)
@@ -48,10 +51,9 @@ namespace Pytocs.Syntax
             return par.stmt();
         }
 
-        private Statement ParseSuite(string input)
+        private SuiteStatement ParseSuite(string input)
         {
             var lex = Lex(input);
-            lex.Get();
             var par = new Parser("foo.py", lex);
             return par.suite();
         }
@@ -299,7 +301,7 @@ except:
     self.testForLiteral(self._returnToken)
     ### return token to caller
     return self._returnToken
-### handle lexical errors ....
+    ### handle lexical errors ....
 except antlr.RecognitionException, e:
     raise hell
 ");
@@ -313,8 +315,8 @@ except antlr.RecognitionException, e:
     self.testForLiteral(self._returnToken)
     ### return token to caller
     return self._returnToken
-except antlr.RecognitionException as e:
     ### handle lexical errors ....
+except antlr.RecognitionException as e:
     raise hell
 ";
             AssertStmt(sExp, pyStm);
@@ -608,17 +610,21 @@ else:
         public void Parse_Trailing_Comments_After_If()
         {
             var pySrc =
-@"if foo:
+@"def test():
+    if foo:
     foonicate()
-# wasn't foo, continue
+    # wasn't foo, continue
 ";
             var sExp =
-@"if foo:
+@"def test():
+    if foo:
     foonicate()
-# wasn't foo, continue";
-            AssertStmt(sExp, ParseStmt(pySrc));
+        # wasn't foo, continue
+    
+";
+            var pyStm = ParseFuncdef(pySrc);
+            Assert.AreEqual(sExp, pyStm.ToString());
         }
-
 
         [Test]
         public void Parse_NestedDef()

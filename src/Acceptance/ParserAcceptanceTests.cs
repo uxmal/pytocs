@@ -331,7 +331,40 @@ class foo:
         ordered_sinks = sorted(list(self.sinkholes), key =operator.itemgetter(0), reverse = True)
 
 ");
-            var sExp = "@@@";
+            var sExp =
+            #region Expected
+@"namespace test {
+    
+    using System.Linq;
+    
+    using System.Collections.Generic;
+    
+    public static class testModule {
+        
+        public class foo {
+            
+            public virtual object widen(object others) {
+                return this._combine(others);
+                //## HEAP MANAGEMENT
+            }
+            
+            // 
+            //         Find a sinkhole which is large enough to support `length` bytes.
+            // 
+            //         This uses first - fit.The first sinkhole(ordered in descending order by their address)
+            //         which can hold `length` bytes is chosen.If there are more than `length` bytes in the
+            //         sinkhole, a new sinkhole is created representing the remaining bytes while the old
+            //         sinkhole is removed.
+            //         
+            public virtual object get_max_sinkhole(object length) {
+                var ordered_sinks = this.sinkholes.ToList().OrderByDescending(@operator.itemgetter(0)).ToList();
+            }
+        }
+    }
+}
+";
+            #endregion
+
             Assert.AreEqual(sExp, s);
         }
     }

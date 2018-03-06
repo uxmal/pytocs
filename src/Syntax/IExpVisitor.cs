@@ -28,6 +28,7 @@ namespace Pytocs.Syntax
         void VisitApplication(Application appl);
         void VisitArrayRef(ArrayRef arrayRef);
         void VisitAssignExp(AssignExp assignExp);
+        void VisitBigLiteral(BigLiteral bigLiteral);
         void VisitBinExp(BinExp bin);
         void VisitBooleanLiteral(BooleanLiteral b);
         void VisitBytes(Bytes bytes);
@@ -66,6 +67,7 @@ namespace Pytocs.Syntax
         T VisitApplication(Application appl);
         T VisitArrayRef(ArrayRef arrayRef);
         T VisitAssignExp(AssignExp assignExp);
+        T VisitBigLiteral(BigLiteral bigLiteral);
         T VisitBinExp(BinExp bin);
         T VisitBooleanLiteral(BooleanLiteral b);
         T VisitBytes(Bytes bytes);

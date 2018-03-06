@@ -20,6 +20,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -28,7 +29,7 @@ namespace Pytocs.Syntax
     /// <summary>
     /// Lexer for Python.
     /// </summary>
-    public class Lexer
+    public class Lexer : ILexer
     {
         private string filename;
         private TextReader rdr;
@@ -118,7 +119,7 @@ namespace Pytocs.Syntax
             if (token.Type != TokenType.NONE)
             {
                 Token t = this.token;
-                token = new Token(0, TokenType.NONE, null, 0, 0);
+                token = new Token(0, 0, TokenType.NONE, null, 0, 0);
                 return t;
             }
             return GetToken();
@@ -199,11 +200,11 @@ namespace Pytocs.Syntax
         private Token GetToken()
         {
             this.sb = new StringBuilder();
-            State oldState = (State)( -1);
+            State oldState = (State)(-1);
             for (; ; )
             {
                 int c = rdr.Peek();
-                char ch = (char) c;
+                char ch = (char)c;
                 switch (st)
                 {
                 case State.Start:
@@ -214,9 +215,7 @@ namespace Pytocs.Syntax
                     case '\r': Transition(State.BlankLineCr); indent = 0; break;
                     case '\n': Advance(); ++LineNumber; indent = 0; break;
                     default:
-                        if (filename.EndsWith("strcmp.py") && LineNumber == 0x73)   //$DEBUG
-                            filename.ToString();
-                        if (ch != '#' || !lastLineEndedInComment)
+                        if (ch != '#')
                         {
                             int lastIndent = indents.Peek();
                             if (indent > lastIndent && ch != '#')
@@ -512,7 +511,7 @@ namespace Pytocs.Syntax
                             Accum(ch, State.Decimal);
                             break;
                         }
-                        return Token(TokenType.INTEGER, (object) 0L);
+                        return Token(TokenType.INTEGER, (object)0);
                     }
                     break;
                 case State.Decimal:
@@ -611,7 +610,22 @@ namespace Pytocs.Syntax
                     case 'l':
                         return EatChToken(TokenType.LONGINTEGER, Convert.ToInt64(sb.ToString(), 16));
                     default:
-                        return Token(TokenType.INTEGER, Convert.ToInt64(sb.ToString(), 16));
+                        if (int.TryParse(sb.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var num))
+                        {
+                            return Token(TokenType.INTEGER, num);
+                    }
+                        if (long.TryParse(sb.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var lnum))
+                        {
+                            return Token(TokenType.LONGINTEGER, lnum);
+                        }
+                        else if (BigInteger.TryParse(sb.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var bignum))
+                        {
+                            return Token(TokenType.LONGINTEGER, bignum);
+                        }
+                        else
+                        {
+                            throw new FormatException($"Invalid hexadecimal string {sb.ToString()}.");
+                        }
                     }
                     break;
                 case State.Octal:
@@ -651,7 +665,7 @@ namespace Pytocs.Syntax
                 case State.BlankLineComment:
                     switch (ch)
                     {
-                    case '\r': indent = 0; return Token(TokenType.COMMENT, sb.ToString(), State.Base); 
+                    case '\r': indent = 0; return Token(TokenType.COMMENT, sb.ToString(), State.Base);
                     case '\n': indent = 0; return Token(TokenType.COMMENT, sb.ToString(), State.Base);
                     default:
                         if (c < 0)
@@ -871,12 +885,12 @@ namespace Pytocs.Syntax
                     case '6':
                     case '7':
                     case '8':
-                    case '9': 
-                        charConst = charConst * 16 + (ch-'0'); 
+                    case '9':
+                        charConst = charConst * 16 + (ch - '0');
                         Advance();
                         if (--hexDigits == 0)
                         {
-                            sb.Append((char) charConst);
+                            sb.Append((char)charConst);
                             st = oldState;
                         }
                         break;
@@ -890,7 +904,7 @@ namespace Pytocs.Syntax
                         Advance();
                         if (--hexDigits == 0)
                         {
-                            sb.Append((char) charConst);
+                            sb.Append((char)charConst);
                             st = oldState;
                         }
                         break;
@@ -904,7 +918,7 @@ namespace Pytocs.Syntax
                         Advance();
                         if (--hexDigits == 0)
                         {
-                            sb.Append((char) charConst);
+                            sb.Append((char)charConst);
                             st = oldState;
                         }
                         break;
@@ -1028,7 +1042,7 @@ namespace Pytocs.Syntax
                 this.lastLineEndedInComment = (this.lastTokenType == TokenType.COMMENT);
             }
             this.st = newState;
-            var token = new Token(LineNumber, t, value, posStart, posEnd);
+            var token = new Token(LineNumber, indent, t, value, posStart, posEnd);
             posStart = posEnd;
             this.lastTokenType = t;
             return token;
