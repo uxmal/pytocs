@@ -575,6 +575,14 @@ namespace Pytocs.Translate
             var sExp = "128";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
+
+        [Test]
+        public void Ex_Github_Issue_14()
+        {
+            var pySrc = "len(x + y + z)";
+            var sExp = "(x + y + z).Count";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
     }
 }
 #endif
