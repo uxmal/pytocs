@@ -510,7 +510,7 @@ namespace Pytocs.Syntax
                     {
                     case 'L':
                     case 'l':
-                        return EatChToken(TokenType.LONGINTEGER, Convert.ToInt64(sb.ToString()));
+                        return LongInteger();
                     case 'e':
                     case 'E':
                         Accum(ch, State.RealExponent);
@@ -616,7 +616,7 @@ namespace Pytocs.Syntax
                         if (int.TryParse(sb.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var num))
                         {
                             return Token(TokenType.INTEGER, num);
-                    }
+                        }
                         if (long.TryParse(sb.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var lnum))
                         {
                             return Token(TokenType.LONGINTEGER, lnum);
@@ -689,7 +689,7 @@ namespace Pytocs.Syntax
                 case State.UnicodeStringPrefix:
                     switch (ch)
                     {
-                    case '"':  unicodeString = true; sb.Clear(); Transition(State.Quote); break;
+                    case '"': unicodeString = true; sb.Clear(); Transition(State.Quote); break;
                     case '\'': unicodeString = true; sb.Clear(); Transition(State.Apos); break;
                     default: st = State.Id; break;
                     }
@@ -803,7 +803,7 @@ namespace Pytocs.Syntax
                     switch (ch)
                     {
                     case '\'': Transition(State.EQuote); break;
-                    case '\r': ++LineNumber;  AccumString(c, st); break;
+                    case '\r': ++LineNumber; AccumString(c, st); break;
                     default: AccumString(c, State.QuoteString3); break;
                     }
                     break;
@@ -853,29 +853,29 @@ namespace Pytocs.Syntax
                     }
                     Accum(ch, oldState);
                     break;
-                    //switch (ch)
-                    //{
-                    //case '\n': st = oldState; Advance(); break;
-                    //case '\\': Accum(ch, oldState); break;
-                    //case '\'': Accum(ch, oldState); break;
-                    //case '\"': Accum(ch, oldState); break;
-                    //case 'a': Accum('\a', oldState); break;
-                    //case 'b': Accum('\b', oldState); break;
-                    //case 'f': Accum('\f', oldState); break;
-                    //case 'n': Accum('\n', oldState); break;
-                    //case 'r': Accum('\r', oldState); break;
-                    //case 't': Accum('\t', oldState); break;
-                    //case 'u': sb.Append(ch);  hexDigits = 4; charConst = 0; Transition(State.StringEscapeHex); break;
-                    //case 'v': Accum('\v', oldState); break;
-                    //case '0':
-                    //case '3': 
-                    //    st = oldState;
-                    //    sbEscapedCode = new StringBuilder(); 
-                    //    sbEscapedCode.Append(ch);
-                    //    Transition(State.StringEscapeDecimal);
-                    //    break;
-                    //default: throw new FormatException(string.Format("Unrecognized string escape character {0} (U+{1:X4}).", ch, c));
-                    //}
+                //switch (ch)
+                //{
+                //case '\n': st = oldState; Advance(); break;
+                //case '\\': Accum(ch, oldState); break;
+                //case '\'': Accum(ch, oldState); break;
+                //case '\"': Accum(ch, oldState); break;
+                //case 'a': Accum('\a', oldState); break;
+                //case 'b': Accum('\b', oldState); break;
+                //case 'f': Accum('\f', oldState); break;
+                //case 'n': Accum('\n', oldState); break;
+                //case 'r': Accum('\r', oldState); break;
+                //case 't': Accum('\t', oldState); break;
+                //case 'u': sb.Append(ch);  hexDigits = 4; charConst = 0; Transition(State.StringEscapeHex); break;
+                //case 'v': Accum('\v', oldState); break;
+                //case '0':
+                //case '3': 
+                //    st = oldState;
+                //    sbEscapedCode = new StringBuilder(); 
+                //    sbEscapedCode.Append(ch);
+                //    Transition(State.StringEscapeDecimal);
+                //    break;
+                //default: throw new FormatException(string.Format("Unrecognized string escape character {0} (U+{1:X4}).", ch, c));
+                //}
                 case State.StringEscapeHex:
                     switch (ch)
                     {
@@ -950,6 +950,18 @@ namespace Pytocs.Syntax
                 default:
                     throw Error($"Unhandled state {st}.");
                 }
+            }
+        }
+
+        private Token LongInteger()
+        {
+            try
+            {
+                return EatChToken(TokenType.LONGINTEGER,Convert.ToInt64(sb.ToString()));
+            }
+            catch
+            {
+                return EatChToken(TokenType.LONGINTEGER, (long)Convert.ToUInt64(sb.ToString()));
             }
         }
 
