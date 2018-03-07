@@ -166,7 +166,7 @@ namespace Pytocs.Translate
         public void ExPow()
         {
             string pySrc = "a  ** b ** c";
-            string sExp = "pow(a, pow(b, c))";
+            string sExp = "Math.Pow(a, Math.Pow(b, c))";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
 
