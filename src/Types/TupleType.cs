@@ -63,11 +63,6 @@ namespace Pytocs.Types
             return visitor.VisitTuple(this);
         }
 
-        public void setElementTypes(List<DataType> eltTypes)
-        {
-            this.eltTypes = eltTypes;
-        }
-
         public void add(DataType elt)
         {
             eltTypes.Add(elt);
@@ -78,7 +73,7 @@ namespace Pytocs.Types
             return eltTypes[i];
         }
 
-        public ListType toListType()
+        public ListType ToListType()
         {
             ListType t = new ListType();        //$ no call to factory.
             foreach (DataType e in eltTypes)

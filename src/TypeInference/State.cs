@@ -589,7 +589,7 @@ namespace Pytocs.TypeInference
             }
             else if (iterType is TupleType)
             {
-                this.Bind(analyzer, target, ((TupleType) iterType).toListType().eltType, kind);
+                this.Bind(analyzer, target, ((TupleType) iterType).ToListType().eltType, kind);
             }
             else
             {

@@ -1242,7 +1242,7 @@ namespace Pytocs.TypeInference
             }
             else if (vt is TupleType tup)
             {
-                return GetListSubscript(s, tup.toListType(), st);
+                return GetListSubscript(s, tup.ToListType(), st);
             }
             else if (vt is DictType dt)
             {

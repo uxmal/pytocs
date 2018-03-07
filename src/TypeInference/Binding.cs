@@ -108,9 +108,7 @@ namespace Pytocs.TypeInference
         public Str GetDocString()
         {
             Node parent = node.Parent;
-            var funcDef = parent as Pytocs.Syntax.FunctionDef;
-            var classDef = parent as Pytocs.Syntax.ClassDef;
-            if (funcDef != null && funcDef.name == node)
+            if (parent is Pytocs.Syntax.FunctionDef funcDef && funcDef.name == node)
                 return parent.GetDocString();
             else
                 return node.GetDocString();

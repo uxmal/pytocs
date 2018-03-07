@@ -406,7 +406,6 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitArgument(Argument a)
         {
-            Debug.Print("  arg {0}", a);
             if (a is ListArgument)
             {
                 return m.Appl(
@@ -463,14 +462,7 @@ namespace Pytocs.Translate
             m.EnsureImport("System.Collections.Generic");
             var init = new CodeObjectCreateExpression
             {
-                Type = new CodeTypeReference("Dictionary")
-                {
-                    TypeArguments =
-                    {
-                        m.TypeRef("object"),
-                        m.TypeRef("object"),
-                    }
-                },
+                Type = m.TypeRef("Dictionary", "object", "object"),
                 Initializer = new CodeCollectionInitializer
                 {
                     Values = items.ToArray()
@@ -485,7 +477,7 @@ namespace Pytocs.Translate
             m.EnsureImport("System.Collections");
             var init = new CodeObjectCreateExpression
             {
-                Type = new CodeTypeReference("HashSet"),
+                Type = m.TypeRef("HashSet"),
                 Initializer = new CodeCollectionInitializer
                 {
                     Values = items.ToArray()
@@ -598,42 +590,36 @@ namespace Pytocs.Translate
             {
                 return m.BinOp(l, opDst, r);
             }
-            if (bin.op == Op.Is)
+            switch (bin.op)
             {
+            case Op.Is:
                 if (bin.r is NoneExp)
                 {
                     return m.BinOp(l, CodeOperatorType.IdentityEquality, r);
                 }
-            }
-            if (bin.op == Op.IsNot)
-            {
+                else
+                {
+                    return m.Appl(
+                        m.MethodRef(
+                            m.TypeRefExpr("object"),
+                            "ReferenceEquals"),
+                        l,
+                        r);
+                }
+            case Op.IsNot:
                 return m.BinOp(l, CodeOperatorType.IdentityInequality, r);
-            }
-            if (bin.op == Op.In)
-            {
+            case Op.In:
                 return m.Appl(
                     m.MethodRef(r, "Contains"),
                      l);
-            }
-            if (bin.op == Op.NotIn)
-            {
+
+            case Op.NotIn:
                 return new CodeUnaryOperatorExpression(
                     CodeOperatorType.Not,
                     m.Appl(
                         m.MethodRef(r, "Contains"),
                         l));
-            }
-            if (bin.op == Op.Is)
-            {
-                return m.Appl(
-                    m.MethodRef(
-                        m.TypeRefExpr("object"),
-                        "ReferenceEquals"),
-                    l,
-                    r);
-            }
-            if (bin.op == Op.Exp)
-            {
+            case Op.Exp:
                 m.EnsureImport("System");
                 return m.Appl(
                     m.MethodRef(m.TypeRefExpr("Math"), "Pow"),

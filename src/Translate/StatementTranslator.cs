@@ -655,8 +655,8 @@ namespace Pytocs.Translate
                 gen.TypeRef(d.className.ToString()),
                 d.arguments.Select(a => new CodeAttributeArgument
                 {
-                     Name = a.name != null ? a.name.ToString() : null,
-                     Value = a.defval != null ? a.defval.Accept(xlat) : null,
+                     Name = a.name?.ToString(),
+                     Value = a.defval?.Accept(xlat),
                 }).ToArray());
         }
 
@@ -728,7 +728,7 @@ namespace Pytocs.Translate
         private CodeStatement Translate(WithItem wi)
         {
             CodeExpression e1 = wi.t.Accept(xlat);
-            CodeExpression e2 = wi.e != null ? wi.e.Accept(xlat) : null;
+            CodeExpression e2 = wi.e?.Accept(xlat);
             if (e2 != null)
                 return new CodeAssignStatement(e2, e1);
             else

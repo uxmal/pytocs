@@ -61,9 +61,9 @@ namespace org.yinwang.pysonar
         public bool hasOption(string key)
         {
             object v = optionsMap[key];
-            if (v is bool)
+            if (v is bool b)
             {
-                return (bool) v;
+                return b;
             }
             else
             {
