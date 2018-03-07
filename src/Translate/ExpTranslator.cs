@@ -636,7 +636,8 @@ namespace Pytocs.Translate
             {
                 m.EnsureImport("System");
                 return m.Appl(
-                    new CodeVariableReferenceExpression("Math.Pow"), l, r);
+                    m.MethodRef(m.TypeRefExpr("Math"), "Pow"),
+                    l, r);
             }
             return m.BinOp(l, mppyoptocsop[bin.op], r);
         }
