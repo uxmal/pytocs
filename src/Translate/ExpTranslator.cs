@@ -1,5 +1,5 @@
 ﻿#region License
-//  Copyright 2015 John Källén
+//  Copyright 2015-2018 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -699,7 +699,7 @@ namespace Pytocs.Translate
                     return m.Appl(
                         m.MethodRef(c, "SelectMany"),
                         m.Lambda(
-                            new CodeExpression[] {((Identifier)compFor.variable).Accept(this) },
+                              new CodeExpression[] {((Identifier)compFor.variable).Accept(this) },
                             join.collection.Accept(this)),
                         m.Lambda(
                             new CodeExpression[] { 
