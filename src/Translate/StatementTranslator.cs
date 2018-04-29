@@ -385,14 +385,21 @@ namespace Pytocs.Translate
                 gen.Foreach(exp, v, () => f.Body.Accept(this));
                 return;
             }
-            if (f.exprs is ExpList expList)
+            else if (f.exprs is ExpList expList)
             {
                 GenerateForTuple(f, expList.Expressions);
                 return;
             }
-            if (f.exprs is PyTuple tuple)
+            else if (f.exprs is PyTuple tuple)
             {
                 GenerateForTuple(f, tuple.values);
+                return;
+            }
+            else if(f.exprs is AttributeAccess attributeAccess)
+            {
+                var exp = f.exprs.Accept(xlat);
+                var v = f.tests.Accept(xlat);
+                gen.Foreach(exp, v, () => f.Body.Accept(this));
                 return;
             }
             throw new NotImplementedException();
