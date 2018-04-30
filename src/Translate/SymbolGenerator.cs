@@ -38,16 +38,35 @@ namespace Pytocs.Translate
             this.stack = new List<Dictionary<string, CodeExpression>>();
         }
 
+        /// <summary>
+        /// Generate a parameter to the current method with a unique name.
+        /// </summary>
+        /// <param name="prefix">Prefix to use for the parameter</param>
+        /// <param name="type">C# type of the parameter</param>
+        /// <returns>A variable reference.</returns>
         public CodeVariableReferenceExpression GenSymParameter(string prefix, CodeTypeReference type)
         {
             return GenSymAutomatic(prefix, type, true);
         }
 
+        /// <summary>
+        /// Generate a local variable in the current method with a unique name.
+        /// </summary>
+        /// <param name="prefix">Prefix to use for the local variable</param>
+        /// <param name="type">C# type of the parameter</param>
+        /// <returns>A variable reference.</returns>
         public CodeVariableReferenceExpression GenSymLocal(string prefix, CodeTypeReference type)
         {
             return GenSymAutomatic(prefix, type, false);
         }
 
+        /// <summary>
+        /// Generates a uniquely named parameter or local variable.
+        /// </summary>
+        /// <param name="prefix"></param>
+        /// <param name="type"></param>
+        /// <param name="parameter"></param>
+        /// <returns></returns>
         public CodeVariableReferenceExpression GenSymAutomatic(string prefix, CodeTypeReference type, bool parameter)
         {
             int i = 1;
@@ -60,8 +79,7 @@ namespace Pytocs.Translate
 
         public LocalSymbol EnsureLocalVariable(string name, CodeTypeReference type, bool parameter)
         {
-            LocalSymbol local;
-            if (!autos.TryGetValue(name, out local))
+            if (!autos.TryGetValue(name, out LocalSymbol local))
             {
                 local = new LocalSymbol(name, type, parameter);
                 autos.Add(name, local);

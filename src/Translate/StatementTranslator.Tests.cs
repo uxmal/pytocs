@@ -1030,8 +1030,8 @@ yx = _tup_1.Item1;
         addr_strs.append(""%#x"" % target_addr)
 ";
             var sExp =
-@"foreach (var _tup_1 in targets) {
-    this.target_addr = _tup_1;
+@"foreach (var _tmp_1 in targets) {
+    this.target_addr = _tmp_1;
     if (this.target_addr == null) {
         addr_strs.append(""default"");
     } else {

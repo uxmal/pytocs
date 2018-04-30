@@ -378,25 +378,20 @@ namespace Pytocs.Translate
 
         public void VisitFor(ForStatement f)
         {
-            if (f.exprs is Identifier)
+            switch (f.exprs)
             {
-                var exp = f.exprs.Accept(xlat);
+            case Identifier id:
+                var exp = id.Accept(xlat);
                 var v = f.tests.Accept(xlat);
                 gen.Foreach(exp, v, () => f.Body.Accept(this));
                 return;
-            }
-            else if (f.exprs is ExpList expList)
-            {
+            case ExpList expList:
                 GenerateForTuple(f, expList.Expressions);
                 return;
-            }
-            else if (f.exprs is PyTuple tuple)
-            {
+            case PyTuple tuple:
                 GenerateForTuple(f, tuple.values);
                 return;
-            }
-            else if (f.exprs is AttributeAccess attributeAccess)
-            {
+            case AttributeAccess attributeAccess:
                 GenerateForAttributeAccess(f, attributeAccess.Expression);
                 return;
             }
@@ -405,7 +400,7 @@ namespace Pytocs.Translate
 
         private void GenerateForAttributeAccess(ForStatement f, Exp id)
         {
-            var localVar = GenSymLocalTuple();
+            var localVar = gensym.GenSymLocal("_tmp_", gen.TypeRef("object"));
             var exp = f.exprs.Accept(xlat);
             var v = f.tests.Accept(xlat);
             gen.Foreach(localVar, v, () =>
