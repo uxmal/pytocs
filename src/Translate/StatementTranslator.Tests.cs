@@ -1020,6 +1020,29 @@ yx = _tup_1.Item1;
         }
 
         [Test]
+        public void Stmt_foreach_class_property()
+        {
+            var pySrc =
+@"for self.target_addr in targets:
+    if self.target_addr is None:
+        addr_strs.append(""default"")
+    else:
+        addr_strs.append(""%#x"" % target_addr)
+";
+            var sExp =
+@"foreach (var _tup_1 in targets) {
+    this.target_addr = _tup_1;
+    if (this.target_addr == null) {
+        addr_strs.append(""default"");
+    } else {
+        addr_strs.append(String.Format(""%#x"", target_addr));
+    }
+}
+";
+            Assert.AreEqual(sExp, XlatStmts(pySrc));
+        }
+
+        [Test]
         public void Stmt_Tuple_Assign()
         {
             var pySrc =

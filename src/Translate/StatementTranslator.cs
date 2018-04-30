@@ -79,7 +79,7 @@ namespace Pytocs.Translate
                         result[dec] = propdef;
                         propdef.Getter = dec;
                         propdef.GetterDecoration = decoration;
-                    } 
+                    }
                     if (IsSetterDecorator(decoration))
                     {
                         var def = (FunctionDef)dec.Statement;
@@ -93,7 +93,7 @@ namespace Pytocs.Translate
             return result;
         }
 
-        private static PropertyDefinition  EnsurePropertyDefinition(Dictionary<string, PropertyDefinition> propdefs, FunctionDef def)
+        private static PropertyDefinition EnsurePropertyDefinition(Dictionary<string, PropertyDefinition> propdefs, FunctionDef def)
         {
             if (!propdefs.TryGetValue(def.name.Name, out var propdef))
             {
@@ -132,7 +132,7 @@ namespace Pytocs.Translate
             var suiteStmt = statements[i] as SuiteStatement;
             if (suiteStmt == null)
                 return nothing;
-            var expStm  = suiteStmt.stmts[0] as ExpStatement;
+            var expStm = suiteStmt.stmts[0] as ExpStatement;
             if (expStm == null)
                 return nothing;
             var str = expStm.Expression as Str;
@@ -265,7 +265,7 @@ namespace Pytocs.Translate
             {
                 var ex = e.Expression.Accept(xlat);
                 EnsureClassConstructor().Statements.Add(
-                    new CodeExpressionStatement( e.Expression.Accept(xlat)));
+                    new CodeExpressionStatement(e.Expression.Accept(xlat)));
             }
         }
 
@@ -337,9 +337,9 @@ namespace Pytocs.Translate
         private void ClassTranslator_GenerateField(Identifier id, ExpTranslator xlat, AssignExp ass)
         {
             IEnumerable<Exp> slotNames = null;
-            if (ass.Src is PyList srcList )
+            if (ass.Src is PyList srcList)
             {
-                slotNames= srcList.elts;
+                slotNames = srcList.elts;
             }
             else if (ass.Src is PyTuple srcTuple)
             {
@@ -395,14 +395,24 @@ namespace Pytocs.Translate
                 GenerateForTuple(f, tuple.values);
                 return;
             }
-            else if(f.exprs is AttributeAccess attributeAccess)
+            else if (f.exprs is AttributeAccess attributeAccess)
             {
-                var exp = f.exprs.Accept(xlat);
-                var v = f.tests.Accept(xlat);
-                gen.Foreach(exp, v, () => f.Body.Accept(this));
+                GenerateForAttributeAccess(f, attributeAccess.Expression);
                 return;
             }
             throw new NotImplementedException();
+        }
+
+        private void GenerateForAttributeAccess(ForStatement f, Exp id)
+        {
+            var localVar = GenSymLocalTuple();
+            var exp = f.exprs.Accept(xlat);
+            var v = f.tests.Accept(xlat);
+            gen.Foreach(localVar, v, () =>
+            {
+                gen.Assign(exp, localVar);
+                f.Body.Accept(this);
+            });
         }
 
         private void GenerateForTuple(ForStatement f, List<Exp> ids)
@@ -525,7 +535,7 @@ namespace Pytocs.Translate
 
         public void VisitPrint(PrintStatement p)
         {
-            CodeExpression e= null;
+            CodeExpression e = null;
             if (p.outputStream != null)
             {
                 e = p.outputStream.Accept(xlat);
@@ -639,7 +649,7 @@ namespace Pytocs.Translate
         private void GeneratePropertyGetter(Decorated getter)
         {
             var def = (FunctionDef)getter.Statement;
-            var mgen = new MethodGenerator(def,  null, def.parameters, false, gen);
+            var mgen = new MethodGenerator(def, null, def.parameters, false, gen);
             var comments = ConvertFirstStringToComments(def.body.stmts);
             gen.CurrentMemberComments.AddRange(comments);
             mgen.Xlat(def.body);
@@ -662,8 +672,8 @@ namespace Pytocs.Translate
                 gen.TypeRef(d.className.ToString()),
                 d.arguments.Select(a => new CodeAttributeArgument
                 {
-                     Name = a.name?.ToString(),
-                     Value = a.defval?.Accept(xlat),
+                    Name = a.name?.ToString(),
+                    Value = a.defval?.Accept(xlat),
                 }).ToArray());
         }
 
