@@ -17,8 +17,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using State = Pytocs.Core.TypeInference.State;
-using TypeStack = Pytocs.Core.TypeInference.TypeStack;
+using NameScope = Pytocs.TypeInference.NameScope;
+using TypeStack = Pytocs.TypeInference.TypeStack;
 
 namespace Pytocs.Core.Types
 {
@@ -30,10 +30,10 @@ namespace Pytocs.Core.Types
 
         protected DataType(State.StateType scopeType = State.StateType.SCOPE)
         {
-            this.Table = new State(null, scopeType);
+            this.Table = new NameScope(null, NameScope.StateType.SCOPE);
         }
 
-        public State Table { get; set; }
+        public NameScope Table { get; set; }
 
         public override bool Equals(object obj)
         {

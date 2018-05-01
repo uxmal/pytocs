@@ -27,7 +27,7 @@ namespace Pytocs.Core.Types
         public readonly FunctionDef? Definition;
         public Lambda? Lambda;
         public ClassType? Class = null;
-        public readonly State? scope;
+        public readonly NameScope? scope;
         public List<DataType?>? defaultTypes;       // types for default parameters (evaluated at def time)
 
         public FunType()
@@ -35,13 +35,13 @@ namespace Pytocs.Core.Types
             this.Class = null;
         }
 
-        public FunType(FunctionDef func, State env)
+        public FunType(FunctionDef func, NameScope env)
         {
             this.Definition = func;
             this.scope = env;
         }
 
-        public FunType(Lambda lambda, State env)
+        public FunType(Lambda lambda, NameScope env)
         {
             this.Lambda = lambda;
             this.scope = env;
@@ -232,6 +232,6 @@ namespace Pytocs.Core.Types
         public override DataType MakeGenericType(params DataType[] typeArguments)
         {
             throw new System.NotImplementedException();
-        }
+    }
     }
 }

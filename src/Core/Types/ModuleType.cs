@@ -15,7 +15,7 @@
 #endregion
 
 using System;
-using State = Pytocs.Core.TypeInference.State;
+using NameScope = Pytocs.Core.TypeInference.NameScope;
 
 namespace Pytocs.Core.Types
 {
@@ -24,12 +24,12 @@ namespace Pytocs.Core.Types
         public string name;
         public string qname;
 
-        public ModuleType(string name, string file, string qName, State parent)
+        public ModuleType(string name, string file, string qName, NameScope parent)
         {
             this.name = name;
             this.file = file;  // null for builtin modules
             this.qname = qName;
-            this.Table = new State(parent, State.StateType.MODULE);
+            this.Table = new NameScope(parent, NameScope.StateType.MODULE);
             Table.Path = qname;
             Table.DataType = this;
         }
@@ -64,6 +64,6 @@ namespace Pytocs.Core.Types
         public override DataType MakeGenericType(params DataType[] typeArguments)
         {
             throw new InvalidOperationException("ModuleType cannot be generic.");
-        }
+    }
     }
 }

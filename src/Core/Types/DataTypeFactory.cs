@@ -53,7 +53,7 @@ namespace Pytocs.Core.Types
             return Register(new ListType(elt0));
         }
 
-        public ModuleType CreateModule(string name, string file, string qName, State parent)
+        public ModuleType CreateModule(string name, string file, string qName, NameScope parent)
         {
             return Register(new ModuleType(name, file, qName, parent));
         }

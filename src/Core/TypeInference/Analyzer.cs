@@ -31,11 +31,11 @@ namespace Pytocs.Core.TypeInference
     {
         DataTypeFactory TypeFactory { get; }
         int CalledFunctions { get; set; }
-        State GlobalTable { get; }
+        NameScope GlobalTable { get; }
         HashSet<Name> Resolved { get; }
         HashSet<Name> Unresolved { get; }
 
-        DataType? LoadModule(List<Name> name, State state);
+        DataType? LoadModule(List<Name> name, NameScope state);
         Module? GetAstForFile(string file);
         string GetModuleQname(string file);
 
@@ -68,6 +68,7 @@ namespace Pytocs.Core.TypeInference
         private readonly List<string> loadedFiles = new List<string>();
         private readonly List<Binding> allBindings = new List<Binding>();
         private readonly Dictionary<Node, DataType> expTypes = new Dictionary<Node, DataType>();
+        private readonly Dictionary<Node, Binding> bindingMap = new Dictionary<Node, Binding>();
         private readonly Dictionary<string, List<Diagnostic>> semanticErrors = new Dictionary<string, List<Diagnostic>>();
         private readonly Dictionary<string, List<Diagnostic>> parseErrors = new Dictionary<string, List<Diagnostic>>();
         private readonly List<string> path = new List<string>();
@@ -97,7 +98,7 @@ namespace Pytocs.Core.TypeInference
             this.FileSystem = fs;
             this.logger = logger;
             this.TypeFactory = new DataTypeFactory(this);
-            this.GlobalTable = new State(null, State.StateType.GLOBAL);
+            this.GlobalTable = new NameScope(null, NameScope.StateType.GLOBAL);
             this.Resolved = new HashSet<Name>();
             this.Unresolved = new HashSet<Name>();
             this.References = new Dictionary<Node, List<Binding>>();
@@ -120,13 +121,13 @@ namespace Pytocs.Core.TypeInference
 
         public DataTypeFactory TypeFactory { get; private set; }
         public int CalledFunctions { get; set; }
-        public State GlobalTable { get; private set; }
+        public NameScope GlobalTable { get; private set; }
         public HashSet<Name> Resolved { get; private set; }
         public HashSet<Name> Unresolved { get; private set; }
         public Builtins Builtins { get; private set; }
         public Dictionary<Node, List<Binding>> References { get; private set; }
 
-        public State ModuleTable = new State(null, State.StateType.GLOBAL);
+        public NameScope ModuleTable = new NameScope(null, NameScope.StateType.GLOBAL);
 
         /// <summary>
         /// Main entry to the analyzer
@@ -152,7 +153,7 @@ namespace Pytocs.Core.TypeInference
         public void setCWD(string? cd)
         {
             if (cd is not null)
-            {
+        {
                 cwd = FileSystem.GetFullPath(cd);
             }
         }
@@ -262,6 +263,8 @@ namespace Pytocs.Core.TypeInference
             return allBindings;
         }
 
+        public Dictionary<Node, Binding> Bindings => bindingMap;
+
         public IEnumerable<Binding> GetModuleBindings()
         {
             return ModuleTable.table.Values
@@ -344,7 +347,7 @@ namespace Pytocs.Core.TypeInference
         }
 
         public void AddProblem(Node loc, string msg)
-        {
+            {
             string? file = loc?.Filename;
             if (file is not null)
             {
@@ -467,7 +470,7 @@ namespace Pytocs.Core.TypeInference
                 return "";
             }
             return string.Join(".", names.Select(n => n.Name));
-        }
+            }
 
         /// <summary>
         /// Find the path that contains modname. Used to find the starting point of locating a qname.
@@ -495,7 +498,7 @@ namespace Pytocs.Core.TypeInference
             return null;
         }
 
-        public DataType? LoadModule(List<Name> name, State state)
+        public DataType? LoadModule(List<Name> name, NameScope state)
         {
             if (name.Count == 0)
             {
@@ -599,9 +602,9 @@ namespace Pytocs.Core.TypeInference
             }
             else if (file_or_dir.EndsWith(suffix))
             {
-                LoadFile(file_or_dir);
+                    LoadFile(file_or_dir);
+                }
             }
-        }
 
         /// <summary>
         /// Count number of .py files
@@ -801,6 +804,7 @@ namespace Pytocs.Core.TypeInference
 
         public void RegisterBinding(Binding b)
         {
+            this.bindingMap[b.node] = b;
             allBindings.Add(b);
         }
 

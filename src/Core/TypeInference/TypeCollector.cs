@@ -16,10 +16,10 @@ namespace Pytocs.Core.TypeInference
         IStatementVisitor<DataType>,
         IExpVisitor<DataType>
     {
-        private readonly State scope;
+        private readonly NameScope scope;
         private readonly Analyzer analyzer;
 
-        public TypeCollector(State s, Analyzer analyzer)
+        public TypeCollector(NameScope s, Analyzer analyzer)
         {
             this.scope = s;
             this.analyzer = analyzer;
@@ -75,7 +75,7 @@ namespace Pytocs.Core.TypeInference
                     if (a.Src != null)
                     {
                         DataType valueType = a.Src!.Accept(this);
-                        scope.BindByScope(analyzer, a.Dst, valueType);
+            scope.BindByScope(analyzer, a.Dst, valueType);
                     }
                 }
             }
@@ -169,7 +169,7 @@ namespace Pytocs.Core.TypeInference
             else
             {
                 analyzer.addRef(a, targetType, bs);
-                return State.MakeUnion(bs);
+                return NameScope.MakeUnion(bs);
             }
         }
 
@@ -361,7 +361,7 @@ namespace Pytocs.Core.TypeInference
 
             BindMethodAttrs(analyzer, func);
 
-            State funcTable = new State(func.scope, State.StateType.FUNCTION);
+            NameScope funcTable = new State(func.scope, NameScope.StateType.FUNCTION);
             if (func.Table.Parent != null)
             {
                 funcTable.Path = func.Table.Parent.ExtendPath(analyzer, func.Definition.name.Name);
@@ -466,7 +466,7 @@ namespace Pytocs.Core.TypeInference
         private DataType BindParameters(
             Node? call,
             FunctionDef func,
-            State funcTable,
+            NameScope funcTable,
             List<Parameter> parameters,
             Identifier? rest,
             Identifier? restKw,
@@ -625,7 +625,7 @@ namespace Pytocs.Core.TypeInference
             b.IsStatic = true;
         }
 
-        public void AddSpecialAttribute(State s, string name, DataType proptype)
+        public void AddSpecialAttribute(NameScope s, string name, DataType proptype)
         {
             Binding b = analyzer.CreateBinding(name, Builtins.newTutUrl("classes.html"), proptype, BindingKind.ATTRIBUTE);
             s.Update(name, b);
@@ -830,7 +830,7 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitLambda(Lambda lambda)
         {
-            State env = scope.getForwarding();
+            NameScope env = scope.getForwarding();
             var fun = new FunType(lambda, env);
             fun.Table.Parent = this.scope;
             fun.Table.Path = scope.ExtendPath(analyzer, "{lambda}");
@@ -846,7 +846,7 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitFunctionDef(FunctionDef f, bool isAsync)
         {
-            State env = scope.getForwarding();
+            NameScope env = scope.getForwarding();
             FunType fun = new FunType(f, env);
             fun.Table.Parent = this.scope;
             fun.Table.Path = scope.ExtendPath(analyzer, f.name.Name);
@@ -880,7 +880,7 @@ namespace Pytocs.Core.TypeInference
 
         private BindingKind DetermineFunctionKind(FunctionDef f)
         {
-            if (scope.stateType == State.StateType.CLASS)
+            if (scope.stateType == NameScope.StateType.CLASS)
             {
                 if ("__init__" == f.name.Name)
                 {
@@ -895,7 +895,7 @@ namespace Pytocs.Core.TypeInference
             {
                 return BindingKind.FUNCTION;
             }
-        }
+            }
 
         public DataType VisitGlobal(GlobalStatement g)
         {
@@ -933,8 +933,8 @@ namespace Pytocs.Core.TypeInference
         public DataType VisitIf(IfStatement i)
         {
             DataType type1, type2;
-            State s1 = scope.Clone();
-            State s2 = scope.Clone();
+            NameScope s1 = scope.Clone();
+            NameScope s2 = scope.Clone();
 
             // Ignore condition for now
             i.Test.Accept(this);
@@ -1226,7 +1226,7 @@ namespace Pytocs.Core.TypeInference
                 analyzer.putRef(id, b);
                 analyzer.Resolved.Add(id);
                 analyzer.Unresolved.Remove(id);
-                return State.MakeUnion(b);
+                return NameScope.MakeUnion(b);
             }
             else if (id.Name == "True" || id.Name == "False")
             {
@@ -1391,13 +1391,13 @@ namespace Pytocs.Core.TypeInference
                 return GetListSubscript(s, tup.ToListType(), st);
             case DictType dt:
                 if (!dt.KeyType.Equals(st!))
-                {
+            {
                     AddWarning(s, "Possible KeyError (wrong type for subscript)");
                 }
                 return dt.ValueType;
             case StrType _:
                 if (st != null && (st is ListType || st.IsNumType()))
-                {
+            {
                     return vt;
                 }
                 else
@@ -1615,7 +1615,7 @@ namespace Pytocs.Core.TypeInference
                     if (sub.Lower != null)
                     {
                         dts.Add(TranslateAnnotation(sub.Lower, state));
-                    }
+    }
                     else
                     {
                         dts.Add(DataType.Unknown);

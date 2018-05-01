@@ -15,7 +15,7 @@
 #endregion
 
 using System.Collections.Generic;
-using State = Pytocs.Core.TypeInference.State;
+using NameScope = Pytocs.Core.TypeInference.NameScope;
 
 namespace Pytocs.Core.Types
 {
@@ -52,6 +52,6 @@ namespace Pytocs.Core.Types
         public override DataType MakeGenericType(params DataType[] typeArguments)
         {
             return new InstanceType(classType.MakeGenericType(typeArguments));
-        }
+    }
     }
 }

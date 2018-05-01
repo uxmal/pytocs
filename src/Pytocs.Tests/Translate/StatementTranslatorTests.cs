@@ -1136,7 +1136,7 @@ c.de = ""f"";
         try {
             using (var raw = open(args.wasm_file, ""rb"")) {
                 raw = raw.read();
-            }
+        }
         } catch (IOError) {
             Console.WriteLine(""[-] Can't open input file: "" + exc.ToString(), file: sys.stderr);
         }

@@ -17,7 +17,7 @@
 using Pytocs.Core.Syntax;
 using System;
 using System.Collections.Generic;
-using State = Pytocs.Core.TypeInference.State;
+using NameScope = Pytocs.TypeInference.NameScope;
 
 namespace Pytocs.Core.Types
 {
@@ -26,10 +26,10 @@ namespace Pytocs.Core.Types
         public string name;
         public InstanceType? instance;
 
-        public ClassType(string name, State? parent, string? path)
+        public ClassType(string name, NameScope? parent, string? path)
         {
             this.name = name;
-            this.Table = new State(parent, State.StateType.CLASS) { DataType = this };
+            this.Table = new NameScope(parent, NameScope.StateType.CLASS) { DataType = this };
             if (parent != null)
             {
                 Table.Path = path!;
@@ -40,7 +40,7 @@ namespace Pytocs.Core.Types
             }
         }
 
-        public ClassType(string name, State parent, string path, ClassType? superClass)
+        public ClassType(string name, NameScope parent, string path, ClassType? superClass)
             : this(name, parent, path)
         {
             if (superClass != null)
@@ -91,6 +91,6 @@ namespace Pytocs.Core.Types
         public override DataType MakeGenericType(params DataType[] typeArguments)
         {
             throw new NotImplementedException();
-        }
+    }
     }
 }
