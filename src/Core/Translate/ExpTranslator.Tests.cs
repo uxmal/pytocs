@@ -670,6 +670,14 @@ namespace Pytocs.Translate
 
             Assert.Equal(sExp, Xlat(pySrc));
         }
+
+        [Test(Description = "Reported in Github issue #21")]
+        public void Ex_nested_for_comprehension()
+        {
+            var pySrc = "((a, b) for a,b in list for a,b  in (a,b)))";
+            var sExp = "@@@";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
     }
 }
 #endif
