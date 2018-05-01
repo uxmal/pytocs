@@ -23,10 +23,10 @@ namespace Pytocs.Core.Types
     {
         public DataType classType;
 
-        public InstanceType(DataType c) : base(State.StateType.INSTANCE)
+        public InstanceType(DataType c) : base(NameScope.StateType.INSTANCE)
         {
-            Table.AddSuper(c.Table);
-            Table.Path = c.Table.Path;
+            Names.AddSuper(c.Names);
+            Names.Path = c.Names.Path;
             classType = c;
         }
 

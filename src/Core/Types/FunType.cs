@@ -108,7 +108,7 @@ namespace Pytocs.Core.Types
         {
             if (other is FunType fo)
             {
-                return fo.Table.Path.Equals(Table.Path) || object.ReferenceEquals(this , other);
+                return fo.Names.Path.Equals(Names.Path) || object.ReferenceEquals(this , other);
             }
             else
             {

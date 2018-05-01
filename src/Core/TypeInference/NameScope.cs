@@ -38,11 +38,10 @@ namespace Pytocs.Core.TypeInference
         }
 
         public IDictionary<string, ISet<Binding>> table = new Dictionary<string, ISet<Binding>>(0);
-<<<<<<< HEAD:src/Core/TypeInference/State.cs
         public IDictionary<string, DataType> DataTypes { get; } = new Dictionary<string, DataType>(); 
-        public State? Parent { get; set; }      // all are non-null except global table
-        public State? Forwarding { get; set; }  // link to the closest non-class scope, for lifting functions out
-        private List<State>? supers;
+        public NameScope? Parent { get; set; }      // all are non-null except global table
+        public NameScope? Forwarding { get; set; }  // link to the closest non-class scope, for lifting functions out
+        private List<NameScope>? supers;
         public ISet<string>? globalNames;
         public StateType stateType { get; set; }
         public string Path { get; set; }
@@ -52,16 +51,7 @@ namespace Pytocs.Core.TypeInference
         /// </summary>
         public DataType? DataType { get; set; }
 
-        public State(State? parent, StateType type)
-=======
-        public NameScope Parent { get; set; }      // all are non-null except global table
-        public NameScope Forwarding { get; set; }  // link to the closest non-class scope, for lifting functions out
-        public List<NameScope> supers;
-        public ISet<string> globalNames;
-        public StateType stateType;
-
-        public NameScope(NameScope parent, StateType type)
->>>>>>> 526dfa9 (Rename ambiguous 'State' to 'NameScope' for clarity.):src/Pytocs.Tests/NameScope.cs
+        public NameScope(NameScope? parent, StateType type)
         {
             this.Parent = parent;
             this.stateType = type;
@@ -144,15 +134,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-<<<<<<< HEAD:src/Core/TypeInference/State.cs
         /// <summary>
         /// Add add reference to a superclass scope to this scope.
         /// </summary>
         /// <param name="sup"></param>
-        public void AddSuper(State sup)
-=======
-        public void addSuper(NameScope sup)
->>>>>>> 526dfa9 (Rename ambiguous 'State' to 'NameScope' for clarity.):src/Pytocs.Tests/NameScope.cs
+        public void AddSuper(NameScope sup)
         {
             if (supers == null)
             {
@@ -317,27 +303,22 @@ namespace Pytocs.Core.TypeInference
             {
                 return b;
             }
-            if (supers != null && supers.Count > 0)
-            {
-                looked.Add(this);
-                foreach (State p in supers)
+                if (supers != null && supers.Count > 0)
                 {
-<<<<<<< HEAD:src/Core/TypeInference/State.cs
-                    b = p.LookupAttribute(attr);
-                    if (b != null)
-=======
                     looked.Add(this);
                     foreach (NameScope p in supers)
->>>>>>> 526dfa9 (Rename ambiguous 'State' to 'NameScope' for clarity.):src/Pytocs.Tests/NameScope.cs
                     {
-                        looked.Remove(this);
-                        return b;
+                        b = p.LookupAttribute(attr);
+                        if (b != null)
+                        {
+                            looked.Remove(this);
+                            return b;
+                        }
                     }
+                    looked.Remove(this);
                 }
-                looked.Remove(this);
+                return null;
             }
-            return null;
-        }
 
         /// <summary>
         /// Look for a binding named <paramref name="name"/> and if found, return its type.
@@ -399,17 +380,13 @@ namespace Pytocs.Core.TypeInference
         /// <summary>
         /// Find a symbol table of a certain type in the enclosing scopes.
         /// </summary>
-<<<<<<< HEAD:src/Core/TypeInference/State.cs
-        public State? getStateOfType(StateType type)
-=======
-        public NameScope getStateOfType(StateType type)
->>>>>>> 526dfa9 (Rename ambiguous 'State' to 'NameScope' for clarity.):src/Pytocs.Tests/NameScope.cs
+        public NameScope? getStateOfType(StateType type)
         {
             if (stateType == type)
             {
                 return this;
             }
-            else if (Parent == null)
+            else if (Parent is null)
             {
                 return null;
             }
@@ -424,13 +401,9 @@ namespace Pytocs.Core.TypeInference
          */
         public NameScope GetGlobalTable()
         {
-<<<<<<< HEAD:src/Core/TypeInference/State.cs
-            State result = getStateOfType(StateType.MODULE)!;
-=======
-            NameScope result = getStateOfType(StateType.MODULE);
->>>>>>> 526dfa9 (Rename ambiguous 'State' to 'NameScope' for clarity.):src/Pytocs.Tests/NameScope.cs
+            NameScope? result = getStateOfType(StateType.MODULE);
             Debug.Assert(result != null, "Couldn't find global table.");
-            return result!;
+            return result;
         }
 
 
@@ -509,11 +482,11 @@ namespace Pytocs.Core.TypeInference
                 break;
             default:
                 if (target != null)
-                {
+            {
                     analyzer.AddProblem(target, "invalid location for assignment");
-                }
-                break;
             }
+                break;
+        }
         }
 
 
@@ -572,16 +545,16 @@ namespace Pytocs.Core.TypeInference
                     if (xs.Count != vs.Length)
                     {
                         ReportUnpackMismatch(analyzer, xs, vs.Length);
-                    }
-                    else
-                    {
-                        for (int i = 0; i < xs.Count; i++)
-                        {
-                            this.Bind(analyzer, xs[i], vs[i], kind);
-                        }
-                    }
-                    break;
                 }
+                else
+                {
+                    for (int i = 0; i < xs.Count; i++)
+                    {
+                        this.Bind(analyzer, xs[i], vs[i], kind);
+                    }
+                }
+                    break;
+            }
             case ListType list:
                 Bind(analyzer, xs, list.ToTupleType(xs.Count), kind);
                 break;
@@ -590,7 +563,7 @@ namespace Pytocs.Core.TypeInference
                 break;
             default:
                 if (rvalue.IsUnknownType())
-                {
+            {
                     foreach (Exp x in xs)
                     {
                         this.Bind(analyzer, x, DataType.Unknown, kind);
@@ -639,7 +612,7 @@ namespace Pytocs.Core.TypeInference
             }
             else
             {
-                ISet<Binding>? ents = iterType.Table.LookupAttribute("__iter__");
+                ISet<Binding>? ents = iterType.Names.LookupAttribute("__iter__");
                 if (ents != null)
                 {
                     foreach (Binding ent in ents)
@@ -688,12 +661,12 @@ namespace Pytocs.Core.TypeInference
                 analyzer.AddProblem(attr, "Can't set attribute for UnknownType");
                 return;
             }
-            ISet<Binding>? bs = targetType.Table.LookupAttribute(attr.FieldName.Name);
+            ISet<Binding>? bs = targetType.Names.LookupAttribute(attr.FieldName.Name);
             if (bs != null)
             {
                 analyzer.addRef(attr, targetType, bs);
             }
-            targetType.Table.Insert(analyzer, attr.FieldName.Name, attr, attrType, BindingKind.ATTRIBUTE);
+            targetType.Names.Insert(analyzer, attr.FieldName.Name, attr, attrType, BindingKind.ATTRIBUTE);
         }
 
         public static void TransformExprs(Analyzer analyzer, List<Slice> exprs, NameScope s)

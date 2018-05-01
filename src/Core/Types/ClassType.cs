@@ -17,7 +17,7 @@
 using Pytocs.Core.Syntax;
 using System;
 using System.Collections.Generic;
-using NameScope = Pytocs.TypeInference.NameScope;
+using NameScope = Pytocs.Core.TypeInference.NameScope;
 
 namespace Pytocs.Core.Types
 {
@@ -29,14 +29,14 @@ namespace Pytocs.Core.Types
         public ClassType(string name, NameScope? parent, string? path)
         {
             this.name = name;
-            this.Table = new NameScope(parent, NameScope.StateType.CLASS) { DataType = this };
+            this.Names = new NameScope(parent, NameScope.StateType.CLASS) { DataType = this };
             if (parent != null)
             {
-                Table.Path = path!;
+                Names.Path = path!;
             }
             else
             {
-                Table.Path = name;
+                Names.Path = name;
             }
         }
 
@@ -56,7 +56,7 @@ namespace Pytocs.Core.Types
 
         public void AddSuper(DataType superclass)
         {
-            Table.AddSuper(superclass.Table);
+            Names.AddSuper(superclass.Names);
         }
 
         public InstanceType GetInstance()

@@ -149,8 +149,8 @@ namespace Pytocs.Core.TypeInference
                 type = DataType.Unknown;
             }
             var fun = new FunType(DataType.Unknown, type);
-            fun.Table.AddSuper(analyzer.Builtins.BaseFunction.Table);
-            fun.Table.Path = analyzer.Builtins.BaseFunction.Table.Path;
+            fun.Names.AddSuper(analyzer.Builtins.BaseFunction.Names);
+            fun.Names.Path = analyzer.Builtins.BaseFunction.Names.Path;
             return fun;
         }
 
@@ -208,14 +208,14 @@ namespace Pytocs.Core.TypeInference
 
             public void initBindings() { initBindings(this.table!); }
 
-            public abstract void initBindings(State table);
+            public abstract void initBindings(NameScope table);
 
             protected void createModuleType()
             {
                 if (module == null)
                 {
                     module = outer.newModule(name);
-                    table = module.Table;
+                    table = module.Names;
                     outer.analyzer.ModuleTable.Insert(outer.analyzer, name, liburl(), module, BindingKind.MODULE).IsBuiltin = true;
                 }
             }
@@ -344,7 +344,7 @@ namespace Pytocs.Core.TypeInference
         private void buildTypes()
         {
             new BuiltinsModule(this);
-            NameScope bt = Builtin.Table;
+            NameScope bt = Builtin.Names;
 
             objectType = newClass("object", bt);
             BaseType = newClass("type", bt, objectType);
@@ -449,7 +449,7 @@ namespace Pytocs.Core.TypeInference
             }
             for (int i = 1; i < mods.Length; i++)
             {
-                type = type.Table.LookupTypeOf(mods[i]);
+                type = type.Names.LookupTypeOf(mods[i]);
                 if (!(type is ModuleType))
                 {
                     return null;
@@ -476,15 +476,15 @@ namespace Pytocs.Core.TypeInference
             };
             foreach (string m in obj_methods)
             {
-                objectType.Table.Insert(analyzer, m, newLibUrl("stdtypes"), newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                objectType.Names.Insert(analyzer, m, newLibUrl("stdtypes"), newFunc(), BindingKind.METHOD).IsBuiltin = true;
             }
-            objectType.Table.Insert(analyzer, "__doc__", newLibUrl("stdtypes"), DataType.Str, BindingKind.CLASS).IsBuiltin = true;
-            objectType.Table.Insert(analyzer, "__class__", newLibUrl("stdtypes"), DataType.Unknown, BindingKind.CLASS).IsBuiltin = true;
+            objectType.Names.Insert(analyzer, "__doc__", newLibUrl("stdtypes"), DataType.Str, BindingKind.CLASS).IsBuiltin = true;
+            objectType.Names.Insert(analyzer, "__class__", newLibUrl("stdtypes"), DataType.Unknown, BindingKind.CLASS).IsBuiltin = true;
         }
 
         void buildTupleType()
         {
-            NameScope bt = BaseTuple.Table;
+            NameScope bt = BaseTuple.Names;
             string[] tuple_methods = 
             {
                 "__add__", "__contains__", "__eq__", "__ge__", "__getnewargs__",
@@ -510,27 +510,27 @@ namespace Pytocs.Core.TypeInference
             };
             foreach (string m in array_methods_none)
             {
-                BaseArray.Table.Insert(analyzer, m, newLibUrl("array"), newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                BaseArray.Names.Insert(analyzer, m, newLibUrl("array"), newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
             }
             string[] array_methods_num = { "count", "itemsize", };
             foreach (string m in array_methods_num)
             {
-                BaseArray.Table.Insert(analyzer, m, newLibUrl("array"), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                BaseArray.Names.Insert(analyzer, m, newLibUrl("array"), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
             }
             string[] array_methods_str = { "tostring", "tounicode", };
             foreach (string m in array_methods_str)
             {
-                BaseArray.Table.Insert(analyzer, m, newLibUrl("array"), newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                BaseArray.Names.Insert(analyzer, m, newLibUrl("array"), newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
             }
         }
 
         void buildListType()
         {
-            BaseList.Table.Insert(analyzer, "__getslice__", newDataModelUrl("object.__getslice__"),
+            BaseList.Names.Insert(analyzer, "__getslice__", newDataModelUrl("object.__getslice__"),
                     newFunc(BaseListInst), BindingKind.METHOD).IsBuiltin = true;
-            BaseList.Table.Insert(analyzer, "__getitem__", newDataModelUrl("object.__getitem__"),
+            BaseList.Names.Insert(analyzer, "__getitem__", newDataModelUrl("object.__getitem__"),
                     newFunc(BaseList), BindingKind.METHOD).IsBuiltin = true;
-            BaseList.Table.Insert(analyzer, "__iter__", newDataModelUrl("object.__iter__"),
+            BaseList.Names.Insert(analyzer, "__iter__", newDataModelUrl("object.__iter__"),
                     newFunc(BaseList), BindingKind.METHOD).IsBuiltin = true;
 
             string[] list_methods_none = {
@@ -538,12 +538,12 @@ namespace Pytocs.Core.TypeInference
         };
             foreach (string m in list_methods_none)
             {
-                BaseList.Table.Insert(analyzer, m, newLibUrl("stdtypes"), newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                BaseList.Names.Insert(analyzer, m, newLibUrl("stdtypes"), newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
             }
             string[] list_methods_num = { "count" };
             foreach (string m in list_methods_num)
             {
-                BaseList.Table.Insert(analyzer, m, newLibUrl("stdtypes"), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                BaseList.Names.Insert(analyzer, m, newLibUrl("stdtypes"), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
             }
         }
 
@@ -557,7 +557,7 @@ namespace Pytocs.Core.TypeInference
 
         void buildNumTypes()
         {
-            NameScope bft = DataType.Float.Table;
+            NameScope bft = DataType.Float.Names;
             string[] float_methods_num = {
                 "__abs__", "__add__", "__coerce__", "__div__", "__divmod__",
                 "__eq__", "__float__", "__floordiv__", "__format__",
@@ -573,7 +573,7 @@ namespace Pytocs.Core.TypeInference
             {
                 bft.Insert(analyzer, m, numUrl(), newFunc(DataType.Float), BindingKind.METHOD).IsBuiltin = true;
             }
-            NameScope bnt = DataType.Int.Table;
+            NameScope bnt = DataType.Int.Names;
             string[] num_methods_num = {
                 "__abs__", "__add__", "__and__",
                 "__class__", "__cmp__", "__coerce__", "__delattr__", "__div__",
@@ -597,7 +597,7 @@ namespace Pytocs.Core.TypeInference
             bnt.Insert(analyzer, "hex", numUrl(), newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
             bnt.Insert(analyzer, "conjugate", numUrl(), newFunc(DataType.Complex), BindingKind.METHOD).IsBuiltin = true;
 
-            NameScope bct = DataType.Complex.Table;
+            NameScope bct = DataType.Complex.Names;
             string[] complex_methods = {
                 "__abs__", "__add__", "__div__", "__divmod__",
                 "__float__", "__floordiv__", "__format__", "__getformat__", "__int__",
@@ -626,11 +626,11 @@ namespace Pytocs.Core.TypeInference
 
         void buildStrType()
         {
-            DataType.Str.Table.Insert(analyzer, "__getslice__", newDataModelUrl("object.__getslice__"),
+            DataType.Str.Names.Insert(analyzer, "__getslice__", newDataModelUrl("object.__getslice__"),
                     newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-            DataType.Str.Table.Insert(analyzer, "__getitem__", newDataModelUrl("object.__getitem__"),
+            DataType.Str.Names.Insert(analyzer, "__getitem__", newDataModelUrl("object.__getitem__"),
                     newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-            DataType.Str.Table.Insert(analyzer, "__iter__", newDataModelUrl("object.__iter__"),
+            DataType.Str.Names.Insert(analyzer, "__iter__", newDataModelUrl("object.__iter__"),
                     newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
 
             string[] str_methods_str = {
@@ -641,7 +641,7 @@ namespace Pytocs.Core.TypeInference
         };
             foreach (string m in str_methods_str)
             {
-                DataType.Str.Table.Insert(analyzer, m, newLibUrl("stdtypes.html#str." + m),
+                DataType.Str.Names.Insert(analyzer, m, newLibUrl("stdtypes.html#str." + m),
                         newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
             }
 
@@ -651,17 +651,17 @@ namespace Pytocs.Core.TypeInference
         };
             foreach (string m in str_methods_num)
             {
-                DataType.Str.Table.Insert(analyzer, m, newLibUrl("stdtypes.html#str." + m),
+                DataType.Str.Names.Insert(analyzer, m, newLibUrl("stdtypes.html#str." + m),
                         newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
             }
 
             string[] str_methods_list = { "split", "splitlines" };
             foreach (string m in str_methods_list)
             {
-                DataType.Str.Table.Insert(analyzer, m, newLibUrl("stdtypes.html#str." + m),
+                DataType.Str.Names.Insert(analyzer, m, newLibUrl("stdtypes.html#str." + m),
                         newFunc(newList(DataType.Str)), BindingKind.METHOD).IsBuiltin = true;
             }
-            DataType.Str.Table.Insert(analyzer, "partition", newLibUrl("stdtypes"),
+            DataType.Str.Names.Insert(analyzer, "partition", newLibUrl("stdtypes"),
                     newFunc(newTuple(DataType.Str)), BindingKind.METHOD).IsBuiltin = true;
         }
 
@@ -671,9 +671,9 @@ namespace Pytocs.Core.TypeInference
             string[] attrs = { "__doc__", "__file__", "__name__", "__package__" };
             foreach (string m in attrs)
             {
-                BaseModule.Table.Insert(analyzer, m, newTutUrl("modules.html"), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                BaseModule.Names.Insert(analyzer, m, newTutUrl("modules.html"), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
             }
-            BaseModule.Table.Insert(analyzer, "__dict__", newLibUrl("stdtypes", "modules"),
+            BaseModule.Names.Insert(analyzer, "__dict__", newLibUrl("stdtypes", "modules"),
                     newDict(DataType.Str, DataType.Unknown), BindingKind.ATTRIBUTE).IsBuiltin = true;
         }
 
@@ -681,7 +681,7 @@ namespace Pytocs.Core.TypeInference
         void buildDictType()
         {
             string url = "datastructures.html#dictionaries";
-            NameScope bt = BaseDict.Table;
+            NameScope bt = BaseDict.Names;
 
             bt.Insert(analyzer, "__getitem__", newTutUrl(url), newFunc(), BindingKind.METHOD).IsBuiltin = true;
             bt.Insert(analyzer, "__iter__", newTutUrl(url), newFunc(), BindingKind.METHOD).IsBuiltin = true;
@@ -714,7 +714,7 @@ namespace Pytocs.Core.TypeInference
         void buildFileType()
         {
             string url = "stdtypes.html#bltin-file-objects";
-            NameScope table = BaseFile.Table;
+            NameScope table = BaseFile.Names;
 
             string[] methods_unknown = {
                 "__enter__", "__exit__", "__iter__", "flush", "readinto", "truncate"
@@ -756,7 +756,7 @@ namespace Pytocs.Core.TypeInference
 
         void buildFunctionType()
         {
-            NameScope t = BaseFunction.Table;
+            NameScope t = BaseFunction.Names;
 
             foreach (string s in new[] { "func_doc", "__doc__", "func_name", "__name__", "__module__" })
             {
@@ -782,7 +782,7 @@ namespace Pytocs.Core.TypeInference
         // so we can remove the per-instance attributes from NClassDef.
         void buildClassType()
         {
-            NameScope t = BaseClass.Table;
+            NameScope t = BaseClass.Names;
 
             foreach (string s in new[] { "__name__", "__doc__", "__module__" })
             {
@@ -799,13 +799,13 @@ namespace Pytocs.Core.TypeInference
                 base(outer, "__builtin__")
             {
                 outer.Builtin = module = outer.newModule(name);
-                table = module.Table;
+                table = module.Names;
             }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 outer.analyzer.ModuleTable.Insert(outer.analyzer, name, liburl(), module!, BindingKind.MODULE).IsBuiltin = true;
-                table!.AddSuper(outer.BaseModule.Table);
+                table!.AddSuper(outer.BaseModule.Names);
 
                 addClass("None", newLibUrl("constants"), DataType.None);
                 addFunction("bool", newLibUrl("functions", "bool"), DataType.Bool);
@@ -907,7 +907,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addClass("array", newLibUrl("array", "array"), outer.BaseArray);
                 addClass("ArrayType", newLibUrl("array", "ArrayType"), outer.BaseArray);
@@ -923,7 +923,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addClass("error", liburl(), outer.newException("error", table!));
 
@@ -949,7 +949,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addStrFuncs(
                         "a2b_uu", "b2a_uu", "a2b_base64", "b2a_base64", "a2b_qp",
@@ -968,20 +968,20 @@ namespace Pytocs.Core.TypeInference
         {
             public Bz2Module(Builtins outer) : base(outer, "bz2") { }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 ClassType bz2 = outer.newClass("BZ2File", table, outer.BaseFile);  // close enough.
                 addClass("BZ2File", liburl(), bz2);
 
                 ClassType bz2c = outer.newClass("BZ2Compressor", table, outer.objectType);
-                bz2c.Table.Insert(outer.analyzer, "compress", newLibUrl("bz2", "sequential-de-compression"),
+                bz2c.Names.Insert(outer.analyzer, "compress", newLibUrl("bz2", "sequential-de-compression"),
                         outer.newFunc(DataType.Str), BindingKind.METHOD);
-                bz2c.Table.Insert(outer.analyzer, "flush", newLibUrl("bz2", "sequential-de-compression"),
+                bz2c.Names.Insert(outer.analyzer, "flush", newLibUrl("bz2", "sequential-de-compression"),
                         outer.newFunc(DataType.None), BindingKind.METHOD);
                 addClass("BZ2Compressor", newLibUrl("bz2", "sequential-de-compression"), bz2c);
 
                 ClassType bz2d = outer.newClass("BZ2Decompressor", table, outer.objectType);
-                bz2d.Table.Insert(outer.analyzer, "decompress", newLibUrl("bz2", "sequential-de-compression"),
+                bz2d.Names.Insert(outer.analyzer, "decompress", newLibUrl("bz2", "sequential-de-compression"),
                         outer.newFunc(DataType.Str), BindingKind.METHOD);
                 addClass("BZ2Decompressor", newLibUrl("bz2", "sequential-de-compression"), bz2d);
 
@@ -1003,7 +1003,7 @@ namespace Pytocs.Core.TypeInference
                 return newLibUrl("pickle", "module-cPickle");
             }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addUnknownFuncs("dump", "load", "dumps", "loads");
 
@@ -1019,13 +1019,13 @@ namespace Pytocs.Core.TypeInference
                         outer.newClass("BadPickleGet", table, unpicklingError), BindingKind.CLASS);
 
                 ClassType pickler = outer.newClass("Pickler", table, outer.objectType);
-                pickler.Table.Insert(outer.analyzer, "dump", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                pickler.Table.Insert(outer.analyzer, "clear_memo", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                pickler.Names.Insert(outer.analyzer, "dump", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                pickler.Names.Insert(outer.analyzer, "clear_memo", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Pickler", liburl(), pickler);
 
                 ClassType unpickler = outer.newClass("Unpickler", table, outer.objectType);
-                unpickler.Table.Insert(outer.analyzer, "load", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                unpickler.Table.Insert(outer.analyzer, "noload", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                unpickler.Names.Insert(outer.analyzer, "load", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                unpickler.Names.Insert(outer.analyzer, "noload", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Unpickler", liburl(), unpickler);
             }
         }
@@ -1048,7 +1048,7 @@ namespace Pytocs.Core.TypeInference
                 return newLibUrl("stringio", anchor);
             }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 ClassType StringIO = outer.newClass("StringIO", table, outer.BaseFile);
                 addFunction("StringIO", liburl(), new InstanceType(StringIO));
@@ -1066,7 +1066,7 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addFunction("phase", liburl("conversions-to-and-from-polar-coordinates"), DataType.Int);
                 addFunction("polar", liburl("conversions-to-and-from-polar-coordinates"),
@@ -1122,60 +1122,60 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 ClassType callable = outer.newClass("Callable", table, outer.objectType);
-                callable.Table.Insert(outer.analyzer, "__call__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                callable.Names.Insert(outer.analyzer, "__call__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Callable", abcUrl(), callable);
 
                 ClassType iterableType = outer.newClass("Iterable", table, outer.objectType);
-                iterableType.Table.Insert(outer.analyzer, "__next__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                iterableType.Table.Insert(outer.analyzer, "__iter__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                iterableType.Names.Insert(outer.analyzer, "__next__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                iterableType.Names.Insert(outer.analyzer, "__iter__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Iterable", abcUrl(), iterableType);
 
                 ClassType Hashable = outer.newClass("Hashable", table, outer.objectType);
-                Hashable.Table.Insert(outer.analyzer, "__hash__", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                Hashable.Names.Insert(outer.analyzer, "__hash__", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Hashable", abcUrl(), Hashable);
 
                 ClassType Sized = outer.newClass("Sized", table, outer.objectType);
-                Sized.Table.Insert(outer.analyzer, "__len__", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                Sized.Names.Insert(outer.analyzer, "__len__", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Sized", abcUrl(), Sized);
 
                 ClassType containerType = outer.newClass("Container", table, outer.objectType);
-                containerType.Table.Insert(outer.analyzer, "__contains__", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                containerType.Names.Insert(outer.analyzer, "__contains__", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Container", abcUrl(), containerType);
 
                 ClassType iteratorType = outer.newClass("Iterator", table, iterableType);
                 addClass("Iterator", abcUrl(), iteratorType);
 
                 ClassType sequenceType = outer.newClass("Sequence", table, Sized, iterableType, containerType);
-                sequenceType.Table.Insert(outer.analyzer, "__getitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                sequenceType.Table.Insert(outer.analyzer, "reversed", abcUrl(), outer.newFunc(sequenceType), BindingKind.METHOD).IsBuiltin = true;
-                sequenceType.Table.Insert(outer.analyzer, "index", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
-                sequenceType.Table.Insert(outer.analyzer, "count", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                sequenceType.Names.Insert(outer.analyzer, "__getitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                sequenceType.Names.Insert(outer.analyzer, "reversed", abcUrl(), outer.newFunc(sequenceType), BindingKind.METHOD).IsBuiltin = true;
+                sequenceType.Names.Insert(outer.analyzer, "index", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                sequenceType.Names.Insert(outer.analyzer, "count", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Sequence", abcUrl(), sequenceType);
 
                 ClassType mutableSequence = outer.newClass("MutableSequence", table, sequenceType);
-                mutableSequence.Table.Insert(outer.analyzer, "__setitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                mutableSequence.Table.Insert(outer.analyzer, "__delitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                mutableSequence.Names.Insert(outer.analyzer, "__setitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                mutableSequence.Names.Insert(outer.analyzer, "__delitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("MutableSequence", abcUrl(), mutableSequence);
 
                 ClassType setType = outer.newClass("Set", table, Sized, iterableType, containerType);
-                setType.Table.Insert(outer.analyzer, "__getitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                setType.Names.Insert(outer.analyzer, "__getitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Set", abcUrl(), setType);
 
                 ClassType mutableSet = outer.newClass("MutableSet", table, setType);
-                mutableSet.Table.Insert(outer.analyzer, "add", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                mutableSet.Table.Insert(outer.analyzer, "discard", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                mutableSet.Names.Insert(outer.analyzer, "add", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                mutableSet.Names.Insert(outer.analyzer, "discard", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("MutableSet", abcUrl(), mutableSet);
 
                 ClassType mapping = outer.newClass("Mapping", table, Sized, iterableType, containerType);
-                mapping.Table.Insert(outer.analyzer, "__getitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                mapping.Names.Insert(outer.analyzer, "__getitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Mapping", abcUrl(), mapping);
 
                 ClassType mutableMapping = outer.newClass("MutableMapping", table, mapping);
-                mutableMapping.Table.Insert(outer.analyzer, "__setitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                mutableMapping.Table.Insert(outer.analyzer, "__delitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                mutableMapping.Names.Insert(outer.analyzer, "__setitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                mutableMapping.Names.Insert(outer.analyzer, "__delitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("MutableMapping", abcUrl(), mutableMapping);
 
                 ClassType MappingView = outer.newClass("MappingView", table, Sized);
@@ -1194,25 +1194,25 @@ namespace Pytocs.Core.TypeInference
                 foreach (string n in new[] {"append", "appendLeft", "clear",
                         "extend", "extendLeft", "rotate"})
                 {
-                    deque.Table.Insert(outer.analyzer, n, dequeUrl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                    deque.Names.Insert(outer.analyzer, n, dequeUrl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
                 }
                 foreach (string u in new[] {"__getitem__", "__iter__",
                         "pop", "popleft", "remove"})
                 {
-                    deque.Table.Insert(outer.analyzer, u, dequeUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                    deque.Names.Insert(outer.analyzer, u, dequeUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 }
                 addClass("deque", dequeUrl(), deque);
 
                 ClassType defaultdict = outer.newClass("defaultdict", table, outer.objectType);
-                defaultdict.Table.Insert(outer.analyzer, "__missing__", liburl("defaultdict-objects"),
+                defaultdict.Names.Insert(outer.analyzer, "__missing__", liburl("defaultdict-objects"),
                         outer.newFunc(), BindingKind.METHOD);
-                defaultdict.Table.Insert(outer.analyzer, "default_factory", liburl("defaultdict-objects"),
+                defaultdict.Names.Insert(outer.analyzer, "default_factory", liburl("defaultdict-objects"),
                         outer.newFunc(), BindingKind.METHOD);
                 addClass("defaultdict", liburl("defaultdict-objects"), defaultdict);
 
                 string argh = "namedtuple-factory-function-for-tuples-with-named-fields";
                 ClassType namedtuple = outer.newClass("(namedtuple)", table, outer.BaseTuple);
-                namedtuple.Table.Insert(outer.analyzer, "_fields", liburl(argh),
+                namedtuple.Names.Insert(outer.analyzer, "_fields", liburl(argh),
                         outer.newList(DataType.Str), BindingKind.ATTRIBUTE);
                 addFunction("namedtuple", liburl(argh), namedtuple);
             }
@@ -1226,7 +1226,7 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 string[] ctypes_attrs = {
                     "ARRAY", "ArgumentError", "Array", "BigEndianStructure", "CDLL",
@@ -1270,7 +1270,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addStrFuncs("crypt");
             }
@@ -1290,7 +1290,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 // XXX:  make datetime, time, date, timedelta and tzinfo Base* objects,
                 // so built-in functions can return them.
@@ -1299,7 +1299,7 @@ namespace Pytocs.Core.TypeInference
 
                 ClassType timedelta = outer.Datetime_timedelta = outer.newClass("timedelta", table, outer.objectType);
                 addClass("timedelta", dtUrl("timedelta"), timedelta);
-                NameScope tdtable = outer.Datetime_timedelta.Table;
+                NameScope tdtable = outer.Datetime_timedelta.Names;
                 tdtable.Insert(outer.analyzer, "min", dtUrl("timedelta"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 tdtable.Insert(outer.analyzer, "max", dtUrl("timedelta"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 tdtable.Insert(outer.analyzer, "resolution", dtUrl("timedelta"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
@@ -1310,7 +1310,7 @@ namespace Pytocs.Core.TypeInference
 
                 ClassType tzinfo = outer.Datetime_tzinfo = outer.newClass("tzinfo", table, outer.objectType);
                 addClass("tzinfo", dtUrl("tzinfo"), tzinfo);
-                NameScope tztable = outer.Datetime_tzinfo.Table;
+                NameScope tztable = outer.Datetime_tzinfo.Names;
                 tztable.Insert(outer.analyzer, "utcoffset", dtUrl("tzinfo"), outer.newFunc(timedelta), BindingKind.METHOD).IsBuiltin = true;
                 tztable.Insert(outer.analyzer, "dst", dtUrl("tzinfo"), outer.newFunc(timedelta), BindingKind.METHOD).IsBuiltin = true;
                 tztable.Insert(outer.analyzer, "tzname", dtUrl("tzinfo"), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
@@ -1318,7 +1318,7 @@ namespace Pytocs.Core.TypeInference
 
                 ClassType date = outer.Datetime_date = outer.newClass("date", table, outer.objectType);
                 addClass("date", dtUrl("date"), date);
-                NameScope dtable = outer.Datetime_date.Table;
+                NameScope dtable = outer.Datetime_date.Names;
                 dtable.Insert(outer.analyzer, "min", dtUrl("date"), date, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 dtable.Insert(outer.analyzer, "max", dtUrl("date"), date, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 dtable.Insert(outer.analyzer, "resolution", dtUrl("date"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
@@ -1347,7 +1347,7 @@ namespace Pytocs.Core.TypeInference
 
                 ClassType time = outer.Datetime_time = outer.newClass("time", table, outer.objectType);
                 addClass("time", dtUrl("time"), time);
-                NameScope ttable = outer.Datetime_time.Table;
+                NameScope ttable = outer.Datetime_time.Names;
 
                 ttable.Insert(outer.analyzer, "min", dtUrl("time"), time, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 ttable.Insert(outer.analyzer, "max", dtUrl("time"), time, BindingKind.ATTRIBUTE).IsBuiltin = true;
@@ -1372,7 +1372,7 @@ namespace Pytocs.Core.TypeInference
 
                 ClassType datetime = outer.Datetime_datetime = outer.newClass("datetime", table, date, time);
                 addClass("datetime", dtUrl("datetime"), datetime);
-                NameScope dttable = outer.Datetime_datetime.Table;
+                NameScope dttable = outer.Datetime_datetime.Names;
 
                 foreach (string c in new[] {"combine", "fromordinal", "fromtimestamp", "now",
                         "strptime", "today", "utcfromtimestamp", "utcnow"})
@@ -1405,7 +1405,7 @@ namespace Pytocs.Core.TypeInference
         {
             public DbmModule(Builtins outer) : base(outer, "dbm") { }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 var path = table.ExtendPath(outer.analyzer, "dbm");
                 ClassType dbm = new ClassType("dbm", table, path, outer.BaseDict);
@@ -1424,7 +1424,7 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addNumAttrs(
                         "E2BIG", "EACCES", "EADDRINUSE", "EADDRNOTAVAIL", "EAFNOSUPPORT",
@@ -1467,7 +1467,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 ModuleType? builtins = outer.get("__builtin__");
                 foreach (string s in builtin_exception_types)
@@ -1486,7 +1486,7 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 foreach (string s in new[] { "fcntl", "ioctl" })
                 {
@@ -1521,7 +1521,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addNoneFuncs("turnon_sigfpe", "turnoff_sigfpe");
                 addClass("FloatingPointError", liburl(), outer.newException("FloatingPointError", table));
@@ -1537,7 +1537,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addNoneFuncs("enable", "disable", "set_debug", "set_threshold");
                 addNumFuncs("isenabled", "collect", "get_debug", "get_count", "get_threshold");
@@ -1560,16 +1560,16 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addClass("error", liburl(), outer.newException("error", table!));
 
                 var path = table!.ExtendPath(outer.analyzer, name);
                 ClassType gdbm = new ClassType("gdbm", table, path, outer.BaseDict);
-                gdbm.Table.Insert(outer.analyzer, "firstkey", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-                gdbm.Table.Insert(outer.analyzer, "nextkey", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-                gdbm.Table.Insert(outer.analyzer, "reorganize", liburl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
-                gdbm.Table.Insert(outer.analyzer, "sync", liburl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                gdbm.Names.Insert(outer.analyzer, "firstkey", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                gdbm.Names.Insert(outer.analyzer, "nextkey", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                gdbm.Names.Insert(outer.analyzer, "reorganize", liburl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                gdbm.Names.Insert(outer.analyzer, "sync", liburl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
 
                 addFunction("open", liburl(), gdbm);
             }
@@ -1586,14 +1586,14 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 outer.get("struct");
                 ClassType struct_group = outer.newClass("struct_group", table, outer.BaseStruct);
-                struct_group.Table.Insert(outer.analyzer, "gr_name", liburl(), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                struct_group.Table.Insert(outer.analyzer, "gr_passwd", liburl(), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                struct_group.Table.Insert(outer.analyzer, "gr_gid", liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                struct_group.Table.Insert(outer.analyzer, "gr_mem", liburl(), outer.newList(DataType.Str), BindingKind.ATTRIBUTE).IsBuiltin = true;
+                struct_group.Names.Insert(outer.analyzer, "gr_name", liburl(), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                struct_group.Names.Insert(outer.analyzer, "gr_passwd", liburl(), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                struct_group.Names.Insert(outer.analyzer, "gr_gid", liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                struct_group.Names.Insert(outer.analyzer, "gr_mem", liburl(), outer.newList(DataType.Str), BindingKind.ATTRIBUTE).IsBuiltin = true;
 
                 addClass("struct_group", liburl(), struct_group);
 
@@ -1613,7 +1613,7 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addStrFuncs("get_magic");
                 addFunction("get_suffixes", liburl(), outer.newList(outer.newTuple(DataType.Str, DataType.Str, DataType.Int)));
@@ -1636,7 +1636,7 @@ namespace Pytocs.Core.TypeInference
                 addNumFuncs("lock_held", "is_builtin", "is_frozen");
 
                 ClassType impNullImporter = outer.newClass("NullImporter", table, outer.objectType);
-                impNullImporter.Table.Insert(outer.analyzer, "find_module", liburl(), outer.newFunc(DataType.None), BindingKind.FUNCTION).IsBuiltin = true;
+                impNullImporter.Names.Insert(outer.analyzer, "find_module", liburl(), outer.newFunc(DataType.None), BindingKind.FUNCTION).IsBuiltin = true;
                 addClass("NullImporter", liburl(), impNullImporter);
             }
         }
@@ -1650,12 +1650,12 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 ClassType iterator = outer.newClass("iterator", table, outer.objectType);
-                iterator.Table.Insert(outer.analyzer, "from_iterable", liburl("itertool-functions"),
+                iterator.Names.Insert(outer.analyzer, "from_iterable", liburl("itertool-functions"),
                         outer.newFunc(iterator), BindingKind.METHOD);
-                iterator.Table.Insert(outer.analyzer, "next", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                iterator.Names.Insert(outer.analyzer, "next", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
 
                 foreach (string s in new[] {"chain", "combinations", "count", "cycle",
                         "dropwhile", "groupby", "ifilter",
@@ -1677,7 +1677,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addNumAttrs("version");
                 addStrFuncs("dumps");
@@ -1694,7 +1694,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addNumFuncs(
                         "acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "ceil",
@@ -1714,15 +1714,15 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addNumAttrs("blocksize", "digest_size");
 
                 ClassType md5 = outer.newClass("md5", table, outer.objectType);
-                md5.Table.Insert(outer.analyzer, "update", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                md5.Table.Insert(outer.analyzer, "digest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-                md5.Table.Insert(outer.analyzer, "hexdigest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-                md5.Table.Insert(outer.analyzer, "copy", liburl(), outer.newFunc(md5), BindingKind.METHOD).IsBuiltin = true;
+                md5.Names.Insert(outer.analyzer, "update", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                md5.Names.Insert(outer.analyzer, "digest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                md5.Names.Insert(outer.analyzer, "hexdigest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                md5.Names.Insert(outer.analyzer, "copy", liburl(), outer.newFunc(md5), BindingKind.METHOD).IsBuiltin = true;
 
                 update("new", liburl(), outer.newFunc(md5), BindingKind.CONSTRUCTOR);
                 update("md5", liburl(), outer.newFunc(md5), BindingKind.CONSTRUCTOR);
@@ -1737,7 +1737,7 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 ClassType mmap = outer.newClass("mmap", table, outer.objectType);
 
@@ -1747,23 +1747,23 @@ namespace Pytocs.Core.TypeInference
                         "MAP_SHARED", "PAGESIZE", "PROT_EXEC", "PROT_READ",
                         "PROT_WRITE"})
                 {
-                    mmap.Table.Insert(outer.analyzer, s, liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                    mmap.Names.Insert(outer.analyzer, s, liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
 
                 foreach (string fstr in new[] { "read", "read_byte", "readline" })
                 {
-                    mmap.Table.Insert(outer.analyzer, fstr, liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                    mmap.Names.Insert(outer.analyzer, fstr, liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
                 }
 
                 foreach (string fnum in new[] { "find", "rfind", "tell" })
                 {
-                    mmap.Table.Insert(outer.analyzer, fnum, liburl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                    mmap.Names.Insert(outer.analyzer, fnum, liburl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
                 }
 
                 foreach (string fnone in new[] {"close", "flush", "move", "resize", "seek",
                         "write", "write_byte"})
                 {
-                    mmap.Table.Insert(outer.analyzer, fnone, liburl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                    mmap.Names.Insert(outer.analyzer, fnone, liburl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
                 }
 
                 addClass("mmap", liburl(), mmap);
@@ -1778,7 +1778,7 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addStrFuncs("match", "cat", "get_default_domain");
                 addFunction("maps", liburl(), outer.newList(DataType.Str));
@@ -1791,7 +1791,7 @@ namespace Pytocs.Core.TypeInference
         {
             public OsModule(Builtins outer) : base(outer, "os") { }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addAttr("name", liburl(), DataType.Str);
                 addClass("error", liburl(), outer.newException("error", table!));  // XXX: OSError
@@ -2016,7 +2016,7 @@ namespace Pytocs.Core.TypeInference
             private void initOsPathModule()
             {
                 ModuleType m = outer.newModule("path");
-                NameScope ospath = m.Table;
+                NameScope ospath = m.Names;
                 ospath.Path = "os.path";  // make sure global qnames are correct
 
                 update("path", newLibUrl("os.path.html#module-os.path"), m, BindingKind.MODULE);
@@ -2076,7 +2076,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 // XXX:  mark __getslice__, __setslice__ and __delslice__ as deprecated.
                 addNumFuncs(
@@ -2114,18 +2114,18 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 ClassType st = outer.newClass("st", table, outer.objectType);
-                st.Table.Insert(outer.analyzer, "compile", newLibUrl("parser", "st-objects"),
+                st.Names.Insert(outer.analyzer, "compile", newLibUrl("parser", "st-objects"),
                         outer.newFunc(), BindingKind.METHOD);
-                st.Table.Insert(outer.analyzer, "isexpr", newLibUrl("parser", "st-objects"),
+                st.Names.Insert(outer.analyzer, "isexpr", newLibUrl("parser", "st-objects"),
                         outer.newFunc(DataType.Int), BindingKind.METHOD);
-                st.Table.Insert(outer.analyzer, "issuite", newLibUrl("parser", "st-objects"),
+                st.Names.Insert(outer.analyzer, "issuite", newLibUrl("parser", "st-objects"),
                         outer.newFunc(DataType.Int), BindingKind.METHOD);
-                st.Table.Insert(outer.analyzer, "tolist", newLibUrl("parser", "st-objects"),
+                st.Names.Insert(outer.analyzer, "tolist", newLibUrl("parser", "st-objects"),
                         outer.newFunc(outer.newList()), BindingKind.METHOD);
-                st.Table.Insert(outer.analyzer, "totuple", newLibUrl("parser", "st-objects"),
+                st.Names.Insert(outer.analyzer, "totuple", newLibUrl("parser", "st-objects"),
                         outer.newFunc(outer.newTuple()), BindingKind.METHOD);
 
                 addAttr("STType", liburl("st-objects"), outer.BaseType);
@@ -2153,7 +2153,7 @@ namespace Pytocs.Core.TypeInference
             public PosixModule(Builtins outer) : base(outer, "posix") { }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addAttr("environ", liburl(), outer.newDict(DataType.Str, DataType.Str));
             }
@@ -2165,13 +2165,13 @@ namespace Pytocs.Core.TypeInference
             public PwdModule(Builtins outer) : base(outer, "pwd") { }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 ClassType struct_pwd = outer.newClass("struct_pwd", table, outer.objectType);
                 foreach (string s in new [] {"pw_nam", "pw_passwd", "pw_uid", "pw_gid",
                         "pw_gecos", "pw_dir", "pw_shell"})
                 {
-                    struct_pwd.Table.Insert(outer.analyzer, s, liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                    struct_pwd.Names.Insert(outer.analyzer, s, liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
                 addAttr("struct_pwd", liburl(), struct_pwd);
 
@@ -2187,7 +2187,7 @@ namespace Pytocs.Core.TypeInference
             public PyexpatModule(Builtins outer) : base(outer, "pyexpat") { }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 // XXX
             }
@@ -2199,7 +2199,7 @@ namespace Pytocs.Core.TypeInference
             public ReadlineModule(Builtins outer) : base(outer, "readline") { }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addNoneFuncs("parse_and_bind", "insert_text", "read_init_file",
                         "read_history_file", "write_history_file",
@@ -2227,7 +2227,7 @@ namespace Pytocs.Core.TypeInference
             public ResourceModule(Builtins outer) : base(outer, "resource") { }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addFunction("getrlimit", liburl(), outer.newTuple(DataType.Int, DataType.Int));
                 addFunction("getrlimit", liburl(), DataType.Unknown);
@@ -2251,7 +2251,7 @@ namespace Pytocs.Core.TypeInference
             };
                 foreach (string ruf in ru_fields)
                 {
-                    ru.Table.Insert(outer.analyzer, ruf, liburl("resource-usage"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                    ru.Names.Insert(outer.analyzer, ruf, liburl("resource-usage"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
 
                 addFunction("getrusage", liburl("resource-usage"), ru);
@@ -2270,7 +2270,7 @@ namespace Pytocs.Core.TypeInference
             public SelectModule(Builtins outer) : base(outer, "select") { }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addClass("error", liburl(), outer.newException("error", table!));
 
@@ -2279,12 +2279,12 @@ namespace Pytocs.Core.TypeInference
                 string a = "edge-and-level-trigger-polling-epoll-objects";
 
                 ClassType epoll = outer.newClass("epoll", table, outer.objectType);
-                epoll.Table.Insert(outer.analyzer, "close", newLibUrl("select", a), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
-                epoll.Table.Insert(outer.analyzer, "fileno", newLibUrl("select", a), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
-                epoll.Table.Insert(outer.analyzer, "fromfd", newLibUrl("select", a), outer.newFunc(epoll), BindingKind.METHOD).IsBuiltin = true;
+                epoll.Names.Insert(outer.analyzer, "close", newLibUrl("select", a), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                epoll.Names.Insert(outer.analyzer, "fileno", newLibUrl("select", a), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                epoll.Names.Insert(outer.analyzer, "fromfd", newLibUrl("select", a), outer.newFunc(epoll), BindingKind.METHOD).IsBuiltin = true;
                 foreach (string s in new[] { "register", "modify", "unregister", "poll" })
                 {
-                    epoll.Table.Insert(outer.analyzer, s, newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                    epoll.Names.Insert(outer.analyzer, s, newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 }
                 addClass("epoll", liburl(a), epoll);
 
@@ -2298,10 +2298,10 @@ namespace Pytocs.Core.TypeInference
                 a = "polling-objects";
 
                 ClassType poll = outer.newClass("poll", table, outer.objectType);
-                poll.Table.Insert(outer.analyzer, "register", newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                poll.Table.Insert(outer.analyzer, "modify",    newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                poll.Table.Insert(outer.analyzer, "unregister", newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                poll.Table.Insert(outer.analyzer, "poll", newLibUrl("select", a),
+                poll.Names.Insert(outer.analyzer, "register", newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                poll.Names.Insert(outer.analyzer, "modify",    newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                poll.Names.Insert(outer.analyzer, "unregister", newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                poll.Names.Insert(outer.analyzer, "poll", newLibUrl("select", a),
                         outer.newFunc(outer.newList(outer.newTuple(DataType.Int, DataType.Int))), BindingKind.METHOD);
                 addClass("poll", liburl(a), poll);
 
@@ -2315,10 +2315,10 @@ namespace Pytocs.Core.TypeInference
                 a = "kqueue-objects";
 
                 ClassType kqueue = outer.newClass("kqueue", table, outer.objectType);
-                kqueue.Table.Insert(outer.analyzer, "close", newLibUrl("select", a), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
-                kqueue.Table.Insert(outer.analyzer, "fileno", newLibUrl("select", a), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
-                kqueue.Table.Insert(outer.analyzer, "fromfd", newLibUrl("select", a), outer.newFunc(kqueue), BindingKind.METHOD).IsBuiltin = true;
-                kqueue.Table.Insert(outer.analyzer, "control", newLibUrl("select", a),
+                kqueue.Names.Insert(outer.analyzer, "close", newLibUrl("select", a), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                kqueue.Names.Insert(outer.analyzer, "fileno", newLibUrl("select", a), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                kqueue.Names.Insert(outer.analyzer, "fromfd", newLibUrl("select", a), outer.newFunc(kqueue), BindingKind.METHOD).IsBuiltin = true;
+                kqueue.Names.Insert(outer.analyzer, "control", newLibUrl("select", a),
                         outer.newFunc(outer.newList(outer.newTuple(DataType.Int, DataType.Int))), BindingKind.METHOD);
                 addClass("kqueue", liburl(a), kqueue);
 
@@ -2327,7 +2327,7 @@ namespace Pytocs.Core.TypeInference
                 ClassType kevent = outer.newClass("kevent", table, outer.objectType);
                 foreach (string s in new[] { "ident", "filter", "flags", "fflags", "data", "udata" })
                 {
-                    kevent.Table.Insert(outer.analyzer, s, newLibUrl("select", a), DataType.Unknown, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                    kevent.Names.Insert(outer.analyzer, s, newLibUrl("select", a), DataType.Unknown, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
                 addClass("kevent", liburl(a), kevent);
             }
@@ -2338,7 +2338,7 @@ namespace Pytocs.Core.TypeInference
         {
             public SignalModule(Builtins outer) : base(outer, "signal") { }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addNumAttrs(
                         "NSIG", "SIGABRT", "SIGALRM", "SIGBUS", "SIGCHLD", "SIGCLD",
@@ -2359,15 +2359,15 @@ namespace Pytocs.Core.TypeInference
             public ShaModule(Builtins outer) : base(outer, "sha") { }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addNumAttrs("blocksize", "digest_size");
 
                 ClassType sha = outer.newClass("sha", table, outer.objectType);
-                sha.Table.Insert(outer.analyzer, "update", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                sha.Table.Insert(outer.analyzer, "digest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-                sha.Table.Insert(outer.analyzer, "hexdigest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-                sha.Table.Insert(outer.analyzer, "copy", liburl(), outer.newFunc(sha), BindingKind.METHOD).IsBuiltin = true;
+                sha.Names.Insert(outer.analyzer, "update", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                sha.Names.Insert(outer.analyzer, "digest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                sha.Names.Insert(outer.analyzer, "hexdigest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                sha.Names.Insert(outer.analyzer, "copy", liburl(), outer.newFunc(sha), BindingKind.METHOD).IsBuiltin = true;
                 addClass("sha", liburl(), sha);
 
                 update("new", liburl(), outer.newFunc(sha), BindingKind.CONSTRUCTOR);
@@ -2380,14 +2380,14 @@ namespace Pytocs.Core.TypeInference
             public SpwdModule(Builtins outer) : base(outer, "spwd") { }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 ClassType struct_spwd = outer.newClass("struct_spwd", table, outer.objectType);
                 foreach (string s in new[]{ "sp_nam", "sp_pwd", "sp_lstchg", "sp_min",
                         "sp_max", "sp_warn", "sp_inact", "sp_expire",
                         "sp_flag"})
                 {
-                    struct_spwd.Table.Insert(outer.analyzer, s, liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                    struct_spwd.Names.Insert(outer.analyzer, s, liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
                 addAttr("struct_spwd", liburl(), struct_spwd);
 
@@ -2401,9 +2401,9 @@ namespace Pytocs.Core.TypeInference
         {
             public StropModule(Builtins outer) : base(outer, "strop") { }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
-                table!.putAll(DataType.Str.Table);
+                table!.putAll(DataType.Str.Names);
             }
         }
 
@@ -2412,7 +2412,7 @@ namespace Pytocs.Core.TypeInference
         {
             public StructModule(Builtins outer) : base(outer, "struct") { }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addClass("error", liburl(), outer.newException("error", table!));
                 addStrFuncs("pack");
@@ -2423,7 +2423,7 @@ namespace Pytocs.Core.TypeInference
 
                 outer.BaseStruct = outer.newClass("Struct", table, outer.objectType);
                 addClass("Struct", liburl("struct-objects"), outer.BaseStruct);
-                NameScope t = outer.BaseStruct.Table;
+                NameScope t = outer.BaseStruct.Names;
                 t.Insert(outer.analyzer, "pack", liburl("struct-objects"), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
                 t.Insert(outer.analyzer, "pack_into", liburl("struct-objects"), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 t.Insert(outer.analyzer, "unpack", liburl("struct-objects"), outer.newFunc(outer.newTuple()), BindingKind.METHOD).IsBuiltin = true;
@@ -2439,7 +2439,7 @@ namespace Pytocs.Core.TypeInference
             public SysModule(Builtins outer) : base(outer, "sys") { }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addUnknownFuncs(
                         "_clear_type_cache", "call_tracing", "callstats", "_current_frames",
@@ -2484,7 +2484,7 @@ namespace Pytocs.Core.TypeInference
             public SyslogModule(Builtins outer) : base(outer, "syslog") { }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addNoneFuncs("syslog", "openlog", "closelog", "setlogmask");
                 addNumAttrs("LOG_ALERT", "LOG_AUTH", "LOG_CONS", "LOG_CRIT", "LOG_CRON",
@@ -2503,7 +2503,7 @@ namespace Pytocs.Core.TypeInference
             public TermiosModule(Builtins outer) : base(outer, "termios") { }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addFunction("tcgetattr", liburl(), outer.newList());
                 addUnknownFuncs("tcsetattr", "tcsendbreak", "tcdrain", "tcflush", "tcflow");
@@ -2515,14 +2515,14 @@ namespace Pytocs.Core.TypeInference
         {
             public ThreadModule(Builtins outer) : base(outer, "thread") { }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addClass("error", liburl(), outer.newException("error", table!));
 
                 ClassType @lock = outer.newClass("lock", table, outer.objectType);
-                @lock.Table.Insert(outer.analyzer, "acquire", liburl(), DataType.Int, BindingKind.METHOD).IsBuiltin = true;
-                @lock.Table.Insert(outer.analyzer, "locked", liburl(), DataType.Int, BindingKind.METHOD).IsBuiltin = true;
-                @lock.Table.Insert(outer.analyzer, "release", liburl(), DataType.None, BindingKind.METHOD).IsBuiltin = true;
+                @lock.Names.Insert(outer.analyzer, "acquire", liburl(), DataType.Int, BindingKind.METHOD).IsBuiltin = true;
+                @lock.Names.Insert(outer.analyzer, "locked", liburl(), DataType.Int, BindingKind.METHOD).IsBuiltin = true;
+                @lock.Names.Insert(outer.analyzer, "release", liburl(), DataType.None, BindingKind.METHOD).IsBuiltin = true;
                 addAttr("LockType", liburl(), outer.BaseType);
 
                 addNoneFuncs("interrupt_main", "exit", "exit_thread");
@@ -2539,7 +2539,7 @@ namespace Pytocs.Core.TypeInference
         {
             public TimeModule(Builtins outer) : base(outer, "time") { }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 InstanceType struct_time = outer.Time_struct_time = new InstanceType(outer.newClass("datetime", table, outer.objectType));
                 addAttr("struct_time", liburl(), struct_time);
@@ -2551,7 +2551,7 @@ namespace Pytocs.Core.TypeInference
             };
                 foreach (string s in struct_time_attrs)
                 {
-                    struct_time.Table.Insert(outer.analyzer, s, liburl("struct_time"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                    struct_time.Names.Insert(outer.analyzer, s, liburl("struct_time"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
 
                 addNumAttrs("accept2dyear", "altzone", "daylight", "timezone");
@@ -2570,7 +2570,7 @@ namespace Pytocs.Core.TypeInference
         {
             public UnicodedataModule(Builtins outer) : base(outer, "unicodedata") { }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addNumFuncs("decimal", "digit", "numeric", "combining",
                         "east_asian_width", "mirrored");
@@ -2585,12 +2585,12 @@ namespace Pytocs.Core.TypeInference
         {
             public ZipimportModule(Builtins outer) : base(outer, "zipimport") { }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 addClass("ZipImportError", liburl(), outer.newException("ZipImportError", table!));
 
                 ClassType zipimporter = outer.newClass("zipimporter", table, outer.objectType);
-                NameScope t = zipimporter.Table;
+                NameScope t = zipimporter.Names;
                 t.Insert(outer.analyzer, "find_module", liburl(), zipimporter, BindingKind.METHOD).IsBuiltin = true;
                 t.Insert(outer.analyzer, "get_code", liburl(), DataType.Unknown, BindingKind.METHOD).IsBuiltin = true;  // XXX:  code object
                 t.Insert(outer.analyzer, "get_data", liburl(), DataType.Unknown, BindingKind.METHOD).IsBuiltin = true;
@@ -2611,26 +2611,26 @@ namespace Pytocs.Core.TypeInference
             public ZlibModule(Builtins outer) : base(outer, "zlib") { }
 
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope table)
             {
                 ClassType compress = outer.newClass("Compress", table, outer.objectType);
                 foreach (string s in new[] { "compress", "flush" })
                 {
-                    compress.Table.Insert(outer.analyzer, s, newLibUrl("zlib"), DataType.Str, BindingKind.METHOD).IsBuiltin = true;
+                    compress.Names.Insert(outer.analyzer, s, newLibUrl("zlib"), DataType.Str, BindingKind.METHOD).IsBuiltin = true;
                 }
-                compress.Table.Insert(outer.analyzer, "copy", newLibUrl("zlib"), compress, BindingKind.METHOD).IsBuiltin = true;
+                compress.Names.Insert(outer.analyzer, "copy", newLibUrl("zlib"), compress, BindingKind.METHOD).IsBuiltin = true;
                 addClass("Compress", liburl(), compress);
 
                 ClassType decompress = outer.newClass("Decompress", table, outer.objectType);
                 foreach (string s in new[] { "unused_data", "unconsumed_tail" })
                 {
-                    decompress.Table.Insert(outer.analyzer, s, newLibUrl("zlib"), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                    decompress.Names.Insert(outer.analyzer, s, newLibUrl("zlib"), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
                 foreach (string s in new[] { "decompress", "flush" })
                 {
-                    decompress.Table.Insert(outer.analyzer, s, newLibUrl("zlib"), DataType.Str, BindingKind.METHOD).IsBuiltin = true;
+                    decompress.Names.Insert(outer.analyzer, s, newLibUrl("zlib"), DataType.Str, BindingKind.METHOD).IsBuiltin = true;
                 }
-                decompress.Table.Insert(outer.analyzer, "copy", newLibUrl("zlib"), decompress, BindingKind.METHOD).IsBuiltin = true;
+                decompress.Names.Insert(outer.analyzer, "copy", newLibUrl("zlib"), decompress, BindingKind.METHOD).IsBuiltin = true;
                 addClass("Decompress", liburl(), decompress);
 
                 addFunction("adler32", liburl(), DataType.Int);
@@ -2646,11 +2646,11 @@ namespace Pytocs.Core.TypeInference
         {
             public MsvcrtModule(Builtins outer) : base(outer, "msvcrt") { }
 
-            public override void initBindings(State table)
+            public override void initBindings(NameScope scope)
             {
                 addFunction("getch", liburl(), DataType.Str);
                 throw new NotImplementedException();
-    }
+            }
         }
     }
 #pragma warning restore IDE1006 // Naming Styles

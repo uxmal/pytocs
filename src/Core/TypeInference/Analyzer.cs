@@ -150,10 +150,11 @@ namespace Pytocs.Core.TypeInference
                 return false;
         }
 
-        public void setCWD(string? cd)
+
+        public void SetCWD(string cd)
         {
-            if (cd is not null)
-        {
+            if (cd != null)
+            {
                 cwd = FileSystem.GetFullPath(cd);
             }
         }
@@ -213,7 +214,7 @@ namespace Pytocs.Core.TypeInference
 #endif
         }
 
-        public List<string> getLoadPath()
+        public List<string> GetLoadPath()
         {
             var loadPath = new List<string>();
             if (cwd is not null)
@@ -402,7 +403,7 @@ namespace Pytocs.Core.TypeInference
 
             // set new CWD and save the old one on stack
             string? oldcwd = cwd;
-            setCWD(FileSystem.GetDirectoryName(path));
+            SetCWD(FileSystem.GetDirectoryName(path));
 
             PushImportStack(path);
             loadingProgress?.Tick();
@@ -421,7 +422,7 @@ namespace Pytocs.Core.TypeInference
             PopImportStack(path);
 
             // restore old CWD
-            setCWD(oldcwd!);
+            SetCWD(oldcwd!);
             return type;
         }
 
@@ -478,7 +479,7 @@ namespace Pytocs.Core.TypeInference
         /// <param name="headName">first module name segment</param>
         public string? LocateModule(string headName)
         {
-            List<string> loadPath = getLoadPath();
+            List<string> loadPath = GetLoadPath();
             foreach (string p in loadPath)
             {
                 string startDir = FileSystem.CombinePath(p, headName);
@@ -512,7 +513,7 @@ namespace Pytocs.Core.TypeInference
                 state.Insert(
                     this,
                     name[0].Name,
-                    new Url(Builtins.LIBRARY_URL + mt.Table.Path + ".html"),
+                    new Url(Builtins.LIBRARY_URL + mt.Names.Path + ".html"),
                     mt, BindingKind.SCOPE);
                 return mt;
             }
@@ -541,7 +542,7 @@ namespace Pytocs.Core.TypeInference
 
                     if (prev != null)
                     {
-                        prev.Table.Insert(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
+                        prev.Names.Insert(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
                     }
                     else
                     {
@@ -561,7 +562,7 @@ namespace Pytocs.Core.TypeInference
                         }
                         if (prev != null)
                         {
-                            prev.Table.Insert(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
+                            prev.Names.Insert(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
                         }
                         else
                         {
@@ -804,7 +805,7 @@ namespace Pytocs.Core.TypeInference
 
         public void RegisterBinding(Binding b)
         {
-            this.bindingMap[b.node] = b;
+            this.bindingMap[b.Node] = b;
             allBindings.Add(b);
         }
 

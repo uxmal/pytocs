@@ -29,9 +29,9 @@ namespace Pytocs.Core.Types
             this.name = name;
             this.file = file;  // null for builtin modules
             this.qname = qName;
-            this.Table = new NameScope(parent, NameScope.StateType.MODULE);
-            Table.Path = qname;
-            Table.DataType = this;
+            this.Names = new NameScope(parent, NameScope.StateType.MODULE);
+            Names.Path = qname;
+            Names.DataType = this;
         }
 
         public override T Accept<T>(IDataTypeVisitor<T> visitor)

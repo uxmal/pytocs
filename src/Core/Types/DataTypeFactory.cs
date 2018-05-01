@@ -63,7 +63,7 @@ namespace Pytocs.Core.Types
             // null during bootstrapping of built-in types
             if (analyzer.Builtins != null)
             {
-                module.Table.AddSuper(analyzer.Builtins.BaseModule.Table);
+                module.Names.AddSuper(analyzer.Builtins.BaseModule.Names);
             }
             return module;
         }
@@ -80,30 +80,30 @@ namespace Pytocs.Core.Types
 
         private TupleType Register(TupleType tuple)
         {
-            tuple.Table.AddSuper(analyzer.Builtins.BaseTuple.Table);
-            tuple.Table.Path = analyzer.Builtins.BaseTuple.Table.Path;
+            tuple.Names.AddSuper(analyzer.Builtins.BaseTuple.Names);
+            tuple.Names.Path = analyzer.Builtins.BaseTuple.Names.Path;
             return tuple;
         }
 
         private ListType Register(ListType list)
         {
-            list.Table.AddSuper(analyzer.Builtins.BaseList.Table);
-            list.Table.Path = analyzer.Builtins.BaseList.Table.Path;
+            list.Names.AddSuper(analyzer.Builtins.BaseList.Names);
+            list.Names.Path = analyzer.Builtins.BaseList.Names.Path;
             return list;
         }
 
         private DictType Register(DictType dictType)
         {
-            dictType.Table.AddSuper(analyzer.Builtins.BaseDict.Table);
-            dictType.Table.Path = analyzer.Builtins.BaseDict.Table.Path;
+            dictType.Names.AddSuper(analyzer.Builtins.BaseDict.Names);
+            dictType.Names.Path = analyzer.Builtins.BaseDict.Names.Path;
             return dictType;
         }
 
         private IterableType Register(IterableType iterableType)
         {
-            iterableType.Table.AddSuper(analyzer.Builtins.BaseIterable.Table);
-            iterableType.Table.Path = analyzer.Builtins.BaseIterable.Table.Path;
+            iterableType.Names.AddSuper(analyzer.Builtins.BaseIterable.Names);
+            iterableType.Names.Path = analyzer.Builtins.BaseIterable.Names.Path;
             return iterableType;
-        }
+    }
     }
 }
