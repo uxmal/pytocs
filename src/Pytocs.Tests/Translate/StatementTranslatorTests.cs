@@ -34,9 +34,16 @@ namespace Pytocs.UnitTests.Translate
     {
         private static readonly string nl = Environment.NewLine;
 
+        private readonly TypeReferenceTranslator datatypes;
 
         public StatementTranslatorTests()
         {
+            this.datatypes = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
+        }
+
+        private FunType FnVoid(params DataType [] args)
+        {
+            return new FunType(new TupleType(args), DataType.None);
         }
 
         private string XlatStmts(string pyStmt)
@@ -48,8 +55,7 @@ namespace Pytocs.UnitTests.Translate
             var stm = par.stmt();
             var gen = new CodeGenerator(new CodeCompileUnit(), "", "module");
             gen.SetCurrentFunction(new CodeMemberMethod());
-            var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
-            var xlt = new StatementTranslator(null, types, gen, new SymbolGenerator(), new HashSet<string>());
+            var xlt = new StatementTranslator(null, datatypes, gen, new SymbolGenerator(), new HashSet<string>());
             stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();

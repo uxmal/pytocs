@@ -483,9 +483,9 @@ namespace Pytocs.Core.TypeInference
             default:
                 if (target != null)
             {
-                    analyzer.AddProblem(target, "invalid location for assignment");
+                analyzer.AddProblem(target, "invalid location for assignment");
             }
-                break;
+            break;
         }
         }
 

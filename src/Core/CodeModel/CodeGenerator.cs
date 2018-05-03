@@ -253,13 +253,17 @@ namespace Pytocs.Core.CodeModel
             return cons;
         }
 
-        public CodeMemberMethod Method(string name, CodeTypeReference retValue, IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
+        public CodeMemberMethod Method(
+            string name,
+            IEnumerable<CodeParameterDeclarationExpression> parms,
+            CodeTypeReference retType,
+            Action body)
         {
             var method = new CodeMemberMethod
             {
                 Name = name,
                 Attributes = MemberAttributes.Public,
-                ReturnType = retValue
+                ReturnType = retType
             };
             method.Parameters.AddRange(parms.ToArray());
             AddMemberWithComments(method);
@@ -268,7 +272,11 @@ namespace Pytocs.Core.CodeModel
             return method;
         }
 
-        public CodeLocalFunction LocalFunction(string name, CodeTypeReference retType, IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
+        public CodeLocalFunction LocalFunction(
+            string name,
+            CodeTypeReference retType,
+            IEnumerable<CodeParameterDeclarationExpression> parms,
+            Action body)
         {
             var localFn = new CodeLocalFunction
             {
@@ -281,13 +289,17 @@ namespace Pytocs.Core.CodeModel
             return localFn;
         }
 
-        public CodeMemberMethod StaticMethod(string name, CodeTypeReference? retType, IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
+        public  CodeMemberMethod StaticMethod(
+            string name, 
+            IEnumerable<CodeParameterDeclarationExpression> parms,
+            CodeTypeReference? retType,
+            Action body)
         {
             var method = new CodeMemberMethod
             {
                 Name = name,
                 Attributes = MemberAttributes.Public | MemberAttributes.Static,
-                ReturnType = retType
+                ReturnType = retType,
             };
             method.Parameters.AddRange(parms.ToArray());
             AddMemberWithComments(method);
@@ -657,7 +669,7 @@ namespace Pytocs.Core.CodeModel
         public CodeLetClause Let(CodeExpression id, CodeExpression value)
         {
             return new CodeLetClause(id, value);
-        }
+    }
 
         public CodeWhereClause Where(CodeExpression e)
         {

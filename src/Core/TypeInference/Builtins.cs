@@ -375,7 +375,7 @@ namespace Pytocs.Core.TypeInference
             buildModuleType();
             buildFileType();
             buildFunctionType();
-            buildClassType();
+            BuildClassType();
 
             modules["__builtin__"].initBindings();  // eagerly load these bindings
 
@@ -780,7 +780,7 @@ namespace Pytocs.Core.TypeInference
 
         // XXX:  finish wiring this up.  ClassType needs to inherit from it somehow,
         // so we can remove the per-instance attributes from NClassDef.
-        void buildClassType()
+        void BuildClassType()
         {
             NameScope t = BaseClass.Names;
 
@@ -832,7 +832,7 @@ namespace Pytocs.Core.TypeInference
                     "property", "quit", "raw_input", "reduce", "reload", "reversed",
                     "set", "setattr", "slice", "sorted", "staticmethod", "super",
                     "type", "unichr", "unicode",
-            };
+                };
                 foreach (string f in builtin_func_unknown)
                 {
                     addFunction(f, newLibUrl("functions.html#" + f), DataType.Unknown);

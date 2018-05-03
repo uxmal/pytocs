@@ -1615,7 +1615,7 @@ namespace Pytocs.Core.TypeInference
                     if (sub.Lower != null)
                     {
                         dts.Add(TranslateAnnotation(sub.Lower, scope));
-                    }
+    }
                     else
                     {
                         dts.Add(DataType.Unknown);

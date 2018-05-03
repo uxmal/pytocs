@@ -35,8 +35,12 @@ namespace Pytocs.Core.TypeInference
         HashSet<Name> Resolved { get; }
         HashSet<Name> Unresolved { get; }
 
-        DataType? LoadModule(List<Name> name, NameScope state);
-        Module? GetAstForFile(string file);
+        Binding GetBindingOf(Node node);
+
+
+
+        DataType LoadModule(List<Name> name, NameScope state);
+        Module GetAstForFile(string file);
         string GetModuleQname(string file);
 
         Binding CreateBinding(string id, Node node, DataType type, BindingKind kind);
@@ -313,6 +317,13 @@ namespace Pytocs.Core.TypeInference
                 file = file.Substring(0, file.Length - suffix.Length);
             }
             return file.Replace(".", "%20").Replace('/', '.').Replace('\\', '.');
+        }
+
+        public Binding GetBindingOf(Node node)
+        {
+            return bindingMap.TryGetValue(node, out Binding b)
+                ? b
+                : null;
         }
 
         public void putRef(Node node, ICollection<Binding> bs)

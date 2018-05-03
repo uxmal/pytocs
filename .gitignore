@@ -10,5 +10,6 @@
 /src/bin
 *.user
 .vs/
+# Ignore NuGet packages
 /src/packages/
 /src/.vscode

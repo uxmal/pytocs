@@ -14,18 +14,14 @@
 //  limitations under the License.
 #endregion
 
-using Xunit;
 using Pytocs.Core.CodeModel;
 using Pytocs.Core.Syntax;
-using Pytocs.Core.TypeInference;
+using Pytocs.Core.Translate;
 using Pytocs.Core.Types;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Pytocs.Core.Translate;
+using Xunit;
 
 namespace Pytocs.UnitTests.Translate
 {

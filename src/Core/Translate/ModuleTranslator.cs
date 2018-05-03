@@ -57,7 +57,7 @@ namespace Pytocs.Core.Translate
                     // Module-level statements are simulated with a static constructor.
                     var methodName = gen.CurrentType.Name!;
                     var parameters = Array.Empty<CodeParameterDeclarationExpression>();
-                    var static_ctor = gen.StaticMethod(methodName, null, parameters, () => { });
+                    var static_ctor = gen.StaticMethod(methodName, parameters, null, () => { });
                     static_ctor.Attributes = MemberAttributes.Static;
                     static_ctor.Statements.AddRange(gen.Scope);
                 }
@@ -87,7 +87,8 @@ namespace Pytocs.Core.Translate
                 var methodName = gen.CurrentType.Name!;
                 var parameters = Array.Empty<CodeParameterDeclarationExpression>();
                 this.GenerateFieldForAssignment = false;
-                var static_ctor = gen.StaticMethod(methodName, null, parameters, () => {
+                var static_ctor = gen.StaticMethod(methodName, parameters, null, () =>
+                {
                     foreach (var stm in stms)
                     {
                         stm.Accept(this);

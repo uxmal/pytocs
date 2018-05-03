@@ -59,6 +59,7 @@ namespace Pytocs.Core.Translate
             this.classDef = classDef;
             this.f = f;
             this.fnName = fnName;
+            this.analyzer = null; //$TODO lookup types.
             this.args = args;
             this.isStatic = isStatic;
             this.isAsync = isAsync;
@@ -85,11 +86,11 @@ namespace Pytocs.Core.Translate
             CodeMemberMethod method;
             if (isStatic)
             {
-                method = gen.StaticMethod(fnName!, retType, parms, () => Xlat(f.body));
+                method = gen.StaticMethod(fnName!, parms, retType, () => Xlat(f.body));
             }
             else
             {
-                method = gen.Method(fnName!, retType, parms, () => Xlat(f.body));
+                method = gen.Method(fnName!, parms, retType, () => Xlat(f.body));
             }
             method.IsAsync = isAsync;
             GenerateTupleParameterUnpackers(method);
