@@ -50,12 +50,19 @@ namespace Pytocs.Core
         public void Translate(string filename, TextReader input, TextWriter output)
         {
             Debug.Print("Translating module {0} in namespace {1}", moduleName, nmspace);
-            var lex = new Lexer(filename, input);
-            var flt = new CommentFilter(lex);
+            try
+            {
+                var lex = new Lexer(filename, input);
+                var flt = new CommentFilter(lex);
             var par = new Parser(filename, flt, true, logger);
-            var stm = par.Parse();
+                var stm = par.Parse();
             var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
             TranslateModuleStatements(stm, types, output);
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, "An error occurred when translating module {0} (in {1}).", moduleName, filename);
+            }
         }
 
         public void TranslateModuleStatements(
@@ -76,7 +83,7 @@ namespace Pytocs.Core
             try
             {
                 TranslateModuleStatements(stm, types, writer);
-        }
+            }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error: {ex.Message}");
