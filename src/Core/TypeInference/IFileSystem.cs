@@ -39,8 +39,7 @@ namespace Pytocs.Core.TypeInference
         string GetFileName(string path);
         string makePathString(params string[] files);
         byte[] ReadFileBytes(string path);
-        string? ReadFile(string path);
-        string? relPath(string path1, string path2);
+        string ReadFile(string path);
         string GetFullPath(string file);
         void WriteFile(string path, string contents);
         void DeleteFile(string path);
@@ -99,7 +98,7 @@ namespace Pytocs.Core.TypeInference
         public string GetTempPath()
         {
             return Path.GetTempPath();
-        }
+            }
 
         public IEnumerable<string> GetDirectories(string directory, string searchPattern, SearchOption options)
         {
@@ -159,45 +158,6 @@ namespace Pytocs.Core.TypeInference
         public byte[] ReadFileBytes(string path)
         {
             return File.ReadAllBytes(path);
-        }
-
-        public string? relPath(string path1, string path2)
-        {
-            string a = GetFullPath(path1);
-            string b = GetFullPath(path2);
-
-            string[] aSegments = a.Split('/', '\\');
-            string[] bSegments = b.Split('/', '\\');
-
-            int i;
-            for (i = 0; i < Math.Min(aSegments.Length, bSegments.Length); i++)
-            {
-                if (!aSegments[i].Equals(bSegments[i]))
-                {
-                    break;
-                }
-            }
-
-            int ups = aSegments.Length - i - 1;
-            var res = new StringBuilder();
-            for (int x = 0; x < ups; x++)
-            {
-                res = res.AppendFormat("{0}..", Path.DirectorySeparatorChar);
-            }
-
-            for (int y = i; y < bSegments.Length; y++)
-            {
-                res.Append(bSegments[y]);
-            }
-
-            if (res.Length == 0)
-            {
-                return null;
-            }
-            else
-            {
-                return res.ToString();
-            }
         }
 
         public Stream CreateFileStream(string filename, FileMode mode, FileAccess access)

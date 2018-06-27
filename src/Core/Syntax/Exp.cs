@@ -368,7 +368,7 @@ namespace Pytocs.Core.Syntax
             else
             {
                 writer.Write(Value.ToString(CultureInfo.InvariantCulture));
-            }
+    }
         }
     }
 
@@ -966,6 +966,7 @@ namespace Pytocs.Core.Syntax
     {
         public Exp variable;
         public Exp collection;
+        public Exp projection;
 
         public CompFor(Exp variable, Exp collection, string filename, int start, int end) : base(filename, start, end)
         {
@@ -992,6 +993,11 @@ namespace Pytocs.Core.Syntax
 
         public override void Write(TextWriter writer)
         {
+            if (projection != null)
+            {
+                projection.Write(writer);
+                writer.Write(" ");
+            }
             writer.Write("for");
             writer.Write(" ");
             variable.Write(writer);
@@ -999,12 +1005,12 @@ namespace Pytocs.Core.Syntax
             writer.Write("in");
             writer.Write(" ");
             collection.Write(writer);
-            if (this.next != null)
+            if (next != null)
             {
                 writer.Write(" ");
-                this.next.Write(writer);
+                next.Write(writer);
+            }
         }
-    }
     }
 
     public class CompIf : CompIter
@@ -1040,7 +1046,7 @@ namespace Pytocs.Core.Syntax
             {
                 writer.Write(" ");
                 next.Write(writer);
-    }
+            }
         }
     }
 
@@ -1234,12 +1240,10 @@ namespace Pytocs.Core.Syntax
 
     public class ListComprehension : Exp
     {
-        public Exp Projection;
         public Exp Collection;
 
-        public ListComprehension(Exp proj, Exp coll, string filename, int start, int end) : base(filename, start, end)
+        public ListComprehension(Exp coll, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Projection = proj;
             this.Collection = coll;
         }
 
@@ -1261,8 +1265,6 @@ namespace Pytocs.Core.Syntax
         public override void Write(TextWriter writer)
         {
             writer.Write("[");
-            Projection.Write(writer);
-            writer.Write(" ");
             Collection.Write(writer);
             writer.Write("]");
         }
@@ -1270,12 +1272,10 @@ namespace Pytocs.Core.Syntax
 
     public class SetComprehension : Exp
     {
-        public Exp Projection;
         public Exp Collection;
 
-        public SetComprehension(Exp proj, Exp coll, string filename, int start, int end) : base(filename, start, end)
+        public SetComprehension(Exp coll, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Projection = proj;
             this.Collection = coll;
         }
 
@@ -1297,8 +1297,6 @@ namespace Pytocs.Core.Syntax
         public override void Write(TextWriter writer)
         {
             writer.Write("{");
-            Projection.Write(writer);
-            writer.Write(" ");
             Collection.Write(writer);
             writer.Write("}");
         }

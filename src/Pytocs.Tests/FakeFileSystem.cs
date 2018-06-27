@@ -16,11 +16,10 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Diagnostics;
 using System.Text;
-using System.Threading.Tasks;
 using Pytocs.Core.TypeInference;
 
 namespace Pytocs.UnitTests
@@ -241,11 +240,6 @@ namespace Pytocs.UnitTests
             var segs = path.Split(new[] { this.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
             FakeDirectory d = Traverse(segs.Take(segs.Length - 1));
             return ((FakeFile) d.Entries[segs.Last()]).Contents;
-        }
-
-        public string relPath(string path1, string path2)
-        {
-            throw new NotImplementedException();
         }
 
         public string GetFullPath(string file)

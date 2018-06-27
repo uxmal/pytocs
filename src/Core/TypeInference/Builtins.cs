@@ -1,5 +1,5 @@
 #region License
-//  Copyright 2015-2021 John Källén
+//  Copyright 2015 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ using System;
 using System.Collections.Generic;
 using Url = Pytocs.Core.Syntax.Url;
 using Pytocs.Core.Types;
-using System.Runtime.CompilerServices;
 
 namespace Pytocs.Core.TypeInference
 {
@@ -54,6 +53,8 @@ namespace Pytocs.Core.TypeInference
             return new Url(REFERENCE_URL + path);
         }
 
+
+
         public static Url newDataModelUrl(string path)
         {
             return new Url(DATAMODEL_URL + path);
@@ -74,7 +75,6 @@ namespace Pytocs.Core.TypeInference
         public InstanceType BaseListInst;
         public ClassType BaseArray;
         public ClassType BaseDict;
-        public ClassType BaseIterable;
         public ClassType BaseTuple;
         public ClassType BaseModule;
         public ClassType BaseFile;
@@ -89,7 +89,7 @@ namespace Pytocs.Core.TypeInference
         public ClassType Datetime_time;
         public ClassType Datetime_timedelta;
         public ClassType Datetime_tzinfo;
-        public InstanceType? Time_struct_time;
+        public InstanceType Time_struct_time;
 
 
 
@@ -116,7 +116,7 @@ namespace Pytocs.Core.TypeInference
         }
 
         ClassType newClass(string name, NameScope table,
-                           ClassType? superClass, params ClassType[] moreSupers)
+                           ClassType superClass, params ClassType[] moreSupers)
         {
             var path = table.ExtendPath(analyzer, name);
             ClassType t = new ClassType(name, table, path, superClass);
@@ -129,7 +129,7 @@ namespace Pytocs.Core.TypeInference
 
         ModuleType newModule(string name)
         {
-            return new ModuleType(name, null!, name, analyzer.GlobalTable);
+            return new ModuleType(name, null, name, analyzer.GlobalTable);
         }
 
         ClassType newException(string name, NameScope t)
@@ -149,8 +149,8 @@ namespace Pytocs.Core.TypeInference
                 type = DataType.Unknown;
             }
             var fun = new FunType(DataType.Unknown, type);
-            fun.Names.AddSuper(analyzer.Builtins.BaseFunction.Names);
-            fun.Names.Path = analyzer.Builtins.BaseFunction.Names.Path;
+            fun.Scope.AddSuperClass(analyzer.Builtins.BaseFunction.Scope);
+            fun.Scope.Path = analyzer.Builtins.BaseFunction.Scope.Path;
             return fun;
         }
 
@@ -183,8 +183,8 @@ namespace Pytocs.Core.TypeInference
         {
             protected Builtins outer;
             protected string name;
-            protected ModuleType? module;
-            protected NameScope? table;  // the module's symbol table
+            protected ModuleType module;
+            protected NameScope table;  // the module's symbol table
 
             protected NativeModule(Builtins outer, string name)
             {
@@ -193,51 +193,50 @@ namespace Pytocs.Core.TypeInference
                 outer.modules[name] = this;
             }
 
-            /// <summary>
-            /// Lazily load the module.
-            /// </summary>
-            public ModuleType? getModule()
+            /**
+             * Lazily load the module.
+             */
+
+            public ModuleType getModule()
             {
-                if (module is null)
+                if (module == null)
                 {
                     createModuleType();
-                    initBindings(this.table!);
+                    initBindings();
                 }
                 return module;
             }
 
-            public void initBindings() { initBindings(this.table!); }
-
-            public abstract void initBindings(NameScope table);
+            public abstract void initBindings();
 
             protected void createModuleType()
             {
                 if (module == null)
                 {
                     module = outer.newModule(name);
-                    table = module.Names;
-                    outer.analyzer.ModuleTable.Insert(outer.analyzer, name, liburl(), module, BindingKind.MODULE).IsBuiltin = true;
+                    table = module.Scope;
+                    outer.analyzer.ModuleScope.AddExpressionBinding(outer.analyzer, name, liburl(), module, BindingKind.MODULE).IsBuiltin = true;
                 }
             }
             
             protected void update(string name, Url url, DataType type, BindingKind kind)
             {
-                table!.Insert(outer.analyzer, name, url, type, kind).IsBuiltin = true;
+                table.AddExpressionBinding(outer.analyzer, name, url, type, kind).IsBuiltin = true;
             }
 
             protected void addClass(string name, Url url, DataType type)
             {
-                table!.Insert(outer.analyzer, name, url, type, BindingKind.CLASS).IsBuiltin = true;
+                table.AddExpressionBinding(outer.analyzer, name, url, type, BindingKind.CLASS).IsBuiltin = true;
             }
 
             protected void addMethod(string name, Url url, DataType type)
             {
-                table!.Insert(outer.analyzer, name, url, type, BindingKind.METHOD).IsBuiltin = true;
+                table.AddExpressionBinding(outer.analyzer, name, url, type, BindingKind.METHOD).IsBuiltin = true;
             }
 
             protected void addFunction(string name, Url url, DataType type)
             {
-                table!.Insert(outer.analyzer, name, url, outer.newFunc(type), BindingKind.FUNCTION).IsBuiltin = true;
+                table.AddExpressionBinding(outer.analyzer, name, url, outer.newFunc(type), BindingKind.FUNCTION).IsBuiltin = true;
             }
 
             // don't use this unless you're sure it's OK to share the type object
@@ -274,7 +273,7 @@ namespace Pytocs.Core.TypeInference
 
             protected void addAttr(string name, Url url, DataType type)
             {
-                table!.Insert(outer.analyzer, name, url, type, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                table.AddExpressionBinding(outer.analyzer, name, url, type, BindingKind.ATTRIBUTE).IsBuiltin = true;
             }
 
 
@@ -330,21 +329,19 @@ namespace Pytocs.Core.TypeInference
         /// <summary>
         /// The set of top-level native modules.
         /// </summary>
-        private readonly IDictionary<string, NativeModule> modules = new Dictionary<string, NativeModule>();
+        private IDictionary<string, NativeModule> modules = new Dictionary<string, NativeModule>();
 
-#nullable disable
         public Builtins(AnalyzerImpl analyzer)
         {
             this.analyzer = analyzer;
             buildTypes();
         }
-#nullable enable
 
 
         private void buildTypes()
         {
             new BuiltinsModule(this);
-            NameScope bt = Builtin.Names;
+            NameScope bt = Builtin.Scope;
 
             objectType = newClass("object", bt);
             BaseType = newClass("type", bt, objectType);
@@ -353,7 +350,6 @@ namespace Pytocs.Core.TypeInference
             BaseListInst = new InstanceType(BaseList);
             BaseArray = newClass("array", bt);
             BaseDict = newClass("dict", bt, objectType);
-            BaseIterable = newClass("iter", bt, objectType);
             ClassType numClass = newClass("int", bt, objectType);
             BaseModule = newClass("module", bt);
             BaseFile = newClass("file", bt, objectType);
@@ -375,7 +371,7 @@ namespace Pytocs.Core.TypeInference
             buildModuleType();
             buildFileType();
             buildFunctionType();
-            BuildClassType();
+            buildClassType();
 
             modules["__builtin__"].initBindings();  // eagerly load these bindings
 
@@ -434,7 +430,7 @@ namespace Pytocs.Core.TypeInference
          * Loads (if necessary) and returns the specified built-in module.
          */
 
-        public ModuleType? get(string name)
+        public ModuleType get(string name)
         {
             if (!name.Contains("."))
             {  // unqualified
@@ -442,14 +438,14 @@ namespace Pytocs.Core.TypeInference
             }
 
             string[] mods = name.Split('\\', '.');
-            DataType? type = getModule(mods[0]);
+            DataType type = getModule(mods[0]);
             if (type == null)
             {
                 return null;
             }
             for (int i = 1; i < mods.Length; i++)
             {
-                type = type.Names.LookupTypeOf(mods[i]);
+                type = type.Scope.LookupTypeOf(mods[i]);
                 if (!(type is ModuleType))
                 {
                     return null;
@@ -458,7 +454,7 @@ namespace Pytocs.Core.TypeInference
             return (ModuleType) type;
         }
 
-        private ModuleType? getModule(string name)
+        private ModuleType getModule(string name)
         {
             if (!modules.TryGetValue(name, out var wrap))
                 return null;
@@ -476,15 +472,15 @@ namespace Pytocs.Core.TypeInference
             };
             foreach (string m in obj_methods)
             {
-                objectType.Names.Insert(analyzer, m, newLibUrl("stdtypes"), newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                objectType.Scope.AddExpressionBinding(analyzer, m, newLibUrl("stdtypes"), newFunc(), BindingKind.METHOD).IsBuiltin = true;
             }
-            objectType.Names.Insert(analyzer, "__doc__", newLibUrl("stdtypes"), DataType.Str, BindingKind.CLASS).IsBuiltin = true;
-            objectType.Names.Insert(analyzer, "__class__", newLibUrl("stdtypes"), DataType.Unknown, BindingKind.CLASS).IsBuiltin = true;
+            objectType.Scope.AddExpressionBinding(analyzer, "__doc__", newLibUrl("stdtypes"), DataType.Str, BindingKind.CLASS).IsBuiltin = true;
+            objectType.Scope.AddExpressionBinding(analyzer, "__class__", newLibUrl("stdtypes"), DataType.Unknown, BindingKind.CLASS).IsBuiltin = true;
         }
 
         void buildTupleType()
         {
-            NameScope bt = BaseTuple.Names;
+            NameScope bt = BaseTuple.Scope;
             string[] tuple_methods = 
             {
                 "__add__", "__contains__", "__eq__", "__ge__", "__getnewargs__",
@@ -493,11 +489,11 @@ namespace Pytocs.Core.TypeInference
             };
             foreach (string m in tuple_methods)
             {
-                bt.Insert(analyzer, m, newLibUrl("stdtypes"), newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                bt.AddExpressionBinding(analyzer, m, newLibUrl("stdtypes"), newFunc(), BindingKind.METHOD).IsBuiltin = true;
             }
-            bt.Insert(analyzer, "__getslice__", newDataModelUrl("object.__getslice__"), newFunc(), BindingKind.METHOD).IsBuiltin = true;
-            bt.Insert(analyzer, "__getitem__", newDataModelUrl("object.__getitem__"), newFunc(), BindingKind.METHOD).IsBuiltin = true;
-            bt.Insert(analyzer, "__iter__", newDataModelUrl("object.__iter__"), newFunc(), BindingKind.METHOD).IsBuiltin = true;
+            bt.AddExpressionBinding(analyzer, "__getslice__", newDataModelUrl("object.__getslice__"), newFunc(), BindingKind.METHOD).IsBuiltin = true;
+            bt.AddExpressionBinding(analyzer, "__getitem__", newDataModelUrl("object.__getitem__"), newFunc(), BindingKind.METHOD).IsBuiltin = true;
+            bt.AddExpressionBinding(analyzer, "__iter__", newDataModelUrl("object.__iter__"), newFunc(), BindingKind.METHOD).IsBuiltin = true;
         }
 
         void buildArrayType()
@@ -510,40 +506,40 @@ namespace Pytocs.Core.TypeInference
             };
             foreach (string m in array_methods_none)
             {
-                BaseArray.Names.Insert(analyzer, m, newLibUrl("array"), newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                BaseArray.Scope.AddExpressionBinding(analyzer, m, newLibUrl("array"), newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
             }
             string[] array_methods_num = { "count", "itemsize", };
             foreach (string m in array_methods_num)
             {
-                BaseArray.Names.Insert(analyzer, m, newLibUrl("array"), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                BaseArray.Scope.AddExpressionBinding(analyzer, m, newLibUrl("array"), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
             }
             string[] array_methods_str = { "tostring", "tounicode", };
             foreach (string m in array_methods_str)
             {
-                BaseArray.Names.Insert(analyzer, m, newLibUrl("array"), newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                BaseArray.Scope.AddExpressionBinding(analyzer, m, newLibUrl("array"), newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
             }
         }
 
         void buildListType()
         {
-            BaseList.Names.Insert(analyzer, "__getslice__", newDataModelUrl("object.__getslice__"),
+            BaseList.Scope.AddExpressionBinding(analyzer, "__getslice__", newDataModelUrl("object.__getslice__"),
                     newFunc(BaseListInst), BindingKind.METHOD).IsBuiltin = true;
-            BaseList.Names.Insert(analyzer, "__getitem__", newDataModelUrl("object.__getitem__"),
+            BaseList.Scope.AddExpressionBinding(analyzer, "__getitem__", newDataModelUrl("object.__getitem__"),
                     newFunc(BaseList), BindingKind.METHOD).IsBuiltin = true;
-            BaseList.Names.Insert(analyzer, "__iter__", newDataModelUrl("object.__iter__"),
+            BaseList.Scope.AddExpressionBinding(analyzer, "__iter__", newDataModelUrl("object.__iter__"),
                     newFunc(BaseList), BindingKind.METHOD).IsBuiltin = true;
 
             string[] list_methods_none = {
                 "append", "extend", "index", "insert", "pop", "remove", "reverse", "sort"
-        };
+             };
             foreach (string m in list_methods_none)
             {
-                BaseList.Names.Insert(analyzer, m, newLibUrl("stdtypes"), newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                BaseList.Scope.AddExpressionBinding(analyzer, m, newLibUrl("stdtypes"), newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
             }
             string[] list_methods_num = { "count" };
             foreach (string m in list_methods_num)
             {
-                BaseList.Names.Insert(analyzer, m, newLibUrl("stdtypes"), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                BaseList.Scope.AddExpressionBinding(analyzer, m, newLibUrl("stdtypes"), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
             }
         }
 
@@ -557,7 +553,7 @@ namespace Pytocs.Core.TypeInference
 
         void buildNumTypes()
         {
-            NameScope bft = DataType.Float.Names;
+            NameScope bft = DataType.Float.Scope;
             string[] float_methods_num = {
                 "__abs__", "__add__", "__coerce__", "__div__", "__divmod__",
                 "__eq__", "__float__", "__floordiv__", "__format__",
@@ -571,9 +567,9 @@ namespace Pytocs.Core.TypeInference
         };
             foreach (string m in float_methods_num)
             {
-                bft.Insert(analyzer, m, numUrl(), newFunc(DataType.Float), BindingKind.METHOD).IsBuiltin = true;
+                bft.AddExpressionBinding(analyzer, m, numUrl(), newFunc(DataType.Float), BindingKind.METHOD).IsBuiltin = true;
             }
-            NameScope bnt = DataType.Int.Names;
+            NameScope bnt = DataType.Int.Scope;
             string[] num_methods_num = {
                 "__abs__", "__add__", "__and__",
                 "__class__", "__cmp__", "__coerce__", "__delattr__", "__div__",
@@ -591,13 +587,13 @@ namespace Pytocs.Core.TypeInference
         };
             foreach (string m in num_methods_num)
             {
-                bnt.Insert(analyzer, m, numUrl(), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                bnt.AddExpressionBinding(analyzer, m, numUrl(), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
             }
-            bnt.Insert(analyzer, "__getnewargs__", numUrl(), newFunc(newTuple(DataType.Int)), BindingKind.METHOD).IsBuiltin = true;
-            bnt.Insert(analyzer, "hex", numUrl(), newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-            bnt.Insert(analyzer, "conjugate", numUrl(), newFunc(DataType.Complex), BindingKind.METHOD).IsBuiltin = true;
+            bnt.AddExpressionBinding(analyzer, "__getnewargs__", numUrl(), newFunc(newTuple(DataType.Int)), BindingKind.METHOD).IsBuiltin = true;
+            bnt.AddExpressionBinding(analyzer, "hex", numUrl(), newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+            bnt.AddExpressionBinding(analyzer, "conjugate", numUrl(), newFunc(DataType.Complex), BindingKind.METHOD).IsBuiltin = true;
 
-            NameScope bct = DataType.Complex.Names;
+            NameScope bct = DataType.Complex.Scope;
             string[] complex_methods = {
                 "__abs__", "__add__", "__div__", "__divmod__",
                 "__float__", "__floordiv__", "__format__", "__getformat__", "__int__",
@@ -608,7 +604,7 @@ namespace Pytocs.Core.TypeInference
         };
             foreach (string c in complex_methods)
             {
-                bct.Insert(analyzer, c, numUrl(), newFunc(DataType.Complex), BindingKind.METHOD).IsBuiltin = true;
+                bct.AddExpressionBinding(analyzer, c, numUrl(), newFunc(DataType.Complex), BindingKind.METHOD).IsBuiltin = true;
             }
             string[] complex_methods_num = {
                 "__eq__", "__ge__", "__gt__", "__le__", "__lt__", "__ne__",
@@ -616,21 +612,21 @@ namespace Pytocs.Core.TypeInference
         };
             foreach (string cn in complex_methods_num)
             {
-                bct.Insert(analyzer, cn, numUrl(), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                bct.AddExpressionBinding(analyzer, cn, numUrl(), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
             }
-            bct.Insert(analyzer, "__getnewargs__", numUrl(), newFunc(newTuple(DataType.Complex)), BindingKind.METHOD).IsBuiltin = true;
-            bct.Insert(analyzer, "imag", numUrl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
-            bct.Insert(analyzer, "real", numUrl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+            bct.AddExpressionBinding(analyzer, "__getnewargs__", numUrl(), newFunc(newTuple(DataType.Complex)), BindingKind.METHOD).IsBuiltin = true;
+            bct.AddExpressionBinding(analyzer, "imag", numUrl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+            bct.AddExpressionBinding(analyzer, "real", numUrl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
         }
 
 
         void buildStrType()
         {
-            DataType.Str.Names.Insert(analyzer, "__getslice__", newDataModelUrl("object.__getslice__"),
+            DataType.Str.Scope.AddExpressionBinding(analyzer, "__getslice__", newDataModelUrl("object.__getslice__"),
                     newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-            DataType.Str.Names.Insert(analyzer, "__getitem__", newDataModelUrl("object.__getitem__"),
+            DataType.Str.Scope.AddExpressionBinding(analyzer, "__getitem__", newDataModelUrl("object.__getitem__"),
                     newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-            DataType.Str.Names.Insert(analyzer, "__iter__", newDataModelUrl("object.__iter__"),
+            DataType.Str.Scope.AddExpressionBinding(analyzer, "__iter__", newDataModelUrl("object.__iter__"),
                     newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
 
             string[] str_methods_str = {
@@ -641,7 +637,7 @@ namespace Pytocs.Core.TypeInference
         };
             foreach (string m in str_methods_str)
             {
-                DataType.Str.Names.Insert(analyzer, m, newLibUrl("stdtypes.html#str." + m),
+                DataType.Str.Scope.AddExpressionBinding(analyzer, m, newLibUrl("stdtypes.html#str." + m),
                         newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
             }
 
@@ -651,17 +647,17 @@ namespace Pytocs.Core.TypeInference
         };
             foreach (string m in str_methods_num)
             {
-                DataType.Str.Names.Insert(analyzer, m, newLibUrl("stdtypes.html#str." + m),
+                DataType.Str.Scope.AddExpressionBinding(analyzer, m, newLibUrl("stdtypes.html#str." + m),
                         newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
             }
 
             string[] str_methods_list = { "split", "splitlines" };
             foreach (string m in str_methods_list)
             {
-                DataType.Str.Names.Insert(analyzer, m, newLibUrl("stdtypes.html#str." + m),
+                DataType.Str.Scope.AddExpressionBinding(analyzer, m, newLibUrl("stdtypes.html#str." + m),
                         newFunc(newList(DataType.Str)), BindingKind.METHOD).IsBuiltin = true;
             }
-            DataType.Str.Names.Insert(analyzer, "partition", newLibUrl("stdtypes"),
+            DataType.Str.Scope.AddExpressionBinding(analyzer, "partition", newLibUrl("stdtypes"),
                     newFunc(newTuple(DataType.Str)), BindingKind.METHOD).IsBuiltin = true;
         }
 
@@ -671,9 +667,9 @@ namespace Pytocs.Core.TypeInference
             string[] attrs = { "__doc__", "__file__", "__name__", "__package__" };
             foreach (string m in attrs)
             {
-                BaseModule.Names.Insert(analyzer, m, newTutUrl("modules.html"), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                BaseModule.Scope.AddExpressionBinding(analyzer, m, newTutUrl("modules.html"), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
             }
-            BaseModule.Names.Insert(analyzer, "__dict__", newLibUrl("stdtypes", "modules"),
+            BaseModule.Scope.AddExpressionBinding(analyzer, "__dict__", newLibUrl("stdtypes", "modules"),
                     newDict(DataType.Str, DataType.Unknown), BindingKind.ATTRIBUTE).IsBuiltin = true;
         }
 
@@ -681,17 +677,17 @@ namespace Pytocs.Core.TypeInference
         void buildDictType()
         {
             string url = "datastructures.html#dictionaries";
-            NameScope bt = BaseDict.Names;
+            NameScope bt = BaseDict.Scope;
 
-            bt.Insert(analyzer, "__getitem__", newTutUrl(url), newFunc(), BindingKind.METHOD).IsBuiltin = true;
-            bt.Insert(analyzer, "__iter__", newTutUrl(url), newFunc(), BindingKind.METHOD).IsBuiltin = true;
-            bt.Insert(analyzer, "get", newTutUrl(url), newFunc(), BindingKind.METHOD).IsBuiltin = true;
+            bt.AddExpressionBinding(analyzer, "__getitem__", newTutUrl(url), newFunc(), BindingKind.METHOD).IsBuiltin = true;
+            bt.AddExpressionBinding(analyzer, "__iter__", newTutUrl(url), newFunc(), BindingKind.METHOD).IsBuiltin = true;
+            bt.AddExpressionBinding(analyzer, "get", newTutUrl(url), newFunc(), BindingKind.METHOD).IsBuiltin = true;
 
-            bt.Insert(analyzer, "items", newTutUrl(url),
+            bt.AddExpressionBinding(analyzer, "items", newTutUrl(url),
                     newFunc(newList(newTuple(DataType.Unknown, DataType.Unknown))), BindingKind.METHOD).IsBuiltin = true;
 
-            bt.Insert(analyzer, "keys", newTutUrl(url), newFunc(BaseList), BindingKind.METHOD).IsBuiltin = true;
-            bt.Insert(analyzer, "values", newTutUrl(url), newFunc(BaseList), BindingKind.METHOD).IsBuiltin = true;
+            bt.AddExpressionBinding(analyzer, "keys", newTutUrl(url), newFunc(BaseList), BindingKind.METHOD).IsBuiltin = true;
+            bt.AddExpressionBinding(analyzer, "values", newTutUrl(url), newFunc(BaseList), BindingKind.METHOD).IsBuiltin = true;
 
             string[] dict_method_unknown = 
             {
@@ -700,13 +696,13 @@ namespace Pytocs.Core.TypeInference
             };
             foreach (string m in dict_method_unknown)
             {
-                bt.Insert(analyzer, m, newTutUrl(url), newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                bt.AddExpressionBinding(analyzer, m, newTutUrl(url), newFunc(), BindingKind.METHOD).IsBuiltin = true;
             }
 
             string[] dict_method_num = { "has_key" };
             foreach (string m in dict_method_num)
             {
-                bt.Insert(analyzer, m, newTutUrl(url), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                bt.AddExpressionBinding(analyzer, m, newTutUrl(url), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
             }
         }
 
@@ -714,82 +710,81 @@ namespace Pytocs.Core.TypeInference
         void buildFileType()
         {
             string url = "stdtypes.html#bltin-file-objects";
-            NameScope table = BaseFile.Names;
+            NameScope table = BaseFile.Scope;
 
             string[] methods_unknown = {
                 "__enter__", "__exit__", "__iter__", "flush", "readinto", "truncate"
         };
             foreach (string m in methods_unknown)
             {
-                table.Insert(analyzer, m, newLibUrl(url), newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                table.AddExpressionBinding(analyzer, m, newLibUrl(url), newFunc(), BindingKind.METHOD).IsBuiltin = true;
             }
 
             string[] methods_str = { "next", "read", "readline" };
             foreach (string m in methods_str)
             {
-                table.Insert(analyzer, m, newLibUrl(url), newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                table.AddExpressionBinding(analyzer, m, newLibUrl(url), newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
             }
 
             string[] num = { "fileno", "isatty", "tell" };
             foreach (string m in num)
             {
-                table.Insert(analyzer, m, newLibUrl(url), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                table.AddExpressionBinding(analyzer, m, newLibUrl(url), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
             }
 
             string[] methods_none = { "close", "seek", "write", "writelines" };
             foreach (string m in methods_none)
             {
-                table.Insert(analyzer, m, newLibUrl(url), newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                table.AddExpressionBinding(analyzer, m, newLibUrl(url), newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
             }
 
-            table.Insert(analyzer, "readlines", newLibUrl(url), newFunc(newList(DataType.Str)), BindingKind.METHOD).IsBuiltin = true;
-            table.Insert(analyzer, "xreadlines", newLibUrl(url), newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-            table.Insert(analyzer, "closed", newLibUrl(url), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
-            table.Insert(analyzer, "encoding", newLibUrl(url), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
-            table.Insert(analyzer, "errors", newLibUrl(url), DataType.Unknown, BindingKind.ATTRIBUTE).IsBuiltin = true;
-            table.Insert(analyzer, "mode", newLibUrl(url), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
-            table.Insert(analyzer, "name", newLibUrl(url), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
-            table.Insert(analyzer, "softspace", newLibUrl(url), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
-            table.Insert(analyzer, "newlines", newLibUrl(url), newUnion(DataType.Str, newTuple(DataType.Str)), BindingKind.ATTRIBUTE).IsBuiltin = true;
+            table.AddExpressionBinding(analyzer, "readlines", newLibUrl(url), newFunc(newList(DataType.Str)), BindingKind.METHOD).IsBuiltin = true;
+            table.AddExpressionBinding(analyzer, "xreadlines", newLibUrl(url), newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+            table.AddExpressionBinding(analyzer, "closed", newLibUrl(url), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+            table.AddExpressionBinding(analyzer, "encoding", newLibUrl(url), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+            table.AddExpressionBinding(analyzer, "errors", newLibUrl(url), DataType.Unknown, BindingKind.ATTRIBUTE).IsBuiltin = true;
+            table.AddExpressionBinding(analyzer, "mode", newLibUrl(url), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+            table.AddExpressionBinding(analyzer, "name", newLibUrl(url), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+            table.AddExpressionBinding(analyzer, "softspace", newLibUrl(url), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+            table.AddExpressionBinding(analyzer, "newlines", newLibUrl(url), newUnion(DataType.Str, newTuple(DataType.Str)), BindingKind.ATTRIBUTE).IsBuiltin = true;
         }
-
 
         void buildFunctionType()
         {
-            NameScope t = BaseFunction.Names;
+            NameScope t = BaseFunction.Scope;
 
             foreach (string s in new[] { "func_doc", "__doc__", "func_name", "__name__", "__module__" })
             {
-                t.Insert(analyzer, s, new Url(DATAMODEL_URL), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                t.AddExpressionBinding(analyzer, s, new Url(DATAMODEL_URL), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
             }
 
-            t.Insert(analyzer, "func_closure", new Url(DATAMODEL_URL), newTuple(), BindingKind.ATTRIBUTE).IsBuiltin = true;
-            t.Insert(analyzer, "func_code", new Url(DATAMODEL_URL), DataType.Unknown, BindingKind.ATTRIBUTE).IsBuiltin = true;
-            t.Insert(analyzer, "func_defaults", new Url(DATAMODEL_URL), newTuple(), BindingKind.ATTRIBUTE).IsBuiltin = true;
-            t.Insert(analyzer, "func_globals", new Url(DATAMODEL_URL), analyzer.TypeFactory.CreateDict(DataType.Str, DataType.Unknown),
+            t.AddExpressionBinding(analyzer, "func_closure", new Url(DATAMODEL_URL), newTuple(), BindingKind.ATTRIBUTE).IsBuiltin = true;
+            t.AddExpressionBinding(analyzer, "func_code", new Url(DATAMODEL_URL), DataType.Unknown, BindingKind.ATTRIBUTE).IsBuiltin = true;
+            t.AddExpressionBinding(analyzer, "func_defaults", new Url(DATAMODEL_URL), newTuple(), BindingKind.ATTRIBUTE).IsBuiltin = true;
+            t.AddExpressionBinding(analyzer, "func_globals", new Url(DATAMODEL_URL), analyzer.TypeFactory.CreateDict(DataType.Str, DataType.Unknown),
                     BindingKind.ATTRIBUTE).IsBuiltin = true;
-            t.Insert(analyzer, "func_dict", new Url(DATAMODEL_URL), analyzer.TypeFactory.CreateDict(DataType.Str, DataType.Unknown), BindingKind.ATTRIBUTE).IsBuiltin = true;
+            t.AddExpressionBinding(analyzer, "func_dict", new Url(DATAMODEL_URL), analyzer.TypeFactory.CreateDict(DataType.Str, DataType.Unknown), BindingKind.ATTRIBUTE).IsBuiltin = true;
 
             // Assume any function can become a method, for simplicity.
             foreach (string s in new[] { "__func__", "im_func" })
             {
-                t.Insert(analyzer, s, new Url(DATAMODEL_URL), new FunType(), BindingKind.METHOD).IsBuiltin = true;
+                t.AddExpressionBinding(analyzer, s, new Url(DATAMODEL_URL), new FunType(), BindingKind.METHOD).IsBuiltin = true;
             }
         }
 
 
         // XXX:  finish wiring this up.  ClassType needs to inherit from it somehow,
         // so we can remove the per-instance attributes from NClassDef.
-        void BuildClassType()
+        void buildClassType()
         {
-            NameScope t = BaseClass.Names;
+            NameScope t = BaseClass.Scope;
 
             foreach (string s in new[] { "__name__", "__doc__", "__module__" })
             {
-                t.Insert(analyzer, s, new Url(DATAMODEL_URL), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                t.AddExpressionBinding(analyzer, s, new Url(DATAMODEL_URL), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
             }
 
-            t.Insert(analyzer, "__dict__", new Url(DATAMODEL_URL), new DictType(DataType.Str, DataType.Unknown), BindingKind.ATTRIBUTE).IsBuiltin = true;
+            t.AddExpressionBinding(analyzer, "__dict__", new Url(DATAMODEL_URL), new DictType(DataType.Str, DataType.Unknown), BindingKind.ATTRIBUTE).IsBuiltin = true;
         }
 
 
@@ -799,13 +794,13 @@ namespace Pytocs.Core.TypeInference
                 base(outer, "__builtin__")
             {
                 outer.Builtin = module = outer.newModule(name);
-                table = module.Names;
+                table = module.Scope;
             }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
-                outer.analyzer.ModuleTable.Insert(outer.analyzer, name, liburl(), module!, BindingKind.MODULE).IsBuiltin = true;
-                table!.AddSuper(outer.BaseModule.Names);
+                outer.analyzer.ModuleScope.AddExpressionBinding(outer.analyzer, name, liburl(), module, BindingKind.MODULE).IsBuiltin = true;
+                table.AddSuperClass(outer.BaseModule.Scope);
 
                 addClass("None", newLibUrl("constants"), DataType.None);
                 addFunction("bool", newLibUrl("functions", "bool"), DataType.Bool);
@@ -832,7 +827,7 @@ namespace Pytocs.Core.TypeInference
                     "property", "quit", "raw_input", "reduce", "reload", "reversed",
                     "set", "setattr", "slice", "sorted", "staticmethod", "super",
                     "type", "unichr", "unicode",
-                };
+            };
                 foreach (string f in builtin_func_unknown)
                 {
                     addFunction(f, newLibUrl("functions.html#" + f), DataType.Unknown);
@@ -871,7 +866,7 @@ namespace Pytocs.Core.TypeInference
                     addClass(f, newDataModelUrl("org/yinwang/pysonar/types"),
                             outer.newClass(f, outer.analyzer.GlobalTable, outer.objectType));
                 }
-                outer.BaseException = (ClassType) table.LookupTypeOf("BaseException")!;
+                outer.BaseException = (ClassType) table.LookupTypeOf("BaseException");
 
                 foreach (string f in new[] { "True", "False" })
                 {
@@ -882,20 +877,9 @@ namespace Pytocs.Core.TypeInference
                 addFunction("open", newTutUrl("inputoutput.html#reading-and-writing-files"), outer.BaseFileInst);
                 addFunction("__import__", newLibUrl("functions"), outer.newModule("<?>"));
 
-                outer.analyzer.GlobalTable.Insert(outer.analyzer, "__builtins__", liburl(), module!, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                outer.analyzer.GlobalTable.putAll(table);
-
-                AddBuiltinTypes(outer.analyzer.GlobalTable.DataTypes);
+                outer.analyzer.GlobalTable.AddExpressionBinding(outer.analyzer, "__builtins__", liburl(), module, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                outer.analyzer.GlobalTable.CopyAllBindings(table);
             }
-
-            private void AddBuiltinTypes(IDictionary<string, DataType> dataTypes)
-            {
-                dataTypes.Add("int", DataType.Int);
-                dataTypes.Add("str", DataType.Str);
-                dataTypes.Add("bool", DataType.Bool);
-                dataTypes.Add("List", new ListType());
-                dataTypes.Add("Dict", new DictType(DataType.Unknown,DataType.Unknown));
-        }
         }
 
 
@@ -907,7 +891,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addClass("array", newLibUrl("array", "array"), outer.BaseArray);
                 addClass("ArrayType", newLibUrl("array", "ArrayType"), outer.BaseArray);
@@ -923,9 +907,9 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
-                addClass("error", liburl(), outer.newException("error", table!));
+                addClass("error", liburl(), outer.newException("error", table));
 
                 addStrFuncs("add", "adpcm2lin", "alaw2lin", "bias", "lin2alaw", "lin2lin",
                         "lin2ulaw", "mul", "reverse", "tomono", "ulaw2lin");
@@ -949,7 +933,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addStrFuncs(
                         "a2b_uu", "b2a_uu", "a2b_base64", "b2a_base64", "a2b_qp",
@@ -958,8 +942,8 @@ namespace Pytocs.Core.TypeInference
 
                 addNumFuncs("crc_hqx", "crc32");
 
-                addClass("Error", liburl(), outer.newException("Error", table!));
-                addClass("Incomplete", liburl(), outer.newException("Incomplete", table!));
+                addClass("Error", liburl(), outer.newException("Error", table));
+                addClass("Incomplete", liburl(), outer.newException("Incomplete", table));
             }
         }
 
@@ -968,20 +952,20 @@ namespace Pytocs.Core.TypeInference
         {
             public Bz2Module(Builtins outer) : base(outer, "bz2") { }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 ClassType bz2 = outer.newClass("BZ2File", table, outer.BaseFile);  // close enough.
                 addClass("BZ2File", liburl(), bz2);
 
                 ClassType bz2c = outer.newClass("BZ2Compressor", table, outer.objectType);
-                bz2c.Names.Insert(outer.analyzer, "compress", newLibUrl("bz2", "sequential-de-compression"),
+                bz2c.Scope.AddExpressionBinding(outer.analyzer, "compress", newLibUrl("bz2", "sequential-de-compression"),
                         outer.newFunc(DataType.Str), BindingKind.METHOD);
-                bz2c.Names.Insert(outer.analyzer, "flush", newLibUrl("bz2", "sequential-de-compression"),
+                bz2c.Scope.AddExpressionBinding(outer.analyzer, "flush", newLibUrl("bz2", "sequential-de-compression"),
                         outer.newFunc(DataType.None), BindingKind.METHOD);
                 addClass("BZ2Compressor", newLibUrl("bz2", "sequential-de-compression"), bz2c);
 
                 ClassType bz2d = outer.newClass("BZ2Decompressor", table, outer.objectType);
-                bz2d.Names.Insert(outer.analyzer, "decompress", newLibUrl("bz2", "sequential-de-compression"),
+                bz2d.Scope.AddExpressionBinding(outer.analyzer, "decompress", newLibUrl("bz2", "sequential-de-compression"),
                         outer.newFunc(DataType.Str), BindingKind.METHOD);
                 addClass("BZ2Decompressor", newLibUrl("bz2", "sequential-de-compression"), bz2d);
 
@@ -1003,7 +987,7 @@ namespace Pytocs.Core.TypeInference
                 return newLibUrl("pickle", "module-cPickle");
             }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addUnknownFuncs("dump", "load", "dumps", "loads");
 
@@ -1019,13 +1003,13 @@ namespace Pytocs.Core.TypeInference
                         outer.newClass("BadPickleGet", table, unpicklingError), BindingKind.CLASS);
 
                 ClassType pickler = outer.newClass("Pickler", table, outer.objectType);
-                pickler.Names.Insert(outer.analyzer, "dump", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                pickler.Names.Insert(outer.analyzer, "clear_memo", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                pickler.Scope.AddExpressionBinding(outer.analyzer, "dump", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                pickler.Scope.AddExpressionBinding(outer.analyzer, "clear_memo", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Pickler", liburl(), pickler);
 
                 ClassType unpickler = outer.newClass("Unpickler", table, outer.objectType);
-                unpickler.Names.Insert(outer.analyzer, "load", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                unpickler.Names.Insert(outer.analyzer, "noload", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                unpickler.Scope.AddExpressionBinding(outer.analyzer, "load", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                unpickler.Scope.AddExpressionBinding(outer.analyzer, "noload", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Unpickler", liburl(), unpickler);
             }
         }
@@ -1048,7 +1032,7 @@ namespace Pytocs.Core.TypeInference
                 return newLibUrl("stringio", anchor);
             }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 ClassType StringIO = outer.newClass("StringIO", table, outer.BaseFile);
                 addFunction("StringIO", liburl(), new InstanceType(StringIO));
@@ -1066,7 +1050,7 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addFunction("phase", liburl("conversions-to-and-from-polar-coordinates"), DataType.Int);
                 addFunction("polar", liburl("conversions-to-and-from-polar-coordinates"),
@@ -1122,60 +1106,60 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 ClassType callable = outer.newClass("Callable", table, outer.objectType);
-                callable.Names.Insert(outer.analyzer, "__call__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                callable.Scope.AddExpressionBinding(outer.analyzer, "__call__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Callable", abcUrl(), callable);
 
                 ClassType iterableType = outer.newClass("Iterable", table, outer.objectType);
-                iterableType.Names.Insert(outer.analyzer, "__next__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                iterableType.Names.Insert(outer.analyzer, "__iter__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                iterableType.Scope.AddExpressionBinding(outer.analyzer, "__next__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                iterableType.Scope.AddExpressionBinding(outer.analyzer, "__iter__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Iterable", abcUrl(), iterableType);
 
                 ClassType Hashable = outer.newClass("Hashable", table, outer.objectType);
-                Hashable.Names.Insert(outer.analyzer, "__hash__", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                Hashable.Scope.AddExpressionBinding(outer.analyzer, "__hash__", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Hashable", abcUrl(), Hashable);
 
                 ClassType Sized = outer.newClass("Sized", table, outer.objectType);
-                Sized.Names.Insert(outer.analyzer, "__len__", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                Sized.Scope.AddExpressionBinding(outer.analyzer, "__len__", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Sized", abcUrl(), Sized);
 
                 ClassType containerType = outer.newClass("Container", table, outer.objectType);
-                containerType.Names.Insert(outer.analyzer, "__contains__", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                containerType.Scope.AddExpressionBinding(outer.analyzer, "__contains__", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Container", abcUrl(), containerType);
 
                 ClassType iteratorType = outer.newClass("Iterator", table, iterableType);
                 addClass("Iterator", abcUrl(), iteratorType);
 
                 ClassType sequenceType = outer.newClass("Sequence", table, Sized, iterableType, containerType);
-                sequenceType.Names.Insert(outer.analyzer, "__getitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                sequenceType.Names.Insert(outer.analyzer, "reversed", abcUrl(), outer.newFunc(sequenceType), BindingKind.METHOD).IsBuiltin = true;
-                sequenceType.Names.Insert(outer.analyzer, "index", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
-                sequenceType.Names.Insert(outer.analyzer, "count", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                sequenceType.Scope.AddExpressionBinding(outer.analyzer, "__getitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                sequenceType.Scope.AddExpressionBinding(outer.analyzer, "reversed", abcUrl(), outer.newFunc(sequenceType), BindingKind.METHOD).IsBuiltin = true;
+                sequenceType.Scope.AddExpressionBinding(outer.analyzer, "index", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                sequenceType.Scope.AddExpressionBinding(outer.analyzer, "count", abcUrl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Sequence", abcUrl(), sequenceType);
 
                 ClassType mutableSequence = outer.newClass("MutableSequence", table, sequenceType);
-                mutableSequence.Names.Insert(outer.analyzer, "__setitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                mutableSequence.Names.Insert(outer.analyzer, "__delitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                mutableSequence.Scope.AddExpressionBinding(outer.analyzer, "__setitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                mutableSequence.Scope.AddExpressionBinding(outer.analyzer, "__delitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("MutableSequence", abcUrl(), mutableSequence);
 
                 ClassType setType = outer.newClass("Set", table, Sized, iterableType, containerType);
-                setType.Names.Insert(outer.analyzer, "__getitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                setType.Scope.AddExpressionBinding(outer.analyzer, "__getitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Set", abcUrl(), setType);
 
                 ClassType mutableSet = outer.newClass("MutableSet", table, setType);
-                mutableSet.Names.Insert(outer.analyzer, "add", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                mutableSet.Names.Insert(outer.analyzer, "discard", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                mutableSet.Scope.AddExpressionBinding(outer.analyzer, "add", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                mutableSet.Scope.AddExpressionBinding(outer.analyzer, "discard", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("MutableSet", abcUrl(), mutableSet);
 
                 ClassType mapping = outer.newClass("Mapping", table, Sized, iterableType, containerType);
-                mapping.Names.Insert(outer.analyzer, "__getitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                mapping.Scope.AddExpressionBinding(outer.analyzer, "__getitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("Mapping", abcUrl(), mapping);
 
                 ClassType mutableMapping = outer.newClass("MutableMapping", table, mapping);
-                mutableMapping.Names.Insert(outer.analyzer, "__setitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                mutableMapping.Names.Insert(outer.analyzer, "__delitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                mutableMapping.Scope.AddExpressionBinding(outer.analyzer, "__setitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                mutableMapping.Scope.AddExpressionBinding(outer.analyzer, "__delitem__", abcUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 addClass("MutableMapping", abcUrl(), mutableMapping);
 
                 ClassType MappingView = outer.newClass("MappingView", table, Sized);
@@ -1194,25 +1178,25 @@ namespace Pytocs.Core.TypeInference
                 foreach (string n in new[] {"append", "appendLeft", "clear",
                         "extend", "extendLeft", "rotate"})
                 {
-                    deque.Names.Insert(outer.analyzer, n, dequeUrl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                    deque.Scope.AddExpressionBinding(outer.analyzer, n, dequeUrl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
                 }
                 foreach (string u in new[] {"__getitem__", "__iter__",
                         "pop", "popleft", "remove"})
                 {
-                    deque.Names.Insert(outer.analyzer, u, dequeUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                    deque.Scope.AddExpressionBinding(outer.analyzer, u, dequeUrl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 }
                 addClass("deque", dequeUrl(), deque);
 
                 ClassType defaultdict = outer.newClass("defaultdict", table, outer.objectType);
-                defaultdict.Names.Insert(outer.analyzer, "__missing__", liburl("defaultdict-objects"),
+                defaultdict.Scope.AddExpressionBinding(outer.analyzer, "__missing__", liburl("defaultdict-objects"),
                         outer.newFunc(), BindingKind.METHOD);
-                defaultdict.Names.Insert(outer.analyzer, "default_factory", liburl("defaultdict-objects"),
+                defaultdict.Scope.AddExpressionBinding(outer.analyzer, "default_factory", liburl("defaultdict-objects"),
                         outer.newFunc(), BindingKind.METHOD);
                 addClass("defaultdict", liburl("defaultdict-objects"), defaultdict);
 
                 string argh = "namedtuple-factory-function-for-tuples-with-named-fields";
                 ClassType namedtuple = outer.newClass("(namedtuple)", table, outer.BaseTuple);
-                namedtuple.Names.Insert(outer.analyzer, "_fields", liburl(argh),
+                namedtuple.Scope.AddExpressionBinding(outer.analyzer, "_fields", liburl(argh),
                         outer.newList(DataType.Str), BindingKind.ATTRIBUTE);
                 addFunction("namedtuple", liburl(argh), namedtuple);
             }
@@ -1226,7 +1210,7 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 string[] ctypes_attrs = {
                     "ARRAY", "ArgumentError", "Array", "BigEndianStructure", "CDLL",
@@ -1270,7 +1254,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addStrFuncs("crypt");
             }
@@ -1290,7 +1274,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 // XXX:  make datetime, time, date, timedelta and tzinfo Base* objects,
                 // so built-in functions can return them.
@@ -1299,104 +1283,104 @@ namespace Pytocs.Core.TypeInference
 
                 ClassType timedelta = outer.Datetime_timedelta = outer.newClass("timedelta", table, outer.objectType);
                 addClass("timedelta", dtUrl("timedelta"), timedelta);
-                NameScope tdtable = outer.Datetime_timedelta.Names;
-                tdtable.Insert(outer.analyzer, "min", dtUrl("timedelta"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                tdtable.Insert(outer.analyzer, "max", dtUrl("timedelta"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                tdtable.Insert(outer.analyzer, "resolution", dtUrl("timedelta"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                NameScope tdtable = outer.Datetime_timedelta.Scope;
+                tdtable.AddExpressionBinding(outer.analyzer, "min", dtUrl("timedelta"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                tdtable.AddExpressionBinding(outer.analyzer, "max", dtUrl("timedelta"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                tdtable.AddExpressionBinding(outer.analyzer, "resolution", dtUrl("timedelta"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
 
-                tdtable.Insert(outer.analyzer, "days", dtUrl("timedelta"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                tdtable.Insert(outer.analyzer, "seconds", dtUrl("timedelta"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                tdtable.Insert(outer.analyzer, "microseconds", dtUrl("timedelta"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                tdtable.AddExpressionBinding(outer.analyzer, "days", dtUrl("timedelta"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                tdtable.AddExpressionBinding(outer.analyzer, "seconds", dtUrl("timedelta"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                tdtable.AddExpressionBinding(outer.analyzer, "microseconds", dtUrl("timedelta"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
 
                 ClassType tzinfo = outer.Datetime_tzinfo = outer.newClass("tzinfo", table, outer.objectType);
                 addClass("tzinfo", dtUrl("tzinfo"), tzinfo);
-                NameScope tztable = outer.Datetime_tzinfo.Names;
-                tztable.Insert(outer.analyzer, "utcoffset", dtUrl("tzinfo"), outer.newFunc(timedelta), BindingKind.METHOD).IsBuiltin = true;
-                tztable.Insert(outer.analyzer, "dst", dtUrl("tzinfo"), outer.newFunc(timedelta), BindingKind.METHOD).IsBuiltin = true;
-                tztable.Insert(outer.analyzer, "tzname", dtUrl("tzinfo"), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-                tztable.Insert(outer.analyzer, "fromutc", dtUrl("tzinfo"), outer.newFunc(tzinfo), BindingKind.METHOD).IsBuiltin = true;
+                NameScope tztable = outer.Datetime_tzinfo.Scope;
+                tztable.AddExpressionBinding(outer.analyzer, "utcoffset", dtUrl("tzinfo"), outer.newFunc(timedelta), BindingKind.METHOD).IsBuiltin = true;
+                tztable.AddExpressionBinding(outer.analyzer, "dst", dtUrl("tzinfo"), outer.newFunc(timedelta), BindingKind.METHOD).IsBuiltin = true;
+                tztable.AddExpressionBinding(outer.analyzer, "tzname", dtUrl("tzinfo"), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                tztable.AddExpressionBinding(outer.analyzer, "fromutc", dtUrl("tzinfo"), outer.newFunc(tzinfo), BindingKind.METHOD).IsBuiltin = true;
 
                 ClassType date = outer.Datetime_date = outer.newClass("date", table, outer.objectType);
                 addClass("date", dtUrl("date"), date);
-                NameScope dtable = outer.Datetime_date.Names;
-                dtable.Insert(outer.analyzer, "min", dtUrl("date"), date, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                dtable.Insert(outer.analyzer, "max", dtUrl("date"), date, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                dtable.Insert(outer.analyzer, "resolution", dtUrl("date"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                NameScope dtable = outer.Datetime_date.Scope;
+                dtable.AddExpressionBinding(outer.analyzer, "min", dtUrl("date"), date, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                dtable.AddExpressionBinding(outer.analyzer, "max", dtUrl("date"), date, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                dtable.AddExpressionBinding(outer.analyzer, "resolution", dtUrl("date"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
 
-                dtable.Insert(outer.analyzer, "today", dtUrl("date"), outer.newFunc(date), BindingKind.METHOD).IsBuiltin = true;
-                dtable.Insert(outer.analyzer, "fromtimestamp", dtUrl("date"), outer.newFunc(date), BindingKind.METHOD).IsBuiltin = true;
-                dtable.Insert(outer.analyzer, "fromordinal", dtUrl("date"), outer.newFunc(date), BindingKind.METHOD).IsBuiltin = true;
+                dtable.AddExpressionBinding(outer.analyzer, "today", dtUrl("date"), outer.newFunc(date), BindingKind.METHOD).IsBuiltin = true;
+                dtable.AddExpressionBinding(outer.analyzer, "fromtimestamp", dtUrl("date"), outer.newFunc(date), BindingKind.METHOD).IsBuiltin = true;
+                dtable.AddExpressionBinding(outer.analyzer, "fromordinal", dtUrl("date"), outer.newFunc(date), BindingKind.METHOD).IsBuiltin = true;
 
-                dtable.Insert(outer.analyzer, "year", dtUrl("date"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                dtable.Insert(outer.analyzer, "month", dtUrl("date"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                dtable.Insert(outer.analyzer, "day", dtUrl("date"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                dtable.AddExpressionBinding(outer.analyzer, "year", dtUrl("date"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                dtable.AddExpressionBinding(outer.analyzer, "month", dtUrl("date"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                dtable.AddExpressionBinding(outer.analyzer, "day", dtUrl("date"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
 
-                dtable.Insert(outer.analyzer, "replace", dtUrl("date"), outer.newFunc(date), BindingKind.METHOD).IsBuiltin = true;
-                dtable.Insert(outer.analyzer, "timetuple", dtUrl("date"), outer.newFunc(outer.Time_struct_time!), BindingKind.METHOD).IsBuiltin = true;
+                dtable.AddExpressionBinding(outer.analyzer, "replace", dtUrl("date"), outer.newFunc(date), BindingKind.METHOD).IsBuiltin = true;
+                dtable.AddExpressionBinding(outer.analyzer, "timetuple", dtUrl("date"), outer.newFunc(outer.Time_struct_time), BindingKind.METHOD).IsBuiltin = true;
 
                 foreach (string n in new[] { "toordinal", "weekday", "isoweekday" })
                 {
-                    dtable.Insert(outer.analyzer, n, dtUrl("date"), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                    dtable.AddExpressionBinding(outer.analyzer, n, dtUrl("date"), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
                 }
                 foreach (string r in new[] { "ctime", "strftime", "isoformat" })
                 {
-                    dtable.Insert(outer.analyzer, r, dtUrl("date"), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                    dtable.AddExpressionBinding(outer.analyzer, r, dtUrl("date"), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
                 }
-                dtable.Insert(outer.analyzer, "isocalendar", dtUrl("date"),
+                dtable.AddExpressionBinding(outer.analyzer, "isocalendar", dtUrl("date"),
                         outer.newFunc(outer.newTuple(DataType.Int, DataType.Int, DataType.Int)), BindingKind.METHOD);
 
                 ClassType time = outer.Datetime_time = outer.newClass("time", table, outer.objectType);
                 addClass("time", dtUrl("time"), time);
-                NameScope ttable = outer.Datetime_time.Names;
+                NameScope ttable = outer.Datetime_time.Scope;
 
-                ttable.Insert(outer.analyzer, "min", dtUrl("time"), time, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                ttable.Insert(outer.analyzer, "max", dtUrl("time"), time, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                ttable.Insert(outer.analyzer, "resolution", dtUrl("time"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                ttable.AddExpressionBinding(outer.analyzer, "min", dtUrl("time"), time, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                ttable.AddExpressionBinding(outer.analyzer, "max", dtUrl("time"), time, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                ttable.AddExpressionBinding(outer.analyzer, "resolution", dtUrl("time"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
 
-                ttable.Insert(outer.analyzer, "hour", dtUrl("time"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                ttable.Insert(outer.analyzer, "minute", dtUrl("time"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                ttable.Insert(outer.analyzer, "second", dtUrl("time"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                ttable.Insert(outer.analyzer, "microsecond", dtUrl("time"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                ttable.Insert(outer.analyzer, "tzinfo", dtUrl("time"), tzinfo, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                ttable.AddExpressionBinding(outer.analyzer, "hour", dtUrl("time"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                ttable.AddExpressionBinding(outer.analyzer, "minute", dtUrl("time"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                ttable.AddExpressionBinding(outer.analyzer, "second", dtUrl("time"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                ttable.AddExpressionBinding(outer.analyzer, "microsecond", dtUrl("time"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                ttable.AddExpressionBinding(outer.analyzer, "tzinfo", dtUrl("time"), tzinfo, BindingKind.ATTRIBUTE).IsBuiltin = true;
 
-                ttable.Insert(outer.analyzer, "replace", dtUrl("time"), outer.newFunc(time), BindingKind.METHOD).IsBuiltin = true;
+                ttable.AddExpressionBinding(outer.analyzer, "replace", dtUrl("time"), outer.newFunc(time), BindingKind.METHOD).IsBuiltin = true;
 
                 foreach (string l in new[] { "isoformat", "strftime", "tzname" })
                 {
-                    ttable.Insert(outer.analyzer, l, dtUrl("time"), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                    ttable.AddExpressionBinding(outer.analyzer, l, dtUrl("time"), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
                 }
                 foreach (string f in new[] { "utcoffset", "dst" })
                 {
-                    ttable.Insert(outer.analyzer, f, dtUrl("time"), outer.newFunc(timedelta), BindingKind.METHOD).IsBuiltin = true;
+                    ttable.AddExpressionBinding(outer.analyzer, f, dtUrl("time"), outer.newFunc(timedelta), BindingKind.METHOD).IsBuiltin = true;
                 }
 
                 ClassType datetime = outer.Datetime_datetime = outer.newClass("datetime", table, date, time);
                 addClass("datetime", dtUrl("datetime"), datetime);
-                NameScope dttable = outer.Datetime_datetime.Names;
+                NameScope dttable = outer.Datetime_datetime.Scope;
 
                 foreach (string c in new[] {"combine", "fromordinal", "fromtimestamp", "now",
                         "strptime", "today", "utcfromtimestamp", "utcnow"})
                 {
-                    dttable.Insert(outer.analyzer, c, dtUrl("datetime"), outer.newFunc(datetime), BindingKind.METHOD).IsBuiltin = true;
+                    dttable.AddExpressionBinding(outer.analyzer, c, dtUrl("datetime"), outer.newFunc(datetime), BindingKind.METHOD).IsBuiltin = true;
                 }
 
-                dttable.Insert(outer.analyzer, "min", dtUrl("datetime"), datetime, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                dttable.Insert(outer.analyzer, "max", dtUrl("datetime"), datetime, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                dttable.Insert(outer.analyzer, "resolution", dtUrl("datetime"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                dttable.AddExpressionBinding(outer.analyzer, "min", dtUrl("datetime"), datetime, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                dttable.AddExpressionBinding(outer.analyzer, "max", dtUrl("datetime"), datetime, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                dttable.AddExpressionBinding(outer.analyzer, "resolution", dtUrl("datetime"), timedelta, BindingKind.ATTRIBUTE).IsBuiltin = true;
 
-                dttable.Insert(outer.analyzer, "date", dtUrl("datetime"), outer.newFunc(date), BindingKind.METHOD).IsBuiltin = true;
+                dttable.AddExpressionBinding(outer.analyzer, "date", dtUrl("datetime"), outer.newFunc(date), BindingKind.METHOD).IsBuiltin = true;
 
                 foreach (string x in new[] { "time", "timetz" })
                 {
-                    dttable.Insert(outer.analyzer, x, dtUrl("datetime"), outer.newFunc(time), BindingKind.METHOD).IsBuiltin = true;
+                    dttable.AddExpressionBinding(outer.analyzer, x, dtUrl("datetime"), outer.newFunc(time), BindingKind.METHOD).IsBuiltin = true;
                 }
 
                 foreach (string y in new[] { "replace", "astimezone" })
                 {
-                    dttable.Insert(outer.analyzer, y, dtUrl("datetime"), outer.newFunc(datetime), BindingKind.METHOD).IsBuiltin = true;
+                    dttable.AddExpressionBinding(outer.analyzer, y, dtUrl("datetime"), outer.newFunc(datetime), BindingKind.METHOD).IsBuiltin = true;
                 }
 
-                dttable.Insert(outer.analyzer, "utctimetuple", dtUrl("datetime"), outer.newFunc(outer.Time_struct_time!), BindingKind.METHOD).IsBuiltin = true;
+                dttable.AddExpressionBinding(outer.analyzer, "utctimetuple", dtUrl("datetime"), outer.newFunc(outer.Time_struct_time), BindingKind.METHOD).IsBuiltin = true;
             }
         }
 
@@ -1405,7 +1389,7 @@ namespace Pytocs.Core.TypeInference
         {
             public DbmModule(Builtins outer) : base(outer, "dbm") { }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 var path = table.ExtendPath(outer.analyzer, "dbm");
                 ClassType dbm = new ClassType("dbm", table, path, outer.BaseDict);
@@ -1424,7 +1408,7 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addNumAttrs(
                         "E2BIG", "EACCES", "EADDRINUSE", "EADDRNOTAVAIL", "EAFNOSUPPORT",
@@ -1467,9 +1451,9 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
-                ModuleType? builtins = outer.get("__builtin__");
+                ModuleType builtins = outer.get("__builtin__");
                 foreach (string s in builtin_exception_types)
                 {
                     //                Binding b = builtins.getTable().lookup(s);
@@ -1486,7 +1470,7 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 foreach (string s in new[] { "fcntl", "ioctl" })
                 {
@@ -1521,7 +1505,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addNoneFuncs("turnon_sigfpe", "turnoff_sigfpe");
                 addClass("FloatingPointError", liburl(), outer.newException("FloatingPointError", table));
@@ -1537,7 +1521,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addNoneFuncs("enable", "disable", "set_debug", "set_threshold");
                 addNumFuncs("isenabled", "collect", "get_debug", "get_count", "get_threshold");
@@ -1560,16 +1544,16 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
-                addClass("error", liburl(), outer.newException("error", table!));
+                addClass("error", liburl(), outer.newException("error", table));
 
-                var path = table!.ExtendPath(outer.analyzer, name);
+                var path = table.ExtendPath(outer.analyzer, name);
                 ClassType gdbm = new ClassType("gdbm", table, path, outer.BaseDict);
-                gdbm.Names.Insert(outer.analyzer, "firstkey", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-                gdbm.Names.Insert(outer.analyzer, "nextkey", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-                gdbm.Names.Insert(outer.analyzer, "reorganize", liburl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
-                gdbm.Names.Insert(outer.analyzer, "sync", liburl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                gdbm.Scope.AddExpressionBinding(outer.analyzer, "firstkey", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                gdbm.Scope.AddExpressionBinding(outer.analyzer, "nextkey", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                gdbm.Scope.AddExpressionBinding(outer.analyzer, "reorganize", liburl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                gdbm.Scope.AddExpressionBinding(outer.analyzer, "sync", liburl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
 
                 addFunction("open", liburl(), gdbm);
             }
@@ -1586,14 +1570,14 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 outer.get("struct");
                 ClassType struct_group = outer.newClass("struct_group", table, outer.BaseStruct);
-                struct_group.Names.Insert(outer.analyzer, "gr_name", liburl(), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                struct_group.Names.Insert(outer.analyzer, "gr_passwd", liburl(), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                struct_group.Names.Insert(outer.analyzer, "gr_gid", liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                struct_group.Names.Insert(outer.analyzer, "gr_mem", liburl(), outer.newList(DataType.Str), BindingKind.ATTRIBUTE).IsBuiltin = true;
+                struct_group.Scope.AddExpressionBinding(outer.analyzer, "gr_name", liburl(), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                struct_group.Scope.AddExpressionBinding(outer.analyzer, "gr_passwd", liburl(), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                struct_group.Scope.AddExpressionBinding(outer.analyzer, "gr_gid", liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                struct_group.Scope.AddExpressionBinding(outer.analyzer, "gr_mem", liburl(), outer.newList(DataType.Str), BindingKind.ATTRIBUTE).IsBuiltin = true;
 
                 addClass("struct_group", liburl(), struct_group);
 
@@ -1613,7 +1597,7 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addStrFuncs("get_magic");
                 addFunction("get_suffixes", liburl(), outer.newList(outer.newTuple(DataType.Str, DataType.Str, DataType.Int)));
@@ -1636,7 +1620,7 @@ namespace Pytocs.Core.TypeInference
                 addNumFuncs("lock_held", "is_builtin", "is_frozen");
 
                 ClassType impNullImporter = outer.newClass("NullImporter", table, outer.objectType);
-                impNullImporter.Names.Insert(outer.analyzer, "find_module", liburl(), outer.newFunc(DataType.None), BindingKind.FUNCTION).IsBuiltin = true;
+                impNullImporter.Scope.AddExpressionBinding(outer.analyzer, "find_module", liburl(), outer.newFunc(DataType.None), BindingKind.FUNCTION).IsBuiltin = true;
                 addClass("NullImporter", liburl(), impNullImporter);
             }
         }
@@ -1650,12 +1634,12 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 ClassType iterator = outer.newClass("iterator", table, outer.objectType);
-                iterator.Names.Insert(outer.analyzer, "from_iterable", liburl("itertool-functions"),
+                iterator.Scope.AddExpressionBinding(outer.analyzer, "from_iterable", liburl("itertool-functions"),
                         outer.newFunc(iterator), BindingKind.METHOD);
-                iterator.Names.Insert(outer.analyzer, "next", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                iterator.Scope.AddExpressionBinding(outer.analyzer, "next", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
 
                 foreach (string s in new[] {"chain", "combinations", "count", "cycle",
                         "dropwhile", "groupby", "ifilter",
@@ -1677,7 +1661,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addNumAttrs("version");
                 addStrFuncs("dumps");
@@ -1694,7 +1678,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addNumFuncs(
                         "acos", "acosh", "asin", "asinh", "atan", "atan2", "atanh", "ceil",
@@ -1714,15 +1698,16 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(NameScope table)
+
+            public override void initBindings()
             {
                 addNumAttrs("blocksize", "digest_size");
 
                 ClassType md5 = outer.newClass("md5", table, outer.objectType);
-                md5.Names.Insert(outer.analyzer, "update", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                md5.Names.Insert(outer.analyzer, "digest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-                md5.Names.Insert(outer.analyzer, "hexdigest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-                md5.Names.Insert(outer.analyzer, "copy", liburl(), outer.newFunc(md5), BindingKind.METHOD).IsBuiltin = true;
+                md5.Scope.AddExpressionBinding(outer.analyzer, "update", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                md5.Scope.AddExpressionBinding(outer.analyzer, "digest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                md5.Scope.AddExpressionBinding(outer.analyzer, "hexdigest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                md5.Scope.AddExpressionBinding(outer.analyzer, "copy", liburl(), outer.newFunc(md5), BindingKind.METHOD).IsBuiltin = true;
 
                 update("new", liburl(), outer.newFunc(md5), BindingKind.CONSTRUCTOR);
                 update("md5", liburl(), outer.newFunc(md5), BindingKind.CONSTRUCTOR);
@@ -1736,8 +1721,7 @@ namespace Pytocs.Core.TypeInference
                 : base(outer, "mmap")
             {
             }
-
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 ClassType mmap = outer.newClass("mmap", table, outer.objectType);
 
@@ -1747,23 +1731,23 @@ namespace Pytocs.Core.TypeInference
                         "MAP_SHARED", "PAGESIZE", "PROT_EXEC", "PROT_READ",
                         "PROT_WRITE"})
                 {
-                    mmap.Names.Insert(outer.analyzer, s, liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                    mmap.Scope.AddExpressionBinding(outer.analyzer, s, liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
 
                 foreach (string fstr in new[] { "read", "read_byte", "readline" })
                 {
-                    mmap.Names.Insert(outer.analyzer, fstr, liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                    mmap.Scope.AddExpressionBinding(outer.analyzer, fstr, liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
                 }
 
                 foreach (string fnum in new[] { "find", "rfind", "tell" })
                 {
-                    mmap.Names.Insert(outer.analyzer, fnum, liburl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                    mmap.Scope.AddExpressionBinding(outer.analyzer, fnum, liburl(), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
                 }
 
                 foreach (string fnone in new[] {"close", "flush", "move", "resize", "seek",
                         "write", "write_byte"})
                 {
-                    mmap.Names.Insert(outer.analyzer, fnone, liburl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                    mmap.Scope.AddExpressionBinding(outer.analyzer, fnone, liburl(), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
                 }
 
                 addClass("mmap", liburl(), mmap);
@@ -1778,11 +1762,11 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addStrFuncs("match", "cat", "get_default_domain");
                 addFunction("maps", liburl(), outer.newList(DataType.Str));
-                addClass("error", liburl(), outer.newException("error", table!));
+                addClass("error", liburl(), outer.newException("error", table));
             }
         }
 
@@ -1791,10 +1775,10 @@ namespace Pytocs.Core.TypeInference
         {
             public OsModule(Builtins outer) : base(outer, "os") { }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addAttr("name", liburl(), DataType.Str);
-                addClass("error", liburl(), outer.newException("error", table!));  // XXX: OSError
+                addClass("error", liburl(), outer.newException("error", table));  // XXX: OSError
 
                 initProcBindings();
                 initProcMgmtBindings();
@@ -2016,7 +2000,7 @@ namespace Pytocs.Core.TypeInference
             private void initOsPathModule()
             {
                 ModuleType m = outer.newModule("path");
-                NameScope ospath = m.Names;
+                NameScope ospath = m.Scope;
                 ospath.Path = "os.path";  // make sure global qnames are correct
 
                 update("path", newLibUrl("os.path.html#module-os.path"), m, BindingKind.MODULE);
@@ -2028,7 +2012,7 @@ namespace Pytocs.Core.TypeInference
             };
                 foreach (string s in str_funcs)
                 {
-                    ospath.Insert(outer.analyzer, s, newLibUrl("os.path", s), outer.newFunc(DataType.Str), BindingKind.FUNCTION).IsBuiltin = true;
+                    ospath.AddExpressionBinding(outer.analyzer, s, newLibUrl("os.path", s), outer.newFunc(DataType.Str), BindingKind.FUNCTION).IsBuiltin = true;
                 }
 
                 string[] num_funcs = {
@@ -2038,32 +2022,32 @@ namespace Pytocs.Core.TypeInference
             };
                 foreach (string s in num_funcs)
                 {
-                    ospath.Insert(outer.analyzer, s, newLibUrl("os.path", s), outer.newFunc(DataType.Int), BindingKind.FUNCTION).IsBuiltin = true;
+                    ospath.AddExpressionBinding(outer.analyzer, s, newLibUrl("os.path", s), outer.newFunc(DataType.Int), BindingKind.FUNCTION).IsBuiltin = true;
                 }
 
                 foreach (string s in new[] { "split", "splitdrive", "splitext", "splitunc" })
                 {
-                    ospath.Insert(outer.analyzer, s, newLibUrl("os.path", s),
+                    ospath.AddExpressionBinding(outer.analyzer, s, newLibUrl("os.path", s),
                             outer.newFunc(outer.newTuple(DataType.Str, DataType.Str)), BindingKind.FUNCTION);
                 }
 
-                ospath.Insert(outer.analyzer, "walk", newLibUrl("os.path"), outer.newFunc(DataType.None), BindingKind.FUNCTION).IsBuiltin = true;
+                ospath.AddExpressionBinding(outer.analyzer, "walk", newLibUrl("os.path"), outer.newFunc(DataType.None), BindingKind.FUNCTION).IsBuiltin = true;
 
                 string[] str_attrs = {
                     "altsep", "curdir", "devnull", "defpath", "pardir", "pathsep", "sep",
             };
                 foreach (string s in str_attrs)
                 {
-                    ospath.Insert(outer.analyzer, s, newLibUrl("os.path", s), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                    ospath.AddExpressionBinding(outer.analyzer, s, newLibUrl("os.path", s), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
 
-                ospath.Insert(outer.analyzer, "os", liburl(), this.module!, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                ospath.Insert(outer.analyzer, "stat", newLibUrl("stat"),
+                ospath.AddExpressionBinding(outer.analyzer, "os", liburl(), this.module, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                ospath.AddExpressionBinding(outer.analyzer, "stat", newLibUrl("stat"),
                     // moduleTable.lookupLocal("stat").getType(),
                         outer.newModule("<stat-fixme>"), BindingKind.ATTRIBUTE);
 
                 // XXX:  this is an re object, I think
-                ospath.Insert(outer.analyzer, "_varprog", newLibUrl("os.path"), DataType.Unknown, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                ospath.AddExpressionBinding(outer.analyzer, "_varprog", newLibUrl("os.path"), DataType.Unknown, BindingKind.ATTRIBUTE).IsBuiltin = true;
             }
         }
 
@@ -2076,7 +2060,7 @@ namespace Pytocs.Core.TypeInference
             }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 // XXX:  mark __getslice__, __setslice__ and __delslice__ as deprecated.
                 addNumFuncs(
@@ -2114,18 +2098,18 @@ namespace Pytocs.Core.TypeInference
             {
             }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 ClassType st = outer.newClass("st", table, outer.objectType);
-                st.Names.Insert(outer.analyzer, "compile", newLibUrl("parser", "st-objects"),
+                st.Scope.AddExpressionBinding(outer.analyzer, "compile", newLibUrl("parser", "st-objects"),
                         outer.newFunc(), BindingKind.METHOD);
-                st.Names.Insert(outer.analyzer, "isexpr", newLibUrl("parser", "st-objects"),
+                st.Scope.AddExpressionBinding(outer.analyzer, "isexpr", newLibUrl("parser", "st-objects"),
                         outer.newFunc(DataType.Int), BindingKind.METHOD);
-                st.Names.Insert(outer.analyzer, "issuite", newLibUrl("parser", "st-objects"),
+                st.Scope.AddExpressionBinding(outer.analyzer, "issuite", newLibUrl("parser", "st-objects"),
                         outer.newFunc(DataType.Int), BindingKind.METHOD);
-                st.Names.Insert(outer.analyzer, "tolist", newLibUrl("parser", "st-objects"),
+                st.Scope.AddExpressionBinding(outer.analyzer, "tolist", newLibUrl("parser", "st-objects"),
                         outer.newFunc(outer.newList()), BindingKind.METHOD);
-                st.Names.Insert(outer.analyzer, "totuple", newLibUrl("parser", "st-objects"),
+                st.Scope.AddExpressionBinding(outer.analyzer, "totuple", newLibUrl("parser", "st-objects"),
                         outer.newFunc(outer.newTuple()), BindingKind.METHOD);
 
                 addAttr("STType", liburl("st-objects"), outer.BaseType);
@@ -2143,7 +2127,7 @@ namespace Pytocs.Core.TypeInference
                 addFunction("issuite", liburl("queries-on-st-objects"), DataType.Bool);
 
                 addClass("ParserError", liburl("exceptions-and-error-handling"),
-                        outer.newException("ParserError", table!));
+                        outer.newException("ParserError", table));
             }
         }
 
@@ -2153,7 +2137,7 @@ namespace Pytocs.Core.TypeInference
             public PosixModule(Builtins outer) : base(outer, "posix") { }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addAttr("environ", liburl(), outer.newDict(DataType.Str, DataType.Str));
             }
@@ -2165,13 +2149,13 @@ namespace Pytocs.Core.TypeInference
             public PwdModule(Builtins outer) : base(outer, "pwd") { }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 ClassType struct_pwd = outer.newClass("struct_pwd", table, outer.objectType);
                 foreach (string s in new [] {"pw_nam", "pw_passwd", "pw_uid", "pw_gid",
                         "pw_gecos", "pw_dir", "pw_shell"})
                 {
-                    struct_pwd.Names.Insert(outer.analyzer, s, liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                    struct_pwd.Scope.AddExpressionBinding(outer.analyzer, s, liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
                 addAttr("struct_pwd", liburl(), struct_pwd);
 
@@ -2187,7 +2171,7 @@ namespace Pytocs.Core.TypeInference
             public PyexpatModule(Builtins outer) : base(outer, "pyexpat") { }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 // XXX
             }
@@ -2199,7 +2183,7 @@ namespace Pytocs.Core.TypeInference
             public ReadlineModule(Builtins outer) : base(outer, "readline") { }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addNoneFuncs("parse_and_bind", "insert_text", "read_init_file",
                         "read_history_file", "write_history_file",
@@ -2227,7 +2211,7 @@ namespace Pytocs.Core.TypeInference
             public ResourceModule(Builtins outer) : base(outer, "resource") { }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addFunction("getrlimit", liburl(), outer.newTuple(DataType.Int, DataType.Int));
                 addFunction("getrlimit", liburl(), DataType.Unknown);
@@ -2251,7 +2235,7 @@ namespace Pytocs.Core.TypeInference
             };
                 foreach (string ruf in ru_fields)
                 {
-                    ru.Names.Insert(outer.analyzer, ruf, liburl("resource-usage"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                    ru.Scope.AddExpressionBinding(outer.analyzer, ruf, liburl("resource-usage"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
 
                 addFunction("getrusage", liburl("resource-usage"), ru);
@@ -2270,21 +2254,21 @@ namespace Pytocs.Core.TypeInference
             public SelectModule(Builtins outer) : base(outer, "select") { }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
-                addClass("error", liburl(), outer.newException("error", table!));
+                addClass("error", liburl(), outer.newException("error", table));
 
                 addFunction("select", liburl(), outer.newTuple(outer.newList(), outer.newList(), outer.newList()));
 
                 string a = "edge-and-level-trigger-polling-epoll-objects";
 
                 ClassType epoll = outer.newClass("epoll", table, outer.objectType);
-                epoll.Names.Insert(outer.analyzer, "close", newLibUrl("select", a), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
-                epoll.Names.Insert(outer.analyzer, "fileno", newLibUrl("select", a), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
-                epoll.Names.Insert(outer.analyzer, "fromfd", newLibUrl("select", a), outer.newFunc(epoll), BindingKind.METHOD).IsBuiltin = true;
+                epoll.Scope.AddExpressionBinding(outer.analyzer, "close", newLibUrl("select", a), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                epoll.Scope.AddExpressionBinding(outer.analyzer, "fileno", newLibUrl("select", a), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                epoll.Scope.AddExpressionBinding(outer.analyzer, "fromfd", newLibUrl("select", a), outer.newFunc(epoll), BindingKind.METHOD).IsBuiltin = true;
                 foreach (string s in new[] { "register", "modify", "unregister", "poll" })
                 {
-                    epoll.Names.Insert(outer.analyzer, s, newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                    epoll.Scope.AddExpressionBinding(outer.analyzer, s, newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 }
                 addClass("epoll", liburl(a), epoll);
 
@@ -2298,10 +2282,10 @@ namespace Pytocs.Core.TypeInference
                 a = "polling-objects";
 
                 ClassType poll = outer.newClass("poll", table, outer.objectType);
-                poll.Names.Insert(outer.analyzer, "register", newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                poll.Names.Insert(outer.analyzer, "modify",    newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                poll.Names.Insert(outer.analyzer, "unregister", newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                poll.Names.Insert(outer.analyzer, "poll", newLibUrl("select", a),
+                poll.Scope.AddExpressionBinding(outer.analyzer, "register", newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                poll.Scope.AddExpressionBinding(outer.analyzer, "modify",    newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                poll.Scope.AddExpressionBinding(outer.analyzer, "unregister", newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                poll.Scope.AddExpressionBinding(outer.analyzer, "poll", newLibUrl("select", a),
                         outer.newFunc(outer.newList(outer.newTuple(DataType.Int, DataType.Int))), BindingKind.METHOD);
                 addClass("poll", liburl(a), poll);
 
@@ -2315,10 +2299,10 @@ namespace Pytocs.Core.TypeInference
                 a = "kqueue-objects";
 
                 ClassType kqueue = outer.newClass("kqueue", table, outer.objectType);
-                kqueue.Names.Insert(outer.analyzer, "close", newLibUrl("select", a), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
-                kqueue.Names.Insert(outer.analyzer, "fileno", newLibUrl("select", a), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
-                kqueue.Names.Insert(outer.analyzer, "fromfd", newLibUrl("select", a), outer.newFunc(kqueue), BindingKind.METHOD).IsBuiltin = true;
-                kqueue.Names.Insert(outer.analyzer, "control", newLibUrl("select", a),
+                kqueue.Scope.AddExpressionBinding(outer.analyzer, "close", newLibUrl("select", a), outer.newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
+                kqueue.Scope.AddExpressionBinding(outer.analyzer, "fileno", newLibUrl("select", a), outer.newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
+                kqueue.Scope.AddExpressionBinding(outer.analyzer, "fromfd", newLibUrl("select", a), outer.newFunc(kqueue), BindingKind.METHOD).IsBuiltin = true;
+                kqueue.Scope.AddExpressionBinding(outer.analyzer, "control", newLibUrl("select", a),
                         outer.newFunc(outer.newList(outer.newTuple(DataType.Int, DataType.Int))), BindingKind.METHOD);
                 addClass("kqueue", liburl(a), kqueue);
 
@@ -2327,7 +2311,7 @@ namespace Pytocs.Core.TypeInference
                 ClassType kevent = outer.newClass("kevent", table, outer.objectType);
                 foreach (string s in new[] { "ident", "filter", "flags", "fflags", "data", "udata" })
                 {
-                    kevent.Names.Insert(outer.analyzer, s, newLibUrl("select", a), DataType.Unknown, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                    kevent.Scope.AddExpressionBinding(outer.analyzer, s, newLibUrl("select", a), DataType.Unknown, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
                 addClass("kevent", liburl(a), kevent);
             }
@@ -2338,7 +2322,7 @@ namespace Pytocs.Core.TypeInference
         {
             public SignalModule(Builtins outer) : base(outer, "signal") { }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addNumAttrs(
                         "NSIG", "SIGABRT", "SIGALRM", "SIGBUS", "SIGCHLD", "SIGCLD",
@@ -2359,15 +2343,15 @@ namespace Pytocs.Core.TypeInference
             public ShaModule(Builtins outer) : base(outer, "sha") { }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addNumAttrs("blocksize", "digest_size");
 
                 ClassType sha = outer.newClass("sha", table, outer.objectType);
-                sha.Names.Insert(outer.analyzer, "update", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                sha.Names.Insert(outer.analyzer, "digest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-                sha.Names.Insert(outer.analyzer, "hexdigest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-                sha.Names.Insert(outer.analyzer, "copy", liburl(), outer.newFunc(sha), BindingKind.METHOD).IsBuiltin = true;
+                sha.Scope.AddExpressionBinding(outer.analyzer, "update", liburl(), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                sha.Scope.AddExpressionBinding(outer.analyzer, "digest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                sha.Scope.AddExpressionBinding(outer.analyzer, "hexdigest", liburl(), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                sha.Scope.AddExpressionBinding(outer.analyzer, "copy", liburl(), outer.newFunc(sha), BindingKind.METHOD).IsBuiltin = true;
                 addClass("sha", liburl(), sha);
 
                 update("new", liburl(), outer.newFunc(sha), BindingKind.CONSTRUCTOR);
@@ -2380,14 +2364,14 @@ namespace Pytocs.Core.TypeInference
             public SpwdModule(Builtins outer) : base(outer, "spwd") { }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 ClassType struct_spwd = outer.newClass("struct_spwd", table, outer.objectType);
                 foreach (string s in new[]{ "sp_nam", "sp_pwd", "sp_lstchg", "sp_min",
                         "sp_max", "sp_warn", "sp_inact", "sp_expire",
                         "sp_flag"})
                 {
-                    struct_spwd.Names.Insert(outer.analyzer, s, liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                    struct_spwd.Scope.AddExpressionBinding(outer.analyzer, s, liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
                 addAttr("struct_spwd", liburl(), struct_spwd);
 
@@ -2401,9 +2385,9 @@ namespace Pytocs.Core.TypeInference
         {
             public StropModule(Builtins outer) : base(outer, "strop") { }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
-                table!.putAll(DataType.Str.Names);
+                table.CopyAllBindings(DataType.Str.Scope);
             }
         }
 
@@ -2412,9 +2396,9 @@ namespace Pytocs.Core.TypeInference
         {
             public StructModule(Builtins outer) : base(outer, "struct") { }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
-                addClass("error", liburl(), outer.newException("error", table!));
+                addClass("error", liburl(), outer.newException("error", table));
                 addStrFuncs("pack");
                 addUnknownFuncs("pack_into");
                 addNumFuncs("calcsize");
@@ -2423,13 +2407,13 @@ namespace Pytocs.Core.TypeInference
 
                 outer.BaseStruct = outer.newClass("Struct", table, outer.objectType);
                 addClass("Struct", liburl("struct-objects"), outer.BaseStruct);
-                NameScope t = outer.BaseStruct.Names;
-                t.Insert(outer.analyzer, "pack", liburl("struct-objects"), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
-                t.Insert(outer.analyzer, "pack_into", liburl("struct-objects"), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                t.Insert(outer.analyzer, "unpack", liburl("struct-objects"), outer.newFunc(outer.newTuple()), BindingKind.METHOD).IsBuiltin = true;
-                t.Insert(outer.analyzer, "unpack_from", liburl("struct-objects"), outer.newFunc(outer.newTuple()), BindingKind.METHOD).IsBuiltin = true;
-                t.Insert(outer.analyzer, "format", liburl("struct-objects"), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                t.Insert(outer.analyzer, "size", liburl("struct-objects"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                NameScope t = outer.BaseStruct.Scope;
+                t.AddExpressionBinding(outer.analyzer, "pack", liburl("struct-objects"), outer.newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
+                t.AddExpressionBinding(outer.analyzer, "pack_into", liburl("struct-objects"), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                t.AddExpressionBinding(outer.analyzer, "unpack", liburl("struct-objects"), outer.newFunc(outer.newTuple()), BindingKind.METHOD).IsBuiltin = true;
+                t.AddExpressionBinding(outer.analyzer, "unpack_from", liburl("struct-objects"), outer.newFunc(outer.newTuple()), BindingKind.METHOD).IsBuiltin = true;
+                t.AddExpressionBinding(outer.analyzer, "format", liburl("struct-objects"), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                t.AddExpressionBinding(outer.analyzer, "size", liburl("struct-objects"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
             }
         }
 
@@ -2439,7 +2423,7 @@ namespace Pytocs.Core.TypeInference
             public SysModule(Builtins outer) : base(outer, "sys") { }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addUnknownFuncs(
                         "_clear_type_cache", "call_tracing", "callstats", "_current_frames",
@@ -2484,7 +2468,7 @@ namespace Pytocs.Core.TypeInference
             public SyslogModule(Builtins outer) : base(outer, "syslog") { }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addNoneFuncs("syslog", "openlog", "closelog", "setlogmask");
                 addNumAttrs("LOG_ALERT", "LOG_AUTH", "LOG_CONS", "LOG_CRIT", "LOG_CRON",
@@ -2503,7 +2487,7 @@ namespace Pytocs.Core.TypeInference
             public TermiosModule(Builtins outer) : base(outer, "termios") { }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addFunction("tcgetattr", liburl(), outer.newList());
                 addUnknownFuncs("tcsetattr", "tcsendbreak", "tcdrain", "tcflush", "tcflow");
@@ -2515,14 +2499,14 @@ namespace Pytocs.Core.TypeInference
         {
             public ThreadModule(Builtins outer) : base(outer, "thread") { }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
-                addClass("error", liburl(), outer.newException("error", table!));
+                addClass("error", liburl(), outer.newException("error", table));
 
                 ClassType @lock = outer.newClass("lock", table, outer.objectType);
-                @lock.Names.Insert(outer.analyzer, "acquire", liburl(), DataType.Int, BindingKind.METHOD).IsBuiltin = true;
-                @lock.Names.Insert(outer.analyzer, "locked", liburl(), DataType.Int, BindingKind.METHOD).IsBuiltin = true;
-                @lock.Names.Insert(outer.analyzer, "release", liburl(), DataType.None, BindingKind.METHOD).IsBuiltin = true;
+                @lock.Scope.AddExpressionBinding(outer.analyzer, "acquire", liburl(), DataType.Int, BindingKind.METHOD).IsBuiltin = true;
+                @lock.Scope.AddExpressionBinding(outer.analyzer, "locked", liburl(), DataType.Int, BindingKind.METHOD).IsBuiltin = true;
+                @lock.Scope.AddExpressionBinding(outer.analyzer, "release", liburl(), DataType.None, BindingKind.METHOD).IsBuiltin = true;
                 addAttr("LockType", liburl(), outer.BaseType);
 
                 addNoneFuncs("interrupt_main", "exit", "exit_thread");
@@ -2539,7 +2523,7 @@ namespace Pytocs.Core.TypeInference
         {
             public TimeModule(Builtins outer) : base(outer, "time") { }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 InstanceType struct_time = outer.Time_struct_time = new InstanceType(outer.newClass("datetime", table, outer.objectType));
                 addAttr("struct_time", liburl(), struct_time);
@@ -2551,7 +2535,7 @@ namespace Pytocs.Core.TypeInference
             };
                 foreach (string s in struct_time_attrs)
                 {
-                    struct_time.Names.Insert(outer.analyzer, s, liburl("struct_time"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                    struct_time.Scope.AddExpressionBinding(outer.analyzer, s, liburl("struct_time"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
 
                 addNumAttrs("accept2dyear", "altzone", "daylight", "timezone");
@@ -2570,7 +2554,7 @@ namespace Pytocs.Core.TypeInference
         {
             public UnicodedataModule(Builtins outer) : base(outer, "unicodedata") { }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 addNumFuncs("decimal", "digit", "numeric", "combining",
                         "east_asian_width", "mirrored");
@@ -2585,20 +2569,20 @@ namespace Pytocs.Core.TypeInference
         {
             public ZipimportModule(Builtins outer) : base(outer, "zipimport") { }
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
-                addClass("ZipImportError", liburl(), outer.newException("ZipImportError", table!));
+                addClass("ZipImportError", liburl(), outer.newException("ZipImportError", table));
 
                 ClassType zipimporter = outer.newClass("zipimporter", table, outer.objectType);
-                NameScope t = zipimporter.Names;
-                t.Insert(outer.analyzer, "find_module", liburl(), zipimporter, BindingKind.METHOD).IsBuiltin = true;
-                t.Insert(outer.analyzer, "get_code", liburl(), DataType.Unknown, BindingKind.METHOD).IsBuiltin = true;  // XXX:  code object
-                t.Insert(outer.analyzer, "get_data", liburl(), DataType.Unknown, BindingKind.METHOD).IsBuiltin = true;
-                t.Insert(outer.analyzer, "get_source", liburl(), DataType.Str, BindingKind.METHOD).IsBuiltin = true;
-                t.Insert(outer.analyzer, "is_package", liburl(), DataType.Int, BindingKind.METHOD).IsBuiltin = true;
-                t.Insert(outer.analyzer, "load_module", liburl(), outer.newModule("<?>"), BindingKind.METHOD).IsBuiltin = true;
-                t.Insert(outer.analyzer, "archive", liburl(), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                t.Insert(outer.analyzer, "prefix", liburl(), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                NameScope t = zipimporter.Scope;
+                t.AddExpressionBinding(outer.analyzer, "find_module", liburl(), zipimporter, BindingKind.METHOD).IsBuiltin = true;
+                t.AddExpressionBinding(outer.analyzer, "get_code", liburl(), DataType.Unknown, BindingKind.METHOD).IsBuiltin = true;  // XXX:  code object
+                t.AddExpressionBinding(outer.analyzer, "get_data", liburl(), DataType.Unknown, BindingKind.METHOD).IsBuiltin = true;
+                t.AddExpressionBinding(outer.analyzer, "get_source", liburl(), DataType.Str, BindingKind.METHOD).IsBuiltin = true;
+                t.AddExpressionBinding(outer.analyzer, "is_package", liburl(), DataType.Int, BindingKind.METHOD).IsBuiltin = true;
+                t.AddExpressionBinding(outer.analyzer, "load_module", liburl(), outer.newModule("<?>"), BindingKind.METHOD).IsBuiltin = true;
+                t.AddExpressionBinding(outer.analyzer, "archive", liburl(), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                t.AddExpressionBinding(outer.analyzer, "prefix", liburl(), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
 
                 addClass("zipimporter", liburl(), zipimporter);
                 addAttr("_zip_directory_cache", liburl(), outer.newDict(DataType.Str, DataType.Unknown));
@@ -2611,26 +2595,26 @@ namespace Pytocs.Core.TypeInference
             public ZlibModule(Builtins outer) : base(outer, "zlib") { }
 
 
-            public override void initBindings(NameScope table)
+            public override void initBindings()
             {
                 ClassType compress = outer.newClass("Compress", table, outer.objectType);
                 foreach (string s in new[] { "compress", "flush" })
                 {
-                    compress.Names.Insert(outer.analyzer, s, newLibUrl("zlib"), DataType.Str, BindingKind.METHOD).IsBuiltin = true;
+                    compress.Scope.AddExpressionBinding(outer.analyzer, s, newLibUrl("zlib"), DataType.Str, BindingKind.METHOD).IsBuiltin = true;
                 }
-                compress.Names.Insert(outer.analyzer, "copy", newLibUrl("zlib"), compress, BindingKind.METHOD).IsBuiltin = true;
+                compress.Scope.AddExpressionBinding(outer.analyzer, "copy", newLibUrl("zlib"), compress, BindingKind.METHOD).IsBuiltin = true;
                 addClass("Compress", liburl(), compress);
 
                 ClassType decompress = outer.newClass("Decompress", table, outer.objectType);
                 foreach (string s in new[] { "unused_data", "unconsumed_tail" })
                 {
-                    decompress.Names.Insert(outer.analyzer, s, newLibUrl("zlib"), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                    decompress.Scope.AddExpressionBinding(outer.analyzer, s, newLibUrl("zlib"), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
                 foreach (string s in new[] { "decompress", "flush" })
                 {
-                    decompress.Names.Insert(outer.analyzer, s, newLibUrl("zlib"), DataType.Str, BindingKind.METHOD).IsBuiltin = true;
+                    decompress.Scope.AddExpressionBinding(outer.analyzer, s, newLibUrl("zlib"), DataType.Str, BindingKind.METHOD).IsBuiltin = true;
                 }
-                decompress.Names.Insert(outer.analyzer, "copy", newLibUrl("zlib"), decompress, BindingKind.METHOD).IsBuiltin = true;
+                decompress.Scope.AddExpressionBinding(outer.analyzer, "copy", newLibUrl("zlib"), decompress, BindingKind.METHOD).IsBuiltin = true;
                 addClass("Decompress", liburl(), decompress);
 
                 addFunction("adler32", liburl(), DataType.Int);
@@ -2639,17 +2623,6 @@ namespace Pytocs.Core.TypeInference
                 addFunction("crc32", liburl(), DataType.Int);
                 addFunction("decompress", liburl(), DataType.Str);
                 addFunction("decompressobj", liburl(), decompress);
-            }
-        }
-
-        class MsvcrtModule : NativeModule
-        {
-            public MsvcrtModule(Builtins outer) : base(outer, "msvcrt") { }
-
-            public override void initBindings(NameScope scope)
-            {
-                addFunction("getch", liburl(), DataType.Str);
-                throw new NotImplementedException();
             }
         }
     }

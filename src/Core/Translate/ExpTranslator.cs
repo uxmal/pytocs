@@ -93,18 +93,21 @@ namespace Pytocs.Core.Translate
             this.intrinsic = new IntrinsicTranslator(this);
         }
 
-        public CodeExpression VisitCompFor(CompFor f)
+        public CodeExpression VisitCompFor(CompFor compFor)
         {
-            throw new NotImplementedException();
-            //var v = compFor.variable.Accept(this);
-            //var c = Translate(v, compFor);
-            //var mr = new CodeMethodReferenceExpression(c, "Select");
-            //var s = m.Appl(mr, new CodeExpression[] {
-            //            m.Lambda(
-            //                new CodeExpression[] { v },
-            //                a.name.Accept(this))
-            //        });
-            //return s;
+            var v = compFor.variable.Accept(this);
+            var c = Translate(v, compFor);
+            if (!IsIdentityProjection(compFor, compFor.projection))
+            {
+                var mr = m.MethodRef(c, "Select");
+                var s = m.Appl(mr, new CodeExpression[] {
+                m.Lambda(
+                    new CodeExpression[] { v },
+                    compFor.projection.Accept(this))
+                });
+                c = s;
+            }
+            return c;
         }
 
         public CodeExpression VisitCompIf(CompIf i)
@@ -420,14 +423,10 @@ namespace Pytocs.Core.Translate
             }
 
         public CodeExpression VisitUnary(UnaryExp u)
-            {
+        {
             if (u.op == Op.Sub && u.e is RealLiteral real)
             {
                 return new RealLiteral("-" + real.Value, -real.NumericValue, real.Filename, real.Start, real.End).Accept(this);
-            }
-            if (u.op == Op.Sub && u.e is RealLiteral real)
-            {
-                return new RealLiteral(-real.Value, real.Filename, real.Start, real.End).Accept(this);
             }
             var e = u.e.Accept(this);
             return new CodeUnaryOperatorExpression(mppyoptocsop[u.op], e);
@@ -586,7 +585,11 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitIterableUnpacker(IterableUnpacker unpacker)
         {
-            throw new NotImplementedException();
+            var compFor = (CompFor)lc.Collection;
+            var v = compFor.variable.Accept(this);
+            var c = lc.Collection.Accept(this);
+            var l = m.ApplyMethod(c, "ToList");
+            return l;
         }
 
         public CodeExpression VisitLambda(Lambda l)
@@ -611,7 +614,7 @@ namespace Pytocs.Core.Translate
                     queryClauses.Add(m.Where(e));
                 }
                 else if (iter is CompFor join)
-                {
+            {
                     e = join.collection.Accept(this);
                     From(join.variable, e, queryClauses);
                 }

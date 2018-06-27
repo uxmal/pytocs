@@ -761,6 +761,18 @@ else:
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
+        [Fact]
+        public void Parser_ArrayComprehension()
+        {
+            var pySrc =
+                "[state for (stash, states) in self.simgr.stashes.items() if (stash != 'pruned') for state in states ]";
+            var sExp =
+                "[state for (stash,states) in self.simgr.stashes.items() if (stash  !=  \"pruned\") for state in states]";
+            var exp = ParseExp(pySrc);
+            Debug.Print(exp.ToString().Substring(65));
+            AssertExp(sExp, exp);
+        }
+
         // Reported in Github 26
         [Fact]
         public void Parser_Infinity()

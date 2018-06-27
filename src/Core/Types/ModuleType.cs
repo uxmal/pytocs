@@ -24,14 +24,14 @@ namespace Pytocs.Core.Types
         public string name;
         public string qname;
 
-        public ModuleType(string name, string file, string qName, NameScope parent)
+        public ModuleType(string name, string? file, string qName, NameScope parent)
         {
             this.name = name;
             this.file = file;  // null for builtin modules
             this.qname = qName;
-            this.Names = new NameScope(parent, NameScope.StateType.MODULE);
-            Names.Path = qname;
-            Names.DataType = this;
+            this.Scope = new NameScope(parent, NameScope.StateType.MODULE);
+            Scope.Path = qname;
+            Scope.DataType = this;
         }
 
         public override T Accept<T>(IDataTypeVisitor<T> visitor)

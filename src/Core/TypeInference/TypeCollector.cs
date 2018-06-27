@@ -158,17 +158,17 @@ namespace Pytocs.Core.TypeInference
 
         public DataType GetAttrType(AttributeAccess a, DataType targetType)
         {
-            ISet<Binding>? bs = targetType.Names.LookupAttribute(a.FieldName.Name);
+            ISet<Binding>? bs = targetType.Scope.LookupAttribute(a.FieldName.Name);
             if (bs is null)
             {
                 analyzer.AddProblem(a.FieldName, "attribute not found in type: " + targetType);
                 DataType t = DataType.Unknown;
-                t.Names.Path = targetType.Names.ExtendPath(analyzer, a.FieldName.Name);
+                t.Names.Path = targetType.Scope.ExtendPath(analyzer, a.FieldName.Name);
                 return t;
             }
             else
             {
-                analyzer.addRef(a, targetType, bs);
+                analyzer.AddRef(a, targetType, bs);
                 return NameScope.MakeUnion(bs);
             }
         }
@@ -190,19 +190,14 @@ namespace Pytocs.Core.TypeInference
         public DataType VisitSuite(SuiteStatement b)
         {
             // first pass: mark global names
-            var globalNames = b.stmts
-                .OfType<GlobalStatement>()
-                .SelectMany(g => g.names)
-                .Concat(b.stmts
-                    .OfType<NonlocalStatement>()
-                    .SelectMany(g => g.names));
+            IEnumerable<Identifier> globalNames = GetGlobalNanesInSuite(b);
             foreach (var id in globalNames)
             {
                 scope.AddGlobalName(id.Name);
-                ISet<Binding>? nb = scope.Lookup(id.Name);
-                if (nb != null)
+                ISet<Binding>? nb = scope.LookupBindingsOf(id.Name);
+                if (nb is not null)
                 {
-                    analyzer.putRef(id, nb);
+                    analyzer.AddReference(id, nb);
                 }
             }
 
@@ -214,7 +209,7 @@ namespace Pytocs.Core.TypeInference
                 if (!returned)
                 {
                     retType = UnionType.Union(retType, t);
-                     if (!UnionType.Contains(t, DataType.Cont))
+                    if (!UnionType.Contains(t, DataType.Cont))
                     {
                         returned = true;
                         retType = UnionType.Remove(retType, DataType.Cont);
@@ -222,6 +217,16 @@ namespace Pytocs.Core.TypeInference
                 }
             }
             return retType;
+        }
+
+        private static IEnumerable<Identifier> GetGlobalNanesInSuite(SuiteStatement b)
+        {
+            return b.stmts
+                .OfType<GlobalStatement>()
+                .SelectMany(g => g.names)
+                .Concat(b.stmts
+                    .OfType<NonlocalStatement>()
+                    .SelectMany(g => g.names));
         }
 
         public DataType VisitBreak(BreakStatement b)
@@ -296,7 +301,7 @@ namespace Pytocs.Core.TypeInference
 
         public void ApplyConstructor(InstanceType i, Application call, List<DataType> args)
         {
-            if (i.Names.LookupAttributeType("__init__") is FunType initFunc && initFunc.Definition != null)
+            if (i.Scope.LookupAttributeType("__init__") is FunType initFunc && initFunc.Definition != null)
             {
                 initFunc.SelfType = i;
                 Apply(initFunc, args, null, null, null, call);
@@ -339,7 +344,7 @@ namespace Pytocs.Core.TypeInference
 
             if (call != null)
             {
-                analyzer.pushStack(call);
+                analyzer.PushStack(call);
             }
 
             var pTypes = new List<DataType>();
@@ -361,10 +366,10 @@ namespace Pytocs.Core.TypeInference
 
             BindMethodAttrs(analyzer, func);
 
-            var funcTable = new NameScope(func.scope!, NameScope.StateType.FUNCTION);
-            if (func.Names.Parent != null)
+            var funcTable = new NameScope(func.scope, NameScope.StateType.FUNCTION);
+            if (func.Scope.Parent != null)
             {
-                funcTable.Path = func.Names.Parent.ExtendPath(analyzer, func.Definition.name.Name);
+                funcTable.Path = func.Scope.Parent.ExtendPath(analyzer, func.Definition.name.Name);
             }
             else
             {
@@ -598,9 +603,9 @@ namespace Pytocs.Core.TypeInference
 
         static void BindMethodAttrs(Analyzer analyzer, FunType cl)
         {
-            if (cl.Names.Parent != null)
+            if (cl.Scope.Parent != null)
             {
-                DataType? cls = cl.Names.Parent.DataType;
+                DataType? cls = cl.Scope.Parent.DataType;
                 if (cls != null && cls is ClassType)
                 {
                     AddReadOnlyAttr(analyzer, cl, "im_class", cls, BindingKind.CLASS);
@@ -620,7 +625,7 @@ namespace Pytocs.Core.TypeInference
         {
             Node loc = Builtins.newDataModelUrl("the-standard-type-hierarchy");
             Binding b = analyzer.CreateBinding(name, loc, type, kind);
-            fun.Names.Update(name, b);
+            fun.Scope.SetIdentifierBinding(name, b);
             b.IsSynthetic = true;
             b.IsStatic = true;
         }
@@ -628,7 +633,7 @@ namespace Pytocs.Core.TypeInference
         public void AddSpecialAttribute(NameScope s, string name, DataType proptype)
         {
             Binding b = analyzer.CreateBinding(name, Builtins.newTutUrl("classes.html"), proptype, BindingKind.ATTRIBUTE);
-            s.Update(name, b);
+            s.SetIdentifierBinding(name, b);
             b.IsSynthetic = true;
             b.IsStatic = true;
         }
@@ -661,12 +666,12 @@ namespace Pytocs.Core.TypeInference
 
             // XXX: Not sure if we should add "bases", "name" and "dict" here. They
             // must be added _somewhere_ but I'm just not sure if it should be HERE.
-            AddSpecialAttribute(classType.Names, "__bases__", analyzer.TypeFactory.CreateTuple(baseTypes.ToArray()));
-            AddSpecialAttribute(classType.Names, "__name__", DataType.Str);
-            AddSpecialAttribute(classType.Names, "__dict__",
+            AddSpecialAttribute(classType.Scope, "__bases__", analyzer.TypeFactory.CreateTuple(baseTypes.ToArray()));
+            AddSpecialAttribute(classType.Scope, "__name__", DataType.Str);
+            AddSpecialAttribute(classType.Scope, "__dict__",
                     analyzer.TypeFactory.CreateDict(DataType.Str, DataType.Unknown));
-            AddSpecialAttribute(classType.Names, "__module__", DataType.Str);
-            AddSpecialAttribute(classType.Names, "__doc__", DataType.Str);
+            AddSpecialAttribute(classType.Scope, "__module__", DataType.Str);
+            AddSpecialAttribute(classType.Scope, "__doc__", DataType.Str);
 
             // Bind ClassType to name here before resolving the body because the
             // methods need this type as self.
@@ -830,10 +835,10 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitLambda(Lambda lambda)
         {
-            NameScope env = scope.getForwarding();
+            NameScope env = scope.Forwarding;
             var fun = new FunType(lambda, env);
-            fun.Names.Parent = this.scope;
-            fun.Names.Path = scope.ExtendPath(analyzer, "{lambda}");
+            fun.Scope.Parent = this.scope;
+            fun.Scope.Path = scope.ExtendPath(analyzer, "{lambda}");
             fun.SetDefaultTypes(ResolveList(lambda.args.Select(p => p.test!)));
             analyzer.AddUncalled(fun);
             return fun;
@@ -846,10 +851,10 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitFunctionDef(FunctionDef f, bool isAsync)
         {
-            NameScope env = scope.getForwarding();
+            NameScope env = scope.Forwarding;
             FunType fun = new FunType(f, env);
-            fun.Names.Parent = this.scope;
-            fun.Names.Path = scope.ExtendPath(analyzer, f.name.Name);
+            fun.Scope.Parent = this.scope;
+            fun.Scope.Path = scope.ExtendPath(analyzer, f.name.Name);
             fun.SetDefaultTypes(ResolveList(f.parameters
                 .Where(p => p.Test != null)
                 .Select(p => p.Test!)));
@@ -895,7 +900,7 @@ namespace Pytocs.Core.TypeInference
             {
                 return BindingKind.FUNCTION;
             }
-            }
+        }
 
         public DataType VisitGlobal(GlobalStatement g)
         {
@@ -1008,11 +1013,11 @@ namespace Pytocs.Core.TypeInference
                 DataType? mod = analyzer.LoadModule(a.orig.segs, scope);
                 if (mod is null)
                 {
-                    analyzer.AddProblem(i, $"Cannot load module {a}");
+                    analyzer.AddProblem(i, $"Cannot load module {string.Join(".", a.orig.segs)}.");
                 }
                 else if (a.alias != null)
                 {
-                    scope.Insert(analyzer, a.alias.Name, a.alias, mod, BindingKind.VARIABLE);
+                    scope.AddExpressionBinding(analyzer, a.alias.Name, a.alias, mod, BindingKind.VARIABLE);
                 }
             }
             return DataType.Cont;
@@ -1039,18 +1044,18 @@ namespace Pytocs.Core.TypeInference
                 foreach (var a in i.AliasedNames)
                 {
                     var idFirst = a.orig.segs[0];
-                    var bs = dtModule.Names.Lookup(idFirst.Name);
+                    var bs = dtModule.Scope.LookupBindingsOf(first.Name);
                     if (bs != null)
                     {
                         if (a.alias != null)
                         {
-                            scope.Update(a.alias.Name, bs);
-                            analyzer.putRef(a.alias, bs);
+                            scope.SetIdentifierBindings(a.alias.Name, bs);
+                            analyzer.AddReference(a.alias, bs);
                         }
                         else
                         {
-                            scope.Update(idFirst.Name, bs);
-                            analyzer.putRef(idFirst, bs);
+                            scope.SetIdentifierBindings(idFirst.Name, bs);
+                            analyzer.AddReference(idFirst, bs);
                         }
                     }
                     else
@@ -1064,11 +1069,11 @@ namespace Pytocs.Core.TypeInference
                         {
                             if (a.alias != null)
                             {
-                                scope.Insert(analyzer, a.alias.Name, a.alias, mod2, BindingKind.VARIABLE);
+                                scope.AddExpressionBinding(analyzer, a.alias.Name, a.alias, mod2, BindingKind.VARIABLE);
                             }
                             else
                             {
-                                scope.Insert(analyzer, idFirst.Name, idFirst, mod2, BindingKind.VARIABLE);
+                                scope.AddExpressionBinding(analyzer, idFirst.Name, idFirst, mod2, BindingKind.VARIABLE);
                             }
                         }
                     }
@@ -1090,7 +1095,7 @@ namespace Pytocs.Core.TypeInference
                 return;
             }
 
-            DataType? allType = mt.Names.LookupTypeOf("__all__");
+            DataType? allType = mt.Scope.LookupTypeOf("__all__");
 
             List<string> names = new List<string>();
             if (allType != null && allType is ListType lt)
@@ -1106,10 +1111,10 @@ namespace Pytocs.Core.TypeInference
                 int start = i.Start;
                 foreach (string name in names)
                 {
-                    ISet<Binding>? b = mt.Names.LookupLocal(name);
+                    ISet<Binding>? b = mt.Scope.LookupLocal(name);
                     if (b != null)
                     {
-                        scope.Update(name, b);
+                        scope.SetIdentifierBindings(name, b);
                     }
                     else
                     {
@@ -1120,7 +1125,7 @@ namespace Pytocs.Core.TypeInference
                         if (type != null)
                         {
                             start += name.Length;
-                            scope.Insert(analyzer, name, fakeName, type, BindingKind.VARIABLE);
+                            scope.AddExpressionBinding(analyzer, name, fakeName, type, BindingKind.VARIABLE);
                         }
                     }
                 }
@@ -1128,9 +1133,9 @@ namespace Pytocs.Core.TypeInference
             else
             {
                 // Fall back to importing all names not starting with "_".
-                foreach (var e in mt.Names.entrySet().Where(en => !en.Key.StartsWith("_")))
+                foreach (var e in mt.Scope.Entries.Where(en => !en.Key.StartsWith("_")))
                 {
-                    scope.Update(e.Key, e.Value);
+                    scope.SetIdentifierBindings(e.Key, e.Value);
                 }
             }
         }
@@ -1175,7 +1180,7 @@ namespace Pytocs.Core.TypeInference
         public DataType VisitListComprehension(ListComprehension l)
         {
             l.Collection.Accept(this);
-            return analyzer.TypeFactory.CreateList(l.Projection.Accept(this));
+            return analyzer.TypeFactory.CreateList(l.Collection.Accept(this));
         }
 
         /// 
@@ -1210,7 +1215,7 @@ namespace Pytocs.Core.TypeInference
 
             var mt = analyzer.TypeFactory.CreateModule(m.Name, m.Filename!, qname, analyzer.GlobalTable);
 
-            scope.Insert(analyzer, analyzer.GetModuleQname(m.Filename!), m, mt, BindingKind.MODULE);
+            scope.AddModuleBinding(analyzer, analyzer.GetModuleQname(m.Filename!), m, mt, BindingKind.MODULE);
             if (m.Body != null)
             {
                 m.Body.Accept(new TypeCollector(mt.Names, this.analyzer));
@@ -1220,10 +1225,10 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitIdentifier(Identifier id)
         {
-            ISet<Binding>? b = scope.Lookup(id.Name);
+            ISet<Binding>? b = scope.LookupBindingsOf(id.Name);
             if (b != null)
             {
-                analyzer.putRef(id, b);
+                analyzer.AddReference(id, b);
                 analyzer.Resolved.Add(id);
                 analyzer.Unresolved.Remove(id);
                 return NameScope.MakeUnion(b);
@@ -1237,7 +1242,7 @@ namespace Pytocs.Core.TypeInference
                 analyzer.AddProblem(id, $"unbound variable {id.Name}");
                 analyzer.Unresolved.Add(id);
                 DataType t = DataType.Unknown;
-                t.Names.Path = scope.ExtendPath(analyzer, id.Name);
+                t.Scope.Path = scope.ExtendPath(analyzer, id.Name);
                 return t;
             }
         }
@@ -1316,8 +1321,8 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitSetComprehension(SetComprehension s)
         {
-            s.Collection.Accept(this);
-            return new SetType(s.Projection.Accept(this));
+            var items = s.Collection.Accept(this);
+            return new SetType(items);
         }
 
         public DataType VisitSlice(Slice s)
@@ -1424,7 +1429,7 @@ namespace Pytocs.Core.TypeInference
                 }
                 else
                 {
-                    DataType? sliceFunc = vt.Names.LookupAttributeType("__getslice__");
+                    DataType? sliceFunc = vt.Scope.LookupAttributeType("__getslice__");
                     if (sliceFunc == null)
                     {
                         AddError(s, "The type can't be sliced: " + vt);

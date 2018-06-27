@@ -60,8 +60,8 @@ namespace Pytocs.UnitTests.TypeInference
                 Assert.False(i < aExp.Length, $"Fewer than the expected {aExp.Length} lines.");
                 Assert.True(i > aExp.Length, $"More than the expected {aExp.Length} lines.");
                 Assert.Equal(sExp, BindingsToString());
+                }
             }
-        }
 
         [Fact]
         public void TypeAn_Empty()
@@ -435,6 +435,54 @@ class Derived(Base):
 @"(binding:kind=FUNCTION:node=foo:type=? -> bool:qname=.foo.test.foo:refs=[])" + nl +
 @"(binding:kind=PARAMETER:node=field:type=?:qname=foo.field:refs=[field])" + nl;
             ExpectBindings(sExp);
+        }
+
+        [Fact]
+        public void TypeAn_call_Ctor()
+        {
+            fs.Dir("foo")
+                .File("test.py",
+@"class Foo():
+    def __init__(self, name):
+        this.name = name
+
+    def bar(self):
+        return Foo(""bar"")
+");
+            an.Analyze(@"\foo");
+            an.Finish();
+            var sExp =
+            #region Expected 
+@"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])
+(binding:kind=CLASS:node=Foo:type=<Foo>:qname=.foo.test.Foo:refs=[Foo])
+(binding:kind=CONSTRUCTOR:node=__init__:type=(Foo, str) -> None:qname=.foo.test.Foo.__init__:refs=[])
+(binding:kind=METHOD:node=bar:type=Foo -> Foo:qname=.foo.test.Foo.bar:refs=[])
+(binding:kind=PARAMETER:node=self:type=Foo:qname=.foo.test.Foo.__init__.self:refs=[])
+(binding:kind=PARAMETER:node=name:type=str:qname=.foo.test.Foo.__init__.name:refs=[name])
+(binding:kind=PARAMETER:node=self:type=Foo:qname=.foo.test.Foo.bar.self:refs=[])
+";
+            #endregion
+            ExpectBindings(sExp);
+        }
+
+        [Fact]
+        public void TypeAn_call_Ctor_names()
+        {
+            fs.Dir("foo")
+                .File("test.py",
+@"class Foo():
+    def __init__(self, name):
+        this.name = name
+
+    def make(name):
+        return Foo(name)
+
+x = make('foo')
+y = make('bar')
+");
+            an.Analyze("foo");
+            an.Finish();
+
         }
 
         [Fact(DisplayName = nameof(TypeAn_void_function))]

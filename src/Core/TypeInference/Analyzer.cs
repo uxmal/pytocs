@@ -35,6 +35,11 @@ namespace Pytocs.Core.TypeInference
         HashSet<Name> Resolved { get; }
         HashSet<Name> Unresolved { get; }
 
+        /// <summary>
+        /// Maps a node to all its references.
+        /// </summary>
+        Dictionary<Node,List<Binding>> References { get; }
+
         Binding GetBindingOf(Node node);
 
 
@@ -44,20 +49,23 @@ namespace Pytocs.Core.TypeInference
         string GetModuleQname(string file);
 
         Binding CreateBinding(string id, Node node, DataType type, BindingKind kind);
-        void addRef(AttributeAccess attr, DataType targetType, ISet<Binding> bs);
-        void putRef(Node node, ICollection<Binding> bs);
-        void putRef(Node node, Binding bs);
+        void AddRef(AttributeAccess attr, DataType targetType, ISet<Binding> bs);
+        /// <summary>
+        /// Record that <paramref name="node"/> uses the bindings <paramref name="bs"/>.
+        /// </summary>
+        void AddReference(Node node, ICollection<Binding> bs);
+        void AddReference(Node node, Binding bs);
         void AddExpType(Exp node, DataType type);
         void AddUncalled(FunType f);
         void RemoveUncalled(FunType f);
-        void pushStack(Exp v);
-        void popStack(Exp v);
+        void PushStack(Exp v);
+        void PopStack(Exp v);
         bool InStack(Exp v);
 
         string ModuleName(string path);
-        string ExtendPath(string path, string name);
 
         void AddProblem(Node loc, string msg);
+        void AddProblem(Node loc, string format, params object[] args);
         void AddProblem(string filename, int start, int end, string msg);
     }
 
@@ -72,6 +80,7 @@ namespace Pytocs.Core.TypeInference
         private readonly List<string> loadedFiles = new List<string>();
         private readonly List<Binding> allBindings = new List<Binding>();
         private readonly Dictionary<Node, DataType> expTypes = new Dictionary<Node, DataType>();
+
         private readonly Dictionary<Node, Binding> bindingMap = new Dictionary<Node, Binding>();
         private readonly Dictionary<string, List<Diagnostic>> semanticErrors = new Dictionary<string, List<Diagnostic>>();
         private readonly Dictionary<string, List<Diagnostic>> parseErrors = new Dictionary<string, List<Diagnostic>>();
@@ -131,11 +140,14 @@ namespace Pytocs.Core.TypeInference
         public Builtins Builtins { get; private set; }
         public Dictionary<Node, List<Binding>> References { get; private set; }
 
-        public NameScope ModuleTable = new NameScope(null, NameScope.StateType.GLOBAL);
+        public NameScope ModuleScope = new NameScope(null, NameScope.StateType.GLOBAL);
 
         /// <summary>
-        /// Main entry to the analyzer
+        /// Loads a file and performs type analysis on it.
         /// </summary>
+        /// <remarks>
+        /// Main entry to the analyzer.
+        /// </remarks>
         public void Analyze(string path)
         {
             string upath = FileSystem.GetFullPath(path);
@@ -155,7 +167,7 @@ namespace Pytocs.Core.TypeInference
         }
 
 
-        public void SetCWD(string cd)
+        public void SetWorkingDirectory(string cd)
         {
             if (cd != null)
             {
@@ -238,12 +250,12 @@ namespace Pytocs.Core.TypeInference
             return callStack.Contains(f);
         }
 
-        public void pushStack(Exp f)
+        public void PushStack(Exp f)
         {
             callStack.Add(f);
         }
 
-        public void popStack(Exp f)
+        public void PopStack(Exp f)
         {
             callStack.Remove(f);
         }
@@ -272,7 +284,7 @@ namespace Pytocs.Core.TypeInference
 
         public IEnumerable<Binding> GetModuleBindings()
         {
-            return ModuleTable.table.Values
+            return ModuleScope.table.Values
                 .SelectMany(g =>g)
                 .Where(g => g.Kind == BindingKind.MODULE && 
                             !g.IsBuiltin && !g.IsSynthetic);
@@ -280,32 +292,23 @@ namespace Pytocs.Core.TypeInference
 
         ModuleType? GetCachedModule(string file)
         {
-            DataType? t = ModuleTable.LookupTypeOf(GetModuleQname(file));
-            if (t is null)
+            DataType t = ModuleScope.LookupTypeOf(GetModuleQname(file));
+            switch (t)
             {
-                return null;
-            }
-            else if (t is UnionType ut)
-            {
-                foreach (DataType tt in ut.types)
-                {
-                    if (tt is ModuleType mt)
-                    {
-                        return mt;
-                    }
-                }
-                return null;
-            }
-            else if (t is ModuleType mt)
-            {
+            case UnionType ut:
+                return ut.types.OfType<ModuleType>().FirstOrDefault();
+            case ModuleType mt:
                 return mt;
-            }
-            else
-            {
+            default:
                 return null;
             }
         }
 
+        /// <summary>
+        /// Get a Module qualified  name from a (relative) path name.
+        /// </summary>
+        /// <param name="file"></param>
+        /// <returns>The qualified name.</returns>
         public string GetModuleQname(string file)
         {
             if (file.EndsWith("__init__.py"))
@@ -324,9 +327,9 @@ namespace Pytocs.Core.TypeInference
             return bindingMap.TryGetValue(node, out Binding b)
                 ? b
                 : null;
-        }
+            }
 
-        public void putRef(Node node, ICollection<Binding> bs)
+        public void AddReference(Node node, ICollection<Binding> bs)
         {
             if (!(node is Url))
             {
@@ -346,10 +349,10 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-        public void putRef(Node node, Binding b)
+        public void AddReference(Node node, Binding b)
         {
             var bs = new List<Binding> { b };
-            putRef(node, bs);
+            AddReference(node, bs);
         }
 
         public void AddExpType(Exp exp, DataType dt)
@@ -359,11 +362,20 @@ namespace Pytocs.Core.TypeInference
         }
 
         public void AddProblem(Node loc, string msg)
-            {
+        {
             string? file = loc?.Filename;
             if (file is not null)
             {
                 AddFileError(file, loc!.Start, loc.End, msg);
+            }
+        }
+
+        public void AddProblem(Node loc, string format, params object[] args)
+        {
+            string? file = loc?.Filename;
+            if (file is not null)
+            {
+                AddFileError(file, loc!.Start, loc.End, string.Format(format, args));
             }
         }
 
@@ -392,6 +404,11 @@ namespace Pytocs.Core.TypeInference
             return msgs;
         }
 
+        /// <summary>
+        /// Loads a specific file and determines the type of the Python module contained within.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
         public DataType? LoadFile(string path)
         {
             path = FileSystem.GetFullPath(path);
@@ -413,8 +430,8 @@ namespace Pytocs.Core.TypeInference
             }
 
             // set new CWD and save the old one on stack
-            string? oldcwd = cwd;
-            SetCWD(FileSystem.GetDirectoryName(path));
+            string oldcwd = cwd;
+            SetWorkingDirectory(FileSystem.GetDirectoryName(path));
 
             PushImportStack(path);
             loadingProgress?.Tick();
@@ -433,13 +450,13 @@ namespace Pytocs.Core.TypeInference
             PopImportStack(path);
 
             // restore old CWD
-            SetCWD(oldcwd!);
+            SetWorkingDirectory(oldcwd);
             return type;
         }
 
         public DataType LoadModule(Module ast)
         {
-            return new TypeCollector(ModuleTable, this).VisitModule(ast);
+            return new TypeCollector(this.ModuleScope, this).VisitModule(ast);
         }
 
         private void CreateCacheDirectory()
@@ -467,7 +484,7 @@ namespace Pytocs.Core.TypeInference
         /// </summary>
         public Module? GetAstForFile(string file)
         {
-            return astCache?.getAST(file);
+            return astCache.GetAst(file);
         }
 
         public ModuleType? GetBuiltinModule(string qname)
@@ -521,10 +538,10 @@ namespace Pytocs.Core.TypeInference
             DataType? mt = GetBuiltinModule(qname);
             if (mt != null)
             {
-                state.Insert(
+                state.AddExpressionBinding(
                     this,
                     name[0].Name,
-                    new Url(Builtins.LIBRARY_URL + mt.Names.Path + ".html"),
+                    new Url(Builtins.LIBRARY_URL + mt.Scope.Path + ".html"),
                     mt, BindingKind.SCOPE);
                 return mt;
             }
@@ -553,11 +570,11 @@ namespace Pytocs.Core.TypeInference
 
                     if (prev != null)
                     {
-                        prev.Names.Insert(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
+                        prev.Scope.AddExpressionBinding(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
                     }
                     else
                     {
-                        state.Insert(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
+                        state.AddExpressionBinding(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
                     }
                     prev = mod;
                 }
@@ -573,11 +590,11 @@ namespace Pytocs.Core.TypeInference
                         }
                         if (prev != null)
                         {
-                            prev.Names.Insert(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
+                            prev.Scope.AddExpressionBinding(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
                         }
                         else
                         {
-                            state.Insert(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
+                            state.AddExpressionBinding(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
                         }
                         prev = mod;
                     }
@@ -814,7 +831,7 @@ namespace Pytocs.Core.TypeInference
             return files;
         }
 
-        public void RegisterBinding(Binding b)
+        public void AddBinding(Binding b)
         {
             this.bindingMap[b.Node] = b;
             allBindings.Add(b);
@@ -856,7 +873,7 @@ namespace Pytocs.Core.TypeInference
         public Binding CreateBinding(string id, Node node, DataType type, BindingKind kind)
         {
             var b = new Binding(id, node, type, kind);
-            RegisterBinding(b);
+            AddBinding(b);
             return b;
         }
 
@@ -873,11 +890,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-        public void addRef(AttributeAccess attr, DataType targetType, ISet<Binding> bs)
+        public void AddRef(AttributeAccess attr, DataType targetType, ISet<Binding> bs)
         {
             foreach (Binding b in bs)
             {
-                putRef(attr, b);
+                AddReference(attr, b);
                 if (attr.Parent is Application &&
                         b.Type is FunType fn && targetType is InstanceType)
                 {  // method call 
@@ -886,14 +903,5 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-        public string ExtendPath(string path, string name)
-        {
-            name = ModuleName(name);
-            if (path == "")
-            {
-                return name;
-            }
-            return path + "." + name;
-        }
     }
 }

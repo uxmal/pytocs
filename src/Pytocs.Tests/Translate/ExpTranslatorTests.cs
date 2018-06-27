@@ -1,5 +1,5 @@
 #region License
-//  Copyright 2015-2021 John Källén
+//  Copyright 2015-2022 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -258,6 +258,14 @@ namespace Pytocs.UnitTests.Translate
         }
 
         [Fact]
+        public void Ex_Regression1()
+        {
+            var pySrc = "((a, s) for a in stackframe.alocs.values() for s in a._segment_list)";
+            string sExp = "stackframe.alocs.values().SelectMany(a => a._segment_list, (a,s) => Tuple.Create(a, s)).Select(a => Tuple.Create(a, s))";
+            Assert.Equal(sExp, Xlat(pySrc));
+        }
+
+        [Fact]
         public void Ex_Regression2()
         {
             var pySrc = @"[""#"",""0"",r""\-"",r"" "",r""\+"",r""\'"",""I""]";
@@ -292,6 +300,7 @@ namespace Pytocs.UnitTests.Translate
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
+
         [Fact]
         public void Ex_SetComprehension2()
         {
@@ -302,6 +311,14 @@ namespace Pytocs.UnitTests.Translate
     let b = _tup_1.Item2
     select (a.addr, b.addr)).ToHashSet()";
 
+            Assert.Equal(sExp, Xlat(pySrc));
+        }
+
+        [Fact]
+        public void Ex_SetComprehension3()
+        {
+            var pySrc = "{(a.addr ,b.addr) for a,b in fdiff.block_matches}";
+            var sExp = "fdiff.block_matches.Chop((a,b) => Tuple.Create(a.addr, b.addr)).ToHashSet()";
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
@@ -617,6 +634,18 @@ namespace Pytocs.UnitTests.Translate
         {
             string pySrc = "a - (b + c)";
             string sExp = "a - (b + c)";
+            Assert.Equal(sExp, Xlat(pySrc));
+        }
+
+        [Fact]
+        public void Ex_NestedForIfComprehensions()
+        {
+            var pySrc = "[state for (stash, states) in self.simgr.stashes.items() if (stash != 'pruned') for state in states ]";
+            var sExp = "this.simgr.stashes.items()" +
+                ".Where(Tuple.Create(stash, states) => stash != \"pruned\")" +
+                ".SelectMany((stash,states) => state)" +
+                ".Select(Tuple.Create(stash, states) => state)" +
+                ".ToList()";
             Assert.Equal(sExp, Xlat(pySrc));
         }
 

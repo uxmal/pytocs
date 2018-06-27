@@ -641,7 +641,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                             if (!Peek(TokenType.COMMA))
                             {
                                 // *args
-                                arg = fpdef();
+                            arg = fpdef();
                             }
                             else
                             {
@@ -748,22 +748,22 @@ eval_input: testlist NEWLINE* ENDMARKER
         public List<VarArg> varargslist()
         {
             var args = new List<VarArg>();
-            if (PeekAndDiscard(TokenType.LPAREN))
-            {
+                    if (PeekAndDiscard(TokenType.LPAREN))
+                    {
                 args = varargslist();
-                Expect(TokenType.RPAREN);
+                        Expect(TokenType.RPAREN);
                 return args;
-            }
+                    }
             if (Peek(TokenType.ID))
-            {
+                    {
                 var vfp = vfpdef_init();
                 args.Add(vfp);
                 while (PeekAndDiscard(TokenType.COMMA) && Peek(TokenType.ID))
-                {
+                        {
                     vfp = vfpdef_init();
                     args.Add(vfp);
-                }
-            }
+                        }
+                    }
             if (PeekAndDiscard(TokenType.OP_STAR))
             {
                 args.Add(VarArg.Indexed(vfpdef()));
@@ -822,15 +822,15 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             try
             {
-                if (Peek(compoundStatement_first))
-                {
-                    return compound_stmt();
-                }
-                else
-                {
-                    return simple_stmt();
-                }
+            if (Peek(compoundStatement_first))
+            {
+                return compound_stmt();
             }
+            else
+            {
+                return simple_stmt();
+            }
+        }
             catch (Exception ex)
             {
                 if (!catchExceptions)
@@ -982,7 +982,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                     {
                         var ee = rhsStack.Pop();
                         e = new AssignExp(ee, Op.Assign, e, filename, ee.Start, e.End);
-                    }
+            }
                     lhs = new AssignExp(lhs, Op.Assign, e, filename, lhs.Start, e.End);
                 }
             }
@@ -1024,7 +1024,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                     if (PeekAndDiscard(TokenType.COMMA))
                     {
                         trailing_comma = true;
-                    }
+                }
                 }
                 else
                 {
@@ -1270,8 +1270,8 @@ eval_input: testlist NEWLINE* ENDMARKER
             if (PeekAndDiscard(TokenType.As))
             {
                 var alias = id();
-                return new AliasedName(orig, alias, filename, orig.Start, alias.End);
-            }
+            return new AliasedName(orig,  alias, filename, orig.Start, alias.End);
+        }
             else
             {
                 return new AliasedName(orig, null, filename, orig.Start, orig.End);
@@ -1708,7 +1708,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 var condition = or_test();
                 if (condition is null) throw Unexpected();
-                Expect(TokenType.Else);
+            Expect(TokenType.Else);
                 var alternative = test();
                 if (alternative is null) throw Unexpected();
                 return new TestExp(o, condition, alternative, filename, o.Start, alternative.End);
@@ -1719,7 +1719,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 {
                     var e = ExpectTest();
                     return new AssignmentExp(id, e, filename, id.Start, e.End);
-                }
+        }
             }
             return o;
 
@@ -2098,9 +2098,13 @@ eval_input: testlist NEWLINE* ENDMARKER
                 Expect(TokenType.RPAREN);
                 return e;
             case TokenType.LBRACKET:
-                lexer.Get();
+                var lbr = lexer.Get();
                 e = testlist_comp(false);
-                Expect(TokenType.RBRACKET);
+                var rbr = Expect(TokenType.RBRACKET);
+                if (e is CompFor)
+                {
+                    e = new ListComprehension(e, filename, lbr.Start, rbr.End);
+                }
                 return e;
             case TokenType.LBRACE:
                 t = lexer.Get();
@@ -2399,23 +2403,21 @@ eval_input: testlist NEWLINE* ENDMARKER
                 if (k != null)
                 {
                     v = ExpectTest();
-                    if (Peek(TokenType.For))
-                    {
-                        // dict comprehension
-
-                        var f = comp_for();
-                        return new DictComprehension(k, v, f, filename, k.Start, f.End);
-                    }
-                    else
-                    {
-                        // dict initializer
+                if (Peek(TokenType.For))
+                {
+                    var f = comp_for(null);
+                    return new DictComprehension(k, v, f, filename, k.Start, f.End);
+                }
+                else
+                {
+                    // dict initializer
                         dictItems.Add(new KeyValuePair<Exp?, Exp>(k, v));
                     }
                 }
-                while (PeekAndDiscard(TokenType.COMMA))
-                {
-                    if (Peek(TokenType.RBRACE))
-                        break;
+                    while (PeekAndDiscard(TokenType.COMMA))
+                    {
+                        if (Peek(TokenType.RBRACE))
+                            break;
                     if (PeekAndDiscard(TokenType.OP_STARSTAR))
                     {
                         v = test();
@@ -2441,8 +2443,8 @@ eval_input: testlist NEWLINE* ENDMARKER
                 // set comprehension
                 if (Peek(TokenType.For))
                 {
-                    var f = comp_for();
-                    return new SetComprehension(k!, f, filename, k!.Start, k!.End);
+                    var f = comp_for(k);
+                    return new SetComprehension(f, filename, k.Start, k.End);
                 }
                 else if (PeekAndDiscard(TokenType.OP_STARSTAR))
                 {
@@ -2465,15 +2467,15 @@ eval_input: testlist NEWLINE* ENDMARKER
                         {
                             v = ExpectTest();
                             setItems.Add(new IterableUnpacker(v, filename, v.Start, v.End));
-                        }
+                    }
                         else
                         {
                             k = ExpectTest();
                             setItems.Add(k);
-                        }
-                    }
-                    return new PySet(setItems, filename, setItems[0].Start, setItems[^1].End);
                 }
+            }
+                    return new PySet(setItems, filename, setItems[0].Start, setItems[^1].End);
+        }
             }
         }
 
@@ -2574,8 +2576,8 @@ eval_input: testlist NEWLINE* ENDMARKER
             Exp? defval;
             if (Peek(TokenType.For))
             {
-                f = comp_for();
-                return new Argument(name, f, filename, posStart, f.End);
+                f = comp_for(name);
+                return new Argument(null, f, filename, posStart, f.End);
             }
             else if (PeekAndDiscard(TokenType.EQ))
             {
@@ -2594,13 +2596,13 @@ eval_input: testlist NEWLINE* ENDMARKER
         public CompIter comp_iter()
         {
             if (Peek(TokenType.For) || Peek(TokenType.Async))
-                return comp_for();
+                return comp_for(null);
             else
                 return comp_if();
         }
 
         // comp_for: ['async'] sync_comp_for
-        public CompFor comp_for()
+        public CompFor comp_for(Exp projection)
         {
             bool async = PeekAndDiscard(TokenType.Async);
             var compFor = sync_comp_for();
@@ -2622,8 +2624,11 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 next = comp_iter();
             }
-            return new CompFor(exprs, collection, filename, start, (next ?? collection).End)
+            return new CompFor(filename, (projection != null? projection.Start : start), (next ?? collection).End)
             {
+                variable = exprs,
+                projection = projection,
+                collection = collection,
                 next = next,
             };
         }

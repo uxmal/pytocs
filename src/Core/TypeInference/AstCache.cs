@@ -84,7 +84,7 @@ namespace Pytocs.Core.TypeInference
         /// <param name="path">Absolute path to a source file.</param>
         /// <returns>The AST, or <code>null</code> if the parse failed for any reason</returns>
         /// </summary>
-        public Module getAST(string path)
+        public Module GetAst(string path)
         {
             // Cache stores null value if the parse failed.
             if (cache.TryGetValue(path, out var module))
