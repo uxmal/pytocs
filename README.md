@@ -1,8 +1,13 @@
 # pytocs
 Converts Python source to C#
 
-pytocs is a hobby project I wrote to convert Python source code to C#. 
+pytocs is a command line tool I wrote as a hobby project to convert Python source code to C#. 
 I've uploaded it here in case someone finds it useful.
+
+## How to run pytocs
+
+Just git clone the project, and use Visual Studio or MSBuild to compile the `pytocs.sln` file. If you're unable or unwilling to build pytocs from source, the latest continuous integration build
+is available at [appveyor.com](https://ci.appveyor.com/project/uxmal/pytocs/build/artifacts). 
 
 ## Examples
 
