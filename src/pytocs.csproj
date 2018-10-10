@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
@@ -155,6 +155,7 @@
     <Compile Include="Translate\ExpNameDiscovery.Tests.cs" />
     <Compile Include="Translate\ExpTranslator.cs" />
     <Compile Include="Translate\ExpTranslator.Tests.cs" />
+    <Compile Include="Translate\IntrinsicTranslator.cs" />
     <Compile Include="Translate\LambdaBodyGenerator.cs" />
     <Compile Include="Translate\LocalSymbol.cs" />
     <Compile Include="Translate\LocalVariableGenerator.cs" />
