@@ -238,6 +238,23 @@ namespace Pytocs.Translate
 
                     }
                 }
+                if (id.Name == "float")
+                {
+                    if (args[0] is CodePrimitiveExpression c && c.Value is Str str)
+                    {
+                        switch (str.s)
+                        {
+                        case "inf":
+                        case "+inf":
+                        case "Infinity":
+                        case "+Infinity":
+                            return m.Access(m.TypeRefExpr("double"), "PositiveInfinity");
+                        case "-inf":
+                        case "-Infinity":
+                            return m.Access(m.TypeRefExpr("double"), "NegativeInfinity");
+                        }
+                    }
+                }
                 if (id.Name == "sorted")
                 {
                     return TranslateSorted(args);
@@ -450,6 +467,14 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitRealLiteral(RealLiteral r)
         {
+            if (r.Value == double.PositiveInfinity)
+            {
+                return m.Access(m.TypeRefExpr("double"), "PositiveInfinity");
+            }
+            else if (r.Value == double.NegativeInfinity)
+            {
+                return m.Access(m.TypeRefExpr("double"), "NegativeInfinity");
+            }
             return m.Prim(r.Value);
         }
 
@@ -567,6 +592,10 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitUnary(UnaryExp u)
         {
+            if (u.op == Op.Sub && u.e is RealLiteral real)
+            {
+                return new RealLiteral(-real.Value, real.Filename, real.Start, real.End).Accept(this);
+            }
             var e = u.e.Accept(this);
             return new CodeUnaryOperatorExpression(mppyoptocsop[u.op], e);
         }

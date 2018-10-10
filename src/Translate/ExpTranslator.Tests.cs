@@ -591,6 +591,22 @@ namespace Pytocs.Translate
             string sExp = "a - (b + c)";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
+
+        [Test(Description = "Reported in Github issue #26")]
+        public void Ex_Infinity()
+        {
+            string pySrc = "-1e3000000";
+            string sExp = "double.NegativeInfinity";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
+
+        [Test]
+        public void Ex_Infinity_FloatBif()
+        {
+            string pySrc = "float('+inf')";
+            string sExp = "double.PositiveInfinity";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
     }
 }
 #endif
