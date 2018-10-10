@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
+using System.Globalization;
 
 namespace Pytocs.Core.Syntax
 {
@@ -190,7 +191,7 @@ namespace Pytocs.Core.Syntax
             writer.Write('\"');
             writer.Write(s);
             writer.Write('\"');
-        }
+    }
 
     }
 
@@ -234,7 +235,7 @@ namespace Pytocs.Core.Syntax
             writer.Write(s);
             writer.Write('\"');
         }
-    }
+        }
 
     public class IntLiteral : Exp
     {
@@ -366,7 +367,7 @@ namespace Pytocs.Core.Syntax
                 writer.Write("float('-inf')");
             else
             {
-                writer.Write(Value);
+                writer.Write(Value.ToString(CultureInfo.InvariantCulture));
             }
         }
     }
@@ -401,7 +402,7 @@ namespace Pytocs.Core.Syntax
         {
             writer.Write(Value);
             writer.Write("j");
-        }
+    }
     }
 
     public class BinExp : Exp
@@ -501,9 +502,9 @@ namespace Pytocs.Core.Syntax
             {
                 if (kv.Key != null)
                 {
-                    kv.Key.Write(writer);
-                    writer.Write(" : ");
-                    kv.Value.Write(writer);
+                kv.Key.Write(writer);
+                writer.Write(" : ");
+                kv.Value.Write(writer);
                 }
                 else
                 {
@@ -920,9 +921,9 @@ namespace Pytocs.Core.Syntax
             if (exp != null)
             {
                 writer.Write(" ");
-                exp.Write(writer);
-            }
+            exp.Write(writer);
         }
+    }
     }
 
     public class YieldFromExp : Exp
@@ -1002,8 +1003,8 @@ namespace Pytocs.Core.Syntax
             {
                 writer.Write(" ");
                 this.next.Write(writer);
-            }
         }
+    }
     }
 
     public class CompIf : CompIter
@@ -1039,7 +1040,7 @@ namespace Pytocs.Core.Syntax
             {
                 writer.Write(" ");
                 next.Write(writer);
-            }
+    }
         }
     }
 
@@ -1110,7 +1111,7 @@ namespace Pytocs.Core.Syntax
         {
             writer.Write("*");
             this.e.Write(writer);
-        }
+    }
     }
 
     public class ExpList : Exp
@@ -1151,15 +1152,15 @@ namespace Pytocs.Core.Syntax
             }
             else
             {
-                var sep = "";
-                foreach (var exp in Expressions)
-                {
-                    writer.Write(sep);
-                    sep = ",";
-                    exp.Write(writer);
-                }
+            var sep = "";
+            foreach (var exp in Expressions)
+            {
+                writer.Write(sep);
+                sep = ",";
+                exp.Write(writer);
             }
         }
+    }
     }
 
     /// <summary>
@@ -1354,9 +1355,9 @@ namespace Pytocs.Core.Syntax
             writer.Write(base.OpToString(op));
             if (Src != null)
             {
-                Src.Write(writer);
-            }
+            Src.Write(writer);
         }
+    }
     }
 
     public class PyTuple : Exp

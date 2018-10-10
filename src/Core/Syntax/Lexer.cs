@@ -1012,13 +1012,13 @@ namespace Pytocs.Core.Syntax
                     switch (ch)
                     {
                     case '=': return EatChToken(TokenType.COLONEQ); break;
-                    default:
+                default:
                         return Token(TokenType.COLON);
-                    }
+                }
                 default:
                     throw Error(string.Format(Resources.ErrUnhandledState, st));
-                }
             }
+        }
         }
 
         // Python and C# binary literals look the same.
