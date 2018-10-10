@@ -10,3 +10,4 @@
 /src/bin
 *.user
 .vs/
+/src/packages/

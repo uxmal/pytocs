@@ -15,6 +15,10 @@ build:
 environment:
   artifacts_dir: bin
 
+
+before_build:
+  - nuget restore
+
 after_build:
   - ps : >-
         $shortHash = $env:APPVEYOR_REPO_COMMIT.Substring(0, 10);
