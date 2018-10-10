@@ -550,6 +550,10 @@ namespace Pytocs.Syntax
                     case 'E':
                         Accum(ch, State.RealExponent);
                         break;
+                    case 'j':
+                    case 'J':
+                        Advance();
+                        return Imaginary();
                     default:
                         if (Char.IsDigit(ch))
                         {
@@ -577,11 +581,20 @@ namespace Pytocs.Syntax
                         Invalid(c, ch);
                     break;
                 case State.RealExponentDigits:
-                    if (c >= 0 && char.IsDigit(ch))
+                    if (c < 0)
+                        return Real();
+                    if (c == 'j' || c == 'J')
+                    {
+                        Advance();
+                        return Imaginary();
+                    }
+                    if (char.IsDigit(ch))
                     {
                         Accum(ch, State.RealExponentDigits);
+                        break;
                     }
                     return Real();
+
                 case State.Hex:
                     switch (ch)
                     {
@@ -1085,7 +1098,30 @@ namespace Pytocs.Syntax
 
         private Token Real()
         {
-            return Token(TokenType.REAL, Convert.ToDouble(sb.ToString(), CultureInfo.InvariantCulture), State.Base);
+            double d;
+            try
+            {
+                d = Convert.ToDouble(sb.ToString(), CultureInfo.InvariantCulture);
+            }
+            catch (OverflowException)
+            {
+                d = (sb[0] != '-') ? double.PositiveInfinity : double.NegativeInfinity;
+            }
+            return Token(TokenType.REAL, d, State.Base);
+        }
+
+        private Token Imaginary()
+        {
+            double d;
+            try
+            {
+                d = Convert.ToDouble(sb.ToString(), CultureInfo.InvariantCulture);
+            }
+            catch (OverflowException)
+            {
+                d = (sb[0] != '-') ? double.PositiveInfinity : double.NegativeInfinity;
+            }
+            return Token(TokenType.IMAG, d, State.Base);
         }
     }
 }

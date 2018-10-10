@@ -759,5 +759,17 @@ else:
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
         }
+
+        [Test]
+        public void Parser_Github_26()
+        {
+            var pySrc =
+@"PosInf = float('+inf')
+";
+            var sExp =
+@"PosInf=float(""+inf"")
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
     }
 }

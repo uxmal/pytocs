@@ -504,7 +504,8 @@ namespace Pytocs.CodeModel
                     }
                     else
                     {
-                        throw new NotImplementedException(string.Format("Not implemented {0}{1}", s[i], s[i+1]));
+                        writer.Write("\\{0}", s[i]);
+                        i += 1;
                     }
                 }
                 else if (' ' <= s[i] && s[i] <= '~')
