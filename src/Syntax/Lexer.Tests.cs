@@ -432,6 +432,14 @@ namespace Pytocs.Syntax
             Assert.AreEqual(TokenType.REAL, tok.Type);
             Assert.AreEqual(double.PositiveInfinity, (double)tok.Value);
         }
+
+        [Test]
+        public void Lex_ImaginaryConstant()
+        {
+            var tok = Lex("3j");
+            Assert.AreEqual(TokenType.IMAG, tok.Type);
+            Assert.AreEqual(3.0, (double)tok.Value);
+        }
     }
 }
 #endif

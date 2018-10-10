@@ -760,16 +760,24 @@ else:
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
-        public void Parser_Github_26()
+        [Test(Description = "Reported in Github 26")]
+        public void Parser_Infinity()
         {
             var pySrc =
 @"PosInf = float('+inf')
 ";
-            var sExp =
+            var sExp = 
 @"PosInf=float(""+inf"")
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
+        }
+
+        [Test(Description = "Reported in Github 26")]
+        public void Parser_complex()
+        {
+            var pySrc = @"3 + 2j";
+            var sExp = @"(3  +  2j)";
+            AssertExp(sExp, ParseExp(pySrc));
         }
     }
 }

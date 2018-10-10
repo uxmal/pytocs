@@ -496,6 +496,9 @@ namespace Pytocs.Syntax
                     case '.':
                         Accum(ch, State.RealFraction);
                         break;
+                    case 'j':
+                        Advance();
+                        return Imaginary();
                     default:
                         if (Char.IsDigit(ch))
                         {
@@ -518,6 +521,9 @@ namespace Pytocs.Syntax
                     case '.':
                         Accum(ch, State.RealFraction);
                         break;
+                    case 'j':
+                        Advance();
+                        return Imaginary();
                     default:
                         if (Char.IsDigit(ch))
                         {

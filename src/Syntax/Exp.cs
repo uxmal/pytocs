@@ -329,6 +329,12 @@ namespace Pytocs.Syntax
         {
             v.VisitImaginaryLiteral(this);
         }
+
+        public override void Write(TextWriter writer)
+        {
+            writer.Write(im.ToString(CultureInfo.InvariantCulture));
+            writer.Write("j");
+        }
     }
 
     public class BinExp : Exp
