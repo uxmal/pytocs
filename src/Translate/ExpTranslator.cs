@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Numerics;
 
 namespace Pytocs.Translate
 {
@@ -615,6 +616,19 @@ namespace Pytocs.Translate
 
             var l = bin.l.Accept(this);
             var r = bin.r.Accept(this);
+            switch (bin.op)
+            {
+            case Op.Add:
+                var cAdd = CondenseComplexConstant(l, r, 1);
+                if (cAdd != null)
+                    return cAdd;
+                break;
+            case Op.Sub:
+                var cSub = CondenseComplexConstant(l, r, -1);
+                if (cSub != null)
+                    return cSub;
+                break;
+            }
             if (mppyoptocsop.TryGetValue(bin.op, out var opDst))
             {
                 return m.BinOp(l, opDst, r);
@@ -655,6 +669,23 @@ namespace Pytocs.Translate
                     l, r);
             }
             return m.BinOp(l, mppyoptocsop[bin.op], r);
+        }
+
+        private CodeExpression CondenseComplexConstant(CodeExpression l, CodeExpression r, double imScale)
+        {
+            if (r is CodePrimitiveExpression primR && primR.Value is Complex complexR &&
+                l is CodePrimitiveExpression primL)
+            {
+                if (primL.Value is double doubleL)
+                {
+                    return m.Prim(new Complex(doubleL + complexR.Real, imScale * complexR.Imaginary));
+                }
+                else if (primL.Value is int intL)
+                {
+                    return m.Prim(new Complex(intL + complexR.Real, imScale * complexR.Imaginary));
+                }
+            }
+            return null;
         }
 
         private CodeExpression TranslateFormatExpression(Exp formatString, Exp pyArgs)
@@ -795,7 +826,8 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitImaginary(ImaginaryLiteral im)
         {
-            throw new NotSupportedException();
+            m.EnsureImport("System.Numerics");
+            return m.Prim(new Complex(0, im.Value));
         }
 
         public CodeExpression VisitIntLiteral(IntLiteral i)

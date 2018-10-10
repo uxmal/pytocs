@@ -313,12 +313,12 @@ namespace Pytocs.Syntax
 
     public class ImaginaryLiteral : Exp
     {
-        private double im;
-
         public ImaginaryLiteral(double im, string filename, int start, int end) : base(filename, start, end)
         {
-            this.im = im;
+            this.Value = im;
         }
+
+        public double Value { get; }
 
         public override T Accept<T>(IExpVisitor<T> v)
         {
@@ -332,7 +332,7 @@ namespace Pytocs.Syntax
 
         public override void Write(TextWriter writer)
         {
-            writer.Write(im.ToString(CultureInfo.InvariantCulture));
+            writer.Write(Value.ToString(CultureInfo.InvariantCulture));
             writer.Write("j");
         }
     }

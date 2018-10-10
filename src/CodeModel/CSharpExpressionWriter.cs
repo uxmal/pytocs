@@ -17,6 +17,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Numerics;
@@ -424,31 +425,48 @@ namespace Pytocs.CodeModel
         {
             if (p.Value == null)
                 writer.Write("null");
-            else if (p.Value is string)
-                WriteStringLiteral(p.Value as string);
-            else if (p.Value is int)
+            switch (p.Value)
+            {
+            case string s:
+                WriteStringLiteral(s);
+                break;
+            case int i:
                 writer.Write(p.Value.ToString());
-            else if (p.Value is long)
-                writer.Write("{0}L", p.Value);
-            else if (p.Value is bool)
+                break;
+            case long l:
+                writer.Write("{0}L", l);
+                break;
+            case bool b:
                 writer.Write((bool)p.Value ? "true" : "false");
-            else if (p.Value is double)
-            {
-                var s = p.Value.ToString();
-                if (!s.Contains('.') && !s.Contains('e') && !s.Contains('E'))
-                    s += ".0";
-                writer.Write(s);
+                break;
+            case double d:
+                WriteReal(d);
+                break;
+            case BigInteger bigint:
+                writer.Write($"new BigInteger({bigint})");
+                break;
+            case Syntax.Str str:
+                WriteStringLiteral(str);
+                break;
+            case Syntax.Bytes bytes:
+                WriteByteLiteral(bytes);
+                break;
+            case Complex cmp:
+                writer.Write("new Complex(");
+                WriteReal(cmp.Real);
+                writer.Write(", ");
+                WriteReal(cmp.Imaginary);
+                writer.Write(")");
+                break;
             }
-            else if (p.Value is BigInteger)
-            {
-                writer.Write($"new BigInteger({p.Value})");
-            }
-            else if (p.Value is Syntax.Str)
-                WriteStringLiteral((Syntax.Str)p.Value);
-            else if (p.Value is Syntax.Bytes)
-                WriteByteLiteral((Syntax.Bytes)p.Value);
-            else
-                throw new NotImplementedException("" + p.Value);
+        }
+
+        private void WriteReal(double real)
+        {
+            var dd = real.ToString(CultureInfo.InvariantCulture);
+            if (!dd.Contains('.') && !dd.Contains('e') && !dd.Contains('E'))
+                dd += ".0";
+            writer.Write(dd);
         }
 
         private void WriteStringLiteral(string literal)
@@ -604,6 +622,7 @@ namespace Pytocs.CodeModel
                 writer.Write(">");
             }
         }
+
 
         private static Dictionary<string, string> csharpTypenames = new Dictionary<string, string>
         {

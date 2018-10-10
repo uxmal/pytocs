@@ -607,6 +607,14 @@ namespace Pytocs.Translate
             string sExp = "double.PositiveInfinity";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
+
+        [Test]
+        public void Ex_Complex()
+        {
+            string pySrc = "3 - 4j";
+            string sExp = "new Complex(3.0, -4.0)";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
     }
 }
 #endif
