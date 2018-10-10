@@ -129,7 +129,7 @@ namespace Pytocs.Core.Translate
             if (ContainsStarExp(l.Expressions))
             {
                 return ExpandIterableExpanders("TupleUtils", l.Expressions, elemType);
-            }
+        }
             else
             {
                 return m.ValueTuple(l.Expressions.Select(e => e.Accept(this)));
@@ -164,13 +164,13 @@ namespace Pytocs.Core.Translate
                 m.EnsureImports(nm);
                 var e = m.New(csClass, args);
                 return e;
-            }
+                }
             if (fn is CodeVariableReferenceExpression id)
-            {
+                {
                 var e = intrinsic.MaybeTranslate(id.Name, appl, args);
                 if (e != null)
                     return e;
-            }
+                }
             else
             {
                 if (fn is CodeFieldReferenceExpression field)
@@ -308,7 +308,7 @@ namespace Pytocs.Core.Translate
             if (r.NumericValue == double.PositiveInfinity)
             {
                 return m.Access(m.TypeRefExpr("double"), "PositiveInfinity");
-            }
+        }
             else if (r.NumericValue == double.NegativeInfinity)
             {
                 return m.Access(m.TypeRefExpr("double"), "NegativeInfinity");
@@ -321,20 +321,20 @@ namespace Pytocs.Core.Translate
         {
             if (s.KeyValues.All(kv => kv.Key != null))
             {
-                var items = s.KeyValues.Select(kv => new CodeCollectionInitializer(
+            var items = s.KeyValues.Select(kv => new CodeCollectionInitializer(
                     kv.Key!.Accept(this),
-                    kv.Value.Accept(this)));
+                kv.Value.Accept(this)));
                 m.EnsureImport(TypeReferenceTranslator.GenericCollectionNamespace);
-                var init = new CodeObjectCreateExpression
+            var init = new CodeObjectCreateExpression
+            {
+                Type = m.TypeRef("Dictionary", "object", "object"),
+                Initializer = new CodeCollectionInitializer
                 {
-                    Type = m.TypeRef("Dictionary", "object", "object"),
-                    Initializer = new CodeCollectionInitializer
-                    {
-                        Values = items.ToArray()
-                    }
-                };
-                return init;
-            }
+                    Values = items.ToArray()
+                }
+            };
+            return init;
+        }
             else
             {
                 m.EnsureImport("pytocs.runtime");
@@ -377,12 +377,12 @@ namespace Pytocs.Core.Translate
                             exp = m.NewArray(m.TypeRef(typeof(object)), subseq.ToArray());
                             seq.Add(exp);
                             subseq.Clear();
-                        }
+                }
                         exp = unpacker.Iterable.Accept(this);
                         seq.Add(exp);
-                    }
+        }
                     else
-                    {
+        {
                         exp = item.Accept(this);
                         subseq.Add(exp);
                     }
@@ -408,22 +408,26 @@ namespace Pytocs.Core.Translate
         }
 
         public CodeExpression VisitSetComprehension(SetComprehension sc)
-        {
+            {
             m.EnsureImport(TypeReferenceTranslator.LinqNamespace);
             var compFor = (CompFor) sc.Collection;
             var v = sc.Projection.Accept(this);
             var c = TranslateToLinq(v, compFor);
-            return m.Appl(
-                m.MethodRef(
-                    c,
-                    "ToHashSet"));
-        }
+                return m.Appl(
+                    m.MethodRef(
+                        c,
+                            "ToHashSet"));
+            }
 
         public CodeExpression VisitUnary(UnaryExp u)
-        {
+            {
             if (u.op == Op.Sub && u.e is RealLiteral real)
             {
                 return new RealLiteral("-" + real.Value, -real.NumericValue, real.Filename, real.Start, real.End).Accept(this);
+            }
+            if (u.op == Op.Sub && u.e is RealLiteral real)
+            {
+                return new RealLiteral(-real.Value, real.Filename, real.Start, real.End).Accept(this);
             }
             var e = u.e.Accept(this);
             return new CodeUnaryOperatorExpression(mppyoptocsop[u.op], e);
@@ -498,7 +502,7 @@ namespace Pytocs.Core.Translate
                 if (l is CodeBinaryOperatorExpression binL && IsComparison(binL))
                 {
                     return FuseComparisons(binL, bin.op, r);
-                }
+            }
                 break;
             }
             return m.BinOp(l, mppyoptocsop[bin.op], r);
@@ -627,7 +631,7 @@ namespace Pytocs.Core.Translate
                 var f = m.From(id.Accept(this), collection);
                 queryClauses.Add(f);
                 break;
-            }
+        }
             case ExpList expList:
             {
                 var vars = expList.Expressions.Select(v => v.Accept(this)).ToArray();
@@ -683,12 +687,12 @@ namespace Pytocs.Core.Translate
             }
             else
             {
-                return m.ListInitializer(
+            return m.ListInitializer(
                     elemType,
-                    l.elts
-                    .Where(e => e != null)
-                    .Select(e => e.Accept(this)));
-            }
+                l.elts
+                .Where(e => e != null)
+                .Select(e => e.Accept(this)));
+        }
         }
 
         private CodeExpression ExpandIterableExpanders(string utilityClassName, List<Exp> l, CodeTypeReference elemType)
@@ -822,11 +826,11 @@ namespace Pytocs.Core.Translate
                 if (ContainsStarExp(tuple.values))
                 {
                     return ExpandIterableExpanders("TupleUtils",tuple.values, elemType);
-                }
+            }
                 else
                 {
                     return MakeTupleCreate(tuple.values.Select(v => v.Accept(this)).ToArray());
-                }
+        }
             }
         }
 
