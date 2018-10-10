@@ -609,10 +609,18 @@ namespace Pytocs.Translate
         }
 
         [Test]
-        public void Ex_Complex()
+        public void Ex_Complex_Literal()
         {
             string pySrc = "3 - 4j";
             string sExp = "new Complex(3.0, -4.0)";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
+
+        [Test]
+        public void Ex_Complex()
+        {
+            string pySrc = "complex(3,4)";
+            string sExp = "new Complex(3, 4)";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
     }

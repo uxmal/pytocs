@@ -130,6 +130,14 @@ namespace Pytocs.Translate
                     return m.Appl(fn, args);
                 }
             }
+            if (id_Name == "complex")
+            {
+                if (args.Length == 2)
+                {
+                    m.EnsureImport("System.Numerics");
+                    return m.New(m.TypeRef("Complex"), args);
+                }
+            }
             if (id_Name == "float")
             {
                 if (args[0] is CodePrimitiveExpression c && c.Value is Str str)
