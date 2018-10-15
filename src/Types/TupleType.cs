@@ -85,17 +85,16 @@ namespace Pytocs.Types
 
         public override bool Equals(object other)
         {
-            var dtOther = other as DataType;
-            if (dtOther == null)
+            if (!(other is DataType dtOther))
                 return false;
             if (typeStack.Contains(this, dtOther))
             {
                 return true;
             }
-            else if (other is TupleType)
+            else if (other is TupleType that)
             {
                 List<DataType> types1 = eltTypes;
-                List<DataType> types2 = ((TupleType) other).eltTypes;
+                List<DataType> types2 = that.eltTypes;
 
                 if (types1.Count != types2.Count)
                     return false;

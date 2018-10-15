@@ -1246,24 +1246,18 @@ namespace Pytocs.TypeInference
             {
                 return DataType.Unknown;
             }
-            else if (vt is ListType)
-            {
-                return GetListSubscript(s, vt, st);
-            }
-            else if (vt is TupleType tup)
-            {
+            switch (vt) {
+            case ListType list:
+                return GetListSubscript(s, list, st);
+            case TupleType tup:
                 return GetListSubscript(s, tup.ToListType(), st);
-            }
-            else if (vt is DictType dt)
-            {
+            case DictType dt:
                 if (!dt.KeyType.Equals(st))
                 {
                     AddWarning(s, "Possible KeyError (wrong type for subscript)");
                 }
                 return dt.ValueType;
-            }
-            else if (vt == DataType.Str)
-            {
+            case StrType _:
                 if (st != null && (st is ListType || st.isNumType()))
                 {
                     return vt;
@@ -1273,9 +1267,7 @@ namespace Pytocs.TypeInference
                     AddWarning(s, "Possible KeyError (wrong type for subscript)");
                     return DataType.Unknown;
                 }
-            }
-            else
-            {
+            default:
                 return DataType.Unknown;
             }
         }
