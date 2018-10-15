@@ -30,6 +30,11 @@ namespace Pytocs.Translate
             throw new NotImplementedException();
         }
 
+        public SymbolTable VisitAsync(AsyncStatement a)
+        {
+            throw new NotImplementedException();
+        }
+
         public SymbolTable VisitBreak(BreakStatement b)
         {
             throw new NotImplementedException();

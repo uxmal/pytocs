@@ -24,6 +24,11 @@ namespace Pytocs.TypeInference
             return DataType.Unknown;
         }
 
+        public DataType VisitAsync(AsyncStatement a)
+        {
+            throw new NotImplementedException();
+        }
+
         public DataType VisitAssert(AssertStatement a)
         {
             if (a.Tests != null)
@@ -43,6 +48,11 @@ namespace Pytocs.TypeInference
             DataType valueType = a.Src.Accept(this);
             scope.BindByScope(analyzer, a.Dst, valueType);
             return DataType.Cont;
+        }
+
+        public DataType VisitAwait(AwaitExp e)
+        {
+            throw new NotImplementedException();
         }
 
         public DataType VisitFieldAccess(AttributeAccess a)

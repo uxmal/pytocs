@@ -766,7 +766,7 @@ else:
             var pySrc =
 @"PosInf = float('+inf')
 ";
-            var sExp = 
+            var sExp =
 @"PosInf=float(""+inf"")
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
@@ -778,6 +778,20 @@ else:
             var pySrc = @"3 + 2j";
             var sExp = @"(3  +  2j)";
             AssertExp(sExp, ParseExp(pySrc));
+        }
+
+        [Test]
+        public void Parser_async_await()
+        {
+            var pySrc =
+@"async def fnordAsync():
+    await asyncio.sleep(1)
+";
+            var sExp =
+@"async def fnordAsync():
+    await asyncio.sleep(1)
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
         }
     }
 }

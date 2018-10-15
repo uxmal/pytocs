@@ -582,6 +582,11 @@ namespace Pytocs.Translate
             }
         }
 
+        public void VisitAsync(AsyncStatement a)
+        {
+            throw new NotImplementedException();
+        }
+
         public void VisitAssert(AssertStatement a)
         {
             foreach (var test in a.Tests)

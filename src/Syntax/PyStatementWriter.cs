@@ -39,6 +39,13 @@ namespace Pytocs.Syntax
             throw new NotImplementedException();
         }
 
+        public void VisitAsync(AsyncStatement a)
+        {
+            w.Write("async");
+            w.Write(" ");
+            a.Statement.Accept(this);
+        }
+
         public void VisitBreak(BreakStatement b)
         {
             throw new NotImplementedException();

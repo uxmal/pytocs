@@ -47,6 +47,11 @@ namespace Pytocs.Translate
             throw new NotImplementedException();
         }
 
+        public void VisitAwait(AwaitExp awaitExp)
+        {
+            throw new NotImplementedException();
+        }
+
         public void VisitBigLiteral(BigLiteral bigLiteral)
         {
             throw new NotImplementedException();

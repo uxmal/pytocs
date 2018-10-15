@@ -34,6 +34,27 @@ namespace Pytocs.Syntax
         public sealed override string ToString() { var sw = new StringWriter(); Accept(new PyStatementWriter(sw)); return sw.ToString(); }
     }
 
+    public class AsyncStatement : Statement
+    {
+        public Statement Statement;
+
+        public AsyncStatement(Statement stmt, string filename, int start, int end)
+            : base(filename, start, end)
+        {
+            this.Statement = stmt;
+        }
+
+        public override T Accept<T>(IStatementVisitor<T> v)
+        {
+            return v.VisitAsync(this);
+        }
+
+        public override void Accept(IStatementVisitor v)
+        {
+            v.VisitAsync(this);
+        }
+    }
+
     public class AssertStatement : Statement
     {
         public AssertStatement(List<Exp> e, string filename, int start, int end)

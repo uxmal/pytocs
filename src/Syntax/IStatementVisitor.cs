@@ -23,6 +23,7 @@ namespace Pytocs.Syntax
 {
     public interface IStatementVisitor
     {
+        void VisitAsync(AsyncStatement a);
         void VisitAssert(AssertStatement a);
         void VisitBreak(BreakStatement b);
         void VisitClass(ClassDef c);
@@ -53,6 +54,7 @@ namespace Pytocs.Syntax
     public interface IStatementVisitor<T>
     {
         T VisitAssert(AssertStatement a);
+        T VisitAsync(AsyncStatement a);
         T VisitBreak(BreakStatement b);
         T VisitClass(ClassDef c);
         T VisitComment(CommentStatement c);

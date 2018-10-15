@@ -133,7 +133,8 @@ shift_expr: arith_expr (('<<'|'>>') arith_expr)*
 arith_expr: term (('+'|'-') term)*
 term: factor (('*'|'/'|'%'|'//') factor)*
 factor: ('+'|'-'|'~') factor | power
-power: atom trailer* ['**' factor]
+power: atom_expr ['**' factor]
+atom_expr: ['await'] atom trailer*
 atom: ('(' [yield_expr|testlist_comp] ')' |
        '[' [testlist_comp] ']' |
        '{' [dictorsetmaker] '}' |
@@ -193,7 +194,9 @@ eval_input: testlist NEWLINE* ENDMARKER
 
 decorator: '@' dotted_name [ '(' [arglist] ')' ] NEWLINE
 decorators: decorator+
-decorated: decorators (classdef | funcdef)
+decorated: decorators (classdef | funcdef | async_funcdef)
+
+async_funcdef: 'async' funcdef
 funcdef: 'def' NAME parameters ':' suite
 parameters: '(' [varargslist] ')'
 varargslist: ((fpdef ['=' test] ',')*
@@ -234,7 +237,8 @@ global_stmt: 'global' NAME (',' NAME)*
 exec_stmt: 'exec' expr ['in' test [',' test]]
 assert_stmt: 'assert' test [',' test]
 
-compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated
+compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt
+async_stmt: 'async' (funcdef | with_stmt | for_stmt)
 if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
 while_stmt: 'while' test ':' suite ['else' ':' suite]
 for_stmt: 'for' exprlist 'in' testlist ':' suite ['else' ':' suite]
@@ -466,8 +470,6 @@ eval_input: testlist NEWLINE* ENDMARKER
         //decorators: decorator+
         public List<Decorator> decorators()
         {
-            if (filename.Contains("project.py") && 640 <= lexer.LineNumber && lexer.LineNumber <= 660)
-                filename.ToArray(); //$DEBUG
             var decs = new List<Decorator>();
             decs.Add(decorator());
             while (Peek(TokenType.AT))
@@ -758,10 +760,9 @@ eval_input: testlist NEWLINE* ENDMARKER
             return new Identifier((string)token.Value, filename, token.Start, token.End);
         }
 
-
         static HashSet<TokenType> compoundStatement_first = new HashSet<TokenType>() {
             TokenType.If, TokenType.While, TokenType.For, TokenType.Try, TokenType.With,
-            TokenType.Def, TokenType.Class, TokenType.AT
+            TokenType.Def, TokenType.Class, TokenType.AT, TokenType.Async
         };
 
         static HashSet<TokenType> augassign_set = new HashSet<TokenType>() {
@@ -1323,8 +1324,27 @@ eval_input: testlist NEWLINE* ENDMARKER
             case TokenType.Def: return funcdef();
             case TokenType.Class: return classdef();
             case TokenType.AT: return decorated();
+            case TokenType.Async: return async_stmt();
             default: throw Unexpected();
             }
+        }
+
+        // async_stmt: 'async' (funcdef | with_stmt | for_stmt)
+        public List<Statement> async_stmt()
+        {
+            var posStart = Expect(TokenType.Async).Start;
+            List<Statement> stm;
+            switch (lexer.Peek().Type)
+            {
+            case TokenType.Def: stm = funcdef(); break;
+            case TokenType.With: stm = with_stmt(); break;
+            case TokenType.For: stm = for_stmt(); break;
+            default: throw Unexpected();
+            }
+            var filename = stm.Last().Filename;
+            var posEnd = stm.Last().End;
+            var asynk = new AsyncStatement(stm[0], filename, posStart, posEnd);
+            return new List<Statement> { asynk };
         }
 
         //if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
@@ -1872,16 +1892,12 @@ eval_input: testlist NEWLINE* ENDMARKER
             return new UnaryExp(op, e, filename, posStart, e.End);
         }
 
-        //power: atom trailer* ['**' factor]
+        // power: atom_expr ['**' factor]
         public Exp power()
         {
-            var e = atom();
+            var e = atom_expr();
             if (e == null)
                 return null;
-            while (Peek(trailer_first))
-            {
-                e = trailer(e);
-            }
             if (PeekAndDiscard(TokenType.OP_STARSTAR))
             {
                 var r = factor();
@@ -1891,6 +1907,35 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             return e;
         }
+
+        // atom_expr: ['await'] atom trailer*
+        public Exp atom_expr()
+        {
+            int posStart = -1;
+            if (lexer.Peek().Type == TokenType.Await)
+            {
+                posStart = lexer.Get().Start;
+            }
+            var e = atom();
+            if (e == null)
+                return null;
+            while (Peek(trailer_first))
+            {
+                e = trailer(e);
+            }
+            if (e == null)
+                return e;
+            if (posStart >= 0)
+            {
+                return new AwaitExp(e, e.Filename, posStart, e.End);
+            }
+            else
+            {
+                return e;
+            }
+        }
+
+
         //atom: ('(' [yield_expr|testlist_comp] ')' |
         //       '[' [testlist_comp] ']' |
         //       '{' [dictorsetmaker] '}' |

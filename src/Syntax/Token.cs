@@ -187,10 +187,14 @@ namespace Pytocs.Syntax
         In,
         Raise,
         LARROW,
+
         ELLIPSIS,
         LONGINTEGER,
         Exec,
         COMMENT,
+        Async,
+
+        Await,
 
     }
 }

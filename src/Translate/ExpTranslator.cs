@@ -263,6 +263,12 @@ namespace Pytocs.Translate
                 e.Src.Accept(this));
         }
 
+        public CodeExpression VisitAwait(AwaitExp awaitExp)
+        {
+            throw new NotImplementedException();
+        }
+
+
         public CodeExpression VisitRealLiteral(RealLiteral r)
         {
             if (r.Value == double.PositiveInfinity)

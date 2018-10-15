@@ -106,6 +106,8 @@ namespace Pytocs.Syntax
             { "raise", TokenType.Raise },
 
             { "exec", TokenType.Exec },
+            { "async", TokenType.Async },
+            { "await", TokenType.Await},
         };
         private bool rawString;
         private bool unicodeString;
