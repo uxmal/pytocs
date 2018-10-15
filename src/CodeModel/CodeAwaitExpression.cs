@@ -22,24 +22,23 @@ using System.Threading.Tasks;
 
 namespace Pytocs.CodeModel
 {
-    public class CodeMemberMethod : CodeMember
+    public class CodeAwaitExpression : CodeExpression
     {
-        public CodeMemberMethod()
+        public CodeExpression Expression { get; set; }
+
+        public CodeAwaitExpression(CodeExpression exp)
         {
-            this.Parameters = new List<CodeParameterDeclarationExpression>();
-            this.Statements = new List<CodeStatement>();
+            this.Expression = exp;
         }
 
-        public List<CodeParameterDeclarationExpression> Parameters { get; private set; }
-        public CodeTypeReference ReturnType { get; set; }
-
-        public List<CodeStatement> Statements { get; private set; }
-
-        public bool IsAsync { get; set; }
-
-        public override T Accept<T>(ICodeMemberVisitor<T> visitor)
+        public override T Accept<T>(ICodeExpressionVisitor<T> visitor)
         {
-            return visitor.VisitMethod(this);
+            return visitor.VisitAwait(this);
+        }
+
+        public override void Accept(ICodeExpressionVisitor visitor)
+        {
+            visitor.VisitAwait(this);
         }
     }
 }

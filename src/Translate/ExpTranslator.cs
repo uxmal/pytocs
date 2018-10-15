@@ -265,9 +265,9 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitAwait(AwaitExp awaitExp)
         {
-            throw new NotImplementedException();
+            var exp = awaitExp.exp.Accept(this);
+            return m.Await(exp);
         }
-
 
         public CodeExpression VisitRealLiteral(RealLiteral r)
         {

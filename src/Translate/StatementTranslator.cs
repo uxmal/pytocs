@@ -36,6 +36,7 @@ namespace Pytocs.Translate
         private Dictionary<Decorated, PropertyDefinition> properties;
         private HashSet<string> globals;
         private CodeConstructor classConstructor;
+        private bool async;
 
         public StatementTranslator(CodeGenerator gen, SymbolGenerator gensym, HashSet<string> globals)
         {
@@ -428,7 +429,8 @@ namespace Pytocs.Translate
 
             if (this.gen.CurrentMember != null)
             {
-                var lgen = new LambdaBodyGenerator(f, f.parameters, true, gen);
+                //$TODO: C# 7 supports local functions.
+                var lgen = new LambdaBodyGenerator(f, f.parameters, true, async, gen);
                 var def = lgen.GenerateLambdaVariable(f);
                 var meth = lgen.Generate();
                 def.InitExpression = gen.Lambda(
@@ -458,17 +460,17 @@ namespace Pytocs.Translate
                             attrs = MemberAttributes.Override;
                             fnName = "ToString";
                         }
-                        mgen = new MethodGenerator(f, fnName, adjustedPs, false, gen);
+                        mgen = new MethodGenerator(f, fnName, adjustedPs, false, async, gen);
                     }
                 }
                 else
                 {
-                    mgen = new MethodGenerator(f, f.name.Name, f.parameters, true, gen);
+                    mgen = new MethodGenerator(f, f.name.Name, f.parameters, true, async, gen);
                 }
             }
             else
             {
-                mgen = new MethodGenerator(f, f.name.Name, f.parameters, true, gen);
+                mgen = new MethodGenerator(f, f.name.Name, f.parameters, true, async, gen);
             }
             CodeMemberMethod m = mgen.Generate();
             m.Attributes |= attrs;
@@ -584,7 +586,10 @@ namespace Pytocs.Translate
 
         public void VisitAsync(AsyncStatement a)
         {
-            throw new NotImplementedException();
+            var oldAsync = this.async;
+            this.async = true;
+            a.Statement.Accept(this);
+            this.async = oldAsync;
         }
 
         public void VisitAssert(AssertStatement a)
@@ -649,7 +654,7 @@ namespace Pytocs.Translate
         private void GeneratePropertyGetter(Decorated getter)
         {
             var def = (FunctionDef)getter.Statement;
-            var mgen = new MethodGenerator(def, null, def.parameters, false, gen);
+            var mgen = new MethodGenerator(def, null, def.parameters, false, async, gen);
             var comments = ConvertFirstStringToComments(def.body.stmts);
             gen.CurrentMemberComments.AddRange(comments);
             mgen.Xlat(def.body);
@@ -660,7 +665,7 @@ namespace Pytocs.Translate
             if (setter == null)
                 return;
             var def = (FunctionDef)setter.Statement;
-            var mgen = new MethodGenerator(def, null, def.parameters, false, gen);
+            var mgen = new MethodGenerator(def, null, def.parameters, false, async, gen);
             var comments = ConvertFirstStringToComments(def.body.stmts);
             gen.CurrentMemberComments.AddRange(comments);
             mgen.Xlat(def.body);

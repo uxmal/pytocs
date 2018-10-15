@@ -623,6 +623,14 @@ namespace Pytocs.Translate
             string sExp = "new Complex(3, 4)";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
+
+        [Test]
+        public void Ex_Await()
+        {
+            string pySrc = "await foo";
+            string sExp = "await foo";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
     }
 }
 #endif

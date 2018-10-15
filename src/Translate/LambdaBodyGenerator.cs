@@ -12,12 +12,12 @@ namespace Pytocs.Translate
 {
     public class LambdaBodyGenerator : MethodGenerator
     {
-        public LambdaBodyGenerator(FunctionDef f, List<Parameter> args, bool isStatic, CodeGenerator gen)
-            : base(f, null, args, isStatic, gen)
+        public LambdaBodyGenerator(FunctionDef f, List<Parameter> args, bool isStatic, bool isAsync, CodeGenerator gen)
+            : base(f, null, args, isStatic, isAsync, gen)
         {
         }
 
-        protected override CodeMemberMethod Generate(CodeParameterDeclarationExpression[] parms)
+        protected override CodeMemberMethod Generate(CodeTypeReference retType, CodeParameterDeclarationExpression[] parms)
         {
             var method = gen.LambdaMethod(parms, () => Xlat(f.body));
             GenerateTupleParameterUnpackers(method);

@@ -207,13 +207,13 @@ namespace Pytocs.CodeModel
             return cons;
         }
 
-        internal CodeMemberMethod Method(string name, IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
+        public CodeMemberMethod Method(string name, CodeTypeReference retValue, IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
         {
             var method = new CodeMemberMethod
             {
                 Name = name,
                 Attributes = MemberAttributes.Public,
-                ReturnType = new CodeTypeReference(typeof(object))
+                ReturnType = retValue
             };
             method.Parameters.AddRange(parms.ToArray());
             AddMemberWithComments(method);
@@ -222,13 +222,13 @@ namespace Pytocs.CodeModel
             return method;
         }
 
-        internal CodeMemberMethod StaticMethod(string name, IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
+        internal CodeMemberMethod StaticMethod(string name, CodeTypeReference retType, IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
         {
             var method = new CodeMemberMethod
             {
                 Name = name,
                 Attributes = MemberAttributes.Public | MemberAttributes.Static,
-                ReturnType = new CodeTypeReference(typeof(object))
+                ReturnType = retType
             };
             method.Parameters.AddRange(parms.ToArray());
             AddMemberWithComments(method);
@@ -316,10 +316,16 @@ namespace Pytocs.CodeModel
             return field;
         }
 
-        internal CodeArrayIndexerExpression Aref(CodeExpression exp, CodeExpression[] indices)
+        public CodeArrayIndexerExpression Aref(CodeExpression exp, CodeExpression[] indices)
         {
             return new CodeArrayIndexerExpression(exp, indices);
         }
+
+        public CodeAwaitExpression Await(CodeExpression exp)
+        {
+            return new CodeAwaitExpression(exp);
+        }
+
 
         internal CodeThrowExceptionStatement Throw(CodeExpression codeExpression)
         {

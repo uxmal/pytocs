@@ -1517,6 +1517,26 @@ public static object func(object cfg_node) {
             #endregion
             Assert.AreEqual(sExp, XlatModule(pySrc));
         }
+
+        [Test]
+        public void Stmt_Async()
+        {
+            var pySrc =
+            #region Expected
+@"async def frobAsync():
+    await frobber
+";
+            var sExp =
+@"public static class testModule {
+    
+    public async static System.Threading.Tasks.Task<object> frobAsync() {
+        await frobber;
+    }
+}
+";
+            #endregion
+            Assert.AreEqual(sExp, XlatModule(pySrc));
+        }
     }
 }
 #endif

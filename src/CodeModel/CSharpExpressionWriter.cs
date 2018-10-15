@@ -165,6 +165,13 @@ namespace Pytocs.CodeModel
             }
         }
 
+        public void VisitAwait(CodeAwaitExpression awaitExp)
+        {
+            writer.Write("await");
+            writer.Write(" ");
+            Write(awaitExp.Expression, PrecUnary, false);
+        }
+
         public void VisitBinary(CodeBinaryOperatorExpression bin)
         {
             var prec = operatorPrecedence[bin.Operator];

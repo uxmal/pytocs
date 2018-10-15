@@ -51,6 +51,7 @@
     <Compile Include="CodeModel\CodeArrayIndexerExpression.cs" />
     <Compile Include="CodeModel\CodeAttributeArgument.cs" />
     <Compile Include="CodeModel\CodeAttributeDeclaration.cs" />
+    <Compile Include="CodeModel\CodeAwaitExpression.cs" />
     <Compile Include="CodeModel\CodeBreakStatement.cs" />
     <Compile Include="CodeModel\CodeCatchClause.cs" />
     <Compile Include="CodeModel\CodeCommentStatement.cs" />

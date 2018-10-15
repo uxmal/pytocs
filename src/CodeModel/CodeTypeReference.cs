@@ -32,7 +32,17 @@ namespace Pytocs.CodeModel
         public CodeTypeReference(Type type)
             : this()
         {
-            TypeName = type.FullName;
+            if (type.IsGenericType)
+            {
+                TypeName = type.FullName.Remove(type.FullName.IndexOf('`'));
+                TypeArguments = type.GetGenericArguments()
+                    .Select(tArg => new CodeTypeReference(tArg))
+                    .ToList();
+            }
+            else
+            {
+                TypeName = type.ToString();
+            }
         }
 
         public CodeTypeReference(string typeName)

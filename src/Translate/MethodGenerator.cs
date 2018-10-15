@@ -35,6 +35,7 @@ namespace Pytocs.Translate
         protected string fnName;
         protected List<Parameter> args;
         private bool isStatic;
+        private bool isAsync;
         protected ExpTranslator xlat;
         protected StatementTranslator stmtXlat;
         protected CodeGenerator gen;
@@ -42,12 +43,13 @@ namespace Pytocs.Translate
         private SymbolGenerator gensym;
         protected HashSet<string> globals;
 
-        public MethodGenerator(FunctionDef f, string fnName, List<Parameter> args, bool isStatic, CodeGenerator gen)
+        public MethodGenerator(FunctionDef f, string fnName, List<Parameter> args, bool isStatic, bool isAsync, CodeGenerator gen)
         {
             this.f = f;
             this.fnName = fnName;
             this.args = args;
             this.isStatic = isStatic;
+            this.isAsync = isAsync;
             this.gen = gen;
             this.gensym = new SymbolGenerator();
             this.xlat = new ExpTranslator(gen, gensym);
@@ -57,20 +59,21 @@ namespace Pytocs.Translate
 
         public CodeMemberMethod Generate()
         {
-            return Generate(CreateFunctionParameters(args)); // () => bodyGenerator(f.body));
+            return Generate(CreateReturnType(), CreateFunctionParameters(args)); // () => bodyGenerator(f.body));
         }
 
-        protected virtual CodeMemberMethod Generate(CodeParameterDeclarationExpression[] parms)
+        protected virtual CodeMemberMethod Generate(CodeTypeReference retType, CodeParameterDeclarationExpression[] parms)
         {
             CodeMemberMethod method;
             if (isStatic)
             {
-                method = gen.StaticMethod(fnName, parms, () => Xlat(f.body));
+                method = gen.StaticMethod(fnName, retType, parms, () => Xlat(f.body));
             }
             else
             {
-                method = gen.Method(fnName, parms, () => Xlat(f.body));
+                method = gen.Method(fnName, retType, parms, () => Xlat(f.body));
             }
+            method.IsAsync = isAsync;
             GenerateTupleParameterUnpackers(method);
             LocalVariableGenerator.Generate(method, globals);
             return method;
@@ -104,6 +107,16 @@ namespace Pytocs.Translate
             var comments = StatementTranslator.ConvertFirstStringToComments(suite.stmts);
             stmtXlat.Xlat(suite);
             gen.CurrentMemberComments.AddRange(comments);
+        }
+
+        private CodeTypeReference CreateReturnType()
+        {
+            Type tyRet;
+            if (isAsync)
+                tyRet = typeof(Task<object>);
+            else
+                tyRet = typeof(object);
+            return new CodeTypeReference(tyRet);
         }
 
         private CodeParameterDeclarationExpression[] CreateFunctionParameters(IEnumerable<Parameter> parameters)
@@ -152,48 +165,6 @@ namespace Pytocs.Translate
                 ? GenerateTupleParameterType(p.tuple)
                 : new CodeTypeReference(typeof(object)));
             return new CodeTypeReference("Tuple", types.ToArray());
-        }
-
-        private void GenerateDefaultArgMethod(int iFirstDefault)
-        {
-            var argList = args.Take(iFirstDefault).Select(p => new CodeParameterDeclarationExpression
-            {
-                ParameterType = new CodeTypeReference(typeof(object)),
-                ParameterName = p.Id.Name,
-                IsVarargs = p.vararg,
-            });
-            var paramList = new List<CodeExpression>();
-            for (int i = 0; i < args.Count; ++i)
-            {
-                paramList.Add((i < iFirstDefault || args[i].test == null)
-                    ? new CodeVariableReferenceExpression(args[i].Id.Name)
-                    : args[i].test.Accept(xlat));
-            }
-            GenerateDefaultArgMethod(argList.ToArray(), paramList.ToArray());
-        }
-
-        protected virtual void GenerateDefaultArgMethod(
-            CodeParameterDeclarationExpression[] argList,
-            CodeExpression[] paramList)
-        {
-            if (isStatic)
-            {
-                gen.StaticMethod(fnName, argList, () =>
-                {
-                    gen.Return(gen.Appl(
-                        new CodeVariableReferenceExpression(fnName),
-                        paramList));
-                });
-            }
-            else
-            {
-                gen.Method(fnName, argList, () =>
-                {
-                    gen.Return(gen.Appl(
-                        new CodeVariableReferenceExpression(fnName),
-                        paramList));
-                });
-            }
         }
     }
 }

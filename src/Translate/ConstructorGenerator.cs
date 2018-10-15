@@ -29,11 +29,11 @@ namespace Pytocs.Translate
     public class ConstructorGenerator : MethodGenerator
     {
         public ConstructorGenerator(FunctionDef f, List<Syntax.Parameter> args, CodeGenerator gen)
-            : base(f, "", args, false, gen)
+            : base(f, "", args, false, false, gen)
         {
         }
 
-        protected override CodeMemberMethod Generate(CodeParameterDeclarationExpression[] parms)
+        protected override CodeMemberMethod Generate(CodeTypeReference ignore, CodeParameterDeclarationExpression[] parms)
         {
             var cons = gen.Constructor(parms, () => XlatConstructor(f.body));
             GenerateTupleParameterUnpackers(cons);
@@ -64,14 +64,6 @@ namespace Pytocs.Translate
             ctor.Comments.AddRange(comments);
             ctor.BaseConstructorArgs.AddRange(appl.Arguments.Skip(1));
             gen.Scope.RemoveAt(0);
-        }
-
-        protected override void GenerateDefaultArgMethod(
-            CodeParameterDeclarationExpression[] argList,
-            CodeExpression [] paramList)
-        {
-            var cons = gen.Constructor(argList, () => {});
-            cons.ChainedConstructorArgs.AddRange(paramList);
         }
     }
 }

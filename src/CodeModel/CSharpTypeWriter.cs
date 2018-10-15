@@ -96,7 +96,7 @@ namespace Pytocs.CodeModel
                 writer.WriteLine(comment.Comment);
             }
             RenderCustomAttributes(method);
-            RenderMethodAttributes(method.Attributes);
+            RenderMethodAttributes(method);
             var expWriter = new CSharpExpressionWriter(writer);
             expWriter.VisitTypeReference(method.ReturnType);
             writer.Write(" ");
@@ -143,7 +143,7 @@ namespace Pytocs.CodeModel
         public int VisitConstructor(CodeConstructor cons)
         {
             RenderCustomAttributes(cons);
-            RenderMethodAttributes(cons.Attributes);
+            RenderMethodAttributes(cons);
             writer.WriteName(type.Name);
             WriteMethodParameters(cons);
             if (cons.BaseConstructorArgs.Count > 0)
@@ -258,10 +258,15 @@ namespace Pytocs.CodeModel
             return 0;
         }
 
-        private void RenderMethodAttributes(MemberAttributes attrs)
+        private void RenderMethodAttributes(CodeMemberMethod method)
         {
-            RenderAccessAttributes(attrs);
-            switch (attrs & MemberAttributes.ScopeMask)
+            RenderAccessAttributes(method.Attributes);
+            if (method.IsAsync)
+            {
+                writer.Write("async");
+                writer.Write(" ");
+            }
+            switch (method.Attributes & MemberAttributes.ScopeMask)
             {
             case 0: writer.Write("virtual"); writer.Write(" "); break;
             case MemberAttributes.Abstract: writer.Write("abstract"); writer.Write(" "); break;
