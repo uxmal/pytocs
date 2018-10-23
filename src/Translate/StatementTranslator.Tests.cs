@@ -828,7 +828,7 @@ def wrapper(*args, **kwargs):
 ";
             var sExp =
 @"[functools.wraps(f)]
-public static object wrapper() {
+public static object wrapper(Hashtable kwargs, params object [] args) {
 }
 
 ";
@@ -1535,6 +1535,24 @@ public static object func(object cfg_node) {
 }
 ";
             #endregion
+            Assert.AreEqual(sExp, XlatModule(pySrc));
+        }
+
+        [Test(Description = "Reported in GitHub issue 29")]
+        public void Stmt_funcdef_excess_positionalParameters()
+        {
+            var pySrc =
+@"def foo(*args):
+    return len(args)
+";
+            var sExp =
+@"public static class testModule {
+    
+    public static object foo(params object [] args) {
+        return args.Count;
+    }
+}
+";
             Assert.AreEqual(sExp, XlatModule(pySrc));
         }
     }

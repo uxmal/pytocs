@@ -381,7 +381,7 @@ def wrapper(*args, **kwargs):
 ";
             var sExp =
 @"@functools.wraps(f)
-def wrapper():
+def wrapper(*args,**kwargs):
     pass
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
@@ -793,5 +793,20 @@ else:
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
         }
+
+        [Test(Description = "Reported in GitHub issue 29")]
+        public void Parser_funcdef_excess_positionalParameters()
+        {
+            var pySrc =
+@"def foo(*args):
+    return len(args)
+";
+            var sExp =
+@"def foo(*args):
+    return len(args)
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
+
     }
 }

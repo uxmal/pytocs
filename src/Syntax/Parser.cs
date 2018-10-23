@@ -563,6 +563,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         public List<Parameter> typedargslist()
         {
             var args = new List<Parameter>();
+            Parameter arg;
             while (!Peek(TokenType.RPAREN))
             {
                 switch (lexer.Peek().Type)
@@ -570,26 +571,34 @@ eval_input: testlist NEWLINE* ENDMARKER
                 case TokenType.OP_STAR:
                     lexer.Get();
                     if (Peek(TokenType.ID))
-                        fpdef();
-                    while (PeekAndDiscard(TokenType.COMMA))
+                    {
+                        arg = fpdef();
+                        arg.vararg = true;
+                        args.Add(arg);
+                    }
+                    if (PeekAndDiscard(TokenType.COMMA))
                     {
                         if (PeekAndDiscard(TokenType.OP_STARSTAR))
                         {
-                            fpdef();
+                            arg = fpdef();
+                            arg.keyarg = true;
+                            args.Add(arg);
                             return args;
                         }
-                        fpdef();
+                        arg = fpdef();
+                        args.Add(arg);
                         if (PeekAndDiscard(TokenType.EQ))
-                            test();
+                            arg.test = test();
                     }
                     return args;
                 case TokenType.OP_STARSTAR:
                     lexer.Get();
-                    fpdef();
+                    arg = fpdef();
+                    args.Add(arg);
                     return args;
                 default:
                     // (tfpdef ['=' test] (',' tfpdef ['=' test])* [','  ['*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef]]
-                    var arg = fpdef();
+                    arg = fpdef();
                     args.Add(arg);
                     if (PeekAndDiscard(TokenType.EQ))
                         arg.test = test();
