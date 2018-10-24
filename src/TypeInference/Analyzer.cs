@@ -750,15 +750,15 @@ namespace Pytocs.TypeInference
                 nXRef += b.References.Count;
             }
 
-            sb.Append($"- number of definitions: {nDef}");
-            sb.Append($"- number of cross references: {nXRef}");
-            sb.Append($"- number of references: {References.Count}");
+            sb.AppendLine($"- number of definitions: {nDef}");
+            sb.AppendLine($"- number of cross references: {nXRef}");
+            sb.AppendLine($"- number of references: {References.Count}");
 
             long resolved = this.Resolved.Count;
             long unresolved = this.Unresolved.Count;
-            sb.Append($"- resolved names: {resolved}");
-            sb.Append($"- unresolved names: {unresolved}");
-            sb.Append($"- name resolve rate: {Percent(resolved, resolved + unresolved)}");
+            sb.AppendLine($"- resolved names: {resolved}");
+            sb.AppendLine($"- unresolved names: {unresolved}");
+            sb.AppendLine($"- name resolve rate: {Percent(resolved, resolved + unresolved)}");
 
             return sb.ToString();
         }

@@ -58,6 +58,7 @@ namespace Pytocs.Translate
             { Op.AugSub, CodeOperatorType.SubEq },
             { Op.AugMul, CodeOperatorType.MulEq },
             { Op.AugDiv, CodeOperatorType.DivEq },
+            { Op.AugIDiv, CodeOperatorType.DivEq },
             { Op.AugAnd, CodeOperatorType.AndEq },
             { Op.AugOr, CodeOperatorType.OrEq },
             { Op.AugShl, CodeOperatorType.ShlEq },

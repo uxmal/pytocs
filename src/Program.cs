@@ -22,6 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Pytocs.TypeInference;
+using Pytocs.Types;
 
 namespace Pytocs
 {
@@ -41,15 +42,26 @@ namespace Pytocs
 
             if (args[0].ToLower() == "-r")
             {
-#if !NOT_READY_FOR_TYPES
-                var options = new Dictionary<string, object>();
-                var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
-                typeAnalysis.Analyze(".");
-                typeAnalysis.Finish();
-
                 var startDir = args.Length == 2
                     ? args[1]
                     : Directory.GetCurrentDirectory();
+                var options = new Dictionary<string, object>();
+#if !NOT_READY_FOR_TYPES
+                var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
+                typeAnalysis.Analyze(startDir);
+                typeAnalysis.Finish();
+                var types =
+                    (from b in typeAnalysis.GetAllBindings()
+                     group b by b.node into g
+                     select new { g.Key, Type = UnionType.CreateUnion(g.Select(bb => bb.type)) })
+                    .ToDictionary(d => d.Key, d => d.Type);
+
+                //Console.WriteLine($"== Type dictionary: {types.Count}");
+                //foreach (var de in types.OrderBy(d => d.Key.ToString()))
+                //{
+                //    Console.WriteLine("{0}: {1} {2}", de.Key, de.Key.Start, de.Value);
+                //}
+
                 var walker = new DirectoryWalker(fs, startDir, "*.py");
                 walker.Enumerate(state =>
                 {
@@ -70,9 +82,6 @@ namespace Pytocs
                     }
                 });
 #else
-                var startDir = args.Length == 2
-                    ? args[1]
-                    : Directory.GetCurrentDirectory();
                 var walker = new DirectoryWalker(fs, startDir, "*.py");
                 walker.Enumerate(walker.ProcessDirectoryFiles);
 #endif
