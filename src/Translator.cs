@@ -25,6 +25,7 @@ using System.Text;
 using System.IO;
 using System.Threading.Tasks;
 using Pytocs.TypeInference;
+using Pytocs.Types;
 
 namespace Pytocs
 {
@@ -53,10 +54,14 @@ namespace Pytocs
             var flt = new CommentFilter(lex);
             var par = new Parser(filename, flt);
             var stm = par.Parse();
-            TranslateModuleStatements(stm, null, output);
+            var types = new Dictionary<Node, DataType>();
+            TranslateModuleStatements(stm, types, output);
         }
 
-        public void TranslateModuleStatements(IEnumerable<Statement> stm, State moduleScope, string outputFileName)
+        public void TranslateModuleStatements(
+            IEnumerable<Statement> stm,
+            Dictionary<Node, DataType> types,
+            string outputFileName)
         {
             TextWriter writer;
             try
@@ -70,7 +75,7 @@ namespace Pytocs
             }
             try
             {
-                TranslateModuleStatements(stm, moduleScope, writer);
+                TranslateModuleStatements(stm, types, writer);
             }
             catch (Exception ex)
             {
@@ -79,11 +84,14 @@ namespace Pytocs
             }
         }
 
-        public void TranslateModuleStatements(IEnumerable<Statement> stm, State moduleScope, TextWriter output)
+        public void TranslateModuleStatements(
+            IEnumerable<Statement> stm,
+            Dictionary<Node,DataType> types, 
+            TextWriter output)
         {
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, nmspace, Path.GetFileNameWithoutExtension(moduleName));
-            var xlt = new ModuleTranslator(moduleScope, gen);
+            var xlt = new ModuleTranslator(types, gen);
             xlt.Translate(stm);
             var pvd = new CSharpCodeProvider();
             pvd.GenerateCodeFromCompileUnit(unt, output, new CodeGeneratorOptions { });

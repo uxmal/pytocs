@@ -25,6 +25,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Pytocs.TypeInference;
+using Pytocs.Syntax;
+using Pytocs.Types;
 
 namespace Pytocs.Translate
 {
@@ -49,7 +51,8 @@ namespace Pytocs.Translate
             var stm = par.stmt();
             var gen = new CodeGenerator(new CodeCompileUnit(), "", "module");
             gen.SetCurrentMethod(new CodeMemberMethod());
-            var xlt = new StatementTranslator(gen, new SymbolGenerator(), new HashSet<string>());
+            var types = new Dictionary<Node, DataType>();
+            var xlt = new StatementTranslator(types, gen, new SymbolGenerator(), new HashSet<string>());
             stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -74,7 +77,8 @@ namespace Pytocs.Translate
             var stm = par.stmt();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
-            var xlt = new StatementTranslator(gen, new SymbolGenerator(), new HashSet<string>());
+            var types = new Dictionary<Node, DataType>();
+            var xlt = new StatementTranslator(types, gen, new SymbolGenerator(), new HashSet<string>());
             stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -117,7 +121,8 @@ namespace Pytocs.Translate
             var stm = par.stmt();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
-            var xlt = new StatementTranslator(gen, new SymbolGenerator(), new HashSet<string>());
+            var types = new Dictionary<Node, DataType>();
+            var xlt = new StatementTranslator(types, gen, new SymbolGenerator(), new HashSet<string>());
             stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();

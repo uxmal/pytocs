@@ -74,10 +74,9 @@ namespace Pytocs
                              fs,
                              logger);
                         var module = typeAnalysis.GetAstForFile(path);
-                        var moduleBinding = typeAnalysis.ModuleTable.Values.SelectMany(s => s).FirstOrDefault(b => b.node == module);
                         xlator.TranslateModuleStatements(
                             module.body.stmts,
-                            moduleBinding.type.Table,
+                            types,
                             Path.ChangeExtension(path, ".cs"));
                     }
                 });

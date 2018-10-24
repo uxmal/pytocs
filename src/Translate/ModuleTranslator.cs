@@ -17,6 +17,7 @@
 using Pytocs.CodeModel;
 using Pytocs.Syntax;
 using Pytocs.TypeInference;
+using Pytocs.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,12 +28,10 @@ namespace Pytocs.Translate
 {
     public class ModuleTranslator : StatementTranslator
     {
-        private State scope;
         private CodeGenerator gen;
 
-        public ModuleTranslator(State scope, CodeGenerator gen) : base(gen, new SymbolGenerator(), new HashSet<string>())
+        public ModuleTranslator(Dictionary<Node,DataType> types, CodeGenerator gen) : base(types, gen, new SymbolGenerator(), new HashSet<string>())
         {
-            this.scope = scope;
             this.gen = gen;
         }
 

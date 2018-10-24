@@ -28,6 +28,7 @@ namespace Pytocs.Translate
 {
     public class StatementTranslator : IStatementVisitor
     {
+        private Dictionary<Node, DataType> types;
         private CodeGenerator gen;
         private ExpTranslator xlat;
         private SymbolGenerator gensym;
@@ -38,11 +39,12 @@ namespace Pytocs.Translate
         private CodeConstructor classConstructor;
         private bool async;
 
-        public StatementTranslator(CodeGenerator gen, SymbolGenerator gensym, HashSet<string> globals)
+        public StatementTranslator(Dictionary<Node, DataType> types, CodeGenerator gen, SymbolGenerator gensym, HashSet<string> globals)
         {
+            this.types = types;
             this.gen = gen;
             this.gensym = gensym;
-            this.xlat = new ExpTranslator(gen, gensym);
+            this.xlat = new ExpTranslator(types, gen, gensym);
             this.properties = new Dictionary<Decorated, PropertyDefinition>();
             this.globals = globals;
         }
@@ -52,7 +54,7 @@ namespace Pytocs.Translate
             var baseClasses = c.args.Select(a => GenerateBaseClassName(a)).ToList();
             var comments = ConvertFirstStringToComments(c.body.stmts);
             var gensym = new SymbolGenerator();
-            var stmtXlt = new StatementTranslator(gen, gensym, new HashSet<string>());
+            var stmtXlt = new StatementTranslator(types, gen, gensym, new HashSet<string>());
             stmtXlt.currentClass = c;
             stmtXlt.properties = FindProperties(c.body.stmts);
             var csClass = gen.Class(c.name.Name, baseClasses, () => c.body.Accept(stmtXlt));
@@ -430,7 +432,8 @@ namespace Pytocs.Translate
             if (this.gen.CurrentMember != null)
             {
                 //$TODO: C# 7 supports local functions.
-                var lgen = new LambdaBodyGenerator(f, f.parameters, true, async, gen);
+                var types = new Dictionary<Node, DataType>();
+                var lgen = new LambdaBodyGenerator(f, f.parameters, true, async, types, gen);
                 var def = lgen.GenerateLambdaVariable(f);
                 var meth = lgen.Generate();
                 def.InitExpression = gen.Lambda(
@@ -451,7 +454,7 @@ namespace Pytocs.Translate
                     if (fnName == "__init__")
                     {
                         // Magic function __init__ is a ctor.
-                        mgen = new ConstructorGenerator(f, adjustedPs, gen);
+                        mgen = new ConstructorGenerator(f, adjustedPs, types, gen);
                     }
                     else
                     {
@@ -460,17 +463,17 @@ namespace Pytocs.Translate
                             attrs = MemberAttributes.Override;
                             fnName = "ToString";
                         }
-                        mgen = new MethodGenerator(f, fnName, adjustedPs, false, async, gen);
+                        mgen = new MethodGenerator(f, fnName, adjustedPs, false, async, types, gen);
                     }
                 }
                 else
                 {
-                    mgen = new MethodGenerator(f, f.name.Name, f.parameters, true, async, gen);
+                    mgen = new MethodGenerator(f, f.name.Name, f.parameters, true, async, types, gen);
                 }
             }
             else
             {
-                mgen = new MethodGenerator(f, f.name.Name, f.parameters, true, async, gen);
+                mgen = new MethodGenerator(f, f.name.Name, f.parameters, true, async, types, gen);
             }
             CodeMemberMethod m = mgen.Generate();
             m.Attributes |= attrs;
@@ -654,7 +657,7 @@ namespace Pytocs.Translate
         private void GeneratePropertyGetter(Decorated getter)
         {
             var def = (FunctionDef)getter.Statement;
-            var mgen = new MethodGenerator(def, null, def.parameters, false, async, gen);
+            var mgen = new MethodGenerator(def, null, def.parameters, false, async, types, gen);
             var comments = ConvertFirstStringToComments(def.body.stmts);
             gen.CurrentMemberComments.AddRange(comments);
             mgen.Xlat(def.body);
@@ -665,7 +668,7 @@ namespace Pytocs.Translate
             if (setter == null)
                 return;
             var def = (FunctionDef)setter.Statement;
-            var mgen = new MethodGenerator(def, null, def.parameters, false, async, gen);
+            var mgen = new MethodGenerator(def, null, def.parameters, false, async, types, gen);
             var comments = ConvertFirstStringToComments(def.body.stmts);
             gen.CurrentMemberComments.AddRange(comments);
             mgen.Xlat(def.body);

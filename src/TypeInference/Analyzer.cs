@@ -395,7 +395,6 @@ namespace Pytocs.TypeInference
         public DataType LoadFile(string path)
         {
             path = FileSystem.GetFullPath(path);
-
             if (!FileSystem.FileExists(path))
             {
                 return null;
@@ -620,12 +619,9 @@ namespace Pytocs.TypeInference
                     LoadFileRecursive(file);
                 }
             }
-            else
+            else if (file_or_dir.EndsWith(suffix))
             {
-                if (file_or_dir.EndsWith(suffix))
-                {
-                    LoadFile(file_or_dir);
-                }
+                LoadFile(file_or_dir);
             }
         }
 

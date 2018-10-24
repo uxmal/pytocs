@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
+using Pytocs.Types;
 
 namespace Pytocs.Translate
 {
@@ -69,9 +70,11 @@ namespace Pytocs.Translate
         internal CodeGenerator m;
         internal SymbolGenerator gensym;
         internal IntrinsicTranslator intrinsic;
+        private Dictionary<Node, DataType> types;
 
-        public ExpTranslator(CodeGenerator gen, SymbolGenerator gensym)
+        public ExpTranslator(Dictionary<Node, DataType> types, CodeGenerator gen, SymbolGenerator gensym)
         {
+            this.types = types;
             this.m = gen;
             this.gensym = gensym;
             this.intrinsic = new IntrinsicTranslator(this);

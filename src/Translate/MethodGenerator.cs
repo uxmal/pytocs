@@ -41,9 +41,17 @@ namespace Pytocs.Translate
         protected CodeGenerator gen;
         private Dictionary<Parameter, CodeParameterDeclarationExpression> mpPyParamToCs;
         private SymbolGenerator gensym;
+        private Dictionary<Node, DataType> types;
         protected HashSet<string> globals;
 
-        public MethodGenerator(FunctionDef f, string fnName, List<Parameter> args, bool isStatic, bool isAsync, CodeGenerator gen)
+        public MethodGenerator(
+            FunctionDef f, 
+            string fnName,
+            List<Parameter> args,
+            bool isStatic, 
+            bool isAsync,
+            Dictionary<Node, DataType> types,
+            CodeGenerator gen)
         {
             this.f = f;
             this.fnName = fnName;
@@ -52,9 +60,10 @@ namespace Pytocs.Translate
             this.isAsync = isAsync;
             this.gen = gen;
             this.gensym = new SymbolGenerator();
-            this.xlat = new ExpTranslator(gen, gensym);
+            this.types = new Dictionary<Node, DataType>();
+            this.xlat = new ExpTranslator(types, gen, gensym);
             this.globals = new HashSet<string>();
-            this.stmtXlat = new StatementTranslator(gen, gensym, globals);
+            this.stmtXlat = new StatementTranslator(types, gen, gensym, globals);
         }
 
         public CodeMemberMethod Generate()

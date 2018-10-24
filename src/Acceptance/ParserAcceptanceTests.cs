@@ -26,6 +26,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Pytocs.TypeInference;
+using Pytocs.Types;
 
 namespace Pytocs.Acceptance
 {
@@ -49,7 +50,8 @@ namespace Pytocs.Acceptance
             var stm = par.Parse(); ;
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
-            var xlt = new ModuleTranslator(scope, gen);
+            var types = new Dictionary<Node, DataType>();
+            var xlt = new ModuleTranslator(types, gen);
             xlt.Translate(stm);
 
             var pvd = new CSharpCodeProvider();

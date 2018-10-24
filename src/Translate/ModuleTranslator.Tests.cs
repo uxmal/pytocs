@@ -24,6 +24,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Pytocs.TypeInference;
+using Pytocs.Syntax;
+using Pytocs.Types;
 
 namespace Pytocs.Translate
 {
@@ -46,7 +48,8 @@ namespace Pytocs.Translate
             var stm = par.Parse();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", Path.GetFileNameWithoutExtension(filename));
-            var xlt = new ModuleTranslator(scope, gen);
+            var types = new Dictionary<Node, DataType>();
+            var xlt = new ModuleTranslator(types, gen);
             xlt.Translate(stm);
 
             var pvd = new CSharpCodeProvider();
