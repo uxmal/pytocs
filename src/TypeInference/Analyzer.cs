@@ -284,7 +284,7 @@ namespace Pytocs.TypeInference
 
         ModuleType GetCachedModule(string file)
         {
-            DataType t = ModuleTable.lookupType(GetModuleQname(file));
+            DataType t = ModuleTable.LookupType(GetModuleQname(file));
             if (t == null)
             {
                 return null;
@@ -347,7 +347,7 @@ namespace Pytocs.TypeInference
                     {
                         bindings.Add(b);
                     }
-                    b.addRef(node);
+                    b.AddReference(node);
                 }
             }
         }
@@ -668,7 +668,7 @@ namespace Pytocs.TypeInference
                 if (!(b.type is ClassType) &&
                         !(b.type is FunType) &&
                         !(b.type is ModuleType)
-                        && b.refs.Count == 0)
+                        && b.References.Count == 0)
                 {
                     putProblem(b.node, "Unused variable: " + b.name);
                 }
@@ -747,7 +747,7 @@ namespace Pytocs.TypeInference
             foreach (Binding b in GetAllBindings())
             {
                 nDef += 1;
-                nXRef += b.refs.Count;
+                nXRef += b.References.Count;
             }
 
             sb.Append($"- number of definitions: {nDef}");

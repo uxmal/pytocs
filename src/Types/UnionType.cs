@@ -35,7 +35,7 @@ namespace Pytocs.Types
         {
             foreach (DataType nt in initialTypes)
             {
-                addType(nt);
+                AddType(nt);
             }
         }
 
@@ -66,13 +66,13 @@ namespace Pytocs.Types
         }
 
 
-        static public DataType remove(DataType t1, DataType t2)
+        public static DataType Remove(DataType t1, DataType t2)
         {
-            if (t1 is UnionType)
+            if (t1 is UnionType u)
             {
-                ISet<DataType> types = new HashSet<DataType>(((UnionType) t1).types);
+                ISet<DataType> types = new HashSet<DataType>(u.types);
                 types.Remove(t2);
-                return UnionType.newUnion(types);
+                return UnionType.CreateUnion(types);
             }
             else if (t1 != DataType.Cont && t1 == t2)
             {
@@ -84,7 +84,7 @@ namespace Pytocs.Types
             }
         }
 
-        static public DataType newUnion(IEnumerable<DataType> types)
+        static public DataType CreateUnion(IEnumerable<DataType> types)
         {
             DataType t = DataType.Unknown;
             foreach (DataType nt in types)
@@ -94,16 +94,16 @@ namespace Pytocs.Types
             return t;
         }
 
-        public void setTypes(ISet<DataType> types)
+        public void SetTypes(ISet<DataType> types)
         {
             this.types = types;
         }
 
-        public void addType(DataType t)
+        public void AddType(DataType t)
         {
-            if (t is UnionType)
+            if (t is UnionType ut)
             {
-                types.UnionWith(((UnionType) t).types);
+                types.UnionWith(ut.types);
             }
             else
             {

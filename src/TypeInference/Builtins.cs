@@ -445,7 +445,7 @@ namespace Pytocs.TypeInference
             }
             for (int i = 1; i < mods.Length; i++)
             {
-                type = type.Table.lookupType(mods[i]);
+                type = type.Table.LookupType(mods[i]);
                 if (!(type is ModuleType))
                 {
                     return null;
@@ -867,7 +867,7 @@ namespace Pytocs.TypeInference
                     addClass(f, newDataModelUrl("org/yinwang/pysonar/types"),
                             outer.newClass(f, outer.analyzer.GlobalTable, outer.objectType));
                 }
-                outer.BaseException = (ClassType) table.lookupType("BaseException");
+                outer.BaseException = (ClassType) table.LookupType("BaseException");
 
                 foreach (string f in new[] { "True", "False" })
                 {

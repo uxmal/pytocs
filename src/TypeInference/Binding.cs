@@ -38,7 +38,7 @@ namespace Pytocs.TypeInference
         /// <summary>
         /// The places where this binding is referenced.
         /// </summary>
-        public ISet<Node> refs { get; private set; }
+        public ISet<Node> References { get; }
 
         // fields from Def
         public int start = -1;
@@ -54,11 +54,11 @@ namespace Pytocs.TypeInference
             this.type = type;
             this.kind = kind;
             this.node = node;
-            this.refs = new HashSet<Node>();
+            this.References = new HashSet<Node>();
 
-            if (node is Url)
+            if (node is Url u)
             {
-                string url = ((Url) node).url;
+                string url = u.url;
                 if (url.StartsWith("file://"))
                 {
                     fileOrUrl = url.Substring("file://".Length);
@@ -83,8 +83,8 @@ namespace Pytocs.TypeInference
             this.end = node.End;
 
             Node parent = node.Parent;
-            if ((parent is FunctionDef && ((FunctionDef) parent).name == node) ||
-                    (parent is ClassDef && ((ClassDef) parent).name == node))
+            if ((parent is FunctionDef def && def.name == node) ||
+                    (parent is ClassDef cldef && cldef.name == node))
             {
                 this.bodyStart = parent.Start;
                 this.bodyEnd = parent.End;
@@ -114,19 +114,19 @@ namespace Pytocs.TypeInference
                 return node.GetDocString();
         }
 
-        public void addRef(Node node)
+        public void AddReference(Node node)
         {
-            refs.Add(node);
+            References.Add(node);
         }
 
         // merge one more type into the type
         // used by stateful assignments which we can't track down the control flow
-        public void addType(DataType t)
+        public void AddType(DataType t)
         {
             type = UnionType.Union(type, t);
         }
 
-        public void setType(DataType type)
+        public void SetType(DataType type)
         {
             this.type = type;
         }
@@ -194,15 +194,15 @@ namespace Pytocs.TypeInference
             sb.Append(":qname=").Append(qname);
             sb.Append(":refs=");
             sb.Append("[");
-            if (refs.Count > 10)
+            if (References.Count > 10)
             {
-                sb.Append(refs.First());
-                sb.AppendFormat(", ...({0} more)]", refs.Count - 1);
+                sb.Append(References.First());
+                sb.AppendFormat(", ...({0} more)]", References.Count - 1);
             }
             else
             {
                 var sep = "";
-                foreach (var r in refs)
+                foreach (var r in References)
                 {
                     sb.Append(sep);
                     sep = ",";
@@ -216,8 +216,7 @@ namespace Pytocs.TypeInference
 
         public override bool Equals(object obj)
         {
-            Binding b = obj as Binding;
-            if (b == null)
+            if (!(obj is Binding b))
                 return false;
 
             return (Object.ReferenceEquals(node, b.node) &&

@@ -232,7 +232,7 @@ namespace Pytocs.TypeInference
 
         /// <summary>
         /// Look up a name in the current symbol table.  If not found,
-        /// recurse on the parent table.
+        /// recurse on the parent symbol table.
         /// </summary>
         public ISet<Binding> Lookup(string name)
         {
@@ -316,9 +316,9 @@ namespace Pytocs.TypeInference
         }
 
         /// <summary>
-        /// Look for a binding named {@code name} and if found, return its type.
+        /// Look for a binding named <paramref name="name"/> and if found, return its type.
         /// </summary>
-        public DataType lookupType(string name)
+        public DataType LookupType(string name)
         {
             ISet<Binding> bs = Lookup(name);
             if (bs == null)
@@ -507,7 +507,7 @@ namespace Pytocs.TypeInference
                 {
                     foreach (Binding b in bs)
                     {
-                        b.addType(rvalue);
+                        b.AddType(rvalue);
                         analyzer.putRef(id, b);
                     }
                 }

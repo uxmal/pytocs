@@ -141,7 +141,7 @@ namespace Pytocs.TypeInference
                      if (!UnionType.Contains(t, DataType.Cont))
                     {
                         returned = true;
-                        retType = UnionType.remove(retType, DataType.Cont);
+                        retType = UnionType.Remove(retType, DataType.Cont);
                     }
                 }
             }
@@ -319,7 +319,7 @@ namespace Pytocs.TypeInference
                     }
                 }
 
-                toType = UnionType.remove(toType, DataType.Cont);
+                toType = UnionType.Remove(toType, DataType.Cont);
                 func.addMapping(fromType, toType);
                 func.SelfType = null;
                 return toType;
@@ -414,7 +414,7 @@ namespace Pytocs.TypeInference
                 DataType dt;
                 if (hash != null && hash.Count > 0)
                 {
-                    DataType hashType = UnionType.newUnion(hash.Values);
+                    DataType hashType = UnionType.CreateUnion(hash.Values);
                     dt = analyzer.TypeFactory.CreateDict(DataType.Str, hashType);
                 }
                 else
@@ -950,7 +950,7 @@ namespace Pytocs.TypeInference
                 return;
             }
 
-            DataType allType = mt.Table.lookupType("__all__");
+            DataType allType = mt.Table.LookupType("__all__");
 
             List<string> names = new List<string>();
             if (allType != null && allType is ListType lt)
