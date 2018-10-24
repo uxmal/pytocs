@@ -428,13 +428,18 @@ namespace Pytocs.TypeInference
             else
             {
                 loadedFiles.Add(path);
-                type = new TypeTransformer(ModuleTable, this).VisitModule(ast);
+                type = LoadModule(ast);
             }
             PopImportStack(path);
 
             // restore old CWD
             setCWD(oldcwd);
             return type;
+        }
+
+        public DataType LoadModule(Module ast)
+        {
+            return new TypeTransformer(ModuleTable, this).VisitModule(ast);
         }
 
         private void CreateCacheDirectory()
@@ -650,6 +655,16 @@ namespace Pytocs.TypeInference
                 }
             }
             return sum;
+        }
+
+        public Dictionary<Node, DataType> BuildTypeDictionary()
+        {
+            var types =
+                (from b in GetAllBindings()
+                 group b by b.node into g
+                 select new { g.Key, Type = UnionType.CreateUnion(g.Select(bb => bb.type)) })
+                .ToDictionary(d => d.Key, d => d.Type);
+            return types;
         }
 
         public void Finish()

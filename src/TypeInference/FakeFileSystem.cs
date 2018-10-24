@@ -176,7 +176,10 @@ namespace Pytocs.TypeInference
         public string GetDirectoryName(string path)
         {
             var segs = path.Split(new[] { this.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
-            return path.Remove(path.IndexOf(DirectorySeparatorChar));
+            int i = path.IndexOf(DirectorySeparatorChar);
+            if (i <= 0)
+                return "";
+            return path.Remove(i);
         }
 
         public string getFileHash(string path)

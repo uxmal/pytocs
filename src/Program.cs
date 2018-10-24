@@ -50,12 +50,7 @@ namespace Pytocs
                 var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
                 typeAnalysis.Analyze(startDir);
                 typeAnalysis.Finish();
-                var types =
-                    (from b in typeAnalysis.GetAllBindings()
-                     group b by b.node into g
-                     select new { g.Key, Type = UnionType.CreateUnion(g.Select(bb => bb.type)) })
-                    .ToDictionary(d => d.Key, d => d.Type);
-
+                var types = typeAnalysis.BuildTypeDictionary();
                 //Console.WriteLine($"== Type dictionary: {types.Count}");
                 //foreach (var de in types.OrderBy(d => d.Key.ToString()))
                 //{

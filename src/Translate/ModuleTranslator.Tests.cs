@@ -32,23 +32,31 @@ namespace Pytocs.Translate
     [TestFixture]
     public class ModuleTranslatorTests
     {
-        private State scope;
+        private IFileSystem fs;
+        private ILogger logger;
 
         [SetUp]
         public void Setup()
         {
-            this.scope = new State(null, State.StateType.MODULE);
+            this.fs = new FakeFileSystem();
+            this.logger = new FakeLogger();
         }
 
         private string XlatModule(string pyModule, string filename = "module.py")
         {
             var rdr = new StringReader(pyModule);
-            var lex = new Syntax.Lexer(filename, rdr);
-            var par = new Syntax.Parser(filename, lex);
-            var stm = par.Parse();
+            var lex = new Lexer(filename, rdr);
+            var par = new Parser(filename, lex);
+            var stm = par.Parse().ToList();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", Path.GetFileNameWithoutExtension(filename));
-            var types = new Dictionary<Node, DataType>();
+            var ana = new AnalyzerImpl(fs, logger, new Dictionary<string, object>(), DateTime.Now);
+            var mod = new Module(
+                "module",
+                new SuiteStatement(stm, filename, 0, 0),
+                filename, 0, 0);
+            ana.LoadModule(mod);
+            var types = ana.BuildTypeDictionary();
             var xlt = new ModuleTranslator(types, gen);
             xlt.Translate(stm);
 
