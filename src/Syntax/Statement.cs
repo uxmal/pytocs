@@ -26,6 +26,8 @@ namespace Pytocs.Syntax
     public abstract class Statement : Node
     {
         public string comment;
+        public List<Decorator> decorators;
+
         public abstract T Accept<T>(IStatementVisitor<T> v);
         public abstract void Accept(IStatementVisitor v);
 
@@ -118,28 +120,6 @@ namespace Pytocs.Syntax
         public override T Accept<T>(IStatementVisitor<T> v)
         {
             return v.VisitContinue(this);
-        }
-    }
-
-    public class Decorated : Statement
-    {
-        public Decorated(Statement d, List<Decorator> decs, string filename, int pos, int end) : base(filename, pos, end)
-        {
-            this.Statement = d;
-            this.Decorations = decs;
-        }
-
-        public Statement Statement;
-        public List<Decorator> Decorations;
-
-        public override void Accept(IStatementVisitor v)
-        {
-            v.VisitDecorated(this);
-        }
-
-        public override T Accept<T>(IStatementVisitor<T> v)
-        {
-            return v.VisitDecorated(this);
         }
     }
 

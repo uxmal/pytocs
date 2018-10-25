@@ -504,9 +504,8 @@ eval_input: testlist NEWLINE* ENDMARKER
                 //$TODO: keep the comments.
                 lexer.Get();
             }
-            return new List<Statement> {
-                new Decorated(d, decs, filename, decs[0].Start, d.End)
-            };
+            d.decorators = decs;
+            return new List<Statement> { d };
         }
 
         // funcdef: 'def' NAME parameters ['->' test] ':' suite

@@ -147,6 +147,9 @@ namespace Pytocs.TypeInference
             string upath = FileSystem.GetFullPath(path);
             this.projectDir = FileSystem.DirectoryExists(upath) ? upath : FileSystem.GetDirectoryName(upath);
             LoadFileRecursive(upath);
+            msg("\nFinished loading files. " + CalledFunctions + " functions were called.");
+            msg("Analyzing uncalled functions");
+            ApplyUncalled();
         }
 
         public bool HasOption(string option)
@@ -155,11 +158,6 @@ namespace Pytocs.TypeInference
                 return true;
             else
                 return false;
-        }
-
-        public void setOption(string option)
-        {
-            options[option] = true;
         }
 
         public void setCWD(string cd)
@@ -681,10 +679,6 @@ namespace Pytocs.TypeInference
 
         public void Finish()
         {
-            msg("\nFinished loading files. " + CalledFunctions + " functions were called.");
-            msg("Analyzing uncalled functions");
-            ApplyUncalled();
-
             // mark unused variables
             foreach (Binding b in allBindings)
             {

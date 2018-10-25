@@ -332,6 +332,46 @@ namespace Pytocs.TypeInference
             }
         }
 
+        public static DataType FirstArgumentType(FunType func, DataType selfType)
+        {
+            if (!func.Definition.isStaticMethod())
+            {
+                if (func.Definition.isClassMethod())
+                {
+                    if (func.Class != null)
+                    {
+                        return func.Class;
+                    }
+                    else if (selfType != null && selfType is InstanceType inst) {
+                        return inst.classType;
+                    }
+                }
+                else
+                {
+                    // usual method
+                    if (selfType != null)
+                    {
+                        return selfType;
+                    }
+                    else
+                    {
+                        if (func.Class != null)
+                        {
+                            if (func.Definition.name.Name != "__init__")
+                            {
+                                throw new NotImplementedException("return func.Class.getInstance(null, this, call));");
+                            }
+                            else
+                            {
+                                throw new NotImplementedException("return func.Class.getInstance());");
+                            }
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+
         /// <summary>
         /// Binds the parameters of a call to the called function.
         /// </summary>
@@ -595,11 +635,6 @@ namespace Pytocs.TypeInference
             return DataType.Cont;
         }
 
-        public DataType VisitDecorated(Decorated d)
-        {
-            return d.Statement.Accept(this);
-        }
-
         public DataType VisitDel(DelStatement d)
         {
             foreach (var n in d.Expressions.AsList())
@@ -723,7 +758,7 @@ namespace Pytocs.TypeInference
         public DataType VisitFunctionDef(FunctionDef f)
         {
             State env = scope.getForwarding();
-            FunType fun = new FunType(f, env);
+            FunType fun =  new FunType(f, env);
             fun.Table.Parent = this.scope;
             fun.Table.Path = scope.ExtendPath(analyzer, f.name.Name);
             fun.SetDefaultTypes(ResolveList(f.parameters
@@ -754,6 +789,12 @@ namespace Pytocs.TypeInference
             }
 
             scope.Bind(analyzer, f.name, fun, funkind);
+            //$TODO
+            //var firstArgType = FirstArgumentType(fun, null);
+            //if (firstArgType != null)
+            //{
+            //    fun.Table.Bind(analyzer, f.parameters[0].Id, firstArgType, BindingKind.PARAMETER);
+            //}
 
             var sOld = this.scope;
             this.scope = fun.Table;

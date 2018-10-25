@@ -50,7 +50,8 @@ namespace Pytocs.Translate
             var stm = par.Parse().ToList();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", Path.GetFileNameWithoutExtension(filename));
-            var ana = new AnalyzerImpl(fs, logger, new Dictionary<string, object>(), DateTime.Now);
+            var opt = new Dictionary<string, object> { { "quiet", true } };
+            var ana = new AnalyzerImpl(fs, logger, opt, DateTime.Now);
             var mod = new Module(
                 "module",
                 new SuiteStatement(stm, filename, 0, 0),
@@ -280,5 +281,37 @@ d = {}
             Assert.AreEqual(sExp, XlatModule(pyModule));
         }
 
+        [Test]
+        public void Module_point_class_members()
+        {
+            var pyModule =
+@"
+class Point:
+    def __init__(self, x, y):
+        self.x = x;
+        self.y = y;
+
+pt = Point(3.5, -0.4)
+";
+            var sExp =
+@"namespace test {
+    
+    public static class module {
+        
+        public class Point {
+            
+            public Point(object x, object y) {
+                this.x = x;
+                this.y = y;
+            }
+        }
+        
+        public static object pt = Point(3.5, -0.4);
+    }
+}
+";
+            Debug.Print(XlatModule(pyModule));
+            Assert.AreEqual(sExp, XlatModule(pyModule));
+        }
     }
 }

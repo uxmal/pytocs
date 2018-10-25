@@ -20,6 +20,7 @@ using Pytocs.TypeInference;
 using Pytocs.Types;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -34,7 +35,7 @@ namespace Pytocs.Translate
         private SymbolGenerator gensym;
         private ClassDef currentClass;
         private IEnumerable<CodeAttributeDeclaration> customAttrs;
-        private Dictionary<Decorated, PropertyDefinition> properties;
+        private Dictionary<Statement, PropertyDefinition> properties;
         private HashSet<string> globals;
         private CodeConstructor classConstructor;
         private bool async;
@@ -45,12 +46,14 @@ namespace Pytocs.Translate
             this.gen = gen;
             this.gensym = gensym;
             this.xlat = new ExpTranslator(types, gen, gensym);
-            this.properties = new Dictionary<Decorated, PropertyDefinition>();
+            this.properties = new Dictionary<Statement, PropertyDefinition>();
             this.globals = globals;
         }
 
         public void VisitClass(ClassDef c)
         {
+            if (VisitDecorators(c))
+                return;
             var baseClasses = c.args.Select(a => GenerateBaseClassName(a)).ToList();
             var comments = ConvertFirstStringToComments(c.body.stmts);
             var gensym = new SymbolGenerator();
@@ -59,6 +62,7 @@ namespace Pytocs.Translate
             stmtXlt.properties = FindProperties(c.body.stmts);
             var csClass = gen.Class(c.name.Name, baseClasses, () => c.body.Accept(stmtXlt));
             csClass.Comments.AddRange(comments);
+            GenerateClassMembers(c);
             if (customAttrs != null)
             {
                 csClass.CustomAttributes.AddRange(customAttrs);
@@ -66,30 +70,43 @@ namespace Pytocs.Translate
             }
         }
 
-        public Dictionary<Decorated, PropertyDefinition> FindProperties(List<Statement> stmts)
+        private void GenerateClassMembers(ClassDef c)
         {
-            var decs = stmts.OfType<Decorated>();
-            var propdefs = new Dictionary<string, PropertyDefinition>();
-            var result = new Dictionary<Decorated, PropertyDefinition>();
-            foreach (var dec in decs)
+            var ct = types.TypeOf(c.name);
+            foreach (var member in ct.Table.table)
             {
-                foreach (var decoration in dec.Decorations)
+                //if (IsField(member.Value))
                 {
-                    if (IsGetterDecorator(decoration))
+                    Debug.Print("member: {0}:{1}:{2}", member.Key, member.Value.Count, member.Value.Sum(b => b.References.Count));
+                }
+            }
+        }
+
+        public Dictionary<Statement, PropertyDefinition> FindProperties(List<Statement> stmts)
+        {
+            var propdefs = new Dictionary<string, PropertyDefinition>();
+            var result = new Dictionary<Statement, PropertyDefinition>();
+            foreach (var stmt in stmts)
+            {
+                if (stmt.decorators == null)
+                    continue;
+                foreach (var decorator in stmt.decorators)
+                {
+                    if (IsGetterDecorator(decorator))
                     {
-                        var def = (FunctionDef)dec.Statement;
+                        var def = (FunctionDef)stmt;
                         var propdef = EnsurePropertyDefinition(propdefs, def);
-                        result[dec] = propdef;
-                        propdef.Getter = dec;
-                        propdef.GetterDecoration = decoration;
+                        result[stmt] = propdef;
+                        propdef.Getter = stmt;
+                        propdef.GetterDecoration = decorator;
                     }
-                    if (IsSetterDecorator(decoration))
+                    if (IsSetterDecorator(decorator))
                     {
-                        var def = (FunctionDef)dec.Statement;
+                        var def = (FunctionDef)stmt;
                         var propdef = EnsurePropertyDefinition(propdefs, def);
-                        result[dec] = propdef;
-                        propdef.Setter = dec;
-                        propdef.SetterDecoration = decoration;
+                        result[stmt] = propdef;
+                        propdef.Setter = stmt;
+                        propdef.SetterDecoration = decorator;
                     }
                 }
             }
@@ -433,6 +450,8 @@ namespace Pytocs.Translate
 
         public void VisitFuncdef(FunctionDef f)
         {
+            if (VisitDecorators(f))
+                return;
             MethodGenerator mgen;
             MemberAttributes attrs = 0;
 
@@ -630,13 +649,21 @@ namespace Pytocs.Translate
             gen.Continue();
         }
 
-        public void VisitDecorated(Decorated d)
+        /// <summary>
+        /// Processes the decorators of <paramref name="stmt"/>.
+        /// </summary>
+        /// <param name="stmt"></param>
+        /// <returns>If true, the body of the statement has been
+        /// translated, so don't do it again.</returns>
+        public bool VisitDecorators(Statement stmt)
         {
-            var decorators = d.Decorations.ToList();
-            if (this.properties.TryGetValue(d, out var propdef))
+            if (stmt.decorators == null)
+                return false;
+            var decorators = stmt.decorators;
+            if (this.properties.TryGetValue(stmt, out var propdef))
             {
                 if (propdef.IsTranslated)
-                    return;
+                    return true;
                 decorators.Remove(propdef.GetterDecoration);
                 decorators.Remove(propdef.SetterDecoration);
                 this.customAttrs = decorators.Select(dd => VisitDecorator(dd));
@@ -652,28 +679,29 @@ namespace Pytocs.Translate
                     prop.SetStatements,
                     globals);
                 propdef.IsTranslated = true;
+                return true;
             }
             else
             {
-                this.customAttrs = d.Decorations.Select(dd => VisitDecorator(dd));
-                d.Statement.Accept(this);
+                this.customAttrs = stmt.decorators.Select(dd => VisitDecorator(dd));
+                return false;
             }
         }
 
-        private void GeneratePropertyGetter(Decorated getter)
+        private void GeneratePropertyGetter(Statement getter)
         {
-            var def = (FunctionDef)getter.Statement;
+            var def = (FunctionDef)getter;
             var mgen = new MethodGenerator(def, null, def.parameters, false, async, types, gen);
             var comments = ConvertFirstStringToComments(def.body.stmts);
             gen.CurrentMemberComments.AddRange(comments);
             mgen.Xlat(def.body);
         }
 
-        private void GeneratePropertySetter(Decorated setter)
+        private void GeneratePropertySetter(Statement setter)
         {
             if (setter == null)
                 return;
-            var def = (FunctionDef)setter.Statement;
+            var def = (FunctionDef)setter;
             var mgen = new MethodGenerator(def, null, def.parameters, false, async, types, gen);
             var comments = ConvertFirstStringToComments(def.body.stmts);
             gen.CurrentMemberComments.AddRange(comments);
@@ -775,8 +803,8 @@ namespace Pytocs.Translate
     public class PropertyDefinition
     {
         public string Name;
-        public Decorated Getter;
-        public Decorated Setter;
+        public Statement Getter;
+        public Statement Setter;
         public Decorator GetterDecoration;
         public Decorator SetterDecoration;
         public bool IsTranslated;

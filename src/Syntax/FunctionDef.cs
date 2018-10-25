@@ -58,6 +58,32 @@ namespace Pytocs.Syntax
         {
             return v.VisitFunctionDef(this);
         }
+
+        public bool isStaticMethod()
+        {
+            throw new NotImplementedException();
+            //foreach (Node d in decorators)
+            //{
+            //    if (d is Name && ((Name)d).id == "staticmethod")
+            //    {
+            //        return true;
+            //    }
+            //}
+            //return false;
+        }
+
+        public bool isClassMethod()
+        {
+            throw new NotImplementedException();
+            //foreach (Node d in base.decorators)
+            //{
+            //    if (d is Name && ((Name)d).id == "classmethod")
+            //    {
+            //        return true;
+            //    }
+            //}
+            //return false;
+        }
     }
 
     public class Lambda : Exp

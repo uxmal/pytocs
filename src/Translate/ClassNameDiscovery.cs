@@ -55,11 +55,6 @@ namespace Pytocs.Translate
             throw new NotImplementedException();
         }
 
-        public SymbolTable VisitDecorated(Decorated d)
-        {
-            throw new NotImplementedException();
-        }
-
         public SymbolTable VisitDel(DelStatement d)
         {
             throw new NotImplementedException();

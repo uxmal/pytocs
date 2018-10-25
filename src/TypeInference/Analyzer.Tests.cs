@@ -130,8 +130,10 @@ def crunk(a):
             var sExp =
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
 @"(binding:kind=SCOPE:node=x:type=str:qname=.foo.test.x:refs=[x])" + nl +
-@"(binding:kind=FUNCTION:node=crunk:type=? -> ?:qname=.foo.test.crunk:refs=[])" + nl +
-@"(binding:kind=SCOPE:node=x:type=str:qname=.foo.test.crunk.x:refs=[])" + nl;
+@"(binding:kind=FUNCTION:node=crunk:type=? -> str:qname=.foo.test.crunk:refs=[])" + nl +
+@"(binding:kind=SCOPE:node=x:type=str:qname=.foo.test.crunk.x:refs=[])" + nl +
+@"(binding:kind=PARAMETER:node=a:type=?:qname=.foo.test.crunk.a:refs=[a])" + nl +
+@"(binding:kind=VARIABLE:node=x:type=str:qname=.foo.test.crunk.x:refs=[])" + nl;
 
             Console.WriteLine(BindingsToString());
 

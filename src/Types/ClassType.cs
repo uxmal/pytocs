@@ -25,6 +25,9 @@ namespace Pytocs.Types
 
         public ClassType(string name, State parent, string path)
         {
+            if (name.Contains("Point"))   //$DEBUG
+                name.ToString();
+
             this.name = name;
             this.Table = new State(parent, State.StateType.CLASS) { Type = this };
             if (parent != null)

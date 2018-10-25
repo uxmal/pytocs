@@ -53,6 +53,7 @@ namespace Pytocs.Syntax
 
         public void VisitClass(ClassDef c)
         {
+            VisitDecorators(c.decorators);
             w.Write("class");
             w.Write(" ");
             w.Write(c.name.Name);
@@ -78,9 +79,11 @@ namespace Pytocs.Syntax
             throw new NotImplementedException();
         }
 
-        public void VisitDecorated(Decorated d)
+        public void VisitDecorators(List<Decorator> decorators)
         {
-            foreach (var dec in d.Decorations)
+            if (decorators == null)
+                return;
+            foreach (var dec in decorators)
             {
                 w.Write("@");
                 w.Write(dec.className.ToString());
@@ -95,7 +98,6 @@ namespace Pytocs.Syntax
                 w.Write(")");
                 w.WriteLine();
             }
-            d.Statement.Accept(this);
         }
 
         public void VisitDel(DelStatement d)
@@ -133,6 +135,7 @@ namespace Pytocs.Syntax
 
         public void VisitFuncdef(FunctionDef f)
         {
+            VisitDecorators(f.decorators);
             w.Write("def");
             w.Write(" ");
             w.WriteName(f.name.Name);

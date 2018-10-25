@@ -29,7 +29,6 @@ namespace Pytocs.Syntax
         void VisitClass(ClassDef c);
         void VisitComment(CommentStatement c);
         void VisitContinue(ContinueStatement c);
-        void VisitDecorated(Decorated d);
         void VisitDel(DelStatement d);
         void VisitExec(ExecStatement exec);
         void VisitExp(ExpStatement e); 
@@ -59,7 +58,6 @@ namespace Pytocs.Syntax
         T VisitClass(ClassDef c);
         T VisitComment(CommentStatement c);
         T VisitContinue(ContinueStatement c);
-        T VisitDecorated(Decorated d);
         T VisitDel(DelStatement d);
         T VisitExec(ExecStatement exec);
         T VisitExp(ExpStatement e);
