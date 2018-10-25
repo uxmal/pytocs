@@ -295,9 +295,11 @@ namespace Pytocs.CodeModel
                 : name;
         }
 
-        public CodeMemberField Field(string fieldName)
+        public CodeMemberField Field(
+            CodeTypeReference fieldType,
+            string fieldName)
         {
-            var field = new CodeMemberField(typeof(object), fieldName)
+            var field = new CodeMemberField(fieldType, fieldName)
             {
                 Attributes = MemberAttributes.Public,
             };

@@ -216,7 +216,8 @@ namespace Pytocs.Translate
             {
                 if (ass.Dst is Identifier idDst)
                 {
-                    gensym.EnsureLocalVariable(idDst.Name, new CodeTypeReference(typeof(object)), false);
+                    var dt = TypeOf(idDst);
+                    gensym.EnsureLocalVariable(idDst.Name, dt, false);
                 }
 
                 if (ass.Dst is ExpList dstTuple)
@@ -324,6 +325,33 @@ namespace Pytocs.Translate
             return gensym.GenSymAutomatic(prefix, type, true);
         }
 
+        private CodeTypeReference TypeOf(Node node)
+        {
+            if (types.TryGetValue(node, out var dt))
+            {
+                return TranslateTypeReference(dt);
+            }
+            else
+            {
+                return new CodeTypeReference(typeof(object));
+            }
+        }
+
+        private CodeTypeReference TranslateTypeReference(DataType dt)
+        {
+            switch (dt)
+            {
+            case DictType dict:
+                gen.EnsureImport("System.Collections.Generic");
+                var dtKey = TranslateTypeReference(dict.KeyType);
+                var dtValue = TranslateTypeReference(dict.ValueType);
+                return new CodeTypeReference("Dictionary", dtKey, dtValue);
+            case InstanceType inst:
+                return new CodeTypeReference(typeof(object));
+            }
+            throw new NotImplementedException($"Data type {dt} ({dt.GetType().Name}).");
+        }
+
         private CodeConstructor EnsureClassConstructor()
         {
             if (this.classConstructor == null)
@@ -359,19 +387,22 @@ namespace Pytocs.Translate
                 {
                     foreach (var slotName in slotNames.OfType<Str>())
                     {
-                        GenerateField(slotName.s, null);
+                        //$TODO: test type inference for slots.
+                        var slotType = new CodeTypeReference(typeof(object));
+                        GenerateField(slotName.s, slotType, null);
                     }
                 }
             }
             else
             {
-                GenerateField(id.Name, ass.Src.Accept(xlat));
+                var fieldType = TypeOf(id);
+                GenerateField(id.Name, fieldType, ass.Src.Accept(xlat));
             }
         }
 
-        protected virtual CodeMemberField GenerateField(string name, CodeExpression value)
+        protected virtual CodeMemberField GenerateField(string name, CodeTypeReference type, CodeExpression value)
         {
-            var field = gen.Field(name);
+            var field = gen.Field(type, name);
             if (value != null)
             {
                 field.InitExpression = value;

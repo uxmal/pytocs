@@ -75,9 +75,9 @@ namespace Pytocs.Translate
             return lit != null;
         }
 
-        protected override CodeMemberField GenerateField(string name, CodeExpression value)
+        protected override CodeMemberField GenerateField(string name, CodeTypeReference fieldType, CodeExpression value)
         {
-            var field = base.GenerateField(name, value);
+            var field = base.GenerateField(name, fieldType, value);
             field.Attributes |= MemberAttributes.Static;
             return field;
         }

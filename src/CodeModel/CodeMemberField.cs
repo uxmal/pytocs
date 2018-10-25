@@ -34,6 +34,12 @@ namespace Pytocs.CodeModel
             this.FieldName = fieldName;
         }
 
+        public CodeMemberField(CodeTypeReference type, string fieldName)
+        {
+            this.FieldType = type;
+            this.FieldName = fieldName;
+        }
+
         public override T Accept<T>(ICodeMemberVisitor<T> visitor)
         {
             return visitor.VisitField(this);

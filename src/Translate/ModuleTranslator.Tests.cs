@@ -254,5 +254,29 @@ import vivisect.const as viv_const
             Debug.Print(XlatModule(pyModule));
             Assert.AreEqual(sExp, XlatModule(pyModule));
         }
+
+        [Test]
+        public void Module_init_global()
+        {
+            var pyModule =
+@"
+d = {}
+";
+            var sExp =
+@"namespace test {
+    
+    using System.Collections.Generic;
+    
+    public static class module {
+        
+        public static Dictionary<object, object> d = new Dictionary<object, object> {
+        };
+    }
+}
+";
+            Debug.Print(XlatModule(pyModule));
+            Assert.AreEqual(sExp, XlatModule(pyModule));
+        }
+
     }
 }
