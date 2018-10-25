@@ -142,6 +142,14 @@ namespace Pytocs.Types
             {
                 return v;
             }
+            else if (u is IntType && v is FloatType)
+            {
+                return v;
+            }
+            else if (u is FloatType && v is IntType)
+            {
+                return u;
+            }
             else
             {
                 return new UnionType(u, v);

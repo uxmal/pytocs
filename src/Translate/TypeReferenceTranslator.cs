@@ -92,6 +92,10 @@ namespace Pytocs.Translate
                 return (
                     new CodeTypeReference(typeof(float)),
                     null);
+            case BoolType _:
+                return (
+                    new CodeTypeReference(typeof(bool)),
+                    null);
             case TupleType tuple:
                 return TranslateTuple(tuple);
             }
