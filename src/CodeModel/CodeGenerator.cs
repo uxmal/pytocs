@@ -14,6 +14,7 @@
 //  limitations under the License.
 #endregion
 
+using Pytocs.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -353,13 +354,13 @@ namespace Pytocs.CodeModel
             return new CodeLambdaExpression(args, stmts);
         }
 
-        public CodeExpression ListInitializer(IEnumerable<CodeExpression> exprs)
+        public CodeExpression ListInitializer(CodeTypeReference elemType,  IEnumerable<CodeExpression> exprs)
         {
+            EnsureImport("System.Collections.Generic");
             var list = new CodeObjectCreateExpression
             {
-                Type = new CodeTypeReference("List", new CodeTypeReference("object"))
+                Type = new CodeTypeReference("List", elemType)
             };
-            EnsureImport("System.Collections.Generic");
             list.Initializers.AddRange(exprs);
             return list;
         }
@@ -369,6 +370,16 @@ namespace Pytocs.CodeModel
             if (CurrentNamespace.Imports.Where(i => i.Namespace == nmespace).Any())
                 return;
             CurrentNamespace.Imports.Add(new CodeNamespaceImport(nmespace));
+        }
+
+        public void EnsureImports(IEnumerable<string> nmespaces)
+        {
+            if (nmespaces == null)
+                return;
+            foreach (var nmspace in nmespaces)
+            {
+                EnsureImport(nmspace);
+            }
         }
 
         public CodeTryCatchFinallyStatement Try(

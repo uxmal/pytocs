@@ -19,6 +19,12 @@ namespace Pytocs.TypeInference
             this.analyzer = analyzer;
         }
 
+        private DataType Register(Exp e, DataType t)
+        {
+            analyzer.AddExpType(e, t);
+            return t;
+        }
+
         public DataType VisitAliasedExp(AliasedExp a)
         {
             return DataType.Unknown;
@@ -1002,7 +1008,8 @@ namespace Pytocs.TypeInference
 
         public DataType VisitBigLiteral(BigLiteral i)
         {
-            return DataType.Int;
+
+            return Register(i, DataType.Int);
         }
 
         public DataType VisitIntLiteral(IntLiteral i)
@@ -1014,7 +1021,7 @@ namespace Pytocs.TypeInference
         {
             var listType = new ListType();
             if (l.elts.Count == 0)
-                return listType;  // list of unknown.
+                return Register(l, listType);  // list of unknown.
             foreach (var exp in l.elts)
             {
                 listType.Add(exp.Accept(this));
@@ -1023,7 +1030,7 @@ namespace Pytocs.TypeInference
                     listType.addValue(sExp.s);
                 }
             }
-            return listType;
+            return Register(l, listType);
         }
 
         /// <remarks>

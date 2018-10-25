@@ -636,13 +636,12 @@ namespace Pytocs.CodeModel
             { "int", "int" },
             { "long", "long" },
             { "System.Object", "object" },
+            { "System.String", "string" },
         };
 
         private void GenerateTypeName(string typeName)
         {
-            if (typeName == "System.Object")
-                writer.Write("object");
-            else if (typeName == null)
+            if (typeName == null)
                 writer.Write("void");
             else
             {

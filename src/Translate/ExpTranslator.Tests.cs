@@ -42,7 +42,7 @@ namespace Pytocs.Translate
             var exp = par.test();
             Debug.Print("{0}", exp);
             var sym = new SymbolGenerator();
-            var types = new Dictionary<Node, DataType>();
+            var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
             var xlt = new ExpTranslator(types, new CodeGenerator(new CodeCompileUnit(), "", "test"), sym);
             var csExp = exp.Accept(xlt);
             var pvd = new CSharpCodeProvider();

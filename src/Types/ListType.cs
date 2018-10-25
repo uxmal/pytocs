@@ -88,11 +88,10 @@ namespace Pytocs.Types
             {
                 return true;
             }
-            else if (other is ListType)
+            else if (other is ListType that)
             {
-                ListType co = (ListType) other;
-                typeStack.Push(this, co);
-                bool ret = co.eltType.Equals(eltType);
+                typeStack.Push(this, that);
+                bool ret = that.eltType.Equals(eltType);
                 typeStack.Pop(this, other);
                 return ret;
             }

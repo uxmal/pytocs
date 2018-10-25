@@ -56,7 +56,7 @@ namespace Pytocs.Translate
                 new SuiteStatement(stm, filename, 0, 0),
                 filename, 0, 0);
             ana.LoadModule(mod);
-            var types = ana.BuildTypeDictionary();
+            var types = new TypeReferenceTranslator(ana.BuildTypeDictionary());
             var xlt = new ModuleTranslator(types, gen);
             xlt.Translate(stm);
 
@@ -79,7 +79,7 @@ namespace Pytocs.Translate
     
     public static class module {
         
-        public static object st = new List<object> {
+        public static List<string> st = new List<string> {
             ""a""
         };
     }
@@ -163,11 +163,13 @@ namespace test {
             var sExp =
 @"namespace test {
     
+    using System;
+    
     using System.Collections.Generic;
     
     public static class module {
         
-        public static object _tokenizer = antlrre.Tokenizer(tokens: new List<object> {
+        public static object _tokenizer = antlrre.Tokenizer(tokens: new List<Tuple<object, string>> {
             Tuple.Create(foo.a, ""sss"")
         });
     }

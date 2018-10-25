@@ -28,7 +28,7 @@ namespace Pytocs.Translate
 {
     public class StatementTranslator : IStatementVisitor
     {
-        private Dictionary<Node, DataType> types;
+        private TypeReferenceTranslator types;
         private CodeGenerator gen;
         private ExpTranslator xlat;
         private SymbolGenerator gensym;
@@ -39,7 +39,7 @@ namespace Pytocs.Translate
         private CodeConstructor classConstructor;
         private bool async;
 
-        public StatementTranslator(Dictionary<Node, DataType> types, CodeGenerator gen, SymbolGenerator gensym, HashSet<string> globals)
+        public StatementTranslator(TypeReferenceTranslator types, CodeGenerator gen, SymbolGenerator gensym, HashSet<string> globals)
         {
             this.types = types;
             this.gen = gen;
@@ -216,7 +216,8 @@ namespace Pytocs.Translate
             {
                 if (ass.Dst is Identifier idDst)
                 {
-                    var dt = TypeOf(idDst);
+                    var (dt, nmspcs) = types.TranslateTypeOf(idDst);
+                    gen.EnsureImports(nmspcs);
                     gensym.EnsureLocalVariable(idDst.Name, dt, false);
                 }
 
@@ -325,33 +326,6 @@ namespace Pytocs.Translate
             return gensym.GenSymAutomatic(prefix, type, true);
         }
 
-        private CodeTypeReference TypeOf(Node node)
-        {
-            if (types.TryGetValue(node, out var dt))
-            {
-                return TranslateTypeReference(dt);
-            }
-            else
-            {
-                return new CodeTypeReference(typeof(object));
-            }
-        }
-
-        private CodeTypeReference TranslateTypeReference(DataType dt)
-        {
-            switch (dt)
-            {
-            case DictType dict:
-                gen.EnsureImport("System.Collections.Generic");
-                var dtKey = TranslateTypeReference(dict.KeyType);
-                var dtValue = TranslateTypeReference(dict.ValueType);
-                return new CodeTypeReference("Dictionary", dtKey, dtValue);
-            case InstanceType inst:
-                return new CodeTypeReference(typeof(object));
-            }
-            throw new NotImplementedException($"Data type {dt} ({dt.GetType().Name}).");
-        }
-
         private CodeConstructor EnsureClassConstructor()
         {
             if (this.classConstructor == null)
@@ -395,7 +369,9 @@ namespace Pytocs.Translate
             }
             else
             {
-                var fieldType = TypeOf(id);
+                var (fieldType, nmspcs) = types.TranslateTypeOf(id);
+                gen.EnsureImports(nmspcs);
+
                 GenerateField(id.Name, fieldType, ass.Src.Accept(xlat));
             }
         }
@@ -463,7 +439,6 @@ namespace Pytocs.Translate
             if (this.gen.CurrentMember != null)
             {
                 //$TODO: C# 7 supports local functions.
-                var types = new Dictionary<Node, DataType>();
                 var lgen = new LambdaBodyGenerator(f, f.parameters, true, async, types, gen);
                 var def = lgen.GenerateLambdaVariable(f);
                 var meth = lgen.Generate();

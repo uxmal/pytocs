@@ -70,9 +70,9 @@ namespace Pytocs.Translate
         internal CodeGenerator m;
         internal SymbolGenerator gensym;
         internal IntrinsicTranslator intrinsic;
-        private Dictionary<Node, DataType> types;
+        private TypeReferenceTranslator types;
 
-        public ExpTranslator(Dictionary<Node, DataType> types, CodeGenerator gen, SymbolGenerator gensym)
+        public ExpTranslator(TypeReferenceTranslator types, CodeGenerator gen, SymbolGenerator gensym)
         {
             this.types = types;
             this.m = gen;
@@ -597,7 +597,10 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitList(PyList l)
         {
+            var (elemType, nms) = types.TranslateListElementType(l);
+            m.EnsureImports(nms);
             return m.ListInitializer(
+                elemType,
                 l.elts
                 .Where(e => e != null)
                 .Select(e => e.Accept(this)));
@@ -775,5 +778,6 @@ namespace Pytocs.Translate
             }
             throw new NotImplementedException();
         }
+
     }
 }

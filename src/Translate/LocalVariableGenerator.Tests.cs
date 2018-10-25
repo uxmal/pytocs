@@ -46,7 +46,7 @@ namespace Pytocs.Translate
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
             var sym = new SymbolGenerator();
-            var types = new Dictionary<Node, DataType>();
+            var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
             var xlt = new StatementTranslator(types, gen, sym, new HashSet<string>());
             stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
@@ -79,7 +79,7 @@ namespace Pytocs.Translate
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
             var sym = new SymbolGenerator();
-            var types = new Dictionary<Node, DataType>();
+            var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
             var xlt = new StatementTranslator(types, gen, sym, new HashSet<string>());
             stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();

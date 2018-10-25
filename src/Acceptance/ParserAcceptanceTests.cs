@@ -50,7 +50,7 @@ namespace Pytocs.Acceptance
             var stm = par.Parse(); ;
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
-            var types = new Dictionary<Node, DataType>();
+            var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
             var xlt = new ModuleTranslator(types, gen);
             xlt.Translate(stm);
 

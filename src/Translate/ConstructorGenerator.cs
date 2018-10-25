@@ -31,7 +31,7 @@ namespace Pytocs.Translate
         public ConstructorGenerator(
             FunctionDef f,
             List<Syntax.Parameter> args, 
-            Dictionary<Node, DataType> types,
+            TypeReferenceTranslator types,
             CodeGenerator gen)
             : base(f, "", args, false, false, types, gen)
         {

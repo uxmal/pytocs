@@ -44,6 +44,7 @@ namespace Pytocs.TypeInference
         void addRef(AttributeAccess attr, DataType targetType, ISet<Binding> bs);
         void putRef(Node node, ICollection<Binding> bs);
         void putRef(Node node, Binding bs);
+        void AddExpType(Exp node, DataType type);
         void AddUncalled(FunType f);
         void RemoveUncalled(FunType f);
         void pushStack(Exp v);
@@ -71,6 +72,7 @@ namespace Pytocs.TypeInference
         //public const string MODEL_LOCATION = "org/yinwang/pysonar/models";
         private List<string> loadedFiles = new List<string>();
         private List<Binding> allBindings = new List<Binding>();
+        private Dictionary<Node, DataType> expTypes = new Dictionary<Node, DataType>();
         private Dictionary<string, List<Diagnostic>> semanticErrors = new Dictionary<string, List<Diagnostic>>();
         private Dictionary<string, List<Diagnostic>> parseErrors = new Dictionary<string, List<Diagnostic>>();
         private string cwd = null;
@@ -356,6 +358,12 @@ namespace Pytocs.TypeInference
         {
             var bs = new List<Binding> { b };
             putRef(node, bs);
+        }
+
+        public void AddExpType(Exp exp, DataType dt)
+        {
+            //$REVIEW: unify with previous type?
+            this.expTypes[exp] = dt;
         }
 
         public void putProblem(Node loc, string msg)
@@ -664,6 +672,10 @@ namespace Pytocs.TypeInference
                  group b by b.node into g
                  select new { g.Key, Type = UnionType.CreateUnion(g.Select(bb => bb.type)) })
                 .ToDictionary(d => d.Key, d => d.Type);
+            foreach (var de in this.expTypes)
+            {
+                types[de.Key] = de.Value;
+            }
             return types;
         }
 

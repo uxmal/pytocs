@@ -54,13 +54,13 @@ namespace Pytocs
             var flt = new CommentFilter(lex);
             var par = new Parser(filename, flt);
             var stm = par.Parse();
-            var types = new Dictionary<Node, DataType>();
+            var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
             TranslateModuleStatements(stm, types, output);
         }
 
         public void TranslateModuleStatements(
             IEnumerable<Statement> stm,
-            Dictionary<Node, DataType> types,
+            TypeReferenceTranslator types,
             string outputFileName)
         {
             TextWriter writer;
@@ -86,7 +86,7 @@ namespace Pytocs
 
         public void TranslateModuleStatements(
             IEnumerable<Statement> stm,
-            Dictionary<Node,DataType> types, 
+            TypeReferenceTranslator types, 
             TextWriter output)
         {
             var unt = new CodeCompileUnit();

@@ -170,6 +170,7 @@
     <Compile Include="Translate\StatementTranslator.cs" />
     <Compile Include="Translate\StatementTranslator.Tests.cs" />
     <Compile Include="Translate\SymbolGenerator.cs" />
+    <Compile Include="Translate\TypeReferenceTranslator.cs" />
     <Compile Include="Translator.cs" />
     <Compile Include="TypeInference\Analyzer.cs" />
     <Compile Include="TypeInference\Analyzer.Tests.cs" />

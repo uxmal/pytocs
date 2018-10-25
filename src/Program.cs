@@ -21,6 +21,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pytocs.Translate;
 using Pytocs.TypeInference;
 using Pytocs.Types;
 
@@ -50,7 +51,8 @@ namespace Pytocs
                 var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
                 typeAnalysis.Analyze(startDir);
                 typeAnalysis.Finish();
-                var types = typeAnalysis.BuildTypeDictionary();
+                var types = new TypeReferenceTranslator(
+                    typeAnalysis.BuildTypeDictionary());
                 //Console.WriteLine($"== Type dictionary: {types.Count}");
                 //foreach (var de in types.OrderBy(d => d.Key.ToString()))
                 //{
