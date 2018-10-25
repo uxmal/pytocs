@@ -62,7 +62,7 @@ namespace Pytocs.Translate
             stmtXlt.properties = FindProperties(c.body.stmts);
             var csClass = gen.Class(c.name.Name, baseClasses, () => c.body.Accept(stmtXlt));
             csClass.Comments.AddRange(comments);
-            GenerateClassMembers(c);
+            GenerateClassMembers(c, csClass);
             if (customAttrs != null)
             {
                 csClass.CustomAttributes.AddRange(customAttrs);
@@ -70,16 +70,33 @@ namespace Pytocs.Translate
             }
         }
 
-        private void GenerateClassMembers(ClassDef c)
+        private void GenerateClassMembers(ClassDef c, CodeTypeDeclaration csClass)
         {
             var ct = types.TypeOf(c.name);
-            foreach (var member in ct.Table.table)
+            var fields = ct.Table.table.Where(m => IsField(m.Value))
+                .OrderBy(f => f.Key);
+            foreach (var field in fields)
             {
-                //if (IsField(member.Value))
+                var b = field.Value.First();
+                var (fieldType, ns) = types.Translate(b.type);
+                gen.EnsureImports(ns);
+                csClass.Members.Add(new CodeMemberField(fieldType, field.Key)
                 {
-                    Debug.Print("member: {0}:{1}:{2}", member.Key, member.Value.Count, member.Value.Sum(b => b.References.Count));
-                }
+                    Attributes = MemberAttributes.Public
+                });
             }
+        }
+
+        private bool IsField(ISet<Binding> value)
+        {
+            foreach (var b in value)
+            {
+                if (b.kind == BindingKind.ATTRIBUTE
+                    &&
+                   (!b.IsSynthetic || b.References.Count != 0))
+                    return true;
+            }
+            return false;
         }
 
         public Dictionary<Statement, PropertyDefinition> FindProperties(List<Statement> stmts)

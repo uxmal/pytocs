@@ -29,8 +29,6 @@ namespace Pytocs.Syntax
 
         public ClassDef(Identifier name, List<Exp> baseClasses, SuiteStatement body, string filename, int start, int end) : base(filename, start, end) 
         {
-            if (name.Name == "Point")   //$DEBUG
-                name.ToString();
             this.name = name;
             this.args = baseClasses;
             this.body = body;

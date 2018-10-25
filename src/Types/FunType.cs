@@ -198,7 +198,7 @@ namespace Pytocs.Types
             {
                 if (Class != null)
                 {
-                    simplified.add(Class.getCanon());
+                    simplified.add(Class.GetInstance());
                 }
                 else
                 {

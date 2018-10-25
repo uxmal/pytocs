@@ -226,7 +226,9 @@ f.foo()
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
 @"(binding:kind=CLASS:node=Foo:type=<Foo>:qname=.foo.test.Foo:refs=[Foo])" + nl +
 @"(binding:kind=METHOD:node=foo:type=Foo -> None:qname=.foo.test.Foo.foo:refs=[f.foo])" + nl +
+@"(binding:kind=PARAMETER:node=self:type=<Foo>:qname=.foo.test.Foo.foo.self:refs=[self])" + nl +
 @"(binding:kind=METHOD:node=bar:type=(Foo, ?) -> None:qname=.foo.test.Foo.bar:refs=[])" + nl +
+@"(binding:kind=PARAMETER:node=self:type=<Foo>:qname=.foo.test.Foo.bar.self:refs=[])" + nl +
 @"(binding:kind=SCOPE:node=f:type=Foo:qname=.foo.test.f:refs=[f])" + nl +
 @"(binding:kind=PARAMETER:node=self:type=Foo:qname=.foo.test.Foo.foo.self:refs=[self])" + nl +
 @"(binding:kind=PARAMETER:node=self:type=Foo:qname=.foo.test.Foo.bar.self:refs=[])" + nl +
@@ -308,6 +310,7 @@ def mane_lupe(phile):
 @"(binding:kind=MODULE:node=(module:\sys_q\parsing\parser.py):type=parser:qname=.sys_q.parsing.parser:refs=[])" + nl +
 @"(binding:kind=CLASS:node=Parser:type=<Parser>:qname=.sys_q.parsing.parser.Parser:refs=[Parser,Parser])" + nl +
 @"(binding:kind=METHOD:node=parse:type=(Parser, ?) -> None:qname=.sys_q.parsing.parser.Parser.parse:refs=[p.parse])" + nl +
+@"(binding:kind=PARAMETER:node=self:type=<Parser>:qname=.sys_q.parsing.parser.Parser.parse.self:refs=[])" + nl +
 
 @"(binding:kind=MODULE:node=(module:\sys_q\main.py):type=main:qname=.sys_q.main:refs=[])" + nl +
 @"(binding:kind=VARIABLE:node=parsing:type=:qname=:refs=[])" + nl +
@@ -343,6 +346,7 @@ def bar():
 @"(binding:kind=MODULE:node=(module:\foo\cls.py):type=cls:qname=.foo.cls:refs=[])" + nl +
 @"(binding:kind=CLASS:node=Cls:type=<Cls>:qname=.foo.cls.Cls:refs=[])" + nl +
 @"(binding:kind=METHOD:node=echo:type=(Cls, ?) -> None:qname=.foo.cls.Cls.echo:refs=[])" + nl +
+@"(binding:kind=PARAMETER:node=self:type=<Cls>:qname=.foo.cls.Cls.echo.self:refs=[])" + nl +
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
 @"(binding:kind=FUNCTION:node=bar:type=() -> None:qname=.foo.test.bar:refs=[])" + nl +
 @"(binding:kind=SCOPE:node=c:type=?:qname=.foo.test.bar.c:refs=[c])" + nl +

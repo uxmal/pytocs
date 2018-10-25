@@ -59,30 +59,32 @@ namespace Pytocs.Syntax
             return v.VisitFunctionDef(this);
         }
 
-        public bool isStaticMethod()
+        public bool IsStaticMethod()
         {
-            throw new NotImplementedException();
-            //foreach (Node d in decorators)
-            //{
-            //    if (d is Name && ((Name)d).id == "staticmethod")
-            //    {
-            //        return true;
-            //    }
-            //}
-            //return false;
+            if (decorators == null)
+                return false;
+            foreach (var d in decorators)
+            {
+                if (d.Name == "staticmethod")
+                {
+                    return true;
+                }
+            }
+            return false;
         }
 
-        public bool isClassMethod()
+        public bool IsClassMethod()
         {
-            throw new NotImplementedException();
-            //foreach (Node d in base.decorators)
-            //{
-            //    if (d is Name && ((Name)d).id == "classmethod")
-            //    {
-            //        return true;
-            //    }
-            //}
-            //return false;
+            if (decorators == null)
+                return false;
+            foreach (var d in decorators)
+            {
+                if (d.Name == "classmethod")
+                {
+                    return true;
+                }
+            }
+            return false;
         }
     }
 

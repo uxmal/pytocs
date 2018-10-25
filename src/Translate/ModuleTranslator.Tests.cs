@@ -14,6 +14,7 @@
 //  limitations under the License.
 #endregion
 
+#if DEBUG
 using Pytocs.CodeModel;
 using NUnit.Framework;
 using System;
@@ -156,7 +157,7 @@ namespace test {
         {
             var pyModule =
 @"_tokenizer = antlrre.Tokenizer(
-    # token regular expression table
+    " + @"# token regular expression table
     tokens = [
         (foo.a, 'sss')
     ])
@@ -304,6 +305,10 @@ pt = Point(3.5, -0.4)
                 this.x = x;
                 this.y = y;
             }
+            
+            public object x;
+            
+            public object y;
         }
         
         public static object pt = Point(3.5, -0.4);
@@ -315,3 +320,4 @@ pt = Point(3.5, -0.4)
         }
     }
 }
+#endif

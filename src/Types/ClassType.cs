@@ -14,6 +14,9 @@
 //  limitations under the License.
 #endregion
 
+using Pytocs.Syntax;
+using System;
+using System.Collections.Generic;
 using State = Pytocs.TypeInference.State;
 
 namespace Pytocs.Types
@@ -21,13 +24,10 @@ namespace Pytocs.Types
     public class ClassType : DataType
     {
         public string name;
-        public InstanceType canon;
+        public InstanceType instance;
 
         public ClassType(string name, State parent, string path)
         {
-            if (name.Contains("Point"))   //$DEBUG
-                name.ToString();
-
             this.name = name;
             this.Table = new State(parent, State.StateType.CLASS) { Type = this };
             if (parent != null)
@@ -59,13 +59,23 @@ namespace Pytocs.Types
             Table.addSuper(superclass.Table);
         }
 
-        public InstanceType getCanon()
+        public InstanceType GetInstance()
         {
-            if (canon == null)
+            if (instance == null)
             {
-                canon = new InstanceType(this);
+                instance = new InstanceType(this);
             }
-            return canon;
+            return instance;
+        }
+
+        public InstanceType GetInstance(IList<DataType> args, DataType inferencer, Exp call)
+        {
+            if (instance == null)
+            {
+                IList<DataType> initArgs = args ?? new List<DataType>();
+                throw new NotImplementedException(" instance = new InstanceType(this, initArgs, inferencer, call);");
+            }
+            return instance;
         }
 
         public override bool Equals(object other)

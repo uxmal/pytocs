@@ -283,7 +283,7 @@ namespace Pytocs.TypeInference
             }
             else if (func.Class != null)
             {
-                pTypes.Add(func.Class.getCanon());
+                pTypes.Add(func.Class.GetInstance());
             }
 
             if (pos != null)
@@ -332,11 +332,13 @@ namespace Pytocs.TypeInference
             }
         }
 
-        public static DataType FirstArgumentType(FunType func, DataType selfType)
+        public static DataType FirstArgumentType(FunctionDef f, FunType func, DataType selfType)
         {
-            if (!func.Definition.isStaticMethod())
+            if (f.parameters.Count == 0)
+                return null;
+            if (!func.Definition.IsStaticMethod())
             {
-                if (func.Definition.isClassMethod())
+                if (func.Definition.IsClassMethod())
                 {
                     if (func.Class != null)
                     {
@@ -363,7 +365,7 @@ namespace Pytocs.TypeInference
                             }
                             else
                             {
-                                throw new NotImplementedException("return func.Class.getInstance());");
+                                return func.Class.GetInstance();
                             }
                         }
                     }
@@ -783,18 +785,18 @@ namespace Pytocs.TypeInference
                 funkind = BindingKind.FUNCTION;
             }
 
-            if (scope.Type is ClassType ct)
+            var ct = scope.Type as ClassType;
+            if (ct != null)
             {
                 fun.Class = ct;
             }
 
             scope.Bind(analyzer, f.name, fun, funkind);
-            //$TODO
-            //var firstArgType = FirstArgumentType(fun, null);
-            //if (firstArgType != null)
-            //{
-            //    fun.Table.Bind(analyzer, f.parameters[0].Id, firstArgType, BindingKind.PARAMETER);
-            //}
+            var firstArgType = FirstArgumentType(f, fun, ct);
+            if (firstArgType != null)
+            {
+                fun.Table.Bind(analyzer, f.parameters[0].Id, firstArgType, BindingKind.PARAMETER);
+            }
 
             var sOld = this.scope;
             this.scope = fun.Table;
