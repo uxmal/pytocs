@@ -783,8 +783,10 @@ namespace Pytocs.Syntax
     {
         public Exp variable;
         public Exp collection;
+        public bool Async { get; set; }
 
         public CompFor(string filename, int start, int end) : base(filename, start, end) { }
+
 
         public override T Accept<T>(IExpVisitor<T> v)
         {

@@ -307,7 +307,8 @@ list_for: 'for' exprlist 'in' testlist_safe [list_iter]
 list_if: 'if' old_test [list_iter]
 
 comp_iter: comp_for | comp_if
-comp_for: 'for' exprlist 'in' or_test [comp_iter]
+sync_comp_for: 'for' exprlist 'in' or_test [comp_iter]
+comp_for: ['async'] sync_comp_for
 comp_if: 'if' old_test [comp_iter]
 
 testlist1: test (',' test)*
@@ -2402,13 +2403,23 @@ eval_input: testlist NEWLINE* ENDMARKER
         //comp_iter: comp_for | comp_if
         public CompIter comp_iter()
         {
-            if (Peek(TokenType.For))
+            if (Peek(TokenType.For) || Peek(TokenType.Async))
                 return comp_for();
             else
                 return comp_if();
         }
-        //comp_for: 'for' exprlist 'in' or_test [comp_iter]
+
+        // comp_for: ['async'] sync_comp_for
         public CompFor comp_for()
+        {
+            bool async = PeekAndDiscard(TokenType.Async);
+            var compFor = sync_comp_for();
+            compFor.Async = async;
+            return compFor;
+        }
+
+        //sync_comp_for: 'for' exprlist 'in' or_test [comp_iter]
+        public CompFor sync_comp_for()
         {
             var start = Expect(TokenType.For).Start;
             var exprs = exprlist();
