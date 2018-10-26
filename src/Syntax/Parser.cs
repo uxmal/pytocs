@@ -2072,7 +2072,10 @@ eval_input: testlist NEWLINE* ENDMARKER
             if (Peek(TokenType.For))
             {
                 e2 = comp_for();
-                return new ListComprehension(e, e2, filename, e.Start, e2.End);
+                if (tuple)
+                    return new GeneratorExp(e, e2, filename, e.Start, e2.End);
+                else
+                    return new ListComprehension(e, e2, filename, e.Start, e2.End);
             }
             else
             {

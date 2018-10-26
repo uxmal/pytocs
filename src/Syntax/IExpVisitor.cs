@@ -39,6 +39,7 @@ namespace Pytocs.Syntax
         void VisitEllipsis(Ellipsis e);
         void VisitExpList(ExpList list);
         void VisitFieldAccess(AttributeAccess acc);
+        void VisitGeneratorExp(GeneratorExp generatorExp);
         void VisitIdentifier(Identifier id);
         void VisitImaginaryLiteral(ImaginaryLiteral im);
         void VisitIntLiteral(IntLiteral s);
@@ -81,6 +82,7 @@ namespace Pytocs.Syntax
         T VisitEllipsis(Ellipsis e);
         T VisitExpList(ExpList list);
         T VisitFieldAccess(AttributeAccess acc);
+        T VisitGeneratorExp(GeneratorExp generatorExp);
         T VisitIdentifier(Identifier id);
         T VisitImaginary(ImaginaryLiteral im);
         T VisitIntLiteral(IntLiteral s);

@@ -54,7 +54,7 @@ namespace Pytocs.CodeModel
         public CodeTypeDeclaration CurrentType { get; set; }
 
 
-        internal CodeExpression Access(CodeExpression exp, string fieldName)
+        public CodeExpression Access(CodeExpression exp, string fieldName)
         {
             return new CodeFieldReferenceExpression(exp, fieldName);
         }
@@ -133,7 +133,7 @@ namespace Pytocs.CodeModel
             return ass;
         }
 
-        internal CodeConditionStatement If(CodeExpression test, Action xlatThen, Action xlatElse)
+        public CodeConditionStatement If(CodeExpression test, Action xlatThen, Action xlatElse)
         {
             var i = new CodeConditionStatement
             {
@@ -195,7 +195,7 @@ namespace Pytocs.CodeModel
             return sideeffect;
         }
 
-        internal CodeConstructor Constructor(IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
+        public CodeConstructor Constructor(IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
         {
             var cons = new CodeConstructor
             {
@@ -223,7 +223,7 @@ namespace Pytocs.CodeModel
             return method;
         }
 
-        internal CodeMemberMethod StaticMethod(string name, CodeTypeReference retType, IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
+        public CodeMemberMethod StaticMethod(string name, CodeTypeReference retType, IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
         {
             var method = new CodeMemberMethod
             {
@@ -261,17 +261,17 @@ namespace Pytocs.CodeModel
             CurrentMemberComments = oldComments;
         }
 
-        internal CodeParameterDeclarationExpression Param(Type type, string name)
+        public CodeParameterDeclarationExpression Param(Type type, string name)
         {
             return new CodeParameterDeclarationExpression(type, name);
         }
 
-        internal CodeParameterDeclarationExpression Param(Type type, string name, CodeExpression defaultValue)
+        public CodeParameterDeclarationExpression Param(Type type, string name, CodeExpression defaultValue)
         {
             return new CodeParameterDeclarationExpression(type, name, defaultValue);
         }
 
-        internal void Return(CodeExpression e = null)
+        public void Return(CodeExpression e = null)
         {
             Scope.Add(new CodeMethodReturnStatement(e));
         }
@@ -308,7 +308,7 @@ namespace Pytocs.CodeModel
             return field;
         }
 
-        internal CodeMemberField Field(string fieldName, CodeExpression initializer)
+        public CodeMemberField Field(string fieldName, CodeExpression initializer)
         {
             var field = new CodeMemberField(typeof(object), fieldName)
             {
@@ -330,26 +330,26 @@ namespace Pytocs.CodeModel
         }
 
 
-        internal CodeThrowExceptionStatement Throw(CodeExpression codeExpression)
+        public CodeThrowExceptionStatement Throw(CodeExpression codeExpression)
         {
             var t = new CodeThrowExceptionStatement(codeExpression);
             Scope.Add(t);
             return t;
         }
 
-        internal CodeThrowExceptionStatement Throw()
+        public CodeThrowExceptionStatement Throw()
         {
             var t = new CodeThrowExceptionStatement();
             Scope.Add(t);
             return t;
         }
 
-        internal CodeExpression Lambda(CodeExpression[] args, CodeExpression expr)
+        public CodeExpression Lambda(CodeExpression[] args, CodeExpression expr)
         {
             return new CodeLambdaExpression(args, expr);
         }
 
-        internal CodeExpression Lambda(CodeExpression[] args, List<CodeStatement> stmts)
+        public CodeExpression Lambda(CodeExpression[] args, List<CodeStatement> stmts)
         {
             return new CodeLambdaExpression(args, stmts);
         }
@@ -399,7 +399,7 @@ namespace Pytocs.CodeModel
             return t;
         }
 
-        internal void Break()
+        public void Break()
         {
             Scope.Add(new CodeBreakStatement());
         }
@@ -441,19 +441,19 @@ namespace Pytocs.CodeModel
             return dw;
         }
 
-        internal CodeYieldStatement Yield(CodeExpression exp)
+        public CodeYieldStatement Yield(CodeExpression exp)
         {
             var y = new CodeYieldStatement(exp);
             Scope.Add(y);
             return y;
         }
 
-        internal CodeExpression MethodRef(CodeExpression exp, string methodName)
+        public CodeExpression MethodRef(CodeExpression exp, string methodName)
         {
             return new CodeMethodReferenceExpression(exp, methodName);
         }
 
-        internal CodeObjectCreateExpression New(CodeTypeReference type, params CodeExpression[] args)
+        public CodeObjectCreateExpression New(CodeTypeReference type, params CodeExpression[] args)
         {
             var exp = new CodeObjectCreateExpression
             {
@@ -463,7 +463,7 @@ namespace Pytocs.CodeModel
             return exp;
         }
 
-        internal CodePrimitiveExpression Prim(object o)
+        public CodePrimitiveExpression Prim(object o)
         {
             if (o is long l)
             {
@@ -475,19 +475,19 @@ namespace Pytocs.CodeModel
             return new CodePrimitiveExpression(o);
         }
 
-        internal CodeTypeReference TypeRef(string typeName)
+        public CodeTypeReference TypeRef(string typeName)
         {
             return new CodeTypeReference(typeName);
         }
 
-        internal CodeTypeReference TypeRef(string typeName, params string[] genericArgs)
+        public CodeTypeReference TypeRef(string typeName, params string[] genericArgs)
         {
             return new CodeTypeReference(
                 typeName,
                 genericArgs.Select(ga => new CodeTypeReference(ga)).ToArray());
         }
 
-        internal CodeAttributeDeclaration CustomAttr(CodeTypeReference typeRef, params CodeAttributeArgument [] args)
+        public CodeAttributeDeclaration CustomAttr(CodeTypeReference typeRef, params CodeAttributeArgument [] args)
         {
             return new CodeAttributeDeclaration
             {
@@ -497,7 +497,7 @@ namespace Pytocs.CodeModel
             throw new NotImplementedException();
         }
 
-        internal CodeCommentStatement Comment(string comment)
+        public CodeCommentStatement Comment(string comment)
         {
             var c = new CodeCommentStatement(comment);
             Scope.Add(c);
@@ -509,7 +509,7 @@ namespace Pytocs.CodeModel
             return new CodeTypeReferenceExpression(typeName);
         }
 
-        internal CodeUsingStatement Using(
+        public CodeUsingStatement Using(
             IEnumerable<CodeStatement> initializers,
             Action xlatUsingBody)
         {
@@ -523,7 +523,7 @@ namespace Pytocs.CodeModel
             return u;
         }
 
-        internal CodeMemberProperty PropertyDef(string name, Action generatePropertyGetter, Action generatePropertySetter)
+        public CodeMemberProperty PropertyDef(string name, Action generatePropertyGetter, Action generatePropertySetter)
         {
             var prop = new CodeMemberProperty
             {
@@ -553,6 +553,31 @@ namespace Pytocs.CodeModel
             this.CurrentMemberComments = oldComments;
 
             return prop;
+        }
+
+        public CodeLetClause Let(CodeExpression id, CodeExpression value)
+        {
+            return new CodeLetClause(id, value);
+        }
+
+        public CodeWhereClause Where(CodeExpression e)
+        {
+            return new CodeWhereClause(e);
+        }
+
+        public CodeFromClause From(CodeExpression id, CodeExpression collection)
+        {
+            return new CodeFromClause(id, collection);
+        }
+
+        public CodeQueryClause Select(CodeExpression projection)
+        {
+            return new CodeSelectClause(projection);
+        }
+
+        public CodeQueryExpression Query(params CodeQueryClause[] clauses)
+        {
+            return new CodeQueryExpression(clauses);
         }
     }
 }

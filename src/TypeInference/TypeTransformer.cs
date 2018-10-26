@@ -1091,11 +1091,11 @@ namespace Pytocs.TypeInference
         /// Python's list comprehension will erase any variable used in generators.
         /// This is wrong, but we "respect" this bug here.
         /// 
-        //public DataType VisitGeneratorExp(GeneratorExp g)
-        //{
-        //    resolveList(g.generators);
-        //    return new ListType(g.elt.Accept(this));
-        //}
+        public DataType VisitGeneratorExp(GeneratorExp g)
+        {
+            g.Collection.Accept(this);
+            return analyzer.TypeFactory.CreateList(g.Projection.Accept(this));
+        }
 
         public DataType VisitLongLiteral(LongLiteral l)
         {

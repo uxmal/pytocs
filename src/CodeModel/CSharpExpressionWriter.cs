@@ -350,7 +350,7 @@ namespace Pytocs.CodeModel
         {
             if (m.TargetObject != null)
             {
-                m.TargetObject.Accept(this);
+                Write(m.TargetObject, PrecPostfix, false);
                 writer.Write(".");
             }
             writer.WriteName(m.MethodName);
@@ -363,6 +363,61 @@ namespace Pytocs.CodeModel
             {
                 writer.Write(": ");
                 Write(arg.exp2, PrecBase, false);
+            }
+        }
+
+        public void VisitQueryExpression(CodeQueryExpression q)
+        {
+            bool needParens = (this.precedence > PrecBase);
+            if (needParens)
+            {
+                writer.Write("(");
+            }
+            WriteQueryClause(q.Clauses[0]);
+
+            ++writer.IndentLevel;
+            foreach (var clause in q.Clauses.Skip(1))
+            {
+                writer.WriteLine();
+                WriteQueryClause(clause);
+            }
+            if (needParens)
+            {
+                writer.Write(")");
+            }
+            --writer.IndentLevel;
+        }
+
+        private void WriteQueryClause(CodeQueryClause clause)
+        {
+            switch (clause)
+            {
+            case CodeFromClause f:
+                writer.Write("from");
+                writer.Write(" ");
+                f.Identifier.Accept(this);
+                writer.Write(" ");
+                writer.Write("in");
+                writer.Write(" ");
+                f.Collection.Accept(this);
+                break;
+            case CodeLetClause l:
+                writer.Write("let");
+                writer.Write(" ");
+                Write(l.Identifier, PrecBase, false);
+                writer.Write(" = ");
+                Write(l.Value, PrecBase, false);
+                break;
+            case CodeWhereClause w:
+                writer.Write("where");
+                writer.Write(" ");
+                Write(w.Condition, PrecBase, false);
+                break;
+            case CodeSelectClause s:
+                writer.Write("select");
+                writer.Write(" ");
+                s.Projection.Accept(this);
+                break;
             }
         }
 

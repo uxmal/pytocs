@@ -97,6 +97,11 @@ namespace Pytocs.Translate
             throw new NotImplementedException();
         }
 
+        public void VisitGeneratorExp(GeneratorExp exp)
+        {
+            throw new NotImplementedException();
+        }
+
         public void VisitIdentifier(Identifier id)
         {
             syms.Reference(id.Name);

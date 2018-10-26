@@ -91,8 +91,7 @@ namespace Pytocs.Translate
         {
             for (int i = stack.Count - 1; i >= 0; --i)
             {
-                CodeExpression exp;
-                if (stack[i].TryGetValue(id, out exp))
+                if (stack[i].TryGetValue(id, out var exp))
                     return exp;
             }
             return new CodeVariableReferenceExpression(id);

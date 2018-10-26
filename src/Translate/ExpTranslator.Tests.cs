@@ -107,7 +107,9 @@ namespace Pytocs.Translate
         public void ExListComprehension()
         {
             string pySrc = "[int(x) for x in s]";
-            string sExp = "s.Select(x => Convert.ToInt32(x))";
+            string sExp = 
+@"(from x in s
+    select Convert.ToInt32(x)).ToList()";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
 
@@ -125,7 +127,10 @@ namespace Pytocs.Translate
         public void ExListCompIf()
         {
             string pySrc = "[int(x) for x in s if x > 10]";
-            string sExp = "s.Where(x => x > 10).Select(x => Convert.ToInt32(x))";
+            string sExp = 
+@"(from x in s
+    where x > 10
+    select Convert.ToInt32(x)).ToList()";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
 
@@ -133,7 +138,10 @@ namespace Pytocs.Translate
         public void ExListCompWithSplit()
         {
             string pySrc = "[int(x) for x in s.split('/') if x != '']";
-            string sExp = "s.split(\"/\").Where(x => x != \"\").Select(x => Convert.ToInt32(x))";
+            string sExp =
+@"(from x in s.split(""/"")
+    where x != """"
+    select Convert.ToInt32(x)).ToList()";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
 
@@ -220,7 +228,9 @@ namespace Pytocs.Translate
         public void Ex_ListFor()
         {
             var pySrc = "[int2byte(b) for b in bytelist]";
-            string sExp = "bytelist.Select(b => int2byte(b))";
+            string sExp =
+@"(from b in bytelist
+    select int2byte(b)).ToList()";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
 
@@ -236,7 +246,9 @@ namespace Pytocs.Translate
         public void Ex_CompFor()
         {
             var pySrc = "sum(int2byte(b) for b in bytelist)";
-            string sExp = "bytelist.Select(b => int2byte(b)).Sum()";
+            string sExp = 
+@"(from b in bytelist
+    select int2byte(b)).Sum()";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
 
@@ -245,14 +257,6 @@ namespace Pytocs.Translate
         {
             var pySrc = "list(foo)";
             string sExp = "foo.ToList()";
-            Assert.AreEqual(sExp, Xlat(pySrc));
-        }
-
-        [Test]
-        public void Ex_Regression1()
-        {
-            var pySrc = "((a, s) for a in stackframe.alocs.values() for s in a._segment_list)";
-            string sExp = "stackframe.alocs.values().SelectMany(a => a._segment_list, (a,s) => Tuple.Create(a, s)).Select(a => Tuple.Create(a, s))";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
 
@@ -285,24 +289,22 @@ namespace Pytocs.Translate
         public void Ex_SetComprehension()
         {
             var pySrc = "{ id(e) for e in self._breakpoints[t] }";
-            var sExp = "this._breakpoints[t].ToHashSet(e => id(e))";
+            var sExp = 
+@"(from e in this._breakpoints[t]
+    select id(e)).ToHashSet()";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
-
 
         [Test]
         public void Ex_SetComprehension2()
         {
             var pySrc = "{(a.addr,b.addr) for a,b in fdiff.block_matches}";
-            var sExp = "fdiff.block_matches.Chop((a,b) => Tuple.Create(a.addr, b.addr)).ToHashSet()";
-            Assert.AreEqual(sExp, Xlat(pySrc));
-        }
+            var sExp =
+@"(from _tup_1 in fdiff.block_matches.Chop((a,b) => Tuple.Create(a, b))
+    let a = _tup_1.Item1
+    let b = _tup_1.Item2
+    select Tuple.Create(a.addr, b.addr)).ToHashSet()";
 
-        [Test]
-        public void Ex_SetComprehension3()
-        {
-            var pySrc = "{(a.addr ,b.addr) for a,b in fdiff.block_matches}";
-            var sExp = "fdiff.block_matches.Chop((a,b) => Tuple.Create(a.addr, b.addr)).ToHashSet()";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
 
@@ -527,7 +529,10 @@ namespace Pytocs.Translate
         public void Ex_for_with_if()
         {
             var pysrc = "(a for a in function.endpoints if a.addr == endpoint_addr)";
-            var sExp = "function.endpoints.Where(a => a.addr == endpoint_addr)";
+            var sExp =
+@"from a in function.endpoints
+    where a.addr == endpoint_addr
+    select a";
             Assert.AreEqual(sExp, Xlat(pysrc));
         }
 
@@ -535,7 +540,10 @@ namespace Pytocs.Translate
         public void Ex_for_with_if_projected()
         {
             var pysrc = "(a.x for a in function.endpoints if a.addr == endpoint_addr)";
-            var sExp = "function.endpoints.Where(a => a.addr == endpoint_addr).Select(a => a.x)";
+            var sExp =
+@"from a in function.endpoints
+    where a.addr == endpoint_addr
+    select a.x";
             Assert.AreEqual(sExp, Xlat(pysrc));
         }
 
@@ -543,7 +551,10 @@ namespace Pytocs.Translate
         public void Ex_for_with_if_projected_to_set()
         {
             var pysrc = "{a for a in function.endpoints if a.addr == endpoint_addr}";
-            var sExp = "function.endpoints.Where(a => a.addr == endpoint_addr).ToHashSet()";
+            var sExp =
+@"(from a in function.endpoints
+    where a.addr == endpoint_addr
+    select a).ToHashSet()";
             Assert.AreEqual(sExp, Xlat(pysrc));
         }
 
@@ -632,6 +643,17 @@ namespace Pytocs.Translate
         {
             string pySrc = "await foo";
             string sExp = "await foo";
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
+
+        [Test]
+        public void Ex_nested_for_comprehensions()
+        {
+            string pySrc = "[(a, s) for a in stackframe.alocs.values() for s in a._segment_list]";
+            string sExp = 
+@"(from a in stackframe.alocs.values()
+    from s in a._segment_list
+    select Tuple.Create(a, s)).ToList()";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
     }

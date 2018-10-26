@@ -60,8 +60,10 @@
     <Compile Include="CodeModel\CodeContinueStatement.cs" />
     <Compile Include="CodeModel\CodeExpressionStatement.cs" />
     <Compile Include="CodeModel\CodeFieldReferenceExpression.cs" />
+    <Compile Include="CodeModel\CodeFromClause.cs" />
     <Compile Include="CodeModel\CodeInitializerExpression.cs" />
     <Compile Include="CodeModel\CodeLambdaExpression.cs" />
+    <Compile Include="CodeModel\CodeLetClause.cs" />
     <Compile Include="CodeModel\CodeMemberProperty.cs" />
     <Compile Include="CodeModel\CodeMethodReferenceExpression.cs" />
     <Compile Include="CodeModel\CodeMethodReturnStatement.cs" />
@@ -70,6 +72,9 @@
     <Compile Include="CodeModel\CodePostTestLoopStatement.cs" />
     <Compile Include="CodeModel\CodePreTestLoopStatement.cs" />
     <Compile Include="CodeModel\CodePrimitiveExpression.cs" />
+    <Compile Include="CodeModel\CodeQueryClause.cs" />
+    <Compile Include="CodeModel\CodeQueryExpression.cs" />
+    <Compile Include="CodeModel\CodeSelectClause.cs" />
     <Compile Include="CodeModel\CodeThisReferenceExpression.cs" />
     <Compile Include="CodeModel\CodeThrowExceptionStatement.cs" />
     <Compile Include="CodeModel\CodeTryCatchFinallyStatement.cs" />
@@ -98,6 +103,7 @@
     <Compile Include="CodeModel\CodeUnaryOperatorExpression.cs" />
     <Compile Include="CodeModel\CodeUsingStatement.cs" />
     <Compile Include="CodeModel\CodeVariableDeclarationStatement.cs" />
+    <Compile Include="CodeModel\CodeWhereClause.cs" />
     <Compile Include="CodeModel\CodeWhile.cs" />
     <Compile Include="CodeModel\CodeYieldStatement.cs" />
     <Compile Include="CodeModel\CSharpCodeProvider.cs" />

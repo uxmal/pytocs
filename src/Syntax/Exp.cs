@@ -807,6 +807,11 @@ namespace Pytocs.Syntax
             writer.Write("in");
             writer.Write(" ");
             collection.Write(writer);
+            if (this.next != null)
+            {
+                writer.Write(" ");
+                this.next.Write(writer);
+            }
         }
     }
 
@@ -824,6 +829,18 @@ namespace Pytocs.Syntax
         public override void Accept(IExpVisitor v)
         {
             v.VisitCompIf(this);
+        }
+
+        public override void Write(TextWriter writer)
+        {
+            writer.Write("if");
+            writer.Write(" ");
+            test.Write(writer);
+            if (next != null)
+            {
+                writer.Write(" ");
+                next.Write(writer);
+            }
         }
     }
 
@@ -942,6 +959,28 @@ namespace Pytocs.Syntax
                 exp.Write(writer);
             }
             writer.Write("]");
+        }
+    }
+
+    public class GeneratorExp : Exp
+    {
+        public Exp Projection;
+        public Exp Collection;
+
+        public GeneratorExp(Exp proj, Exp coll, string filename, int start, int end) : base(filename,start, end)
+        {
+            this.Projection = proj;
+            this.Collection = coll;
+        }
+
+        public override T Accept<T>(IExpVisitor<T> v)
+        {
+            return v.VisitGeneratorExp(this);
+        }
+
+        public override void Accept(IExpVisitor v)
+        {
+            v.VisitGeneratorExp(this);
         }
     }
 

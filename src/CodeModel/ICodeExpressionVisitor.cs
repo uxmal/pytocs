@@ -38,6 +38,8 @@ namespace Pytocs.CodeModel
         void VisitObjectInitializer(CodeObjectInitializer i);
         void VisitParameterDeclaration(CodeParameterDeclarationExpression param);
         void VisitPrimitive(CodePrimitiveExpression p);
+        void VisitQueryExpression(CodeQueryExpression q);
+
         void VisitThisReference(CodeThisReferenceExpression t);
         void VisitTypeReference(CodeTypeReferenceExpression t);
         void VisitUnary(CodeUnaryOperatorExpression u);
@@ -62,6 +64,7 @@ namespace Pytocs.CodeModel
         T VisitObjectInitializer(CodeObjectInitializer i);
         T VisitParameterDeclaration(CodeParameterDeclarationExpression param);
         T VisitPrimitive(CodePrimitiveExpression p);
+        T VisitQueryExpression(CodeQueryExpression q);
         T VisitThisReference(CodeThisReferenceExpression t);
         T VisitTypeReference(CodeTypeReferenceExpression t);
         T VisitUnary(CodeUnaryOperatorExpression u);

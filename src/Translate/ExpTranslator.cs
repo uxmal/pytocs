@@ -240,15 +240,9 @@ namespace Pytocs.Translate
             {
                 if (a.defval is CompFor compFor)
                 {
-                    var v = compFor.variable.Accept(this);
-                    var c = Translate(v, compFor);
-                    var mr = m.MethodRef(c, "Select");
-                    var s = m.Appl(mr, new CodeExpression[] {
-                        m.Lambda(
-                            new CodeExpression[] { v },
-                            a.name.Accept(this))
-                    });
-                    return s;
+                    var v = a.name.Accept(this);
+                    var c = TranslateToLinq(v, compFor);
+                    return c;
                 }
                 else
                 {
@@ -321,81 +315,14 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitSetComprehension(SetComprehension sc)
         {
+            m.EnsureImport("System.Linq");
             var compFor = (CompFor) sc.Collection;
-
-            var v = compFor.variable.Accept(this);
-            var c = Translate(v, compFor);
-
-            if (IsIdentityProjection(compFor, sc.Projection))
-            {
-                return m.Appl(
-                    m.MethodRef(
-                        c,
-                        "ToHashSet"));
-            }
-            else if (v is CodeVariableReferenceExpression)
-            {
-                return m.Appl(
-                    m.MethodRef(
-                        c,
-                        "ToHashSet"),
-                        m.Lambda(
-                            new CodeExpression[] { v },
-                            sc.Projection.Accept(this)));
-            }
-            else
-            {
-                var varList = (ExpList)compFor.variable;
-                return
-                    m.Appl(
-                        m.MethodRef(
-                            m.Appl(
-                                m.MethodRef(
-                                    c,
-                                    "Chop"),
-                                    m.Lambda(
-                                         varList.Expressions.Select(e => e.Accept(this)).ToArray(),
-                                         sc.Projection.Accept(this))),
-                            "ToHashSet"));
-            }
-#if NO
-            var list = dc.source.collection.Accept(this);
-            var varList = dc.source.variable as ExpList;
-            if (varList != null)
-            {
-                if (varList.Expressions.Count != 2)
-                    throw new InvalidOperationException("Variable list should contain one or two variables.");
-                var k = (Identifier)varList.Expressions[0];
-                var v = (Identifier)varList.Expressions[1];
-                var kValue = dc.key.Accept(this);
-                var vValue = dc.value.Accept(this);
-                return m.Appl(
-                    new CodeMethodReferenceExpression(
-                        list,
-                        "ToDictionary"),
-                        m.Lambda(new CodeExpression[] { k.Accept(this) }, kValue),
-                        m.Lambda(new CodeExpression[] { v.Accept(this) }, vValue));
-            }
-            var id = sc dc.source.variable as Identifier;
-            if (id != null)
-            {
-                var vValue = dc.value.Accept(this);
-                return m.Appl(
-                    new CodeMethodReferenceExpression(
-                        list,
-                        "ToHashSet"),
-                    m.Lambda(new CodeExpression[] { id.Accept(this) }, vValue));
-            }
-            var tuple = dc.source.variable as PyTuple;
-            if (tuple != null)
-            {
-                //TODO: tuples, especially nested tuples, are hard.
-                return new CodePrimitiveExpression("!!!{" +
-                    dc.key.Accept(this) +
-                    ": " +
-                    dc.value.Accept(this));
-            }
-#endif
+            var v = sc.Projection.Accept(this);
+            var c = TranslateToLinq(v, compFor);
+            return m.Appl(
+                m.MethodRef(
+                    c,
+                    "ToHashSet"));
         }
 
         public CodeExpression VisitUnary(UnaryExp u)
@@ -526,20 +453,14 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitListComprehension(ListComprehension lc)
         {
+            m.EnsureImport("System.Linq");
             var compFor = (CompFor) lc.Collection;
-            var v = compFor.variable.Accept(this);
-            var c = Translate(v, compFor);
-
-            if (IsIdentityProjection(compFor, lc.Projection))
-                return c;
-
-            var mr = m.MethodRef(c, "Select");
-            var s = m.Appl(mr, new CodeExpression[] {
-                m.Lambda(
-                    new CodeExpression[] { v },
-                    lc.Projection.Accept(this))
-            });
-            return s;
+            var v = lc.Projection.Accept(this);
+            var c = TranslateToLinq(v, compFor);
+            return m.Appl(
+                m.MethodRef(
+                    c,
+                    "ToList"));
         }
 
         public CodeExpression VisitLambda(Lambda l)
@@ -550,49 +471,62 @@ namespace Pytocs.Translate
             return e;
         }
 
-        private CodeExpression Translate(CodeExpression v, CompFor compFor)
+        private CodeExpression TranslateToLinq(CodeExpression projection, CompFor compFor)
         {
-            var c = compFor.collection.Accept(this);
-            if (compFor.next != null)
+            var e = compFor.collection.Accept(this);
+            var queryClauses = new List<CodeQueryClause>();
+            From(compFor.variable, e, queryClauses);
+            var iter = compFor.next;
+            while (iter != null)
             {
-                if (compFor.next is CompIf filter)
+                if (iter is CompIf filter)
                 {
-                    return Where(c, v, filter.test.Accept(this));
+                    e = filter.test.Accept(this);
+                    queryClauses.Add(m.Where(e));
                 }
-                if (compFor.next is CompFor join)
+                else if (iter is CompFor join)
                 {
-                    //var pySrc = "((a, s) for a in stackframe.alocs.values() for s in a._segment_list)";
-                    //string sExp = "stackframe.alocs.SelectMany(aa => aa._segment_list, (a, s) => Tuple.Create( a, s ))";
-                    return m.Appl(
-                        m.MethodRef(c, "SelectMany"),
-                        m.Lambda(
-                              new CodeExpression[] {((Identifier)compFor.variable).Accept(this) },
-                            join.collection.Accept(this)),
-                        m.Lambda(
-                            new CodeExpression[] { 
-                                ((Identifier)compFor.variable).Accept(this),
-                                ((Identifier)join.variable).Accept(this)
-                            },
-                            m.Appl(
-                                m.MethodRef(
-                                    m.TypeRefExpr("Tuple"),
-                                    "Create"),
-                                ((Identifier)compFor.variable).Accept(this),
-                                ((Identifier)join.variable).Accept(this))));
+                    e = join.collection.Accept(this);
+                    From(join.variable, e, queryClauses);
                 }
+                iter = iter.next;
             }
-            return c;
+            queryClauses.Add(m.Select(projection));
+            return m.Query(queryClauses.ToArray());
         }
 
-        private CodeExpression Where(CodeExpression c, CodeExpression v, CodeExpression filter)
+
+        private void From(Exp variable, CodeExpression collection, List<CodeQueryClause> queryClauses)
         {
-            var mr = m.MethodRef(c, "Where");
-            var f = m.Appl(mr, new CodeExpression[] {
-                m.Lambda(
-                    new CodeExpression[] { v },
-                    filter)
-            });
-            return f;
+            if (variable is Identifier id)
+            {
+                var f = m.From(id.Accept(this), collection);
+                queryClauses.Add(f);
+            }
+            else if (variable is ExpList expList)
+            {
+                var vars = expList.Expressions.Select(v => v.Accept(this)).ToArray();
+                var type = MakeTupleType(expList.Expressions);
+                var it = gensym.GenSymAutomatic("_tup_", type, false);
+                var f = m.From(it, m.ApplyMethod(collection, "Chop",
+                    m.Lambda(vars,
+                    MakeTupleCreate(vars))));
+                queryClauses.Add(f);
+                for (int i = 0; i < vars.Length; ++i)
+                {
+                    var l = m.Let(vars[i], m.Access(it, $"Item{i + 1}"));
+                    queryClauses.Add(l);
+                }
+            }
+            else
+            {
+                throw new NotImplementedException(variable.GetType().Name);
+            }
+        }
+
+        private CodeTypeReference MakeTupleType(List<Exp> expressions)
+        {
+            return new CodeTypeReference(typeof(object));
         }
 
         public CodeExpression VisitList(PyList l)
@@ -610,6 +544,15 @@ namespace Pytocs.Translate
         {
             var exp = acc.Expression.Accept(this);
             return m.Access(exp, acc.FieldName.Name);
+        }
+
+        public CodeExpression VisitGeneratorExp(GeneratorExp g)
+        {
+            m.EnsureImport("System.Linq");
+            var compFor = (CompFor)g.Collection;
+            var v = g.Projection.Accept(this);
+            var c = TranslateToLinq(v, compFor);
+            return c;
         }
 
         public CodeExpression VisitIdentifier(Identifier id)
@@ -675,18 +618,22 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitTuple(PyTuple tuple)
         {
-            var fn = m.MethodRef(
-                m.TypeRefExpr("Tuple"), "Create");
             if (tuple.values.Count == 0)
             {
-                return m.Appl(fn, m.Prim("<Empty>"));
+                return MakeTupleCreate(m.Prim("<Empty>"));
             }
             else
             {
-                return m.Appl(fn, tuple.values.Select(v => v.Accept(this)).ToArray());
+                return MakeTupleCreate(tuple.values.Select(v => v.Accept(this)).ToArray());
             }
         }
 
+        private CodeExpression MakeTupleCreate(params CodeExpression[] exprs)
+        {
+            var fn = m.MethodRef(
+                m.TypeRefExpr("Tuple"), "Create");
+            return m.Appl(fn, exprs);
+        }
         public CodeExpression VisitYieldExp(YieldExp yieldExp)
         {
             if (yieldExp.exp == null)
