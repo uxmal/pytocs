@@ -310,7 +310,7 @@ pt = Point(3.5, -0.4)
             }
         }
         
-        public static object pt = new Point(3.5, -0.4);
+        public static Point pt = new Point(3.5, -0.4);
     }
 }
 ";

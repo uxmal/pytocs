@@ -71,15 +71,16 @@ namespace Pytocs.Translate
             switch (dt)
             {
             case DictType dict:
-                stackq.Push(dt);
+                stackq.Push(dt); 
                 var (dtKey, nmKey) = Translate(dict.KeyType);
                 var (dtValue, nmValue) = Translate(dict.ValueType);
                 var nms = Join(nmKey, nmValue);
+                stackq.Pop();
                 return (
                     new CodeTypeReference("Dictionary", dtKey, dtValue),
                     Join(nms, GenericCollectionNamespace));
             case InstanceType inst:
-                return (new CodeTypeReference(typeof(object)), null);
+                return TranslateInstance(inst);
             case ListType list:
                 stackq.Push(dt);
                 var (dtElem, nmElem) = Translate(list.eltType);
@@ -117,7 +118,10 @@ namespace Pytocs.Translate
             case TupleType tuple:
                 return TranslateTuple(tuple);
             case FunType fun:
-                return TranslateFunc(fun);
+                stackq.Push(dt);
+                var ft = TranslateFunc(fun);
+                stackq.Pop();
+                return ft;
             case ClassType classType:
                 return (
                     new CodeTypeReference(classType.name),
@@ -130,15 +134,21 @@ namespace Pytocs.Translate
             throw new NotImplementedException($"Data type {dt} ({dt.GetType().Name}).");
         }
 
+        private (CodeTypeReference, ISet<string>) TranslateInstance(InstanceType inst)
+        {
+            if (inst == DataType.Unknown)
+                return (new CodeTypeReference(typeof(object)
+                    ), null);
+            return this.Translate(inst.classType);
+        }
+
         private (CodeTypeReference, ISet<string>) TranslateFunc(FunType fun)
         {
             if (fun.arrows.Count != 0)
             {
                 // Pick an arrow at random.
                 var arrow = fun.arrows.First();
-                stackq.Push(fun);
                 var (args, nms) = Translate(arrow.Key);
-                stackq.Pop();
                 var s = arrow.Value.GetType().Name;
                 if (arrow.Value is InstanceType i && i.classType is ClassType c && c.name == "None")
                 {
@@ -148,9 +158,7 @@ namespace Pytocs.Translate
                 }
                 else
                 {
-                    stackq.Push(fun);
                     var (ret, nmsRet) = Translate(arrow.Value);
-                    stackq.Pop();
                     return (
                         new CodeTypeReference("Func", args),
                         Join(nms, Join(nmsRet, SystemNamespace)));
@@ -182,9 +190,7 @@ namespace Pytocs.Translate
             var elementTypes = new List<CodeTypeReference>();
             foreach (var type in types)
             {
-                stackq.Push(type);
                 var (et, nm) = Translate(type);
-                stackq.Pop();
                 elementTypes.Add(et);
                 namespaces = Join(namespaces, nm);
             }
