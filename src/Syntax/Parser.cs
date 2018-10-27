@@ -2447,7 +2447,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             var start = Expect(TokenType.If).Start;
             var test = test_nocond();
             CompIter next = null;
-            if (Peek(TokenType.For | TokenType.If))
+            if (Peek(TokenType.For, TokenType.If))
                 next = comp_iter();
             return new CompIf(filename, start, (next ?? test).End) { test = test, next = next };
         }

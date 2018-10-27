@@ -808,5 +808,14 @@ else:
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
+        [Test]
+        public void Parser_ListComprehension_Alternating_fors()
+        {
+            var pySrc = "states = [state for (stash, states) in self.simgr.stashes.items() if stash != 'pruned' for state in states]\n";
+            var sExp = "states=[state for (stash,states) in self.simgr.stashes.items() if (stash  !=  \"pruned\") for state in states]" + Environment.NewLine;
+
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
+
     }
 }
