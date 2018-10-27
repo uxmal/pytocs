@@ -42,6 +42,7 @@ namespace Pytocs.CodeModel
             "in",
             "int",
             "long",
+            "namespace",
             "new",
             "operator",
             "out",
