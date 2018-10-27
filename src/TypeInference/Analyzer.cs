@@ -665,15 +665,35 @@ namespace Pytocs.TypeInference
 
         public Dictionary<Node, DataType> BuildTypeDictionary()
         {
-            var types =
-                (from b in GetAllBindings()
-                 group b by b.node into g
-                 select new { g.Key, Type = UnionType.CreateUnion(g.Select(bb => bb.type)) })
-                .ToDictionary(d => d.Key, d => d.Type);
+            var types = new Dictionary<Node, DataType>();
+            foreach (var b in GetAllBindings())
+            {
+                var dt = b.type;
+                if (types.TryGetValue(b.node, out var dtOld))
+                {
+                    dt = UnionType.CreateUnion(new[] { dt, dtOld });
+                }
+                types[b.node] = dt;
+            }
+
+            foreach (var b in GetAllBindings())
+            {
+                var dt = types[b.node];
+                foreach (var r in b.References)
+                {
+                    if (types.TryGetValue(r, out var dtOld))
+                    {
+                        dt = UnionType.CreateUnion(new[] { dt, dtOld });
+                    }
+                    types[r] = dt;
+                }
+            }
+
             foreach (var de in this.expTypes)
             {
                 types[de.Key] = de.Value;
             }
+
             return types;
         }
 
