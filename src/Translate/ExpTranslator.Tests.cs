@@ -120,7 +120,6 @@ namespace Pytocs.Translate
             string pySrc = "x[2:]";
             string sExp = "x.Skip(2)";
             Assert.AreEqual(sExp, Xlat(pySrc));
-
         }
 
         [Test]

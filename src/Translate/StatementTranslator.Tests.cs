@@ -1143,8 +1143,7 @@ c.de = ""f"";
         }
 
         [Test]
-        [Ignore()]
-        public void Stmt_Regress3()
+        public void Stmt_try_except_with()
         {
             var pySrc =
 @"def foo():
@@ -1154,7 +1153,20 @@ c.de = ""f"";
     except IOError as exc:
         print(""[-] Can't open input file: "" + str(exc), file=sys.stderr)
 ";
-            var sExp = "@@@";
+            var sExp = 
+@"public static class testModule {
+    
+    public static object foo() {
+        try {
+            using (var raw = open(args.wasm_file, ""rb"")) {
+                raw = raw.read();
+            }
+        } catch (IOError) {
+            Console.WriteLine(""[-] Can't open input file: "" + str(exc), file: sys.stderr);
+        }
+    }
+}
+";
             Assert.AreEqual(sExp, XlatModule(pySrc));
         }
 
