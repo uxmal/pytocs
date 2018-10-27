@@ -63,7 +63,7 @@ namespace Pytocs.Translate
             var csClass = gen.Class(
                 c.name.Name, 
                 baseClasses, 
-                () => GenerateClassMembers(c),
+                () => GenerateFields(c),
                 () => c.body.Accept(stmtXlt));
             csClass.Comments.AddRange(comments);
             if (customAttrs != null)
@@ -73,7 +73,7 @@ namespace Pytocs.Translate
             }
         }
 
-        private IEnumerable<CodeMemberField> GenerateClassMembers(ClassDef c)
+        private IEnumerable<CodeMemberField> GenerateFields(ClassDef c)
         {
             var ct = types.TypeOf(c.name);
             var fields = ct.Table.table.Where(m => IsField(m.Value))
