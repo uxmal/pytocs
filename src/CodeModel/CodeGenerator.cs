@@ -77,7 +77,8 @@ namespace Pytocs.CodeModel
         public CodeTypeDeclaration Class(
             string name, 
             IEnumerable<string> baseClasses, 
-            Action body)
+            Func<IEnumerable<CodeMemberField>> fieldGenerator,
+            Action bodyGenerator)
         {
             var oldScope = Scope;
             Scope = new List<CodeStatement>();
@@ -108,7 +109,8 @@ namespace Pytocs.CodeModel
             CurrentMemberStatements = null;
             CurrentMemberComments = null;
             isInit = false;
-            body();
+            c.Members.AddRange(fieldGenerator());
+            bodyGenerator();
             CurrentMember = oldMethod;
             CurrentMemberStatements = oldStmts;
             CurrentMemberComments = oldComments;

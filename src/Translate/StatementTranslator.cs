@@ -60,9 +60,12 @@ namespace Pytocs.Translate
             var stmtXlt = new StatementTranslator(types, gen, gensym, new HashSet<string>());
             stmtXlt.currentClass = c;
             stmtXlt.properties = FindProperties(c.body.stmts);
-            var csClass = gen.Class(c.name.Name, baseClasses, () => c.body.Accept(stmtXlt));
+            var csClass = gen.Class(
+                c.name.Name, 
+                baseClasses, 
+                () => GenerateClassMembers(c),
+                () => c.body.Accept(stmtXlt));
             csClass.Comments.AddRange(comments);
-            GenerateClassMembers(c, csClass);
             if (customAttrs != null)
             {
                 csClass.CustomAttributes.AddRange(customAttrs);
@@ -70,7 +73,7 @@ namespace Pytocs.Translate
             }
         }
 
-        private void GenerateClassMembers(ClassDef c, CodeTypeDeclaration csClass)
+        private IEnumerable<CodeMemberField> GenerateClassMembers(ClassDef c)
         {
             var ct = types.TypeOf(c.name);
             var fields = ct.Table.table.Where(m => IsField(m.Value))
@@ -80,10 +83,10 @@ namespace Pytocs.Translate
                 var b = field.Value.First();
                 var (fieldType, ns) = types.Translate(b.type);
                 gen.EnsureImports(ns);
-                csClass.Members.Add(new CodeMemberField(fieldType, field.Key)
+                yield return new CodeMemberField(fieldType, field.Key)
                 {
                     Attributes = MemberAttributes.Public
-                });
+                };
             }
         }
 
