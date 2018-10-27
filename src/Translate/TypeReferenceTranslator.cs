@@ -132,8 +132,9 @@ namespace Pytocs.Translate
 
         private (CodeTypeReference, ISet<string>) TranslateFunc(FunType fun)
         {
-            if (fun.arrows.Count == 1)
+            if (fun.arrows.Count != 0)
             {
+                // Pick an arrow at random.
                 var arrow = fun.arrows.First();
                 stackq.Push(fun);
                 var (args, nms) = Translate(arrow.Key);
@@ -155,7 +156,7 @@ namespace Pytocs.Translate
                         Join(nms, Join(nmsRet, SystemNamespace)));
                 }
             }
-            else if (fun.arrows.Count == 0)
+            else
             {
                 return (
                     new CodeTypeReference("Func",
@@ -163,7 +164,6 @@ namespace Pytocs.Translate
                         new CodeTypeReference(typeof(object))),
                     Join(null, SystemNamespace));
             }
-            throw new NotImplementedException();
         }
 
         private (CodeTypeReference, ISet<string>) TranslateTuple(TupleType tuple)
