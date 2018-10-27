@@ -149,7 +149,6 @@ namespace test {
 }
 ";
             Assert.AreEqual(sExp, XlatModule(pyModule));
-
         }
 
         [Test]
@@ -301,17 +300,17 @@ pt = Point(3.5, -0.4)
         
         public class Point {
             
+            public object x;
+            
+            public object y;
+            
             public Point(object x, object y) {
                 this.x = x;
                 this.y = y;
             }
-            
-            public object x;
-            
-            public object y;
         }
         
-        public static object pt = Point(3.5, -0.4);
+        public static object pt = new Point(3.5, -0.4);
     }
 }
 ";

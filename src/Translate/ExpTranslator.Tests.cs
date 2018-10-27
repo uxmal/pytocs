@@ -656,6 +656,21 @@ namespace Pytocs.Translate
     select Tuple.Create(a, s)).ToList()";
             Assert.AreEqual(sExp, Xlat(pySrc));
         }
+
+        [Test]
+        public void Ex_ListComprehension_Alternating_fors()
+        {
+            var pySrc = "[state for (stash, states) in self.simgr.stashes.items() if stash != 'pruned' for state in states]";
+            var sExp =
+@"(from _tup_1 in this.simgr.stashes.items().Chop((stash,states) => Tuple.Create(stash, states))
+    let stash = _tup_1.Item1
+    let states = _tup_1.Item2
+    where stash != ""pruned""
+    from state in states
+    select state).ToList()";
+
+            Assert.AreEqual(sExp, Xlat(pySrc));
+        }
     }
 }
 #endif

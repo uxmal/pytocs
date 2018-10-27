@@ -137,9 +137,17 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitApplication(Application appl)
         {
-            Debug.Print("appl: {0}", appl.fn);
             var fn = appl.fn.Accept(this);
             var args = TranslateArgs(appl).ToArray();
+            var dtFn = types.TypeOf(appl.fn);
+            if (dtFn is ClassType c)
+            {
+                // applying a class type => calling constructor.
+                var (csClass, nm) = types.Translate(dtFn);
+                m.EnsureImports(nm);
+                var e = m.New(csClass, args);
+                return e;
+            }
             if (fn is CodeVariableReferenceExpression id)
             {
                 var e = intrinsic.MaybeTranslate(id.Name, appl, args);
