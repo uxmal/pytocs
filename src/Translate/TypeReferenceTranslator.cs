@@ -109,7 +109,7 @@ namespace Pytocs.Translate
                     null);
             case FloatType _:
                 return (
-                    new CodeTypeReference(typeof(float)),
+                    new CodeTypeReference(typeof(double)),
                     null);
             case BoolType _:
                 return (
