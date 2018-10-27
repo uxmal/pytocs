@@ -82,6 +82,10 @@ namespace Pytocs
                 Console.WriteLine($"Error: {ex.Message}");
                 Console.WriteLine(ex.StackTrace);
             }
+            finally
+            {
+                writer.Close();
+            }
         }
 
         public void TranslateModuleStatements(

@@ -74,7 +74,7 @@ namespace Pytocs
                         xlator.TranslateModuleStatements(
                             module.body.stmts,
                             types,
-                            Path.ChangeExtension(path, ".cs"));
+                            Path.ChangeExtension(path, ".py.cs"));
                     }
                 });
 #else

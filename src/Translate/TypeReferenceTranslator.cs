@@ -35,10 +35,12 @@ namespace Pytocs.Translate
         private const string GenericCollectionNamespace = "System.Collections.Generic";
 
         private Dictionary<Node, DataType> types;
+        private Stack<DataType> stackq;
 
         public TypeReferenceTranslator(Dictionary<Node, DataType> types)
         {
             this.types = types;
+            this.stackq = new Stack<DataType>();
         }
 
         public DataType TypeOf(Node node)
@@ -64,9 +66,12 @@ namespace Pytocs.Translate
 
         public (CodeTypeReference, ISet<string>) Translate(DataType dt)
         {
+            if (stackq.Contains(dt))
+                return (new CodeTypeReference(typeof(object)), null);
             switch (dt)
             {
             case DictType dict:
+                stackq.Push(dt);
                 var (dtKey, nmKey) = Translate(dict.KeyType);
                 var (dtValue, nmValue) = Translate(dict.ValueType);
                 var nms = Join(nmKey, nmValue);
@@ -76,10 +81,23 @@ namespace Pytocs.Translate
             case InstanceType inst:
                 return (new CodeTypeReference(typeof(object)), null);
             case ListType list:
+                stackq.Push(dt);
                 var (dtElem, nmElem) = Translate(list.eltType);
+                stackq.Pop();
                 return (
                     new CodeTypeReference("List", dtElem),
                     Join(nmElem, GenericCollectionNamespace));
+            case SetType set:
+                stackq.Push(dt);
+                var (dtSetElem, nmSetElem) = Translate(set.ElementType);
+                stackq.Pop();
+                return (
+                    new CodeTypeReference("Set", dtSetElem),
+                    Join(nmSetElem, GenericCollectionNamespace));
+            case UnionType u:
+                return (
+                    new CodeTypeReference(typeof(object)),
+                    null);
             case StrType str:
                 return (
                     new CodeTypeReference(typeof(string)),
@@ -98,24 +116,80 @@ namespace Pytocs.Translate
                     null);
             case TupleType tuple:
                 return TranslateTuple(tuple);
+            case FunType fun:
+                return TranslateFunc(fun);
+            case ClassType classType:
+                return (
+                    new CodeTypeReference(classType.name),
+                    null);
+            case ModuleType module:
+                return (
+                    new CodeTypeReference(module.name),
+                    null);
             }
             throw new NotImplementedException($"Data type {dt} ({dt.GetType().Name}).");
+        }
+
+        private (CodeTypeReference, ISet<string>) TranslateFunc(FunType fun)
+        {
+            if (fun.arrows.Count == 1)
+            {
+                var arrow = fun.arrows.First();
+                stackq.Push(fun);
+                var (args, nms) = Translate(arrow.Key);
+                stackq.Pop();
+                var s = arrow.Value.GetType().Name;
+                if (arrow.Value is InstanceType i && i.classType is ClassType c && c.name == "None")
+                {
+                    return (
+                        new CodeTypeReference("Action", args),
+                        Join(nms, SystemNamespace));
+                }
+                else
+                {
+                    stackq.Push(fun);
+                    var (ret, nmsRet) = Translate(arrow.Value);
+                    stackq.Pop();
+                    return (
+                        new CodeTypeReference("Func", args),
+                        Join(nms, Join(nmsRet, SystemNamespace)));
+                }
+            }
+            else if (fun.arrows.Count == 0)
+            {
+                return (
+                    new CodeTypeReference("Func",
+                        new CodeTypeReference(typeof(object)),
+                        new CodeTypeReference(typeof(object))),
+                    Join(null, SystemNamespace));
+            }
+            throw new NotImplementedException();
         }
 
         private (CodeTypeReference, ISet<string>) TranslateTuple(TupleType tuple)
         {
             ISet<string> namespaces = null;
-            var elementTypes = new List<CodeTypeReference>();
-            foreach (var type in tuple.eltTypes)
-            {
-                var (et, nm) = Translate(type);
-                elementTypes.Add(et);
-                namespaces = Join(namespaces, nm);
-            }
+            var types = tuple.eltTypes;
+            var (elementTypes, nms) = TranslateTypes(types, namespaces);
             var tt = new CodeTypeReference(
                 "Tuple",
                 elementTypes.ToArray());
             return (tt, Join(namespaces, SystemNamespace));
+        }
+
+        private (List<CodeTypeReference>, ISet<string>) TranslateTypes(IEnumerable<DataType> types, ISet<string> namespaces)
+        {
+            var elementTypes = new List<CodeTypeReference>();
+            foreach (var type in types)
+            {
+                stackq.Push(type);
+                var (et, nm) = Translate(type);
+                stackq.Pop();
+                elementTypes.Add(et);
+                namespaces = Join(namespaces, nm);
+            }
+
+            return (elementTypes, namespaces);
         }
 
         private ISet<string> Join(ISet<string> a, ISet<string> b)

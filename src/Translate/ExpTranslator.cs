@@ -518,6 +518,22 @@ namespace Pytocs.Translate
                     queryClauses.Add(l);
                 }
             }
+            else if (variable is PyTuple tuple)
+            {
+                var vars = tuple.values.Select(v => v.Accept(this)).ToArray();
+                var type = MakeTupleType(tuple.values);
+                var it = gensym.GenSymAutomatic("_tup_", type, false);
+                var f = m.From(it, m.ApplyMethod(collection, "Chop",
+                    m.Lambda(vars,
+                    MakeTupleCreate(vars))));
+                queryClauses.Add(f);
+                for (int i = 0; i < vars.Length; ++i)
+                {
+                    var l = m.Let(vars[i], m.Access(it, $"Item{i + 1}"));
+                    queryClauses.Add(l);
+                }
+
+            }
             else
             {
                 throw new NotImplementedException(variable.GetType().Name);
@@ -526,6 +542,7 @@ namespace Pytocs.Translate
 
         private CodeTypeReference MakeTupleType(List<Exp> expressions)
         {
+            //$TODO: make an effor to make this correct.
             return new CodeTypeReference(typeof(object));
         }
 
