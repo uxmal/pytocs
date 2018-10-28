@@ -33,6 +33,7 @@ namespace Pytocs.CodeModel
             "bool",
             "const",
             "case",
+            "checked",
             "class",
             "decimal",
             "default",

@@ -691,6 +691,8 @@ namespace Pytocs.CodeModel
             { "int", "int" },
             { "long", "long" },
             { "System.Object", "object" },
+            { "System.Int32", "int" },
+            { "System.Double", "double" },
             { "System.String", "string" },
         };
 
