@@ -872,7 +872,7 @@ namespace Pytocs.TypeInference
             else
             {
                 int pct = (int) (num * 100 / total);
-                return string.Format("{0:3}%", pct);
+                return string.Format("{0,3}%", pct);
             }
         }
 

@@ -127,15 +127,15 @@ namespace Pytocs.TypeInference
             }
             if (n is int)
             {
-                return string.Format("{0:" + length + "}", (int)n);
+                return string.Format("{0," + length + "}", (int)n);
             }
             else if (n is long)
             {
-                return string.Format("{0:" + length + "}", (long)n);
+                return string.Format("{0," + length + "}", (long)n);
             }
             else
             {
-                return string.Format("{0:" + length + "}", n);
+                return string.Format("{0," + length + "}", n);
             }
         }
 
