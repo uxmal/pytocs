@@ -18,7 +18,6 @@
 using Pytocs.CodeModel;
 using Pytocs.Syntax;
 using Pytocs.Translate;
-using NUnit.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -27,17 +26,16 @@ using System.Text;
 using System.Threading.Tasks;
 using Pytocs.TypeInference;
 using Pytocs.Types;
+using Xunit;
 
 namespace Pytocs.Acceptance
 {
-    [TestFixture]
     public class ParserAcceptanceTests
     {
         private static readonly string nl = Environment.NewLine;
         private State scope;
 
-        [SetUp]
-        public void Setup()
+        public ParserAcceptanceTests()
         {
             this.scope = new State(null, State.StateType.MODULE);
         }
@@ -65,7 +63,7 @@ namespace Pytocs.Acceptance
             return writer.ToString();
         }
 
-        [Test]
+        [Fact]
         public void Accept1()
         {
             var s = XlatModule(
@@ -306,10 +304,10 @@ namespace test {
 }
 ";
             Console.WriteLine(s);
-            Assert.AreEqual(sExp, s);
+            Assert.Equal(sExp, s);
         }
 
-        [Test]
+        [Fact]
         public void Accept2()
         {
             var s = XlatModule(
@@ -367,7 +365,7 @@ class foo:
 ";
             #endregion
 
-            Assert.AreEqual(sExp, s);
+            Assert.Equal(sExp, s);
         }
     }
 }

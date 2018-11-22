@@ -533,7 +533,7 @@ namespace Pytocs.CodeModel
                 Attributes = MemberAttributes.Public,
                 PropertyType = new CodeTypeReference(typeof(object))
             };
-            var mem = new System.CodeDom.CodeMemberProperty();
+            var mem = new CodeMemberProperty();
             var old = Scope;
             var oldMethod = CurrentMember;
             var oldStatements = CurrentMemberStatements;

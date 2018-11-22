@@ -15,7 +15,7 @@
 #endregion
 
 #if DEBUG
-using NUnit.Framework;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -272,10 +272,9 @@ namespace Pytocs.TypeInference
         }
     }
 
-    [TestFixture]
     public class FakeFileSystemTests
     {
-        [Test]
+        [Fact]
         public void Filesys_Add()
         {
             var fs = new FakeFileSystem()
@@ -285,9 +284,9 @@ namespace Pytocs.TypeInference
                 .End()
                 .Dir("end")
                 .End();
-            Assert.IsTrue(fs.FileExists("\\foo\\foo.py"));
-            Assert.IsFalse(fs.FileExists("\\foo\\foo1.py"));
-            Assert.IsFalse(fs.FileExists("\\bar\\foo1.py"));
+            Assert.True(fs.FileExists("\\foo\\foo.py"));
+            Assert.False(fs.FileExists("\\foo\\foo1.py"));
+            Assert.False(fs.FileExists("\\bar\\foo1.py"));
         }
     }
 }

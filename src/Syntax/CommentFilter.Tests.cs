@@ -15,7 +15,7 @@
 #endregion
 
 #if DEBUG
-using NUnit.Framework;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,7 +25,6 @@ using System.Threading.Tasks;
 
 namespace Pytocs.Syntax
 {
-    [TestFixture]
     public class CommentFilterTests
     {
         private CommentFilter comfil;
@@ -43,30 +42,26 @@ namespace Pytocs.Syntax
                 var tok = comfil.Get();
                 if (tok.Type == TokenType.EOF)
                     break;
-                if (encodedTokens.Length <= i)
-                {
-                    Assert.Fail($"Unexpected {tok}");
-                    return;
-                }
+                Assert.True(encodedTokens.Length > i, $"Unexpected {tok}");
                 switch (encodedTokens[i])
                 {
-                case '(': Assert.AreEqual(TokenType.LPAREN, tok.Type); break;
-                case ')': Assert.AreEqual(TokenType.RPAREN, tok.Type); break;
-                case ':': Assert.AreEqual(TokenType.COLON, tok.Type); break;
-                case 'd': Assert.AreEqual(TokenType.Def, tok.Type); break;
-                case 'i': Assert.AreEqual(TokenType.ID, tok.Type); break;
-                case 'N': Assert.AreEqual(TokenType.NEWLINE, tok.Type); break;
-                case 'I': Assert.AreEqual(TokenType.INDENT, tok.Type); break;
-                case 'D': Assert.AreEqual(TokenType.DEDENT, tok.Type); break;
-                case '#': Assert.AreEqual(TokenType.COMMENT, tok.Type); break;
-                default: Assert.Fail($"Unexpected {tok.Type}"); break;
+                case '(': Assert.Equal(TokenType.LPAREN, tok.Type); break;
+                case ')': Assert.Equal(TokenType.RPAREN, tok.Type); break;
+                case ':': Assert.Equal(TokenType.COLON, tok.Type); break;
+                case 'd': Assert.Equal(TokenType.Def, tok.Type); break;
+                case 'i': Assert.Equal(TokenType.ID, tok.Type); break;
+                case 'N': Assert.Equal(TokenType.NEWLINE, tok.Type); break;
+                case 'I': Assert.Equal(TokenType.INDENT, tok.Type); break;
+                case 'D': Assert.Equal(TokenType.DEDENT, tok.Type); break;
+                case '#': Assert.Equal(TokenType.COMMENT, tok.Type); break;
+                default: throw new InvalidOperationException($"Unexpected {tok.Type}");
                 }
                 ++i;
             }
-            Assert.AreEqual(encodedTokens.Length, i, $"Expected {encodedTokens.Length} tokens");
+            Assert.Equal(encodedTokens.Length, i); // Expected {encodedTokens.Length} tokens
         }
 
-        [Test]
+        [Fact]
         public void Comfil_Simple()
         {
             var pySrc = "hello\n";
@@ -74,7 +69,7 @@ namespace Pytocs.Syntax
             AssertTokens("iN");
         }
 
-        [Test]
+        [Fact]
         public void Comfil_Indent()
         {
             var pySrc = "hello\n    hello\n";
@@ -82,7 +77,7 @@ namespace Pytocs.Syntax
             AssertTokens("iNIiND");
         }
 
-        [Test]
+        [Fact]
         public void Comfil_Comment()
         {
             var pySrc = "hello\n# hello\n";
@@ -90,7 +85,7 @@ namespace Pytocs.Syntax
             AssertTokens("iN#N");
         }
 
-        [Test]
+        [Fact]
         public void Comfil_IndentedComment()
         {
             var pySrc = "hello\n    #hello\nbye\n";
@@ -98,7 +93,7 @@ namespace Pytocs.Syntax
             AssertTokens("iN#NiN");
         }
 
-        [Test]
+        [Fact]
         public void Comfil_DedentedComment()
         {
             var pySrc = "one\n  two\n  #dedent\nthree\n";
@@ -106,7 +101,7 @@ namespace Pytocs.Syntax
             AssertTokens("iNIiN#NDiN");
         }
 
-        [Test]
+        [Fact]
         public void Comfil_DedentAfterDef()
         {
             var pySrc = "def f():\n    id\n\n# comment\ndef g():\n";

@@ -1,231 +1,36 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<?xml version="1.0" encoding="utf-8"?>
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{89D2BF67-423A-4C7D-B4E8-C34BA9E83152}</ProjectGuid>
-    <OutputType>Exe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Pytocs</RootNamespace>
-    <AssemblyName>Pytocs</AssemblyName>
-    <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <TargetFrameworkProfile />
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <TargetFrameworks>net471;netcoreapp2.1</TargetFrameworks>
+    <ApplicationIcon />
+    <authors>John Källén</authors>
+    <OutputType>exe</OutputType>
+    <StartupObject>Pytocs.Program</StartupObject>
+    <PackageProjectUrl>https://github.com/uxmal/pytocs</PackageProjectUrl>
+    <RepositoryType>https://github.com/uxmal/pytocs</RepositoryType>
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
   </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net471|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
-    <Commandlineparameters>foo.py</Commandlineparameters>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="nunit.framework">
-      <HintPath>..\external\NUnit-2.6.3\nunit.framework.dll</HintPath>
-    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Numerics" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CodeModel\CodeApplicationExpression.cs" />
-    <Compile Include="CodeModel\CodeArrayIndexerExpression.cs" />
-    <Compile Include="CodeModel\CodeAttributeArgument.cs" />
-    <Compile Include="CodeModel\CodeAttributeDeclaration.cs" />
-    <Compile Include="CodeModel\CodeAwaitExpression.cs" />
-    <Compile Include="CodeModel\CodeBreakStatement.cs" />
-    <Compile Include="CodeModel\CodeCatchClause.cs" />
-    <Compile Include="CodeModel\CodeCommentStatement.cs" />
-    <Compile Include="CodeModel\CodeConditionExpression.cs" />
-    <Compile Include="CodeModel\CodeConstructor.cs" />
-    <Compile Include="CodeModel\CodeContinueStatement.cs" />
-    <Compile Include="CodeModel\CodeExpressionStatement.cs" />
-    <Compile Include="CodeModel\CodeFieldReferenceExpression.cs" />
-    <Compile Include="CodeModel\CodeFromClause.cs" />
-    <Compile Include="CodeModel\CodeInitializerExpression.cs" />
-    <Compile Include="CodeModel\CodeLambdaExpression.cs" />
-    <Compile Include="CodeModel\CodeLetClause.cs" />
-    <Compile Include="CodeModel\CodeMemberProperty.cs" />
-    <Compile Include="CodeModel\CodeMethodReferenceExpression.cs" />
-    <Compile Include="CodeModel\CodeMethodReturnStatement.cs" />
-    <Compile Include="CodeModel\CodeObjectCreateExpression.cs" />
-    <Compile Include="CodeModel\CodeObjectInitializer.cs" />
-    <Compile Include="CodeModel\CodePostTestLoopStatement.cs" />
-    <Compile Include="CodeModel\CodePreTestLoopStatement.cs" />
-    <Compile Include="CodeModel\CodePrimitiveExpression.cs" />
-    <Compile Include="CodeModel\CodeQueryClause.cs" />
-    <Compile Include="CodeModel\CodeQueryExpression.cs" />
-    <Compile Include="CodeModel\CodeSelectClause.cs" />
-    <Compile Include="CodeModel\CodeThisReferenceExpression.cs" />
-    <Compile Include="CodeModel\CodeThrowExceptionStatement.cs" />
-    <Compile Include="CodeModel\CodeTryCatchFinallyStatement.cs" />
-    <Compile Include="CodeModel\CodeTypeReference.cs" />
-    <Compile Include="CodeModel\CodeArrayCreateExpression.cs" />
-    <Compile Include="CodeModel\CodeAssignStatement.cs" />
-    <Compile Include="CodeModel\CodeBinaryOperatorExpression.cs" />
-    <Compile Include="CodeModel\CodeCompileUnit.cs" />
-    <Compile Include="CodeModel\CodeConditionStatement.cs" />
-    <Compile Include="CodeModel\CodeConstant.cs" />
-    <Compile Include="CodeModel\CodeExpression.cs" />
-    <Compile Include="CodeModel\CodeForeachStatement.cs" />
-    <Compile Include="CodeModel\CodeGeneratorOptions.cs" />
-    <Compile Include="CodeModel\CodeIf.cs" />
-    <Compile Include="CodeModel\CodeMember.cs" />
-    <Compile Include="CodeModel\CodeMemberField.cs" />
-    <Compile Include="CodeModel\CodeMemberMethod.cs" />
-    <Compile Include="CodeModel\CodeNamedArgument.cs" />
-    <Compile Include="CodeModel\CodeNamespace.cs" />
-    <Compile Include="CodeModel\CodeNamespaceImport.cs" />
-    <Compile Include="CodeModel\CodeOperatorType.cs" />
-    <Compile Include="CodeModel\CodeParameterDeclarationExpression.cs" />
-    <Compile Include="CodeModel\CodeStatement.cs" />
-    <Compile Include="CodeModel\CodeTypeDeclaration.cs" />
-    <Compile Include="CodeModel\CodeTypeReferenceExpression.cs" />
-    <Compile Include="CodeModel\CodeUnaryOperatorExpression.cs" />
-    <Compile Include="CodeModel\CodeUsingStatement.cs" />
-    <Compile Include="CodeModel\CodeVariableDeclarationStatement.cs" />
-    <Compile Include="CodeModel\CodeWhereClause.cs" />
-    <Compile Include="CodeModel\CodeWhile.cs" />
-    <Compile Include="CodeModel\CodeYieldStatement.cs" />
-    <Compile Include="CodeModel\CSharpCodeProvider.cs" />
-    <Compile Include="CodeModel\CSharpExpressionWriter.cs" />
-    <Compile Include="CodeModel\CSharpStatementWriter.cs" />
-    <Compile Include="CodeModel\CSharpTypeWriter.cs" />
-    <Compile Include="CodeModel\CSharpUnitWriter.cs" />
-    <Compile Include="CodeModel\ICodeElement.cs" />
-    <Compile Include="CodeModel\ICodeElementVisitor.cs" />
-    <Compile Include="CodeModel\ICodeExpressionVisitor.cs" />
-    <Compile Include="CodeModel\ICodeMemberVisitor.cs" />
-    <Compile Include="CodeModel\ICodeStatementVisitor.cs" />
-    <Compile Include="CodeModel\IndentingTextWriter.cs" />
-    <Compile Include="CodeModel\MemberAttributes.cs" />
-    <Compile Include="CodeModel\UnaryCodeExpression.cs" />
-    <Compile Include="DirectoryWalker.cs" />
-    <Compile Include="Modules.cs" />
-    <Compile Include="Program.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Symbol.cs" />
-    <Compile Include="SymbolTable.cs" />
-    <Compile Include="Syntax\AliasedExp.cs" />
-    <Compile Include="Syntax\AliasedName.cs" />
-    <Compile Include="Syntax\Argument.cs" />
-    <Compile Include="Syntax\ClassDef.cs" />
-    <Compile Include="Syntax\CommentFilter.cs" />
-    <Compile Include="Syntax\CommentFilter.Tests.cs" />
-    <Compile Include="Syntax\Decorator.cs" />
-    <Compile Include="Syntax\DottedName.cs" />
-    <Compile Include="Syntax\ExceptHandler.cs" />
-    <Compile Include="Syntax\Exp.cs" />
-    <Compile Include="Syntax\FunctionDef.cs" />
-    <Compile Include="Syntax\IExpVisitor.cs" />
-    <Compile Include="Syntax\ILexer.cs" />
-    <Compile Include="Syntax\IStatementVisitor.cs" />
-    <Compile Include="Syntax\Lexer.cs" />
-    <Compile Include="Syntax\Lexer.Tests.cs" />
-    <Compile Include="Syntax\Module.cs" />
-    <Compile Include="Syntax\Node.cs" />
-    <Compile Include="Syntax\Op.cs" />
-    <Compile Include="Syntax\Parameter.cs" />
-    <Compile Include="Syntax\Parser.cs" />
-    <Compile Include="Acceptance\ParserAcceptanceTests.cs" />
-    <Compile Include="Syntax\Parser.Tests.cs" />
-    <Compile Include="Syntax\PyStatementWriter.cs" />
-    <Compile Include="Syntax\Statement.cs" />
-    <Compile Include="Syntax\Token.cs" />
-    <Compile Include="Syntax\VarArg.cs" />
-    <Compile Include="Syntax\WithItem.cs" />
-    <Compile Include="CodeModel\CodeGenerator.cs" />
-    <Compile Include="CodeModel\CodeVariableReferenceExpression.cs" />
-    <Compile Include="Translate\ClassNameDiscovery.cs" />
-    <Compile Include="Translate\ConstructorGenerator.cs" />
-    <Compile Include="Translate\CsAssignOp.cs" />
-    <Compile Include="Translate\ExpNameDiscovery.cs" />
-    <Compile Include="Translate\ExpNameDiscovery.Tests.cs" />
-    <Compile Include="Translate\ExpTranslator.cs" />
-    <Compile Include="Translate\ExpTranslator.Tests.cs" />
-    <Compile Include="Translate\IntrinsicTranslator.cs" />
-    <Compile Include="Translate\LambdaBodyGenerator.cs" />
-    <Compile Include="Translate\LocalSymbol.cs" />
-    <Compile Include="Translate\LocalVariableGenerator.cs" />
-    <Compile Include="Translate\LocalVariableGenerator.Tests.cs" />
-    <Compile Include="Translate\MethodGenerator.cs" />
-    <Compile Include="Translate\ModuleNameDiscovery.cs" />
-    <Compile Include="Translate\ModuleTranslator.cs" />
-    <Compile Include="Translate\ModuleTranslator.Tests.cs" />
-    <Compile Include="Translate\Special\StructTranslator.cs" />
-    <Compile Include="Translate\StatementNameDiscovery.cs" />
-    <Compile Include="Translate\StatementTranslator.cs" />
-    <Compile Include="Translate\StatementTranslator.Tests.cs" />
-    <Compile Include="Translate\SymbolGenerator.cs" />
-    <Compile Include="Translate\TypeReferenceTranslator.cs" />
-    <Compile Include="Translator.cs" />
-    <Compile Include="TypeInference\Analyzer.cs" />
-    <Compile Include="TypeInference\Analyzer.Tests.cs" />
-    <Compile Include="TypeInference\AstCache.cs" />
-    <Compile Include="TypeInference\Binding.cs" />
-    <Compile Include="TypeInference\Builtins.cs" />
-    <Compile Include="TypeInference\Diagnostic.cs" />
-    <Compile Include="TypeInference\FakeFileSystem.cs" />
-    <Compile Include="TypeInference\FakeLogger.cs" />
-    <Compile Include="TypeInference\IFileSystem.cs" />
-    <Compile Include="TypeInference\ILogger.cs" />
-    <Compile Include="TypeInference\Options.cs" />
-    <Compile Include="TypeInference\Progress.cs" />
-    <Compile Include="TypeInference\State.cs" />
-    <Compile Include="TypeInference\Statistics.cs" />
-    <Compile Include="TypeInference\TypeStack.cs" />
-    <Compile Include="Types\BoolType.cs" />
-    <Compile Include="Types\ClassType.cs" />
-    <Compile Include="Types\ComplexType.cs" />
-    <Compile Include="Types\DataTypeFactory.cs" />
-    <Compile Include="Types\DictType.cs" />
-    <Compile Include="Types\FloatType.cs" />
-    <Compile Include="Types\FunType.cs" />
-    <Compile Include="Types\IDataTypeVisitor.cs" />
-    <Compile Include="Types\InstanceType.cs" />
-    <Compile Include="Types\IntType.cs" />
-    <Compile Include="Types\ListType.cs" />
-    <Compile Include="Types\ModuleType.cs" />
-    <Compile Include="Types\SetType.cs" />
-    <Compile Include="Types\StrType.cs" />
-    <Compile Include="Types\SymbolType.cs" />
-    <Compile Include="Types\TupleType.cs" />
-    <Compile Include="Types\DataType.cs" />
-    <Compile Include="Types\TypePrinter.cs" />
-    <Compile Include="Types\UnionType.cs" />
-    <Compile Include="TypeInference\TypeTransformer.cs" />
+    <Folder Include="Properties\PublishProfiles\" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="App.config" />
+    <PackageReference Include="xunit" Version="2.4.1" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.4.1">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
+    </PackageReference>
   </ItemGroup>
-  <ItemGroup>
-    <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
-  </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
 </Project>

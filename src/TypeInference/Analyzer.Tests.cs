@@ -15,7 +15,7 @@
 #endregion
 
 #if DEBUG
-using NUnit.Framework;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +24,6 @@ using System.Threading.Tasks;
 
 namespace Pytocs.TypeInference
 {
-    [TestFixture]
     public class AnalyzerTests
     {
         private Pytocs.TypeInference.FakeFileSystem fs;
@@ -33,8 +32,7 @@ namespace Pytocs.TypeInference
         private string nl;
         private AnalyzerImpl an;
 
-        [SetUp]
-        public void Setup()
+        public AnalyzerTests()
         {
             this.fs = new Pytocs.TypeInference.FakeFileSystem();
             this.logger = new FakeLogger();
@@ -56,26 +54,21 @@ namespace Pytocs.TypeInference
                 int i;
                 for (i = 0; i < Math.Min(aExp.Length, aActual.Length); ++i)
                 {
-                    Assert.AreEqual(aExp[i], aActual[i], string.Format($"Mismatch on line {i + 1}"));
+                    Assert.Equal(aExp[i], aActual[i]);
                 }
-                if (i < aExp.Length)
-                {
-                    Assert.Fail($"Fewer than the expected {aExp.Length} lines.");
-                } else if (i > aExp.Length)
-                { 
-                    Assert.Fail($"More than the expected {aExp.Length} lines.");
-                }
-                Assert.AreEqual(sExp, BindingsToString());
+                Assert.False(i < aExp.Length, $"Fewer than the expected {aExp.Length} lines.");
+                Assert.True(i > aExp.Length, $"More than the expected {aExp.Length} lines.");
+                Assert.Equal(sExp, BindingsToString());
             }
         }
 
-        [Test]
+        [Fact]
         public void TypeAn_Empty()
         {
             an.Analyze("\\foo");
         }
 
-        [Test]
+        [Fact]
         public void TypeAn_StrDef()
         {
             fs.Dir("foo")
@@ -85,7 +78,7 @@ namespace Pytocs.TypeInference
                 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
                 @"(binding:kind=SCOPE:node=x:type=str:qname=.foo.test.x:refs=[])" + nl;
 
-            Assert.AreEqual(sExp, BindingsToString());
+            Assert.Equal(sExp, BindingsToString());
         }
 
         private string BindingsToString()
@@ -99,7 +92,7 @@ namespace Pytocs.TypeInference
             return sb.ToString();
         }
 
-        [Test]
+        [Fact]
         public void TypeAn_Copy()
         {
             fs.Dir("foo")
@@ -109,10 +102,10 @@ namespace Pytocs.TypeInference
                 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
                 @"(binding:kind=SCOPE:node=x:type=int:qname=.foo.test.x:refs=[x])" + nl +
                 @"(binding:kind=SCOPE:node=y:type=int:qname=.foo.test.y:refs=[])" + nl;
-            Assert.AreEqual(sExp, BindingsToString());
+            Assert.Equal(sExp, BindingsToString());
         }
 
-        [Test]
+        [Fact]
         public void TypeAn_FuncDef()
         {
             fs.Dir("foo")
@@ -137,10 +130,10 @@ def crunk(a):
 
             Console.WriteLine(BindingsToString());
 
-            Assert.AreEqual(sExp, BindingsToString());
+            Assert.Equal(sExp, BindingsToString());
         }
 
-        [Test]
+        [Fact]
         public void TypeAn_FuncDef_Globals()
         {
             fs.Dir("foo")
@@ -165,10 +158,10 @@ def crunk(a):
 
             Console.WriteLine(BindingsToString());
 
-            Assert.AreEqual(sExp, BindingsToString());
+            Assert.Equal(sExp, BindingsToString());
         }
 
-        [Test]
+        [Fact]
         public void TypeAn_FwdReference()
         {
             fs.Dir("foo")
@@ -199,10 +192,10 @@ foo('Hello')
 
             Console.WriteLine(BindingsToString());
 
-            Assert.AreEqual(sExp, BindingsToString());
+            Assert.Equal(sExp, BindingsToString());
         }
 
-        [Test]
+        [Fact]
         public void TypeAn_Attribute()
         {
             fs.Dir("foo")
@@ -236,10 +229,10 @@ f.foo()
 
             Console.WriteLine(BindingsToString());
 
-            Assert.AreEqual(sExp, BindingsToString());
+            Assert.Equal(sExp, BindingsToString());
         }
 
-        [Test]
+        [Fact]
         public void TypeAn_LocalVar()
         {
             fs.Dir("foo")
@@ -259,10 +252,10 @@ def bar():
 @"(binding:kind=SCOPE:node=x:type=int:qname=.foo.test.bar.x:refs=[x])" + nl +
 @"(binding:kind=VARIABLE:node=x:type=int:qname=.foo.test.bar.x:refs=[x])" + nl;
             Console.Write(BindingsToString());
-            Assert.AreEqual(sExp, BindingsToString());
+            Assert.Equal(sExp, BindingsToString());
         }
 
-        [Test]
+        [Fact]
         public void TypeAn_Point()
         {
             fs.Dir("foo")
@@ -279,10 +272,10 @@ def bar(point):
 @"(binding:kind=PARAMETER:node=point:type=?:qname=.foo.test.bar.point:refs=[point,point,point,point])" + nl;
 
             Console.Write(BindingsToString());
-            Assert.AreEqual(sExp, BindingsToString());
+            Assert.Equal(sExp, BindingsToString());
         }
 
-        [Test]
+        [Fact]
         public void TypeAn_Dirs()
         {
             fs.Dir("sys_q")
@@ -324,7 +317,7 @@ def mane_lupe(phile):
             ExpectBindings(sExp);
         }
 
-        [Test]
+        [Fact]
         public void TypeAn_class_instance_creation()
         {
             fs.Dir("foo")
@@ -357,7 +350,7 @@ def bar():
             ExpectBindings(sExp);
         }
 
-        [Test]
+        [Fact]
         public void TypeAn_Array_Ref()
         {
             fs.Dir("foo")
@@ -379,7 +372,7 @@ def bar():
             ExpectBindings(sExp);
         }
 
-        [Test]
+        [Fact]
         public void TypeAn_Bool_Local()
         {
             fs.Dir("foo")
@@ -400,7 +393,7 @@ def bar():
         }
 
 
-        [Test]
+        [Fact]
         public void TypeAn_Inherit_field()
         {
             fs.Dir("foo")

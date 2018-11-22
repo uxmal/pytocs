@@ -15,7 +15,7 @@
 #endregion
 
 #if DEBUG
-using NUnit.Framework;
+using Xunit;
 using Pytocs.CodeModel;
 using Pytocs.Syntax;
 using Pytocs.Types;
@@ -29,7 +29,6 @@ using System.Threading.Tasks;
 
 namespace Pytocs.Translate
 {
-    [TestFixture]
     public class ExpTranslatorTests
     {
         private string nl = Environment.NewLine;
@@ -54,48 +53,48 @@ namespace Pytocs.Translate
             return writer.ToString();
         }
 
-        [Test]
+        [Fact(DisplayName = nameof(ExBinop))]
         public void ExBinop()
         {
-            Assert.AreEqual("a + b", Xlat("a + b"));
+            Assert.Equal("a + b", Xlat("a + b"));
         }
 
-        [Test]
+        [Fact]
         public void ExFn_NoArgs()
         {
-            Assert.AreEqual("fn()", Xlat("fn()"));
+            Assert.Equal("fn()", Xlat("fn()"));
         }
 
-        [Test]
+        [Fact]
         public void ExIsNone()
         {
-            Assert.AreEqual("a == null", Xlat("a is None"));
+            Assert.Equal("a == null", Xlat("a is None"));
         }
 
-        [Test]
+        [Fact]
         public void ExIsNotNone()
         {
-            Assert.AreEqual("a != null", Xlat("a is not None"));
+            Assert.Equal("a != null", Xlat("a is not None"));
         }
 
-        [Test]
+        [Fact]
         public void ExIsOneOfManyTypes()
         {
             var pysrc = "isinstance(read_addr, (int, long))";
             var sExp = "read_addr is int || read_addr is long";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void ExSelf()
         {
-            Assert.AreEqual("this", Xlat("self"));
+            Assert.Equal("this", Xlat("self"));
         }
 
-        [Test]
+        [Fact]
         public void ExIn()
         {
-            Assert.AreEqual(
+            Assert.Equal(
 @"new List<object> {
     ANCESTOR,
     EQUAL,
@@ -103,26 +102,25 @@ namespace Pytocs.Translate
 }.Contains(this.compare(start))", Xlat("self.compare(start) in [ANCESTOR, EQUAL, PRECEDENT]"));
         }
 
-        [Test]
+        [Fact]
         public void ExListComprehension()
         {
             string pySrc = "[int(x) for x in s]";
             string sExp = 
 @"(from x in s
     select Convert.ToInt32(x)).ToList()";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
-        [Ignore]
+        [Fact(Skip = "Need type inference for this to work correctly")]
         public void ExSubscript()
         {
             string pySrc = "x[2:]";
             string sExp = "x.Skip(2)";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void ExListCompIf()
         {
             string pySrc = "[int(x) for x in s if x > 10]";
@@ -130,10 +128,10 @@ namespace Pytocs.Translate
 @"(from x in s
     where x > 10
     select Convert.ToInt32(x)).ToList()";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void ExListCompWithSplit()
         {
             string pySrc = "[int(x) for x in s.split('/') if x != '']";
@@ -141,26 +139,26 @@ namespace Pytocs.Translate
 @"(from x in s.split(""/"")
     where x != """"
     select Convert.ToInt32(x)).ToList()";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void ExAnd()
         {
             string pySrc = "x & 3 and y & 40";
             string sExp = "x & 3 && y & 40";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void ExStringFormat()
         {
             string pySrc = "\"Hello %s%s\" % (world, '!')";
             string sExp = "String.Format(\"Hello %s%s\", world, \"!\")";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void ExNotIn()
         {
             string pySrc = "f not in [a, b]";
@@ -169,26 +167,26 @@ namespace Pytocs.Translate
     a,
     b
 }.Contains(f)";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void ExPow()
         {
             string pySrc = "a  ** b ** c";
             string sExp = "Math.Pow(a, Math.Pow(b, c))";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void ExRealLiteral()
         {
             string pySrc = "0.1";
             string sExp = "0.1";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void ExListInitializer_SingleItem()
         {
             var pySrc = "['indices'] ";
@@ -196,70 +194,70 @@ namespace Pytocs.Translate
 @"new List<object> {
     ""indices""
 }";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void ExStringLiteral_Quotes()
         {
             var pySrc = "'\"'";
             string sExp = "\"\\\"\"";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_isinstance()
         {
             var pySrc = "isinstance(term, Foo)\r\n";
             string sExp = "term is Foo";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_not_isinstance()
         {
             var pySrc = "not isinstance(term, Foo)\r\n";
             string sExp = "!(term is Foo)";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_ListFor()
         {
             var pySrc = "[int2byte(b) for b in bytelist]";
             string sExp =
 @"(from b in bytelist
     select int2byte(b)).ToList()";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_TestExpression()
         {
             var pySrc = "x if cond else y";
             string sExp = "cond ? x : y";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_CompFor()
         {
             var pySrc = "sum(int2byte(b) for b in bytelist)";
             string sExp = 
 @"(from b in bytelist
     select int2byte(b)).Sum()";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_List()
         {
             var pySrc = "list(foo)";
             string sExp = "foo.ToList()";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_Regression2()
         {
             var pySrc = @"[""#"",""0"",r""\-"",r"" "",r""\+"",r""\'"",""I""]";
@@ -272,29 +270,29 @@ namespace Pytocs.Translate
     @""\'"",
     ""I""
 }";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
 
         }
 
-        [Test]
+        [Fact]
         public void Ex_Regression4()
         {
             var pySrc = "{ k:_raw_ast(a[k]) for k in a }";
             var sExp = "a.ToDictionary(k => k, k => _raw_ast(a[k]))";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_SetComprehension()
         {
             var pySrc = "{ id(e) for e in self._breakpoints[t] }";
             var sExp = 
 @"(from e in this._breakpoints[t]
     select id(e)).ToHashSet()";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_SetComprehension2()
         {
             var pySrc = "{(a.addr,b.addr) for a,b in fdiff.block_matches}";
@@ -304,148 +302,148 @@ namespace Pytocs.Translate
     let b = _tup_1.Item2
     select Tuple.Create(a.addr, b.addr)).ToHashSet()";
 
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_DictComprehension1()
         {
             var pySrc = "{ k:copy.copy(v) for k, v in path.info.iteritems() }";
             string sExp = "path.info" +
                 ".ToDictionary(_tup_1 => _tup_1.Item1, _tup_1 => copy.copy(_tup_1.Item2))";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_DictComprehension2()
         {
             var pySrc = "{ k:k + 'X' for k in path.info }";
             string sExp = "path.info.ToDictionary(k => k, k => k + \"X\")";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_DictComprehension3()
         {
             var pySrc = "{ a + b: b + c for a, b, c in path }";
             string sExp = "path" +
                 ".ToDictionary(_tup_1 => _tup_1.Item1 + _tup_1.Item2, _tup_1 => _tup_1.Item2 + _tup_1.Item3)";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_NamedParameterCall()
         {
             var pySrc = "foo(bar='baz')";
             var sExp = "foo(bar: \"baz\")";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_HashSet()
         {
             var pySrc = "set()";
             var sExp = "new HashSet<object>()";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_HashTable()
         {
             var pySrc = "{}";
             var sExp = "new Dictionary<object, object> {" + nl + "}";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_Regression5()
         {
             var pySrc = "round(float( float(count) / float(self.insn_count)), 3) >= .67";
             var sExp = "round(float(float(count) / float(this.insn_count)), 3) >= 0.67";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_ByteConstant()
         {
             var pySrc = "b'\\xfe\\xed' * init_stack_size";
             var sExp = "new byte[] { 0xfe, 0xed } * init_stack_size";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_intrinsic_len()
         {
             var pysrc = "len(foo.bar)";
             var sExp = "foo.bar.Count";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_instrinsic_iteritems()
         {
             var pysrc = "foo.iteritems()";
             var sExp = "foo";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_instrinsic_itervalues()
         {
             var pysrc = "foo.itervalues()";
             var sExp = "foo.Values";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_instrinsic_iterkeys()
         {
             var pysrc = "foo.iterkeys()";
             var sExp = "foo.Keys";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_instrinsic_sum()
         {
             var pysrc = "sum(bar)";
             var sExp = "bar.Sum()";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
         
-        [Test]
+        [Fact]
         public void Ex_instrinsic_list()
         {
             var pysrc = "list()";
             var sExp = "new List<object>()";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_instrinsic_set()
         {
             var pysrc = "set()";
             var sExp = "new HashSet<object>()";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_instrinsic_set_with_args()
         {
             var pysrc = "set(a)";
             var sExp = "new HashSet<object>(a)";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_intrinsic_dict()
         {
             var pysrc = "dict()";
             var sExp = "new Dictionary<object, object>()";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_intrinsic_dict_kwargs()
         {
             var pysrc = "dict(foo='bob', bar=sue+3)";
@@ -457,74 +455,74 @@ namespace Pytocs.Translate
                 "    {" + nl +
                 "        \"bar\"," + nl +
                 "        sue + 3}}";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_intrinsic_dict_iterable()
         {
             var pysrc = "dict(a)";
             var sExp = "a.ToDictionary()";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_intrinsic_filter()
         {
             var pysrc = "filter(fn, items)";
             var sExp = "items.Where(fn).ToList()";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_intrinsic_filter_none()
         {
             var pysrc = "filter(None, items)";
             var sExp = "items.Where(_p_1 => _p_1 != null).ToList()";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_intrinsic_sorted()
         {
             var pysrc = "sorted(items)";
             var sExp = "items.OrderBy(_p_1 => _p_1).ToList()";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_intrinsic_sorted_cmp()
         {
             var pysrc = "sorted(items, cmp)";
             var sExp = "items.OrderBy(cmp).ToList()";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_intrinsic_sorted_key()
         {
             var pysrc = "sorted(items, key=lambda x: x.addr)";
             var sExp = "items.OrderBy(x => x.addr).ToList()";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_intrinsic_sorted_reverse_bool()
         {
             var pysrc = "sorted(items, reverse=true)";
             var sExp = "items.OrderBy(_p_1 => _p_1).ToList()";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_intrinsic_enumerate()
         {
             var pysrc = "enumerate(items)";
             var sExp = "items.Select((_p_1,_p_2) => Tuple.Create(_p_2, _p_1))";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_for_with_if()
         {
             var pysrc = "(a for a in function.endpoints if a.addr == endpoint_addr)";
@@ -532,10 +530,10 @@ namespace Pytocs.Translate
 @"from a in function.endpoints
     where a.addr == endpoint_addr
     select a";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_for_with_if_projected()
         {
             var pysrc = "(a.x for a in function.endpoints if a.addr == endpoint_addr)";
@@ -543,10 +541,10 @@ namespace Pytocs.Translate
 @"from a in function.endpoints
     where a.addr == endpoint_addr
     select a.x";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_for_with_if_projected_to_set()
         {
             var pysrc = "{a for a in function.endpoints if a.addr == endpoint_addr}";
@@ -554,98 +552,100 @@ namespace Pytocs.Translate
 @"(from a in function.endpoints
     where a.addr == endpoint_addr
     select a).ToHashSet()";
-            Assert.AreEqual(sExp, Xlat(pysrc));
+            Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_dict_Comprehension()
         {
             var pySrc = "{AT.from_rva(v, self).to_mva(): k for (k, v) in self._plt.iteritems()}";
             var sExp = "this._plt.ToDictionary(_de1 => AT.from_rva(_de1.Value, this).to_mva(), _de1 => _de1.Key)";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_struct_unpack()
         {
             var pySrc = "struct.unpack('3x', buffer)";
             var sExp = "@struct.unpack(\"3x\", buffer)";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_ScientificNotation()
         {
             var pySrc = "1E-5";
             var sExp = "1E-05";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_SmallInteger()
         {
             var pySrc = "128";
             var sExp = "128";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_Github_Issue_14()
         {
             var pySrc = "len(x + y + z)";
             var sExp = "(x + y + z).Count";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test(Description = "Reported in Github issue #17")]
+        // Reported in Github issue #17
+        [Fact]
         public void Ex_Associativity()
         {
             string pySrc = "a - (b + c)";
             string sExp = "a - (b + c)";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test(Description = "Reported in Github issue #26")]
+        // Reported in Github issue #26
+        [Fact]
         public void Ex_Infinity()
         {
             string pySrc = "-1e3000000";
             string sExp = "double.NegativeInfinity";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_Infinity_FloatBif()
         {
             string pySrc = "float('+inf')";
             string sExp = "double.PositiveInfinity";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_Complex_Literal()
         {
             string pySrc = "3 - 4j";
             string sExp = "new Complex(3.0, -4.0)";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_Complex()
         {
             string pySrc = "complex(3,4)";
             string sExp = "new Complex(3, 4)";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_Await()
         {
             string pySrc = "await foo";
             string sExp = "await foo";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_nested_for_comprehensions()
         {
             string pySrc = "[(a, s) for a in stackframe.alocs.values() for s in a._segment_list]";
@@ -653,10 +653,10 @@ namespace Pytocs.Translate
 @"(from a in stackframe.alocs.values()
     from s in a._segment_list
     select Tuple.Create(a, s)).ToList()";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Ex_ListComprehension_Alternating_fors()
         {
             var pySrc = "[state for (stash, states) in self.simgr.stashes.items() if stash != 'pruned' for state in states]";
@@ -668,7 +668,7 @@ namespace Pytocs.Translate
     from state in states
     select state).ToList()";
 
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            Assert.Equal(sExp, Xlat(pySrc));
         }
     }
 }

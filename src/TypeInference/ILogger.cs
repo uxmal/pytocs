@@ -77,7 +77,7 @@ namespace Pytocs.TypeInference
 
         public void Error(string format, params object[] args)
         {
-            Write(EventLogEntryType.Error, string.Format(format, args));
+            Write(TraceEventType.Error, string.Format(format, args));
         }
 
         public void Error(Exception ex, string format, params object[] args)
@@ -90,20 +90,20 @@ namespace Pytocs.TypeInference
                 sb.Append(ex.Message);
                 ex = ex.InnerException;
             }
-            Write(EventLogEntryType.Error, sb.ToString());
+            Write(TraceEventType.Error, sb.ToString());
         }
 
         public void Inform(string msg)
         {
-            Write(EventLogEntryType.Information, msg);
+            Write(TraceEventType.Information, msg);
         }
 
         public void Verbose(string msg)
         {
-            Write(EventLogEntryType.Information, msg);
+            Write(TraceEventType.Information, msg);
         }
 
-        private void Write(EventLogEntryType et, string message)
+        private void Write(TraceEventType et, string message)
         {
             Console.WriteLine("{0}: {1}: {2}", title, et, message);
         }

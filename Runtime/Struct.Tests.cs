@@ -15,7 +15,7 @@
 #endregion
 
 #if DEBUG
-using NUnit.Framework;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +24,6 @@ using System.Threading.Tasks;
 
 namespace pytocs.runtime
 {
-    [TestFixture]
     public class StructTests
     {
         private byte[] hex(string str)
@@ -46,34 +45,34 @@ namespace pytocs.runtime
                 throw new ArgumentException($"Invalid hex digit '{ch}' (U+{(int)ch:X4}");
         }
 
-        [Test]
+        [Fact]
         public void Struct_unpack_LEInt()
         {
             var tup = @struct.unpack<Tuple<int>>("<i", hex("78563412"));
-            Assert.AreEqual(0x12345678, tup.Item1);
+            Assert.Equal(0x12345678, tup.Item1);
         }
 
-        [Test]
+        [Fact]
         public void Struct_unpack_BEint_ushort()
         {
             var tup = @struct.unpack<Tuple<int,ushort>>(">iH", hex("12345678FCB0"));
-            Assert.AreEqual(0x12345678, tup.Item1);
-            Assert.AreEqual((ushort)0xFCB0, tup.Item2);
+            Assert.Equal(0x12345678, tup.Item1);
+            Assert.Equal((ushort)0xFCB0, tup.Item2);
         }
 
-        [Test]
+        [Fact]
         public void Struct_unpack_padchars()
         {
             var tup = @struct.unpack<Tuple<uint>>(">4xI", hex("5041440012345678"));
-            Assert.AreEqual(0x12345678u, tup.Item1);
+            Assert.Equal(0x12345678u, tup.Item1);
         }
 
-        [Test]
+        [Fact]
         public void Struct_unpack_string()
         {
             var tup = @struct.unpack<Tuple<string, int>>(">4si", hex("5041434B00123456"));
-            Assert.AreEqual("PACK", tup.Item1);
-            Assert.AreEqual(0x00123456, tup.Item2);
+            Assert.Equal("PACK", tup.Item1);
+            Assert.Equal(0x00123456, tup.Item2);
         }
     }
 }

@@ -16,7 +16,7 @@
 
 #if DEBUG
 using Pytocs.Syntax;
-using NUnit.Framework;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -26,13 +26,11 @@ using System.Threading.Tasks;
 
 namespace Pytocs.Translate
 {
-    [TestFixture]
     public class ExpNameDiscoveryTests
     {
         private SymbolTable syms;
 
-        [SetUp]
-        public void Setup()
+        public ExpNameDiscoveryTests()
         {
             syms = new SymbolTable();
         }
@@ -45,11 +43,11 @@ namespace Pytocs.Translate
             exp.Accept(new ExpNameDiscovery(syms));
         }
 
-        [Test]
+        [Fact]
         public void EN_NameReference()
         {
             RunTest("id");
-            Assert.IsNotNull(syms.GetSymbol("id"));
+            Assert.NotNull(syms.GetSymbol("id"));
         }
     }
 }

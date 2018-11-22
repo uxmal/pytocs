@@ -15,7 +15,7 @@
 #endregion
 
 #if DEBUG
-using NUnit.Framework;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,13 +25,11 @@ using System.Threading.Tasks;
 
 namespace Pytocs.Syntax
 {
-    [TestFixture]
     public class LexerTests
     {
         private Lexer lexer;
 
-        [SetUp]
-        public void Setup()
+        public LexerTests()
         {
             lexer = null;
         }
@@ -58,72 +56,72 @@ namespace Pytocs.Syntax
             foreach (var exp in tokens)
             {
                 tok = lexer.Get();
-                Assert.AreEqual(exp, tok.Type);
+                Assert.Equal(exp, tok.Type);
             }
-            Assert.AreEqual(TokenType.EOF, tok.Type);
+            Assert.Equal(TokenType.EOF, tok.Type);
         }
 
-        [Test]
+        [Fact]
         public void LexId()
         {
-            Assert.AreEqual(new Token(0, 0, TokenType.ID, "hoo", 0, 3), Lex("hoo"));
+            Assert.Equal(new Token(0, 0, TokenType.ID, "hoo", 0, 3), Lex("hoo"));
         }
 
-        [Test]
+        [Fact]
         public void LexOps()
         {
-            Assert.AreEqual(TokenType.OP_PLUS, Lex("+").Type);
-            Assert.AreEqual(TokenType.OP_MINUS, Lex("-").Type);
-            Assert.AreEqual(TokenType.OP_STAR, Lex("*").Type);
-            Assert.AreEqual(TokenType.OP_STARSTAR, Lex("**").Type);
-            Assert.AreEqual(TokenType.OP_SLASH, Lex("/").Type);
-            Assert.AreEqual(TokenType.OP_SLASHSLASH, Lex("//").Type);
-            Assert.AreEqual(TokenType.OP_PERCENT, Lex("%").Type);
+            Assert.Equal(TokenType.OP_PLUS, Lex("+").Type);
+            Assert.Equal(TokenType.OP_MINUS, Lex("-").Type);
+            Assert.Equal(TokenType.OP_STAR, Lex("*").Type);
+            Assert.Equal(TokenType.OP_STARSTAR, Lex("**").Type);
+            Assert.Equal(TokenType.OP_SLASH, Lex("/").Type);
+            Assert.Equal(TokenType.OP_SLASHSLASH, Lex("//").Type);
+            Assert.Equal(TokenType.OP_PERCENT, Lex("%").Type);
 
-            Assert.AreEqual(TokenType.OP_SHL, Lex("<<").Type);
-            Assert.AreEqual(TokenType.OP_SHR, Lex(">>").Type);
-            Assert.AreEqual(TokenType.OP_AMP, Lex("&").Type);
-            Assert.AreEqual(TokenType.OP_BAR, Lex("|").Type);
-            Assert.AreEqual(TokenType.OP_CARET, Lex("^").Type);
-            Assert.AreEqual(TokenType.OP_TILDE, Lex("~").Type);
+            Assert.Equal(TokenType.OP_SHL, Lex("<<").Type);
+            Assert.Equal(TokenType.OP_SHR, Lex(">>").Type);
+            Assert.Equal(TokenType.OP_AMP, Lex("&").Type);
+            Assert.Equal(TokenType.OP_BAR, Lex("|").Type);
+            Assert.Equal(TokenType.OP_CARET, Lex("^").Type);
+            Assert.Equal(TokenType.OP_TILDE, Lex("~").Type);
 
-            Assert.AreEqual(TokenType.OP_LT, Lex("<").Type);
-            Assert.AreEqual(TokenType.OP_GT, Lex(">").Type);
-            Assert.AreEqual(TokenType.OP_LE, Lex("<=").Type);
-            Assert.AreEqual(TokenType.OP_GE, Lex(">=").Type);
-            Assert.AreEqual(TokenType.OP_EQ, Lex("==").Type);
-            Assert.AreEqual(TokenType.OP_NE, Lex("!=").Type);
+            Assert.Equal(TokenType.OP_LT, Lex("<").Type);
+            Assert.Equal(TokenType.OP_GT, Lex(">").Type);
+            Assert.Equal(TokenType.OP_LE, Lex("<=").Type);
+            Assert.Equal(TokenType.OP_GE, Lex(">=").Type);
+            Assert.Equal(TokenType.OP_EQ, Lex("==").Type);
+            Assert.Equal(TokenType.OP_NE, Lex("!=").Type);
 
-            Assert.AreEqual(TokenType.LPAREN, Lex("(").Type);
-            Assert.AreEqual(TokenType.RPAREN, Lex(")").Type);
-            Assert.AreEqual(TokenType.LBRACKET, Lex("[").Type);
-            Assert.AreEqual(TokenType.RBRACKET, Lex("]").Type);
-            Assert.AreEqual(TokenType.LBRACE, Lex("{").Type);
-            Assert.AreEqual(TokenType.RBRACE, Lex("}").Type);
+            Assert.Equal(TokenType.LPAREN, Lex("(").Type);
+            Assert.Equal(TokenType.RPAREN, Lex(")").Type);
+            Assert.Equal(TokenType.LBRACKET, Lex("[").Type);
+            Assert.Equal(TokenType.RBRACKET, Lex("]").Type);
+            Assert.Equal(TokenType.LBRACE, Lex("{").Type);
+            Assert.Equal(TokenType.RBRACE, Lex("}").Type);
 
-            Assert.AreEqual(TokenType.COMMA, Lex(",").Type);
-            Assert.AreEqual(TokenType.COLON, Lex(":").Type);
-            Assert.AreEqual(TokenType.DOT, Lex(".").Type);
-            Assert.AreEqual(TokenType.SEMI, Lex(";").Type);
-            Assert.AreEqual(TokenType.AT, Lex("@").Type);
-            Assert.AreEqual(TokenType.EQ, Lex("=").Type);
+            Assert.Equal(TokenType.COMMA, Lex(",").Type);
+            Assert.Equal(TokenType.COLON, Lex(":").Type);
+            Assert.Equal(TokenType.DOT, Lex(".").Type);
+            Assert.Equal(TokenType.SEMI, Lex(";").Type);
+            Assert.Equal(TokenType.AT, Lex("@").Type);
+            Assert.Equal(TokenType.EQ, Lex("=").Type);
 
-            Assert.AreEqual(TokenType.ADDEQ, Lex("+=").Type);
-            Assert.AreEqual(TokenType.SUBEQ, Lex("-=").Type);
-            Assert.AreEqual(TokenType.MULEQ, Lex("*=").Type);
-            Assert.AreEqual(TokenType.DIVEQ, Lex("/=").Type);
-            Assert.AreEqual(TokenType.IDIVEQ, Lex("//=").Type);
-            Assert.AreEqual(TokenType.MODEQ, Lex("%=").Type);
+            Assert.Equal(TokenType.ADDEQ, Lex("+=").Type);
+            Assert.Equal(TokenType.SUBEQ, Lex("-=").Type);
+            Assert.Equal(TokenType.MULEQ, Lex("*=").Type);
+            Assert.Equal(TokenType.DIVEQ, Lex("/=").Type);
+            Assert.Equal(TokenType.IDIVEQ, Lex("//=").Type);
+            Assert.Equal(TokenType.MODEQ, Lex("%=").Type);
 
-            Assert.AreEqual(TokenType.ANDEQ, Lex("&=").Type);
-            Assert.AreEqual(TokenType.OREQ, Lex("|=").Type);
-            Assert.AreEqual(TokenType.XOREQ, Lex("^=").Type);
-            Assert.AreEqual(TokenType.SHREQ, Lex(">>=").Type);
-            Assert.AreEqual(TokenType.SHLEQ, Lex("<<=").Type);
-            Assert.AreEqual(TokenType.EXPEQ, Lex("**=").Type);
+            Assert.Equal(TokenType.ANDEQ, Lex("&=").Type);
+            Assert.Equal(TokenType.OREQ, Lex("|=").Type);
+            Assert.Equal(TokenType.XOREQ, Lex("^=").Type);
+            Assert.Equal(TokenType.SHREQ, Lex(">>=").Type);
+            Assert.Equal(TokenType.SHLEQ, Lex("<<=").Type);
+            Assert.Equal(TokenType.EXPEQ, Lex("**=").Type);
         }
 
-        [Test]
+        [Fact]
         public void LexDef()
         {
             Lex("def foo(bar):\n return 1",
@@ -131,7 +129,7 @@ namespace Pytocs.Syntax
                 TokenType.INDENT, TokenType.Return, TokenType.INTEGER, TokenType.EOF);
         }
 
-        [Test]
+        [Fact]
         public void LexNestedIndents()
         {
             Lex(
@@ -147,14 +145,14 @@ namespace Pytocs.Syntax
                TokenType.Return, TokenType.INTEGER, TokenType.NEWLINE, TokenType.EOF);
         }
 
-        [Test]
+        [Fact]
         public void LexComment()
         {
             Lex("  foo # hello\nfoo\n",
                 TokenType.INDENT, TokenType.ID, TokenType.COMMENT, TokenType.NEWLINE,
                 TokenType.DEDENT, TokenType.ID, TokenType.NEWLINE, TokenType.EOF);
         }
-        [Test]
+        [Fact]
         public void LexBlankLineComment()
         {
             Lex("  # hello\nfoo\n",
@@ -162,18 +160,18 @@ namespace Pytocs.Syntax
                 TokenType.ID, TokenType.NEWLINE, TokenType.EOF);
         }
 
-        [Test]
+        [Fact]
         public void LexInt()
         {
-            Assert.AreEqual(0, (int)Lex("0").Value);
-            Assert.AreEqual(1, (int)Lex("1").Value);
-            Assert.AreEqual(30, (int)Lex("30").Value);
-            Assert.AreEqual(0xF, (int)Lex("0xF").Value);
-            Assert.AreEqual(0xed, (int)Lex("0xed").Value);
-            Assert.AreEqual(10, (long)Lex("0o12").Value);
-            Assert.AreEqual(13, (long)Lex("0O15").Value);
-            Assert.AreEqual(0xA, (long)Lex("0b1010").Value);
-            Assert.AreEqual(0xA, (long)Lex("0B1010").Value);
+            Assert.Equal(0, (int)Lex("0").Value);
+            Assert.Equal(1, (int)Lex("1").Value);
+            Assert.Equal(30, (int)Lex("30").Value);
+            Assert.Equal(0xF, (int)Lex("0xF").Value);
+            Assert.Equal(0xed, (int)Lex("0xed").Value);
+            Assert.Equal(10, (long)Lex("0o12").Value);
+            Assert.Equal(13, (long)Lex("0O15").Value);
+            Assert.Equal(0xA, (long)Lex("0b1010").Value);
+            Assert.Equal(0xA, (long)Lex("0B1010").Value);
         }
 
         private string LexString(string pyStr)
@@ -181,25 +179,25 @@ namespace Pytocs.Syntax
             return ((Str)Lex(pyStr).Value).s;
         }
 
-        [Test]
+        [Fact]
         public void LexStrings()
         {
-            //Assert.AreEqual("", Lex("\"\"").Value);
-            //Assert.AreEqual("a", Lex("\"a\"").Value);
-            //Assert.AreEqual("a", Lex("'a'").Value);
-            //Assert.AreEqual("\"a\"", Lex("'\"a\"'").Value);
-            //Assert.AreEqual("ab", Lex("'a\\\nb'").Value);
-            //Assert.AreEqual("\\", Lex(@"'\\'").Value);
-            Assert.AreEqual("\\'", LexString(@"'\''"));
-            Assert.AreEqual("\\\"", LexString(@"'\""'"));
-            Assert.AreEqual("\\a", LexString(@"'\a'"));
-            Assert.AreEqual("\\b", LexString(@"'\b'"));
-            Assert.AreEqual("\\f", LexString(@"'\f'"));
-            Assert.AreEqual("\\n", LexString(@"'\n'"));
-            Assert.AreEqual("\\r", LexString(@"'\r'"));
-            Assert.AreEqual("\\v", LexString(@"'\v'"));
-            Assert.AreEqual("a", LexString("\"\"\"a\"\"\""));
-            Assert.AreEqual("a", LexString("'''a'''"));
+            //Assert.Equal("", Lex("\"\"").Value);
+            //Assert.Equal("a", Lex("\"a\"").Value);
+            //Assert.Equal("a", Lex("'a'").Value);
+            //Assert.Equal("\"a\"", Lex("'\"a\"'").Value);
+            //Assert.Equal("ab", Lex("'a\\\nb'").Value);
+            //Assert.Equal("\\", Lex(@"'\\'").Value);
+            Assert.Equal("\\'", LexString(@"'\''"));
+            Assert.Equal("\\\"", LexString(@"'\""'"));
+            Assert.Equal("\\a", LexString(@"'\a'"));
+            Assert.Equal("\\b", LexString(@"'\b'"));
+            Assert.Equal("\\f", LexString(@"'\f'"));
+            Assert.Equal("\\n", LexString(@"'\n'"));
+            Assert.Equal("\\r", LexString(@"'\r'"));
+            Assert.Equal("\\v", LexString(@"'\v'"));
+            Assert.Equal("a", LexString("\"\"\"a\"\"\""));
+            Assert.Equal("a", LexString("'''a'''"));
             //\ooo 	Character with octal value ooo 	(1,3)
             //\xhh 	Character with hex value hh 	(2,3)
 
@@ -210,97 +208,97 @@ namespace Pytocs.Syntax
             //\Uxxxxxxxx 	Character with 32-bit hex value xxxxxxxx 	(6)
         }
 
-        [Test]
+        [Fact]
         public void LexArrow()
         {
-            Assert.AreEqual(TokenType.LARROW, Lex("->").Type);
+            Assert.Equal(TokenType.LARROW, Lex("->").Type);
         }
 
-        [Test]
+        [Fact]
         public void LexEllipsis()
         {
             Lex("...", TokenType.ELLIPSIS, TokenType.EOF);
             Lex("..", TokenType.DOT, TokenType.DOT, TokenType.EOF);
         }
 
-        [Test]
+        [Fact]
         public void Lex_Regression1()
         {
             Lex("'']", TokenType.STRING, TokenType.RBRACKET, TokenType.EOF);
         }
 
-        [Test]
+        [Fact]
         public void Lex_LineExtension()
         {
             Lex("foo \\\r\n  bar", TokenType.ID, TokenType.ID, TokenType.EOF);
-            Assert.AreEqual(2, lexer.LineNumber);
+            Assert.Equal(2, lexer.LineNumber);
         }
 
-        [Test]
+        [Fact]
         public void Lex_StrConstant()
         {
             Lex("\"\"\n", TokenType.STRING, TokenType.NEWLINE, TokenType.EOF);
         }
 
-        [Test]
+        [Fact]
         public void Lex_LongInteger()
         {
             Lex("1L", TokenType.LONGINTEGER, TokenType.EOF);
         }
 
-        [Test]
+        [Fact]
         public void Lex_LongZero()
         {
             Lex("0L", TokenType.LONGINTEGER, TokenType.EOF);
         }
 
-        [Test]
+        [Fact]
         public void Lex_RawString()
         {
             var token = LexString(@"r'\''");
-            Assert.AreEqual("\\'", token);
+            Assert.Equal("\\'", token);
         }
 
-        [Test]
+        [Fact]
         public void Lex_DecimalEscape()
         {
             var token = LexString(@"'\33'");
-            Assert.AreEqual("\\33", token);
+            Assert.Equal("\\33", token);
         }
 
-        [Test]
+        [Fact]
         public void Lex_RealLiteral()
         {
             var token = Lex("0.1");
-            Assert.AreEqual(TokenType.REAL, token.Type);
-            Assert.AreEqual(0.1, token.Value);
+            Assert.Equal(TokenType.REAL, token.Type);
+            Assert.Equal(0.1, token.Value);
         }
 
-        [Test]
+        [Fact]
         public void Lex_UnicodeString()
         {
             var token = Lex("u'foo'");
-            Assert.AreEqual(TokenType.STRING, token.Type);
-            Assert.AreEqual("foo", ((Str)token.Value).s);
+            Assert.Equal(TokenType.STRING, token.Type);
+            Assert.Equal("foo", ((Str)token.Value).s);
         }
 
-        [Test]
+        [Fact]
         public void Lex_UnicodeStringConstant()
         {
             var token = Lex("u'\u00e9'");
-            Assert.AreEqual(TokenType.STRING, token.Type);
-            Assert.AreEqual("é", ((Str)token.Value).s);
+            Assert.Equal(TokenType.STRING, token.Type);
+            Assert.Equal("é", ((Str)token.Value).s);
         }
 
-        [Test]
+        [Fact]
         public void Lex_Comment()
         {
             var token = Lex("# Hello\n");
-            Assert.AreEqual(TokenType.COMMENT, token.Type);
-            Assert.AreEqual(" Hello", token.Value);
+            Assert.Equal(TokenType.COMMENT, token.Type);
+            Assert.Equal(" Hello", token.Value);
         }
 
-        [Test]
+        [Fact]
         public void Lex_Indented()
         {
             Lex("if x :\n    hi\n",
@@ -309,7 +307,7 @@ namespace Pytocs.Syntax
                 TokenType.EOF);
         }
 
-        [Test]
+        [Fact]
         public void Lex_IndentedComment()
         {
             Lex("if x :\n    #foo\n    hi\n",
@@ -321,7 +319,7 @@ namespace Pytocs.Syntax
 
         }
 
-        [Test]
+        [Fact]
         public void Lex_UnevenComments()
         {
             Lex("#foo\n  #bar\n#baz\n",
@@ -330,47 +328,47 @@ namespace Pytocs.Syntax
                 TokenType.COMMENT, TokenType.NEWLINE, TokenType.EOF);
         }
 
-        [Test]
+        [Fact]
         public void Lex_AddEq()
         {
             Lex("+=", TokenType.ADDEQ, TokenType.EOF);
         }
 
-        [Test]
+        [Fact]
         public void Lex_StringWithCrLf()
         {
             var t = LexString("'\\r\\n'");
-            Assert.AreEqual("\\r\\n", t);
+            Assert.Equal("\\r\\n", t);
         }
 
-        [Test]
+        [Fact]
         public void Lex_BinaryString()
         {
             var t = Lex("b'\x00'");
-            Assert.AreEqual(TokenType.STRING, t.Type);
-            Assert.AreEqual("\x00", ((Bytes)t.Value).s);
+            Assert.Equal(TokenType.STRING, t.Type);
+            Assert.Equal("\x00", ((Bytes)t.Value).s);
         }
 
-        [Test]
+        [Fact]
         public void Lex_Position()
         {
             var t = Lex("    x");
-            Assert.AreEqual(0, t.Start);
-            Assert.AreEqual(4, t.End);
+            Assert.Equal(0, t.Start);
+            Assert.Equal(4, t.End);
             t = LexMore();
-            Assert.AreEqual(4, t.Start);
-            Assert.AreEqual(5, t.End);
+            Assert.Equal(4, t.Start);
+            Assert.Equal(5, t.End);
         }
 
-        [Test]
+        [Fact]
         public void Lex_PositionCrLf()
         {
             var t = Lex("\r\nx");
-            Assert.AreEqual(2, t.Start, "Expected start at 2");
-            Assert.AreEqual(3, t.End, "Expected end at 3");
+            Assert.Equal(2, t.Start);   // Expected start at 2
+            Assert.Equal(3, t.End);     // Expected end at 3
         }
 
-        [Test]
+        [Fact]
         public void Lex_Indent()
         {
             Lex("def foo():\n    return\n",
@@ -378,21 +376,21 @@ namespace Pytocs.Syntax
                 TokenType.INDENT, TokenType.Return, TokenType.NEWLINE, TokenType.DEDENT, TokenType.EOF);
         }
 
-        [Test]
+        [Fact]
         public void Lex_Regression2()
         {
             Lex(@"r'\'', 'I'",
                 TokenType.STRING, TokenType.COMMA, TokenType.STRING, TokenType.EOF);
         }
         
-        [Test]
+        [Fact]
         public void Lex_FloatConstant()
         {
             Lex(".68",
                 TokenType.REAL, TokenType.EOF);
         }
 
-        [Test]
+        [Fact]
         public void Lex_Mixed_ByteStrings_Strings()
         {
             var tok = Lex("b\"bytes\" \"chars\"");
@@ -401,44 +399,44 @@ namespace Pytocs.Syntax
             Assert.IsAssignableFrom<Str>(tok.Value);
         }
 
-        [Test]
+        [Fact]
         public void Lex_FString()
         {
             var tok = Lex("f'Message: {msg}'");
             var str = (Str)tok.Value;
-            Assert.IsTrue(str.Format);
+            Assert.True(str.Format);
         }
 
-        [Test]
+        [Fact]
         public void Lex_Float_ScientificNotation()
         {
             var tok = Lex("1E-5");
             var str = (double)tok.Value;
-            Assert.AreEqual("1E-05", str.ToString());
+            Assert.Equal("1E-05", str.ToString());
         }
 
-        [Test]
+        [Fact]
         public void Lex_Float_ScientificNotation_Zero()
         {
             var tok = Lex("0E0");
             var str = (double)tok.Value;
-            Assert.AreEqual("0", str.ToString());
+            Assert.Equal("0", str.ToString());
         }
 
-        [Test]
+        [Fact]
         public void Lex_Github_26()
         {
             var tok = Lex("1e300000");
-            Assert.AreEqual(TokenType.REAL, tok.Type);
-            Assert.AreEqual(double.PositiveInfinity, (double)tok.Value);
+            Assert.Equal(TokenType.REAL, tok.Type);
+            Assert.Equal(double.PositiveInfinity, (double)tok.Value);
         }
 
-        [Test]
+        [Fact]
         public void Lex_ImaginaryConstant()
         {
             var tok = Lex("3j");
-            Assert.AreEqual(TokenType.IMAG, tok.Type);
-            Assert.AreEqual(3.0, (double)tok.Value);
+            Assert.Equal(TokenType.IMAG, tok.Type);
+            Assert.Equal(3.0, (double)tok.Value);
         }
     }
 }

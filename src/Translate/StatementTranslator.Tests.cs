@@ -16,7 +16,7 @@
 
 #if DEBUG
 using Pytocs.CodeModel;
-using NUnit.Framework;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -30,14 +30,13 @@ using Pytocs.Types;
 
 namespace Pytocs.Translate
 {
-    [TestFixture]
     public class StatementTranslatorTests
     {
         private static readonly string nl = Environment.NewLine;
 
         private State scope;
 
-        public void Setup()
+        public StatementTranslatorTests()
         {
             scope = new State(null, State.StateType.MODULE);
         }
@@ -141,19 +140,19 @@ namespace Pytocs.Translate
             return writer.ToString();
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Assign()
         {
-            Assert.AreEqual("a = b;\r\n", XlatStmts("a = b\n"));
+            Assert.Equal("a = b;\r\n", XlatStmts("a = b\n"));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_If()
         {
-            Assert.AreEqual("if (a) {\r\n    b();\r\n}\r\n", XlatStmts("if a:\n  b()\n"));
+            Assert.Equal("if (a) {\r\n    b();\r\n}\r\n", XlatStmts("if a:\n  b()\n"));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Def()
         {
             string sExp =
@@ -164,10 +163,10 @@ namespace Pytocs.Translate
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule("def a(self,bar):\n print 'Hello ' + bar\n"));
+            Assert.Equal(sExp, XlatModule("def a(self,bar):\n print 'Hello ' + bar\n"));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_ClassWithStaticMethods()
         {
             string src =
@@ -191,10 +190,10 @@ namespace Pytocs.Translate
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(src));
+            Assert.Equal(sExp, XlatModule(src));
         }
 
-        [Test]
+        [Fact]
         public void StmtImport()
         {
             string src =
@@ -205,10 +204,10 @@ namespace Pytocs.Translate
 public static class testModule {
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(src));
+            Assert.Equal(sExp, XlatModule(src));
         }
 
-        [Test]
+        [Fact]
         public void StmtImport_ReservedWord()
         {
             string src =
@@ -219,10 +218,10 @@ public static class testModule {
 public static class testModule {
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(src));
+            Assert.Equal(sExp, XlatModule(src));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_From()
         {
             string src =
@@ -233,10 +232,10 @@ public static class testModule {
 public static class testModule {
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(src));
+            Assert.Equal(sExp, XlatModule(src));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_MemberVarInit()
         {
             string src =
@@ -259,10 +258,10 @@ class Bar:
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(src));
+            Assert.Equal(sExp, XlatModule(src));
         }
 
-        [Test]
+        [Fact]
         public void StmtForeach()
         {
             string src =
@@ -274,25 +273,25 @@ class Bar:
     Console.WriteLine(x);
 }
 ";
-            Assert.AreEqual(sExp, XlatStmts(src));
+            Assert.Equal(sExp, XlatStmts(src));
         }
 
-        [Test]
+        [Fact]
         public void StmtRaise()
         {
             string src =
                 "raise FooExc(\"Bob\", 1)\r\n";
             string sExp =
                 "throw FooExc(\"Bob\", 1);\r\n";
-            Assert.AreEqual(sExp, XlatStmts(src));
+            Assert.Equal(sExp, XlatStmts(src));
         }
 
-        [Test]
+        [Fact]
         public void StmtEmptyList()
         {
             string src = "res = []\r\n";
             string sExp = "res = new List<object>();\r\n";
-            Assert.AreEqual(sExp, XlatStmts(src));
+            Assert.Equal(sExp, XlatStmts(src));
         }
 
         private string FixCr(string sExp)
@@ -300,7 +299,7 @@ class Bar:
             return sExp.Replace("\r\n", "\n").Replace("\n", "\r\n");
         }
 
-        [Test]
+        [Fact]
         public void StmtTry()
         {
             string src =
@@ -320,10 +319,10 @@ finally:
     printf(""Hello"");
 }
 ";
-            Assert.AreEqual(FixCr(sExp), XlatStmts(src));
+            Assert.Equal(FixCr(sExp), XlatStmts(src));
         }
 
-        [Test]
+        [Fact]
         public void StmtWhile()
         {
             string src =
@@ -337,10 +336,10 @@ finally:
     x = x - 1;
 }
 ";
-            Assert.AreEqual(sExp, XlatStmts(src));
+            Assert.Equal(sExp, XlatStmts(src));
         }
 
-        [Test]
+        [Fact]
         public void StmtWhileElse()
         {
             string src =
@@ -360,11 +359,11 @@ else:
     printf(""Never"");
 }
 ";
-            Assert.AreEqual(sExp, XlatStmts(src));
+            Assert.Equal(sExp, XlatStmts(src));
         }
 
 
-        [Test]
+        [Fact]
         public void Stmt_Lambda()
         {
             var pyStm =
@@ -380,10 +379,10 @@ else:
     this.func = func;
 }
 ";
-            Assert.AreEqual(sExp, XlatStmts(pyStm));
+            Assert.Equal(sExp, XlatStmts(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Lambda_2Args()
         {
             var pyStm =
@@ -399,11 +398,11 @@ else:
     this.func = func;
 }
 ";
-            Assert.AreEqual(sExp, XlatStmts(pyStm));
+            Assert.Equal(sExp, XlatStmts(pyStm));
 
         }
 
-        [Test]
+        [Fact]
         public void StmtFnDefaultParameterValue()
         {
             var pyStm =
@@ -418,10 +417,10 @@ else:
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pyStm));
+            Assert.Equal(sExp, XlatModule(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void StmtSetBuilder()
         {
             var pyStm =
@@ -439,10 +438,10 @@ else:
         ""minor"",
         ""7""}};
 ";
-            Assert.AreEqual(sExp, XlatStmts(pyStm));
+            Assert.Equal(sExp, XlatStmts(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void StmtVarargs()
         {
             var pyStm =
@@ -457,26 +456,26 @@ else:
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pyStm));
+            Assert.Equal(sExp, XlatModule(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void StmtList()
         {
             var pyStm = "return (isinstance(x,str) or isinstance(x,unicode))\r\n";
             var sExp = "return x is str || x is unicode;\r\n";
-            Assert.AreEqual(sExp, XlatStmts(pyStm));
+            Assert.Equal(sExp, XlatStmts(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void StmtListArgument()
         {
             var pyStm = "foo(*args)\r\n";
             var sExp = "foo(args);\r\n";
-            Assert.AreEqual(sExp, XlatStmts(pyStm));
+            Assert.Equal(sExp, XlatStmts(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void StmtElif()
         {
             var pyStm =
@@ -502,10 +501,10 @@ else:
     foo();
 }
 ";
-            Assert.AreEqual(sExp, XlatStmts(pyStm));
+            Assert.Equal(sExp, XlatStmts(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Regress1()
         {
             var pyStm =
@@ -521,10 +520,10 @@ public static class testModule {
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pyStm));
+            Assert.Equal(sExp, XlatModule(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Regress2()
         {
             var pyStm =
@@ -546,27 +545,27 @@ public static class testModule {
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pyStm));
+            Assert.Equal(sExp, XlatModule(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Print()
         {
             var pyStm = "print >>sys.stderr, fmt % (line,col,text)\r\n";
             var sExp = "sys.stderr.WriteLine(String.Format(fmt, line, col, text));\r\n";
-            Assert.AreEqual(sExp, XlatStmts(pyStm));
+            Assert.Equal(sExp, XlatStmts(pyStm));
         }
 
 
-        [Test]
+        [Fact]
         public void Stmt_PrintEmpty()
         {
             var pyStm = "print\n";
             var sExp = "Console.WriteLine();\r\n";
-            Assert.AreEqual(sExp, XlatStmts(pyStm));
+            Assert.Equal(sExp, XlatStmts(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_EmptyLineWithSpaces()
         {
             var pyStm =
@@ -583,18 +582,18 @@ public static class testModule {
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pyStm));
+            Assert.Equal(sExp, XlatMember(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_ReturnExprList()
         {
             var pyStm = "return a, b\r\n";
             var sExp = "return Tuple.Create(a, b);\r\n";
-            Assert.AreEqual(sExp, XlatStmts(pyStm));
+            Assert.Equal(sExp, XlatStmts(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Decoration()
         {
             var pyStm = "@dec.ora.tion\ndef foo():\n   pass\n";
@@ -604,18 +603,18 @@ public static object foo() {
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pyStm));
+            Assert.Equal(sExp, XlatMember(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Exec()
         {
             var pyStm = "exec a in b, c\n";
             var sExp = "Python_Exec(a, b, c);\r\n";
-            Assert.AreEqual(sExp, XlatStmts(pyStm));
+            Assert.Equal(sExp, XlatStmts(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_InitMethodsToCtors()
         {
             var pyStm = "class foo:\n    def __init__(self,str): print(\"Hello \" + str)\n";
@@ -628,10 +627,10 @@ public static object foo() {
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pyStm));
+            Assert.Equal(sExp, XlatMember(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_InitCallOfBaseClass()
         {
             var pyStm = "class Foo(Bar):\n    def __init__(self): Bar.__init__(self, 'x');a = 3\n";
@@ -646,10 +645,10 @@ public static object foo() {
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pyStm));
+            Assert.Equal(sExp, XlatMember(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_ParameterWithNonConstantInitializer()
         {
             var pyStm = "def foo(a = bar.baz): return a\n";
@@ -659,10 +658,10 @@ public static object foo() {
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pyStm));
+            Assert.Equal(sExp, XlatMember(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_CtorWithDefaultArgs()
         {
             var pyStm = "class Class:\n    def __init__(self,a, b = 'q', c = 'cc'): pass\n";
@@ -674,10 +673,10 @@ public static object foo() {
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pyStm));
+            Assert.Equal(sExp, XlatMember(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Class_slots()
         {
             var pyCls =
@@ -695,10 +694,10 @@ public static object foo() {
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pyCls));
+            Assert.Equal(sExp, XlatMember(pyCls));
         }
 
-        [Test]
+        [Fact]
         public void Class_ComputedSlots()
         {
             var pyCls =
@@ -711,18 +710,18 @@ public static object foo() {
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pyCls));
+            Assert.Equal(sExp, XlatMember(pyCls));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_EmptyCommentLine()
         {
             var pyStm = "# Comment\n";
             var sExp = "// Comment\r\n";
-            Assert.AreEqual(sExp, this.XlatStmts(pyStm));
+            Assert.Equal(sExp, this.XlatStmts(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_IfWithCommentEmptyCommentLine()
         {
             var pyStm =
@@ -735,10 +734,10 @@ public static object foo() {
     args = 0;
 }
 ";
-            Assert.AreEqual(sExp, this.XlatStmts(pyStm));
+            Assert.Equal(sExp, this.XlatStmts(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_CommentedArg()
         {
             var pyStm =
@@ -747,10 +746,10 @@ public static object foo() {
 " + "        #baz" + nl +
 "     )" + nl;
             var sExp = "foo(bar);\r\n";
-            Assert.AreEqual(sExp, XlatStmts(pyStm));
+            Assert.Equal(sExp, XlatStmts(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_TrailingComment()
         {
             var pyStm =
@@ -767,18 +766,18 @@ public static object foo() {
     whine();
 }
 ";
-            Assert.AreEqual(sExp, XlatStmts(pyStm));
+            Assert.Equal(sExp, XlatStmts(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_AddEq()
         {
             var pyStm = "s += 'foo'\n";
             var sExp = "s += \"foo\";\r\n";
-            Assert.AreEqual(sExp, XlatStmts(pyStm));
+            Assert.Equal(sExp, XlatStmts(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_ClassDocComment()
         {
             var pyStm = "class foo:\n    'doc comment'\n";
@@ -790,10 +789,10 @@ public static object foo() {
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pyStm));
+            Assert.Equal(sExp, XlatModule(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_LocalVar()
         {
             var pyStm = "def fn():\n    loc = 4\n    return loc\n";
@@ -804,26 +803,26 @@ public static object foo() {
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pyStm));
+            Assert.Equal(sExp, XlatMember(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_YieldExpr()
         {
             var pyStm = "yield 3\n";
             var sExp = "yield return 3;" + nl;
-            Assert.AreEqual(sExp, XlatStmts(pyStm));
+            Assert.Equal(sExp, XlatStmts(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_YieldNoExpr()
         {
             var pyStm = "yield\n";
             var sExp = "yield return null;" + nl;
-            Assert.AreEqual(sExp, XlatStmts(pyStm));
+            Assert.Equal(sExp, XlatStmts(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Decoration2()
         {
             var pySrc =
@@ -837,10 +836,10 @@ public static object wrapper(Hashtable kwargs, params object [] args) {
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pySrc));
+            Assert.Equal(sExp, XlatMember(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_With()
         {
             var pySrc =
@@ -852,10 +851,10 @@ public static object wrapper(Hashtable kwargs, params object [] args) {
     bar();
 }
 ";
-            Assert.AreEqual(sExp, XlatStmts(pySrc));
+            Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_AssignTuple()
         {
             var pySrc =
@@ -866,11 +865,11 @@ public static object wrapper(Hashtable kwargs, params object [] args) {
 foo = _tup_1.Item1;
 bar = _tup_1.Item2;
 ";
-            Assert.AreEqual(sExp, XlatStmts(pySrc));
+            Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
 
-        [Test]
+        [Fact]
         public void Stmt_AssignTuple_Dummy()
         {
             var pySrc =
@@ -880,10 +879,10 @@ bar = _tup_1.Item2;
 @"_tup_1 = baz();
 bar = _tup_1.Item2;
 ";
-            Assert.AreEqual(sExp, XlatStmts(pySrc));
+            Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_AssignTuple_Nonlocals()
         {
             var pySrc =
@@ -894,10 +893,10 @@ bar = _tup_1.Item2;
 foo.x = _tup_1.Item1;
 foo.y = _tup_1.Item2;
 ";
-            Assert.AreEqual(sExp, XlatStmts(pySrc));
+            Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_TupleArguments()
         {
             var pySrc =
@@ -919,10 +918,10 @@ foo.y = _tup_1.Item2;
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_TupleSingletonAssignment()
         {
             var pySrc =
@@ -932,10 +931,10 @@ foo.y = _tup_1.Item2;
 @"_tup_1 = sdf();
 yx = _tup_1.Item1;
 ";
-            Assert.AreEqual(sExp, XlatStmts(pySrc));
+            Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_LambdaWithParams()
         {
             var pySrc =
@@ -944,10 +943,10 @@ yx = _tup_1.Item1;
             var sExp =
 @"Base = (args,kwargs) => null;
 ";
-            Assert.AreEqual(sExp, XlatStmts(pySrc).ToString());
+            Assert.Equal(sExp, XlatStmts(pySrc).ToString());
         }
 
-        [Test]
+        [Fact]
         public void Stmt_DefWithDefaultArgs()
         {
             var pySrc =
@@ -959,10 +958,10 @@ yx = _tup_1.Item1;
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
+            Assert.Equal(sExp, XlatMember(pySrc).ToString());
         }
 
-        [Test]
+        [Fact]
         public void Stmt_DelFromDictionary()
         {
             var pySrc =
@@ -975,10 +974,10 @@ yx = _tup_1.Item1;
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
+            Assert.Equal(sExp, XlatMember(pySrc).ToString());
         }
 
-        [Test]
+        [Fact]
         public void Stmt_NestedDef()
         {
             var pySrc =
@@ -1004,10 +1003,10 @@ yx = _tup_1.Item1;
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
+            Assert.Equal(sExp, XlatMember(pySrc).ToString());
         }
 
-        [Test]
+        [Fact]
         public void Stmt_foreach_tuple()
         {
             var pySrc =
@@ -1021,10 +1020,10 @@ yx = _tup_1.Item1;
     Console.WriteLine(a + b);
 }
 ";
-            Assert.AreEqual(sExp, XlatStmts(pySrc));
+            Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_foreach_class_property()
         {
             var pySrc =
@@ -1044,10 +1043,10 @@ yx = _tup_1.Item1;
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatStmts(pySrc));
+            Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Tuple_Assign()
         {
             var pySrc =
@@ -1057,10 +1056,10 @@ yx = _tup_1.Item1;
 @"a = c;
 b = d;
 ";
-            Assert.AreEqual(sExp, XlatStmts(pySrc));
+            Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Tuple_Assign_field()
         {
             var pySrc =
@@ -1070,10 +1069,10 @@ b = d;
 @"a.b = ""e"";
 c.de = ""f"";
 ";
-            Assert.AreEqual(sExp, XlatStmts(pySrc));
+            Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_For_Tuple_regression1()
         {
             var pySrc =
@@ -1094,10 +1093,10 @@ c.de = ""f"";
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatStmts(pySrc));
+            Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Use_CSharpVar_Unless_Null()
         {
             var pySrc =
@@ -1116,10 +1115,10 @@ c.de = ""f"";
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_DocString()
         {
             var pySrc =
@@ -1139,10 +1138,10 @@ c.de = ""f"";
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_try_except_with()
         {
             var pySrc =
@@ -1167,10 +1166,10 @@ c.de = ""f"";
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Property()
         {
             var pySrc =
@@ -1193,10 +1192,10 @@ c.de = ""f"";
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Property_WithAssignment()
         {
             var pySrc =
@@ -1221,10 +1220,10 @@ c.de = ""f"";
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Property_Method()
         {
             var pySrc =
@@ -1254,10 +1253,10 @@ c.de = ""f"";
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Property_DocComment()
         {
             var pySrc =
@@ -1282,10 +1281,10 @@ c.de = ""f"";
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Property_Setter()
         {
             var pySrc =
@@ -1316,10 +1315,10 @@ c.de = ""f"";
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Long_ArgList()
         {
             var pySrc =
@@ -1339,10 +1338,10 @@ c.de = ""f"";
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Method_Comments()
         {
             var pySrc =
@@ -1362,11 +1361,11 @@ c.de = ""f"";
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
 
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Multiple_Method_Comments()
         {
             var pySrc =
@@ -1394,12 +1393,12 @@ c.de = ""f"";
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
 
         }
 
 
-        [Test]
+        [Fact]
         public void Stmt_Comment_Before_Else_Clause()
         {
             var pySrc =
@@ -1417,10 +1416,10 @@ else:
     barnicate();
 }
 ";
-            Assert.AreEqual(sExp, XlatStmts(pySrc));
+            Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_DocComment_And_Comment()
         {
             var pySrc =
@@ -1441,10 +1440,10 @@ public static object func() {
 }
 
 "; 
-            Assert.AreEqual(sExp, XlatMember(pySrc));
+            Assert.Equal(sExp, XlatMember(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Regression()
         {
             var pySrc = @"
@@ -1464,10 +1463,10 @@ public static object func(object cfg_node) {
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pySrc));
+            Assert.Equal(sExp, XlatMember(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Regress4()
         {
             var pySrc =
@@ -1503,10 +1502,11 @@ public static object func(object cfg_node) {
 }
 ";
             #endregion
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Test(Description = "Reported in GitHub #15")]
+        // Reported in GitHub #15
+        [Fact]
         public void Stmt_Global()
         {
             var pySrc =
@@ -1532,10 +1532,10 @@ public static object func(object cfg_node) {
 }
 ";
             #endregion
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Stmt_Async()
         {
             var pySrc =
@@ -1552,10 +1552,11 @@ public static object func(object cfg_node) {
 }
 ";
             #endregion
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Test(Description = "Reported in GitHub issue 29")]
+        // "Reported in GitHub issue 29
+        [Fact]
         public void Stmt_funcdef_excess_positionalParameters()
         {
             var pySrc =
@@ -1570,7 +1571,7 @@ public static object func(object cfg_node) {
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pySrc));
+            Assert.Equal(sExp, XlatModule(pySrc));
         }
     }
 }

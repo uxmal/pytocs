@@ -15,7 +15,7 @@
 #endregion
 
 #if DEBUG
-using NUnit.Framework;
+using Xunit;
 using Pytocs.CodeModel;
 using Pytocs.Syntax;
 using Pytocs.TypeInference;
@@ -29,11 +29,9 @@ using System.Threading.Tasks;
 
 namespace Pytocs.Translate
 {
-    [TestFixture]
     public class LocalVariableTranslator
     {
-        [SetUp]
-        public void Setup()
+        public LocalVariableTranslator()
         {
         }
 
@@ -111,7 +109,7 @@ namespace Pytocs.Translate
                 .Select(n => gen.EscapeKeywordName(n)));
         }
 
-        [Test]
+        [Fact]
         public void Lvt_IfElseDeclaration()
         {
             var pySrc =
@@ -135,10 +133,10 @@ namespace Pytocs.Translate
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
+            Assert.Equal(sExp, XlatMember(pySrc).ToString());
         }
 
-        [Test]
+        [Fact]
         public void Lvi_ForceStandAloneDefinition()
         {
             var pySrc =
@@ -158,10 +156,10 @@ namespace Pytocs.Translate
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
+            Assert.Equal(sExp, XlatMember(pySrc).ToString());
         }
 
-        [Test]
+        [Fact]
         public void Lvi_LocalRedefinition()
         {
             var pySrc =
@@ -182,10 +180,10 @@ namespace Pytocs.Translate
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
+            Assert.Equal(sExp, XlatMember(pySrc).ToString());
         }
 
-        [Test]
+        [Fact]
         public void Lvi_LocalInBranch()
         {
             var pySrc =
@@ -206,10 +204,10 @@ namespace Pytocs.Translate
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
+            Assert.Equal(sExp, XlatMember(pySrc).ToString());
         }
 
-        [Test]
+        [Fact]
         public void Lvi_ModifyParameter()
         {
             var pySrc =
@@ -228,7 +226,7 @@ namespace Pytocs.Translate
 }
 
 ";
-            Assert.AreEqual(sExp, XlatMember(pySrc).ToString());
+            Assert.Equal(sExp, XlatMember(pySrc).ToString());
         }
     }
 }

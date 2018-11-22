@@ -142,8 +142,8 @@ atom: ('(' [yield_expr|testlist_comp] ')' |
 testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
 trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
 subscriptlist: subscript (',' subscript)* [',']
-subscript: test | [test] ':' [test] [sliceop]
-sliceop: ':' [test]
+subscript: test | [Fact] ':' [Fact] [sliceop]
+sliceop: ':' [Fact]
 exprlist: (expr|star_expr) (',' (expr|star_expr))* [',']
 testlist: test (',' test)* [',']
 dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
@@ -286,8 +286,8 @@ testlist_comp: test ( comp_for | (',' test)* [','] )
 lambdef: 'lambda' [varargslist] ':' test
 trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
 subscriptlist: subscript (',' subscript)* [',']
-subscript: '.' '.' '.' | test | [test] ':' [test] [sliceop]
-sliceop: ':' [test]
+subscript: '.' '.' '.' | test | [Fact] ':' [Fact] [sliceop]
+sliceop: ':' [Fact]
 exprlist: expr (',' expr)* [',']
 testlist: test (',' test)* [',']
 dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
@@ -2154,7 +2154,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             return subs;
         }
-        //subscript: test | [test] ':' [test] [sliceop]
+        //subscript: test | [Fact] ':' [Fact] [sliceop]
         public Slice subscript()
         {
             Exp start = null;
@@ -2183,7 +2183,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 lexer.LineNumber);       //$BUG: should be position, not line number.
         }
 
-        //sliceop: ':' [test]
+        //sliceop: ':' [Fact]
         public Exp sliceop()
         {
             Expect(TokenType.COLON);

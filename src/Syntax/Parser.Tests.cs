@@ -14,7 +14,7 @@
 //  limitations under the License.
 #endregion
 
-using NUnit.Framework;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -24,7 +24,6 @@ using System.Threading.Tasks;
 
 namespace Pytocs.Syntax
 {
-    [TestFixture]
     public class ParserTests
     {
         private static readonly string nl = Environment.NewLine;
@@ -67,7 +66,7 @@ namespace Pytocs.Syntax
 
         private void AssertExp(string sExp, Exp exp)
         {
-            Assert.AreEqual(sExp, exp.ToString());
+            Assert.Equal(sExp, exp.ToString());
         }
 
         private void AssertStmt(string sExp, List<Statement> stmts)
@@ -80,10 +79,10 @@ namespace Pytocs.Syntax
                     sb.AppendLine();
                 sb.Append(stmt);
             }
-            Assert.AreEqual(sExp, sb.ToString());
+            Assert.Equal(sExp, sb.ToString());
         }
 
-        [Test]
+        [Fact]
         public void Parse_DottedName()
         {
             var parser = new Parser("foo.py", Lex("foo.bar.baz,"));
@@ -91,28 +90,29 @@ namespace Pytocs.Syntax
             AssertExp("foo.bar.baz", exp);
         }
 
-        [Test]
+        [Fact]
         public void Parse_ExpressionWithString()
         {
             var exp = ParseExp(@"menuitem.connect(""realize"", self.on_menuitem_realize, refactoring)");
             AssertExp("menuitem.connect(\"realize\",self.on_menuitem_realize,refactoring)", exp);
         }
 
-        [Test(Description = "We do this for backwards compatability")]
+        // We do this for backwards compatability
+        [Fact]
         public void Parse_PrintStatement()
         {
             var stmt = ParseStmt("print \"Hello\"\n");
             AssertStmt("print \"Hello\"" + nl, stmt);
         }
 
-        [Test]
+        [Fact]
         public void Parse_EmptyPrintStatement()
         {
             var stmt = ParseStmt("print\n");
             AssertStmt("print" + nl, stmt);
         }
 
-        [Test]
+        [Fact]
         public void Parse_Initializer()
         {
             var stmt = ParseStmt(
@@ -125,14 +125,14 @@ baz(),
             AssertStmt(sExp, stmt);
         }
 
-        [Test]
+        [Fact]
         public void Lex_IdWithUnderscore()
         {
             var exp = ParseExp("__init__");
             AssertExp("__init__", exp);
         }
 
-        [Test]
+        [Fact]
         public void Parse_SetBuilder()
         {
             var pyExpr = ParseStmt(
@@ -144,7 +144,7 @@ baz(),
             AssertStmt("r={ \"major\" : \"2\", \"minor\" : \"7\",  }\r\n", pyExpr);
         }
 
-        [Test]
+        [Fact]
         public void Parse_AssignEmptyString()
         {
             var pyStm = ParseStmt("for x in L : s += x\r\n");
@@ -156,7 +156,7 @@ baz(),
 
         }
 
-        [Test]
+        [Fact]
         public void Parse_Shift()
         {
             var pyStm = ParseStmt("return bit >> BitSet.LOG_BITS\r\n");
@@ -164,7 +164,7 @@ baz(),
             AssertStmt(sExp, pyStm);
         }
 
-        [Test]
+        [Fact]
         public void Parse_longInt()
         {
             var pyStm = ParseStmt("return (1L << pos)\r\n");
@@ -172,35 +172,35 @@ baz(),
             AssertStmt(sExp, pyStm);
         }
 
-        [Test]
+        [Fact]
         public void Parse_print_to_stderr()
         {
             var pyStm = ParseStmt("print >> sys.stderr,\"Hello\"\r\n");
             AssertStmt("print >> sys.stderr, \"Hello\"" + nl, pyStm);
         }
 
-        [Test]
+        [Fact]
         public void Parse_EmptyToken()
         {
             var pyExp = ParseExp("()");
-            Assert.AreEqual("()", pyExp.ToString());
+            Assert.Equal("()", pyExp.ToString());
         }
 
-        [Test]
+        [Fact]
         public void Parse_Eof()
         {
             var pyStm = ParseStmt("return");
             AssertStmt("return\r\n", pyStm);
         }
 
-        [Test]
+        [Fact]
         public void Parse_FuncdefEof()
         {
             var pyStm = ParseFuncdef("def foo():\n    return");
-            Assert.IsInstanceOf<FunctionDef>(pyStm);
+            Assert.IsAssignableFrom<FunctionDef>(pyStm);
         }
 
-        [Test]
+        [Fact]
         public void Parse_MultipleExceptClauses()
         {
             var pyStm = (TryStatement)ParseStmt(
@@ -213,24 +213,24 @@ except Bar:
 except:
     c = ''
 ")[0];
-            Assert.AreEqual(3, pyStm.exHandlers.Count);
+            Assert.Equal(3, pyStm.exHandlers.Count);
         }
 
-        [Test]
+        [Fact]
         public void Parse_Raise_ObsoleteSyntax()
         {
             var pyStm = ParseStmt("raise AttributeError, \"widget %s not found\" % name\n");
             AssertStmt("raise AttributeError, ((\"widget %s not found\" % name),None)\r\n", pyStm);
         }
 
-        [Test]
+        [Fact]
         public void Parse_Print_TrailingComma()
         {
             var pyStm = ParseStmt("print 'foo',\n");
             AssertStmt("print \"foo\",\r\n", pyStm);
         }
 
-        [Test]
+        [Fact]
         public void Parse_ArgList_TrailingComma()
         {
             var pyStm = ParseFuncdef("def SplitAll(operand, ): pass\r\n");
@@ -238,39 +238,39 @@ except:
 @"def SplitAll(operand):
     pass
 ";
-            Assert.AreEqual(sExp, pyStm.ToString());
+            Assert.Equal(sExp, pyStm.ToString());
         }
 
-        [Test]
+        [Fact]
         public void Parse_Exec()
         {
             var pyStm = ParseStmt("exec code in globals_, locals_\n");
             AssertStmt("exec code in globals_, locals_\r\n", pyStm);
         }
 
-        [Test]
+        [Fact]
         public void Parse_DefaultArgValue()
         {
             var pyStm = ParseStmt("def foo(bar = baz.naz): pass\n");
             var funcDef = (FunctionDef)pyStm[0];
-            Assert.AreEqual("bar=baz.naz", funcDef.parameters[0].ToString());
+            Assert.Equal("bar=baz.naz", funcDef.parameters[0].ToString());
         }
 
-        [Test]
+        [Fact]
         public void Parse_ListInitializer_SingleValue()
         {
             var pyStm = ParseStmt("a = [ 'Hello' ]\n");
             AssertStmt("a=[\"Hello\"]\r\n", pyStm);
         }
 
-        [Test]
+        [Fact]
         public void Parse_StaggeredComment()
         {
             var pyStm = (FunctionDef)ParseFuncdef("def x():\n  version = 1\n  #foo\n    #bar\n");
-            Assert.AreEqual("version=1\r\n#foo\r\n#bar\r\n", pyStm.body.ToString());
+            Assert.Equal("version=1\r\n#foo\r\n#bar\r\n", pyStm.body.ToString());
         }
 
-        [Test]
+        [Fact]
         public void Parse_CommentedIf()
         {
             var pyStm = ParseStmt(
@@ -290,7 +290,7 @@ except:
             AssertStmt(sExp, pyStm);
         }
 
-        [Test]
+        [Fact]
         public void Parse_TryWithComments()
         {
             var pyStm = ParseStmt(
@@ -322,7 +322,7 @@ except antlr.RecognitionException as e:
             AssertStmt(sExp, pyStm);
         }
 
-        [Test]
+        [Fact]
         public void Parse_CommentAfterElse()
         {
             var pyStm =
@@ -347,7 +347,7 @@ else:
             AssertStmt(sExp, ParseStmt(pyStm));
         }
 
-        [Test]
+        [Fact]
         public void Parse_ListFor()
         {
             var pySrc = "[int2byte(b) for b in bytelist]";
@@ -355,7 +355,7 @@ else:
             AssertExp(sExp, ParseExp(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_CompFor()
         {
             var pySrc = "sum(int2byte(b) for b in bytelist)";
@@ -363,7 +363,7 @@ else:
             AssertExp(sExp, ParseExp(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_Test()
         {
             var pySrc = "x if foo else y";
@@ -371,7 +371,7 @@ else:
             AssertExp(sExp, ParseExp(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_Decoration()
         {
             var pySrc =
@@ -387,7 +387,7 @@ def wrapper(*args,**kwargs):
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_With()
         {
             var pySrc =
@@ -401,7 +401,7 @@ def wrapper(*args,**kwargs):
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_YieldFrom()
         {
             var pySrc =
@@ -417,7 +417,7 @@ def wrapper(*args,**kwargs):
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_Call()
         {
             var pySrc = "func(a, b=c, *d, **e)";
@@ -425,16 +425,16 @@ def wrapper(*args,**kwargs):
             AssertExp(sExp, ParseExp(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_Id_Pos()
         {
             var pySrc = "id";
             var e = ParseExp(pySrc);
-            Assert.AreEqual(0, e.Start);
-            Assert.AreEqual(2, e.End);
+            Assert.Equal(0, e.Start);
+            Assert.Equal(2, e.End);
         }
 
-        [Test]
+        [Fact]
         public void Parse_Set()
         {
             var pySrc = "{self._path_merge_points[addr]}";
@@ -442,7 +442,7 @@ def wrapper(*args,**kwargs):
             AssertExp("{ self._path_merge_points[addr] }", e);
         }
 
-        [Test]
+        [Fact]
         public void Parse_Slice()
         {
             var pySrc = "a[::]";
@@ -450,7 +450,7 @@ def wrapper(*args,**kwargs):
             AssertExp("a[::]", e);
         }
 
-        [Test]
+        [Fact]
         public void Parse_Regression1()
         {
             var pySrc =
@@ -465,7 +465,7 @@ def wrapper(*args,**kwargs):
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_Regression2()
         {
             var pySrc =
@@ -477,7 +477,7 @@ def wrapper(*args,**kwargs):
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_Regression3()
         {
             var pySrc =
@@ -489,7 +489,7 @@ def wrapper(*args,**kwargs):
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_SetComprehension()
         {
             var pySrc = "{ id(e) for e in self._breakpoints[t] }";
@@ -497,7 +497,7 @@ def wrapper(*args,**kwargs):
             AssertExp(sExp, ParseExp(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_TupleArguments()
         {
             var pySrc =
@@ -511,7 +511,7 @@ def wrapper(*args,**kwargs):
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_LambdaWithParams()
         {
             var pySrc =
@@ -523,7 +523,7 @@ def wrapper(*args,**kwargs):
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_EolComment()
         {
             var pySrc =
@@ -538,7 +538,7 @@ def wrapper(*args,**kwargs):
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_ReturnWithComment()
         {
             var pySrc =
@@ -554,7 +554,7 @@ def wrapper(*args,**kwargs):
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_FunctionDef()
         {
             var pySrc =
@@ -572,7 +572,7 @@ def wrapper(*args,**kwargs):
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_SetNamedArgumentValue()
         {
             var pySrc =
@@ -586,7 +586,7 @@ def wrapper(*args,**kwargs):
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_Comment_Before_Else_Clause()
         {
             var pySrc =
@@ -606,7 +606,7 @@ else:
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_Trailing_Comments_After_If()
         {
             var pySrc =
@@ -623,10 +623,10 @@ else:
     
 ";
             var pyStm = ParseFuncdef(pySrc);
-            Assert.AreEqual(sExp, pyStm.ToString());
+            Assert.Equal(sExp, pyStm.ToString());
         }
 
-        [Test]
+        [Fact]
         public void Parse_NestedDef()
         {
             var pySrc =
@@ -654,7 +654,7 @@ else:
 
         }
 
-        [Test]
+        [Fact]
         public void Parse_Blank_Lines()
         {
             var pySrc =
@@ -694,7 +694,7 @@ else:
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_Trailing_Comment()
         {
             var pySrc =
@@ -713,7 +713,7 @@ else:
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parse_Trailing_Tuple()
         {
             var pySrc =
@@ -733,7 +733,7 @@ else:
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parser_DeeplyNestedStatementFollowedByComment()
         {
             var pySrc =
@@ -760,7 +760,8 @@ else:
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test(Description = "Reported in Github 26")]
+        // Reported in Github 26
+        [Fact]
         public void Parser_Infinity()
         {
             var pySrc =
@@ -772,7 +773,8 @@ else:
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test(Description = "Reported in Github 26")]
+        // Reported in Github 26
+        [Fact]
         public void Parser_complex()
         {
             var pySrc = @"3 + 2j";
@@ -780,7 +782,7 @@ else:
             AssertExp(sExp, ParseExp(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parser_async_await()
         {
             var pySrc =
@@ -794,7 +796,8 @@ else:
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test(Description = "Reported in GitHub issue 29")]
+        // Reported in GitHub issue 29
+        [Fact]
         public void Parser_funcdef_excess_positionalParameters()
         {
             var pySrc =
@@ -808,7 +811,7 @@ else:
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Test]
+        [Fact]
         public void Parser_ListComprehension_Alternating_fors()
         {
             var pySrc = "states = [state for (stash, states) in self.simgr.stashes.items() if stash != 'pruned' for state in states]\n";

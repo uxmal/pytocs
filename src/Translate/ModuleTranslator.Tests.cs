@@ -16,7 +16,7 @@
 
 #if DEBUG
 using Pytocs.CodeModel;
-using NUnit.Framework;
+using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -30,14 +30,12 @@ using Pytocs.Types;
 
 namespace Pytocs.Translate
 {
-    [TestFixture]
     public class ModuleTranslatorTests
     {
         private IFileSystem fs;
         private ILogger logger;
 
-        [SetUp]
-        public void Setup()
+        public ModuleTranslatorTests()
         {
             this.fs = new FakeFileSystem();
             this.logger = new FakeLogger();
@@ -68,7 +66,7 @@ namespace Pytocs.Translate
             return writer.ToString();
         }
 
-        [Test]
+        [Fact]
         public void Module_UsesList()
         {
             var pyModule =
@@ -87,10 +85,10 @@ namespace Pytocs.Translate
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pyModule));
+            Assert.Equal(sExp, XlatModule(pyModule));
         }
 
-        [Test]
+        [Fact]
         public void Module_ComplexAssignment()
         {
             var pyModule =
@@ -107,10 +105,10 @@ namespace Pytocs.Translate
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pyModule));
+            Assert.Equal(sExp, XlatModule(pyModule));
         }
 
-        [Test]
+        [Fact]
         public void Module_StandaloneFn()
         {
             var pyModule =
@@ -127,10 +125,10 @@ namespace Pytocs.Translate
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pyModule));
+            Assert.Equal(sExp, XlatModule(pyModule));
         }
 
-        [Test]
+        [Fact]
         public void Module_DocComment()
         {
             var pyModule =
@@ -148,10 +146,10 @@ namespace test {
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pyModule));
+            Assert.Equal(sExp, XlatModule(pyModule));
         }
 
-        [Test]
+        [Fact]
         public void Module_MemberVars()
         {
             var pyModule =
@@ -176,10 +174,10 @@ namespace test {
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pyModule));
+            Assert.Equal(sExp, XlatModule(pyModule));
         }
 
-        [Test]
+        [Fact]
         public void Module__init__file()
         {
             var pyModule =
@@ -210,10 +208,10 @@ class MyClass:
 ";
             Debug.Print(XlatModule(pyModule, "__init__.py"));
 
-            Assert.AreEqual(sExp, XlatModule(pyModule, "__init__.py"));
+            Assert.Equal(sExp, XlatModule(pyModule, "__init__.py"));
         }
 
-        [Test]
+        [Fact]
         public void Module__init__nested_classes()
         {
             var pyModule =
@@ -235,10 +233,10 @@ class OuterClass:
     }
 }
 ";
-            Assert.AreEqual(sExp, XlatModule(pyModule, "__init__.py"));
+            Assert.Equal(sExp, XlatModule(pyModule, "__init__.py"));
         }
 
-        [Test]
+        [Fact]
         public void Module_import_as()
         {
             var pyModule =
@@ -255,10 +253,10 @@ import vivisect.const as viv_const
 }
 ";
             Debug.Print(XlatModule(pyModule));
-            Assert.AreEqual(sExp, XlatModule(pyModule));
+            Assert.Equal(sExp, XlatModule(pyModule));
         }
 
-        [Test]
+        [Fact]
         public void Module_init_global()
         {
             var pyModule =
@@ -278,10 +276,10 @@ d = {}
 }
 ";
             Debug.Print(XlatModule(pyModule));
-            Assert.AreEqual(sExp, XlatModule(pyModule));
+            Assert.Equal(sExp, XlatModule(pyModule));
         }
 
-        [Test]
+        [Fact]
         public void Module_point_class_members()
         {
             var pyModule =
@@ -315,7 +313,7 @@ pt = Point(3.5, -0.4)
 }
 ";
             Debug.Print(XlatModule(pyModule));
-            Assert.AreEqual(sExp, XlatModule(pyModule));
+            Assert.Equal(sExp, XlatModule(pyModule));
         }
     }
 }
