@@ -32,7 +32,7 @@ after_build:
         ;
 
 test_script:
-  - cmd: nunit-console-x86.exe ./src/bin/%CONFIGURATION%/net451/pytocs.exe /framework:net-4.5
+  - cmd: xunit.console.clr4 ./src/bin/%CONFIGURATION%/net451/pytocs.exe /appveyor
  # - cmd: python ./subjects/regressionTests.py --check-output --configuration=%CONFIGURATION%
 
 artifacts:
