@@ -32,6 +32,7 @@ after_build:
         ;
 
 test_script:
+  - cmd: dir /s .\src\Core\bin\%CONFIGURATION%
   - cmd: xunit.console.clr4 ./src/Core/bin/%CONFIGURATION%/net471/Pytocs.Core.dll /appveyor
  # - cmd: python ./subjects/regressionTests.py --check-output --configuration=%CONFIGURATION%
 
