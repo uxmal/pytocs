@@ -1,4 +1,4 @@
-version: 1.0.0.{build}
+version: 1.1.0.{build}
 
 init: 
   - git config --global core.autocrlf true 
@@ -22,12 +22,13 @@ before_build:
 after_build:
   - ps : >-
         $shortHash = $env:APPVEYOR_REPO_COMMIT.Substring(0, 10);
-        $version = ls ./src/bin/$env:CONFIGURATION/pytocs.exe | % VersionInfo | % ProductVersion;
+        $version = ls ./src/Cli/bin/$env:CONFIGURATION/net471/pytocs.exe | % VersionInfo | % ProductVersion;
         mkdir $env:artifacts_dir;
         ;
         <# zip pytocs.exe, append version and short hash #>;
         "[after_build] compressing Pytocs...";
-        7z a $env:artifacts_dir/pytocs-$version-$shortHash.zip ./src/bin/$env:CONFIGURATION/.;
+        7z a $env:artifacts_dir/pytocs-net471-$version-$shortHash.zip ./src/Cli/bin/$env:CONFIGURATION/net471/.;
+        7z a $env:artifacts_dir/pytocs-netcore21-$version-$shortHash.zip ./src/Cli/bin/$env:CONFIGURATION/netcoreapp2.1/.;
         ;
 
 test_script:
@@ -35,5 +36,7 @@ test_script:
  # - cmd: python ./subjects/regressionTests.py --check-output --configuration=%CONFIGURATION%
 
 artifacts:
-  - path: bin/Pytocs-*.zip
-    name: Pytocs executable
+  - path: bin/net471/Pytocs-*.zip
+    name: Pytocs executable for .NET Framework
+  - path: bin/netcoreapp2.1/Pytocs-*.zip
+    name: Pytocs executable for .NET Core
