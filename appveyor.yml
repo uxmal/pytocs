@@ -20,6 +20,7 @@ before_build:
   - nuget restore src/pytocs.sln
 
 after_build:
+  - cmd: echo "AFTER BUILD"
   - ps : >-
         $shortHash = $env:APPVEYOR_REPO_COMMIT.Substring(0, 10);
         $version = ls ./src/Cli/bin/$env:CONFIGURATION/net471/pytocs.exe | % VersionInfo | % ProductVersion;
