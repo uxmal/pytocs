@@ -5,8 +5,6 @@
     <TargetFrameworks>net471;netcoreapp2.1</TargetFrameworks>
     <ApplicationIcon />
     <authors>John Källén</authors>
-    <OutputType>exe</OutputType>
-    <StartupObject>Pytocs.Program</StartupObject>
     <PackageProjectUrl>https://github.com/uxmal/pytocs</PackageProjectUrl>
     <RepositoryType>https://github.com/uxmal/pytocs</RepositoryType>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>

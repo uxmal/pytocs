@@ -25,7 +25,7 @@ using Pytocs.Translate;
 using Pytocs.TypeInference;
 using Pytocs.Types;
 
-namespace Pytocs
+namespace Pytocs.Cli
 {
     class Program
     {
