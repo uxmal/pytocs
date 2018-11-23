@@ -26,8 +26,9 @@ after_build:
         mkdir $env:artifacts_dir;
         ;
         <# zip pytocs.exe, append version and short hash #>;
-        "[after_build] compressing Pytocs...";
+        "[after_build] compressing Pytocs (.NET Framework)...";
         7z a $env:artifacts_dir/pytocs-net471-$version-$shortHash.zip ./src/Cli/bin/$env:CONFIGURATION/net471/.;
+        "[after_build] compressing Pytocs (.NET Core)...";
         7z a $env:artifacts_dir/pytocs-netcore21-$version-$shortHash.zip ./src/Cli/bin/$env:CONFIGURATION/netcoreapp2.1/.;
         ;
 
@@ -37,7 +38,5 @@ test_script:
  # - cmd: python ./subjects/regressionTests.py --check-output --configuration=%CONFIGURATION%
 
 artifacts:
-  - path: Cli/bin/$(CONFIGURATION)/net471/Pytocs-*.zip
-    name: Pytocs executable for .NET Framework
-  - path: Cli/bin/$(CONFIGURATION)/netcoreapp2.1/Pytocs-*.zip
-    name: Pytocs executable for .NET Core
+  - path: Pytocs-*.zip
+    name: Pytocs executables
