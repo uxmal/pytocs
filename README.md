@@ -1,6 +1,6 @@
 # pytocs
 
-[![Join the chat at https://gitter.im/pytocs/Lobby](https://badges.gitter.im/pytocs/Lobby.svg)](https://gitter.im/pytocs/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+[![Join the chat at https://gitter.im/uxmal/pytocs/Lobby](https://badges.gitter.im/uxmal/pytocs/Lobby.svg)](https://gitter.im/uxmal/pytocs/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
 Converts Python source to C#
 
