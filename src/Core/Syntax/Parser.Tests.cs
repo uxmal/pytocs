@@ -811,7 +811,7 @@ else:
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Fact]
+        [Fact(DisplayName =nameof(Parser_ListComprehension_Alternating_fors))]
         public void Parser_ListComprehension_Alternating_fors()
         {
             var pySrc = "states = [state for (stash, states) in self.simgr.stashes.items() if stash != 'pruned' for state in states]\n";
@@ -820,5 +820,13 @@ else:
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
+        [Fact(DisplayName = nameof(Parser_VariableAnnotation))]
+        public void Parser_VariableAnnotation()
+        {
+            var pySrc = "ints: List[int] = []";
+            var sExp = "ints: List[int]=[]" + Environment.NewLine;
+
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
     }
 }

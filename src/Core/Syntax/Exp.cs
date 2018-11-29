@@ -1051,6 +1051,7 @@ namespace Pytocs.Syntax
         public readonly Exp Dst;
         public readonly Op op;
         public readonly Exp Src;
+        public readonly Exp Annotation;
 
         public AssignExp(Exp lhs, Op op, Exp rhs, string filename, int start, int end)
             : base(filename, start, end)
@@ -1058,6 +1059,16 @@ namespace Pytocs.Syntax
             this.Dst = lhs;
             this.op = op;
             this.Src = rhs;
+            this.Annotation = null;
+        }
+
+        public AssignExp(Exp lhs, Exp annotation, Op op, Exp rhs, string filename, int start, int end)
+        : base(filename, start, end)
+        {
+            this.Dst = lhs;
+            this.op = op;
+            this.Src = rhs;
+            this.Annotation = annotation;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -1073,6 +1084,11 @@ namespace Pytocs.Syntax
         public override void Write(TextWriter writer)
         {
             Dst.Write(writer);
+            if (Annotation != null)
+            {
+                writer.Write(": ");
+                this.Annotation.Write(writer);
+            }
             writer.Write(base.OpToString(op));
             Src.Write(writer);
         }

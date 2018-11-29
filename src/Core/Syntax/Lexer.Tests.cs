@@ -266,7 +266,7 @@ namespace Pytocs.Syntax
             Assert.Equal("\\33", token);
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Lex_RealLiteral))]
         public void Lex_RealLiteral()
         {
             var token = Lex("0.1");

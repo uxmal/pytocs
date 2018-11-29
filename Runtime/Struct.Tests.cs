@@ -45,14 +45,14 @@ namespace pytocs.runtime
                 throw new ArgumentException($"Invalid hex digit '{ch}' (U+{(int)ch:X4}");
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Struct_unpack_LEInt))]
         public void Struct_unpack_LEInt()
         {
             var tup = @struct.unpack<Tuple<int>>("<i", hex("78563412"));
             Assert.Equal(0x12345678, tup.Item1);
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Struct_unpack_BEint_ushort))]
         public void Struct_unpack_BEint_ushort()
         {
             var tup = @struct.unpack<Tuple<int,ushort>>(">iH", hex("12345678FCB0"));
@@ -60,7 +60,7 @@ namespace pytocs.runtime
             Assert.Equal((ushort)0xFCB0, tup.Item2);
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Struct_unpack_padchars))]
         public void Struct_unpack_padchars()
         {
             var tup = @struct.unpack<Tuple<uint>>(">4xI", hex("5041440012345678"));

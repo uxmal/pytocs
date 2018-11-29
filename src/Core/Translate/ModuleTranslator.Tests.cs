@@ -66,7 +66,7 @@ namespace Pytocs.Translate
             return writer.ToString();
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Module_UsesList))]
         public void Module_UsesList()
         {
             var pyModule =
@@ -88,7 +88,7 @@ namespace Pytocs.Translate
             Assert.Equal(sExp, XlatModule(pyModule));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Module_ComplexAssignment))]
         public void Module_ComplexAssignment()
         {
             var pyModule =
@@ -108,7 +108,7 @@ namespace Pytocs.Translate
             Assert.Equal(sExp, XlatModule(pyModule));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Module_StandaloneFn))]
         public void Module_StandaloneFn()
         {
             var pyModule =
@@ -128,7 +128,7 @@ namespace Pytocs.Translate
             Assert.Equal(sExp, XlatModule(pyModule));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Module_DocComment))]
         public void Module_DocComment()
         {
             var pyModule =
@@ -149,7 +149,7 @@ namespace test {
             Assert.Equal(sExp, XlatModule(pyModule));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Module_MemberVars))]
         public void Module_MemberVars()
         {
             var pyModule =
@@ -177,7 +177,7 @@ namespace test {
             Assert.Equal(sExp, XlatModule(pyModule));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Module__init__file))]
         public void Module__init__file()
         {
             var pyModule =
@@ -211,7 +211,7 @@ class MyClass:
             Assert.Equal(sExp, XlatModule(pyModule, "__init__.py"));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Module__init__nested_classes))]
         public void Module__init__nested_classes()
         {
             var pyModule =
@@ -236,7 +236,7 @@ class OuterClass:
             Assert.Equal(sExp, XlatModule(pyModule, "__init__.py"));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Module_import_as))]
         public void Module_import_as()
         {
             var pyModule =
@@ -256,7 +256,7 @@ import vivisect.const as viv_const
             Assert.Equal(sExp, XlatModule(pyModule));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Module_init_global))]
         public void Module_init_global()
         {
             var pyModule =
@@ -279,7 +279,7 @@ d = {}
             Assert.Equal(sExp, XlatModule(pyModule));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Module_point_class_members))]
         public void Module_point_class_members()
         {
             var pyModule =
@@ -315,6 +315,35 @@ pt = Point(3.5, -0.4)
             Debug.Print(XlatModule(pyModule));
             Assert.Equal(sExp, XlatModule(pyModule));
         }
+
+        [Fact(DisplayName = nameof(Module_slots))]
+        public void Module_slots()
+        {
+            var pyModule =
+@"
+class Point:
+    __slots__ = 'x','y'
+";
+            var sExp =
+@"namespace test {
+    
+    using System;
+    
+    public static class module {
+        
+        public class Point {
+            
+            public object x;
+            
+            public object y;
+        }
+    }
+}
+";
+            Debug.Print(XlatModule(pyModule));
+            Assert.Equal(sExp, XlatModule(pyModule));
+        }
+
     }
 }
 #endif

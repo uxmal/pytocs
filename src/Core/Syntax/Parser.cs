@@ -892,7 +892,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
         }
 
-        //expr_stmt: testlist_star_expr (augassign (yield_expr|testlist)) |
+        //expr_stmt: testlist_star_expr (annasign | augassign (yield_expr|testlist)) |
         //                     ('=' (yield_expr|testlist_star_expr))*)
         public Statement expr_stmt()
         {
@@ -902,6 +902,12 @@ eval_input: testlist NEWLINE* ENDMARKER
                 return print_stmt();
             }
             var lhs = testlist_star_expr();
+            if (Peek(TokenType.COLON))
+            {
+                var (a, i) = annasign();
+                var ass = new AssignExp(lhs, a, Op.Assign, i, filename, lhs.Start, (i ?? a).End);
+                lhs = ass;
+            }
             if (Peek(augassign_set))
             {
                 var op = augassign();
@@ -1005,6 +1011,20 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             return exprs.Count == 1 ? exprs[0] : new ExpList(exprs, filename, 0, 0);
         }
+
+        // annassign: ':' test ['=' test]
+        public (Exp, Exp) annasign()
+        {
+            Expect(TokenType.COLON);
+            Exp annotation = test();
+            Exp initializer = null;
+            if (PeekAndDiscard(TokenType.EQ))
+            {
+                initializer = test();
+            }
+            return (annotation, initializer);
+        }
+
         //augassign: ('+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' |
         //            '<<=' | '>>=' | '**=' | '//=')
         public Op augassign()
