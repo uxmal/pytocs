@@ -1,4 +1,7 @@
 # pytocs
+
+[![Join the chat at https://gitter.im/pytocs/Lobby](https://badges.gitter.im/pytocs/Lobby.svg)](https://gitter.im/pytocs/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Converts Python source to C#
 
 pytocs is a command line tool I wrote as a hobby project to convert Python source code to C#. 
