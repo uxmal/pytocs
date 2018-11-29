@@ -251,7 +251,8 @@ namespace Pytocs.Translate
         {
             if (e.Expression is AssignExp ass)
             {
-                if (ass.Dst is Identifier idDst)
+                if (ass.Dst is Identifier idDst &&
+                    idDst.Name != "__slots__")
                 {
                     var (dt, nmspcs) = types.TranslateTypeOf(idDst);
                     gen.EnsureImports(nmspcs);
@@ -378,31 +379,11 @@ namespace Pytocs.Translate
 
         private void ClassTranslator_GenerateField(Identifier id, ExpTranslator xlat, AssignExp ass)
         {
-            IEnumerable<Exp> slotNames = null;
-            if (ass.Src is PyList srcList)
-            {
-                slotNames = srcList.elts;
-            }
-            else if (ass.Src is PyTuple srcTuple)
-            {
-                slotNames = srcTuple.values;
-            }
             if (id.Name == "__slots__")
             {
-                if (slotNames == null)
-                {
-                    // dynamically generated slots are hard.
-                    gen.Comment(ass.ToString());
-                }
-                else
-                {
-                    foreach (var slotName in slotNames.OfType<Str>())
-                    {
-                        //$TODO: test type inference for slots.
-                        var slotType = new CodeTypeReference(typeof(object));
-                        GenerateField(slotName.s, slotType, null);
-                    }
-                }
+                // We should already have analyzed the slots in 
+                // the type inference phase, so we ignore __slots__.
+                return;
             }
             else
             {

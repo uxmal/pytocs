@@ -327,8 +327,6 @@ class Point:
             var sExp =
 @"namespace test {
     
-    using System;
-    
     public static class module {
         
         public class Point {
@@ -344,6 +342,40 @@ class Point:
             Assert.Equal(sExp, XlatModule(pyModule));
         }
 
+        [Fact(DisplayName = nameof(Module_slots))]
+        public void Module_slots_with_types()
+        {
+            var pyModule =
+@"
+class Frob:
+    __slots__ = 'a','b'
+
+    def frob(self):
+        self.a = 'Hello'
+        self.b = 42
+";
+            var sExp =
+@"namespace test {
+    
+    public static class module {
+        
+        public class Frob {
+            
+            public string a;
+            
+            public int b;
+            
+            public virtual object frob() {
+                this.a = ""Hello"";
+                this.b = 42;
+            }
+        }
+    }
+}
+";
+            Debug.Print(XlatModule(pyModule));
+            Assert.Equal(sExp, XlatModule(pyModule));
+        }
     }
 }
 #endif

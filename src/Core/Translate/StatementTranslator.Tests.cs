@@ -677,27 +677,6 @@ public static object foo() {
         }
 
         [Fact]
-        public void Class_slots()
-        {
-            var pyCls =
-@"class MyClass:
-   __slots__ = [ 'foo', 'bar', 'baz' ]
-";
-            var sExp =
-@"public class MyClass {
-    
-    public object foo;
-    
-    public object bar;
-    
-    public object baz;
-}
-
-";
-            Assert.Equal(sExp, XlatMember(pyCls));
-        }
-
-        [Fact]
         public void Class_ComputedSlots()
         {
             var pyCls =

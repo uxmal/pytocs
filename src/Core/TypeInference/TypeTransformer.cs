@@ -51,9 +51,50 @@ namespace Pytocs.TypeInference
 
         public DataType VisitAssignExp(AssignExp a)
         {
-            DataType valueType = a.Src.Accept(this);
-            scope.BindByScope(analyzer, a.Dst, valueType);
+            if (scope.stateType == State.StateType.CLASS &&
+                a.Dst is Identifier id &&
+                id.Name == "__slots__")
+            {
+                // The __slots__ attribute needs to be handled specially:
+                // it actually introduces new attributes.
+                BindClassSlots(a.Src);
+            }
+            else
+            {
+                DataType valueType = a.Src.Accept(this);
+                scope.BindByScope(analyzer, a.Dst, valueType);
+            }
             return DataType.Cont;
+        }
+
+        private void BindClassSlots(Exp eSlotNames)
+        {
+            IEnumerable<Exp> slotNames = null;
+            switch (eSlotNames)
+            {
+            case PyList srcList:
+                slotNames = srcList.elts;
+                break;
+            case PyTuple srcTuple:
+                slotNames = srcTuple.values;
+                break;
+            case ExpList expList:
+                slotNames = expList.Expressions;
+                break;
+            }
+            if (slotNames == null)
+            {
+                //$TODO: dynamically generated slots are hard.
+            }
+            else
+            {
+                // Generate an attribute binding for each slot.
+                foreach (var slotName in slotNames.OfType<Str>())
+                {
+                    var id = new Identifier(slotName.s, slotName.Filename, slotName.Start, slotName.End);
+                    scope.Bind(analyzer, id, DataType.Unknown, BindingKind.ATTRIBUTE);
+                }
+            }
         }
 
         public DataType VisitAwait(AwaitExp e)
