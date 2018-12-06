@@ -62,13 +62,15 @@ class MyClass:
         for (i,strg) in lst.iterate():
             print "index: %d strg: %s\n" % (i, strg)
  
-    # list comprehension
+    # list comprehension, generating linQ output.
     def apply_map(mapfn, filterfn):
         return [mapfn(n) for n in lst if filterfn]
 ```
 Translates to:
 ```C#
 using System;
+
+using System.Linq;
 
 public static class readme {
     
@@ -80,14 +82,13 @@ public static class readme {
         }
         
         // arithmetic and exceptions
-
         public virtual object frobulate(object op, object x, object y) {
             if (op == "+") {
                 return x + y;
             } else if (op == "-") {
                 return x - y;
             } else {
-                throw ValueError(String.Format("Unexpected argument %s", op));
+                throw new ValueError(String.Format("Unexpected argument %s", op));
             }
         }
         
@@ -102,7 +103,9 @@ public static class readme {
         
         // list comprehension
         public static object apply_map(object mapfn, object filterfn) {
-            return lst.Where(n => filterfn).Select(n => mapfn(n));
+            return (from n in lst
+                where filterfn
+                select mapfn(n)).ToList();
         }
     }
 }

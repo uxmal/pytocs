@@ -15,7 +15,7 @@ public static class issue29 {
         foreach (var _tup_1 in arrs.Select((_p_1,_p_2) => Tuple.Create(_p_2, _p_1))) {
             var i = _tup_1.Item1;
             var arr = _tup_1.Item2;
-            var slc = new List<object> {
+            var slc = new List<int> {
                 1
             } * dim;
             slc[i] = lens[i];

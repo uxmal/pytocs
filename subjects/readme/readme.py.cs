@@ -1,6 +1,8 @@
 
 using System;
 
+using System.Linq;
+
 public static class readme {
     
     public class MyClass {
@@ -17,7 +19,7 @@ public static class readme {
             } else if (op == "-") {
                 return x - y;
             } else {
-                throw ValueError(String.Format("Unexpected argument %s", op));
+                throw new ValueError(String.Format("Unexpected argument %s", op));
             }
         }
         
@@ -32,7 +34,9 @@ public static class readme {
         
         // list comprehension
         public static object apply_map(object mapfn, object filterfn) {
-            return lst.Where(n => filterfn).Select(n => mapfn(n));
+            return (from n in lst
+                where filterfn
+                select mapfn(n)).ToList();
         }
     }
 }

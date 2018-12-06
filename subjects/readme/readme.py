@@ -17,6 +17,6 @@ class MyClass:
         for (i,strg) in lst.iterate():
             print "index: %d strg: %s\n" % (i, strg)
  
-    # list comprehension
+    # list comprehension, generating linQ output.
     def apply_map(mapfn, filterfn):
         return [mapfn(n) for n in lst if filterfn]
