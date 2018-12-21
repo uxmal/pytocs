@@ -70,6 +70,11 @@ namespace Pytocs
             }
         }
 
+        public Task EnumerateAsync(Action<EnumerationState> transformer)
+        {
+            return Task.Run(() => Enumerate(transformer));
+        }
+
         private string GenerateNamespace(EnumerationState state, string dirname)
         {
             dirname = fs.GetFileName(dirname)
