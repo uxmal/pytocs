@@ -134,5 +134,18 @@ namespace Pytocs
                 if (reader != null) reader.Dispose();
             }
         }
+
+        public string TranslateSnippet(string snippet)
+        {
+            var stringBuilder = new StringBuilder();
+            using (var reader = new StringReader(snippet))
+            using (var writer = new StringWriter(stringBuilder))
+            {
+                Translate("Program", reader, writer);
+                writer.Flush();
+            }
+
+            return stringBuilder.ToString();
+        }
     }
 }

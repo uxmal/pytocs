@@ -24,6 +24,7 @@
       <TextBox x:Name="ConversionLogBox"
                Margin="10"
                TextWrapping="Wrap"
+               IsReadOnly="True"
                AcceptsReturn="True"               
       ></TextBox>
     </DockPanel>

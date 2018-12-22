@@ -1,8 +1,10 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
+using Pytocs.TypeInference;
 
 namespace Pytocs.Gui
 {
@@ -17,6 +19,7 @@ namespace Pytocs.Gui
 
             PythonEditor = this.FindControl<TextBox>(nameof(PythonEditor));
             CSharpEditor = this.FindControl<TextBox>(nameof(CSharpEditor));
+            PythonEditor.Text = string.Empty;
             CSharpEditor.Text = string.Empty;
         }
 
@@ -27,7 +30,16 @@ namespace Pytocs.Gui
 
         private void Convert_Click(object sender, RoutedEventArgs e)
         {
-
+            try
+            {
+                var xlator = new Translator("", "Program", null, new ConsoleLogger());
+                CSharpEditor.Text = xlator.TranslateSnippet(PythonEditor.Text);
+            }
+            catch (Exception ex)
+            {
+                //todo: use a configuration file for UI message
+                CSharpEditor.Text = "// Conversion error!\n// " + ex.Message;
+            }
         }
 
         private async void InsertFile_Click(object sender, RoutedEventArgs e)

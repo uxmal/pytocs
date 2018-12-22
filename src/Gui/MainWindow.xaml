@@ -2,7 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:Pytocs.Gui"
         Width="800" Height="600"
-        Title="MainWindow">
+        Title="Pytocs GUI">
   <DockPanel>
     <Menu DockPanel.Dock="Top">
       <MenuItem Header="_File">
