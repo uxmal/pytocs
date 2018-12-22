@@ -6,9 +6,7 @@
   <DockPanel>
     <Menu DockPanel.Dock="Top">
       <MenuItem Header="_File">
-        <MenuItem Header="_Open..."/>
-        <Separator/>
-        <MenuItem Header="_Exit"/>
+        <MenuItem Header="_Exit" Click="Exit_Click"/>
       </MenuItem>
     </Menu>
     <TabControl>
