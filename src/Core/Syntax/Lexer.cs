@@ -632,7 +632,19 @@ namespace Pytocs.Syntax
                         break;
                     case 'L':
                     case 'l':
-                        return EatChToken(TokenType.LONGINTEGER, Convert.ToInt64(sb.ToString(), 16));
+                        Advance();
+                        if (long.TryParse(sb.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var l))
+                        {
+                            return Token(TokenType.LONGINTEGER, l);
+                        }
+                        else if (BigInteger.TryParse(sb.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var big))
+                        {
+                            return Token(TokenType.LONGINTEGER, big);
+                        }
+                        else
+                        {
+                            throw new NotImplementedException($"Unexpected error lexing '{sb}'.");
+                        }
                     default:
                         if (int.TryParse(sb.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var num))
                         {

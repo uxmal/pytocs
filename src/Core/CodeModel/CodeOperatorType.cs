@@ -52,6 +52,7 @@ namespace Pytocs.CodeModel
         SubEq,
         OrEq,
         AndEq,
+        ModEq,
         MulEq,
         DivEq,
         BitXor,

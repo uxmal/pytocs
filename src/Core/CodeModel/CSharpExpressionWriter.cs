@@ -86,6 +86,7 @@ namespace Pytocs.CodeModel
             { CodeOperatorType.Assign, 1 },
             { CodeOperatorType.AddEq, 1 },
             { CodeOperatorType.SubEq, 1 },
+            { CodeOperatorType.ModEq, 1 },
             { CodeOperatorType.MulEq, 1 },
             { CodeOperatorType.AndEq, 1 },
             { CodeOperatorType.OrEq, 1 },
@@ -240,6 +241,7 @@ namespace Pytocs.CodeModel
 
             case CodeOperatorType.AddEq: return "+=";
             case CodeOperatorType.SubEq: return "-=";
+            case CodeOperatorType.ModEq: return "%=";
             case CodeOperatorType.MulEq: return "*=";
             case CodeOperatorType.DivEq: return "/=";
             case CodeOperatorType.OrEq: return "|=";

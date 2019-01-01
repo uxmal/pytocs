@@ -57,10 +57,10 @@ namespace Pytocs.Syntax
             case Op.Eq: return "=";
             case Op.Ne: return " != ";
             case Op.In: return "in";
-            case Op.NotIn: return "@";
+            case Op.NotIn: return "not in";
             case Op.Is: return "is";
             case Op.IsNot: return "is not";
-            case Op.Xor: return "@";
+            case Op.Xor: return "^";
             case Op.LogOr: return "or";
             case Op.LogAnd: return "and";
             case Op.Shl: return " << ";
@@ -83,7 +83,7 @@ namespace Pytocs.Syntax
             case Op.AugShl: return " <<= ";
             case Op.AugShr: return " >>= ";
             case Op.AugExp: return " **= ";
-            case Op.AugIDiv: return "@";
+            case Op.AugIDiv: return " //= ";
             case Op.BitAnd: return "&";
             case Op.BitOr: return "|";
             case Op.Not: return "not ";

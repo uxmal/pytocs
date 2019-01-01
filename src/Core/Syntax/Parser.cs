@@ -1621,6 +1621,8 @@ eval_input: testlist NEWLINE* ENDMARKER
         //test: or_test ['if' or_test 'else' test] | lambdef
         public Exp test()
         {
+            while (PeekAndDiscard(TokenType.COMMENT))
+                ;
             if (Peek(TokenType.Lambda))
                 return lambdef();
             var o = or_test();

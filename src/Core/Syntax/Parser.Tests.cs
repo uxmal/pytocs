@@ -828,5 +828,17 @@ else:
 
             AssertStmt(sExp, ParseStmt(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Parser_BitwiseComplement))]
+        public void Parser_BitwiseComplement()
+        {
+            var pySrc =
+@"a = ExprCond(magn1,
+    # magn1 == magn2, are the signal equals?
+    ~(sign1 ^ sign2))";
+            var sExp = "a=ExprCond(magn1,~(sign1 ^ sign2))" + Environment.NewLine;
+
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
     }
 }
