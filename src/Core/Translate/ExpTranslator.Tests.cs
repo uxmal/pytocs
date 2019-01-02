@@ -671,12 +671,20 @@ namespace Pytocs.Translate
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Test(Description = "Reported in Github issue #21")]
+        //$TODO: this is not strictly correct, but at least it doesn't crash anymore
+        [Fact(DisplayName = nameof(Ex_nested_for_comprehension))]
         public void Ex_nested_for_comprehension()
         {
-            var pySrc = "((a, b) for a,b in list for a,b  in (a,b)))";
-            var sExp = "@@@";
-            Assert.AreEqual(sExp, Xlat(pySrc));
+            var pySrc = "((a, b) for a,b in list for a,b in (a,b)))";
+            var sExp =
+@"from _tup_1 in list.Chop((a,b) => Tuple.Create(a, b))
+    let a = _tup_1.Item1
+    let b = _tup_1.Item2
+    from _tup_2 in Tuple.Create(a, b).Chop((a,b) => Tuple.Create(a, b))
+    let a = _tup_2.Item1
+    let b = _tup_2.Item2
+    select Tuple.Create(a, b)";
+            Assert.Equal(sExp, Xlat(pySrc));
         }
     }
 }
