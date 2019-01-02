@@ -99,6 +99,10 @@ namespace Pytocs.Translate
                 return (
                     new CodeTypeReference(typeof(object)),
                     null);
+            case ComplexType complex:
+                return (
+                    new CodeTypeReference("Complex"),
+                    new HashSet<string> { "System.Numeric" });
             case StrType str:
                 return (
                     new CodeTypeReference(typeof(string)),

@@ -273,7 +273,6 @@ namespace Pytocs.Translate
             default:
                 throw new NotImplementedException($"str({string.Join<CodeExpression>(",", args)})");
             }
-            return null;
         }
 
         CodeExpression Translate_enumerate(Application appl, CodeExpression[] args)
