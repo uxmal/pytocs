@@ -686,6 +686,22 @@ namespace Pytocs.Translate
     select Tuple.Create(a, b)";
             Assert.Equal(sExp, Xlat(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Ex_str_builtin))]
+        public void Ex_str_builtin()
+        {
+            var pySrc = "str(a)";
+            var sExp = "a.ToString()";
+            Assert.Equal(sExp, Xlat(pySrc));
+        }
+
+        [Fact(DisplayName = nameof(Ex_str_builtin_encoding))]
+        public void Ex_str_builtin_encoding()
+        {
+            var pySrc = "str(a, 'utf-8')";
+            var sExp = "Encoding.GetEncoding(\"utf-8\").GetString(a)";
+            Assert.Equal(sExp, Xlat(pySrc));
+        }
     }
 }
 #endif

@@ -36,6 +36,7 @@ namespace Pytocs.Translate
                 { "complex", Translate_complex },
                 { "float", Translate_float },
                 { "sorted", Translate_sorted },
+                { "str", Translate_str },
                 { "enumerate", Translate_enumerate },
             };
         }
@@ -221,27 +222,6 @@ namespace Pytocs.Translate
 
         CodeExpression Translate_sorted(Application appl, CodeExpression[] args)
         {
-            return TranslateSorted(args);
-        }
-
-        CodeExpression Translate_enumerate(Application appl, CodeExpression[] args)
-        {
-            if (args.Length == 1)
-            {
-                var p = expTranslator.gensym.GenSymLocal("_p_", m.TypeRef("object"));
-                var i = expTranslator.gensym.GenSymLocal("_p_", m.TypeRef("int"));
-                return m.ApplyMethod(
-                    args[0],
-                    "Select",
-                    m.Lambda(
-                        new[] { p, i },
-                        m.ApplyMethod(m.TypeRefExpr("Tuple"), "Create", i, p)));
-            }
-            return null;
-        }
-
-        private CodeExpression TranslateSorted(CodeExpression[] args)
-        {
             if (args.Length == 0)
                 return m.Appl(new CodeVariableReferenceExpression("sorted"), args);
             var iter = args[0];
@@ -273,6 +253,44 @@ namespace Pytocs.Translate
                     IsReverse(rev) ? "OrderByDescending" : "OrderBy",
                     cmp ?? key ?? m.Lambda(new[] { formal }, formal)),
                 "ToList");
+        }
+
+        CodeExpression Translate_str(Application appl, CodeExpression[] args)
+        {
+            switch (args.Length)
+            {
+            case 1:
+                return m.ApplyMethod(args[0], "ToString");
+            case 2:
+            case 3:
+                //$TODO: careless about the third arg here.
+                m.EnsureImport("System.Text");
+                var getEncoding = m.ApplyMethod(
+                    m.TypeRefExpr("Encoding"),
+                    "GetEncoding",
+                    args[1]);
+                return m.ApplyMethod(getEncoding, "GetString", args[0]);
+            default:
+                throw new NotImplementedException($"str({string.Join<CodeExpression>(",", args)})");
+            }
+            return null;
+        }
+
+        CodeExpression Translate_enumerate(Application appl, CodeExpression[] args)
+        {
+            if (args.Length == 1)
+            {
+                m.EnsureImport("System.Linq");
+                var p = expTranslator.gensym.GenSymLocal("_p_", m.TypeRef("object"));
+                var i = expTranslator.gensym.GenSymLocal("_p_", m.TypeRef("int"));
+                return m.ApplyMethod(
+                    args[0],
+                    "Select",
+                    m.Lambda(
+                        new[] { p, i },
+                        m.ApplyMethod(m.TypeRefExpr("Tuple"), "Create", i, p)));
+            }
+            return null;
         }
 
         private bool IsReverse(CodeExpression rev)

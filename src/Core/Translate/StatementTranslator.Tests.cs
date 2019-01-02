@@ -1120,7 +1120,7 @@ c.de = ""f"";
             Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Stmt_try_except_with))]
         public void Stmt_try_except_with()
         {
             var pySrc =
@@ -1140,7 +1140,7 @@ c.de = ""f"";
                 raw = raw.read();
             }
         } catch (IOError) {
-            Console.WriteLine(""[-] Can't open input file: "" + str(exc), file: sys.stderr);
+            Console.WriteLine(""[-] Can't open input file: "" + exc.ToString(), file: sys.stderr);
         }
     }
 }
