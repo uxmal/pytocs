@@ -309,16 +309,9 @@ namespace Pytocs.Translate
 
         public CodeExpression VisitSet(PySet s)
         {
-            var items = s.exps.Select(e => new CodeCollectionInitializer(e.Accept(this)));
             m.EnsureImport("System.Collections");
-            var init = new CodeObjectCreateExpression
-            {
-                Type = m.TypeRef("HashSet"),
-                Initializer = new CodeCollectionInitializer
-                {
-                    Values = items.ToArray()
-                }
-            };
+            var items = s.exps.Select(e => new CodeCollectionInitializer(e.Accept(this)));
+            var init = m.New(m.TypeRef("HashSet"), items.ToArray());
             return init;
         }
 
@@ -433,9 +426,8 @@ namespace Pytocs.Translate
 
         private CodeExpression TranslateFormatExpression(Exp formatString, Exp pyArgs)
         {
-            var args = new List<CodeExpression>();
-            args.Add(formatString.Accept(this));
-
+            var arg = formatString.Accept(this);
+            var args = new List<CodeExpression> { arg };
             if (pyArgs is PyTuple tuple)
             {
                 args.AddRange(tuple.values
@@ -507,12 +499,15 @@ namespace Pytocs.Translate
 
         private void From(Exp variable, CodeExpression collection, List<CodeQueryClause> queryClauses)
         {
-            if (variable is Identifier id)
+            switch (variable)
+            {
+            case Identifier id:
             {
                 var f = m.From(id.Accept(this), collection);
                 queryClauses.Add(f);
+                break;
             }
-            else if (variable is ExpList expList)
+            case ExpList expList:
             {
                 var vars = expList.Expressions.Select(v => v.Accept(this)).ToArray();
                 var type = MakeTupleType(expList.Expressions);
@@ -526,8 +521,9 @@ namespace Pytocs.Translate
                     var l = m.Let(vars[i], m.Access(it, $"Item{i + 1}"));
                     queryClauses.Add(l);
                 }
+                break;
             }
-            else if (variable is PyTuple tuple)
+            case PyTuple tuple:
             {
                 var vars = tuple.values.Select(v => v.Accept(this)).ToArray();
                 var type = MakeTupleType(tuple.values);
@@ -541,10 +537,9 @@ namespace Pytocs.Translate
                     var l = m.Let(vars[i], m.Access(it, $"Item{i + 1}"));
                     queryClauses.Add(l);
                 }
-
+                break;
             }
-            else
-            {
+            default:
                 throw new NotImplementedException(variable.GetType().Name);
             }
         }
