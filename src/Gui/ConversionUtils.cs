@@ -66,14 +66,12 @@ namespace Pytocs.Gui
                     }
                 });
 
-                //$TODO: use a configuration file for processing message
-                logger.Inform("Done!");
+                logger.Inform(Resources.Done);
             }
             catch (Exception ex)
             {
-                //$TODO: use a configuration file for processing message
-                logger.Error($"Unexpected conversion error: {ex.Message}");
-                logger.Inform("Conversion was aborted!");
+                logger.Error(Resources.ErrUnexpectedConversionError, ex.Message);
+                logger.Inform(Resources.ConversionWasAborted);
             }
         }
 

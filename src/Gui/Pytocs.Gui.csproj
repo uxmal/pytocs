@@ -29,6 +29,11 @@
     <Compile Update="FolderConverterTab.xaml.cs">
       <DependentUpon>FolderConverterTab.xaml</DependentUpon>
     </Compile>
+    <Compile Update="Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
     <Compile Update="SnippetConverterTab.xaml.cs">
       <DependentUpon>SnippetConverterTab.xaml</DependentUpon>
     </Compile>
@@ -39,6 +44,10 @@
     </EmbeddedResource>
     <EmbeddedResource Update="FolderConverterTab.xaml">
       <Generator>MSBuild:Compile</Generator>
+    </EmbeddedResource>
+    <EmbeddedResource Update="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
     <EmbeddedResource Update="SnippetConverterTab.xaml">
       <Generator>MSBuild:Compile</Generator>

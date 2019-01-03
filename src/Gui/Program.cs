@@ -23,6 +23,11 @@ namespace Pytocs.Gui
     {
         static void Main(string[] args)
         {
+            //$DEBUG: Uncomment the following lines to force culture to Russian.
+            var ru = new System.Globalization.CultureInfo("ru");
+            System.Threading.Thread.CurrentThread.CurrentUICulture = ru;
+            System.Threading.Thread.CurrentThread.CurrentCulture = ru;
+
             BuildAvaloniaApp().Start<MainWindow>();
         }
 

@@ -98,15 +98,13 @@ namespace Pytocs.Gui
         {
             if (string.IsNullOrWhiteSpace(SourceFolderBox.Text))
             {
-                //$TODO: use a configuration file for UI message
-                ConversionLogBox.Text = "Source directory path is empty.";
+                ConversionLogBox.Text = Gui.Resources.ErrSourceDirectoryPathEmpty;
                 return (null, null);
             }
 
             if (string.IsNullOrWhiteSpace(TargetFolderBox.Text))
             {
-                //$TODO: use a configuration file for UI message
-                ConversionLogBox.Text = "Target directory path is empty.";
+                ConversionLogBox.Text = Gui.Resources.ErrTargetDirectoryPathEmpty;
                 return (null, null);
             }
 
@@ -119,8 +117,7 @@ namespace Pytocs.Gui
 
             if (!Directory.Exists(sourceFolder))
             {
-                //$TODO: use a configuration file for UI message
-                ConversionLogBox.Text = "Invalid source directory path.";
+                ConversionLogBox.Text = Gui.Resources.ErrInvalidSourceDirectoryPath;
                 return (null, null);
             }
 
@@ -132,8 +129,10 @@ namespace Pytocs.Gui
                 }
                 catch (Exception ex)
                 {
-                    //$TODO: use a configuration file for UI message
-                    ConversionLogBox.Text = "Couldn't create target directory:\n" + ex.Message;
+                    ConversionLogBox.Text = string.Format(
+                        Gui.Resources.ErrCouldntCreateTargetDirectory,
+                        targetFolder,
+                        ex.Message);
                     return (null, null);
                 }
             }
