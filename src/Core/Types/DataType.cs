@@ -76,12 +76,12 @@ namespace Pytocs.Types
             case UnionType ut:
                 var mut = ut.types.OfType<ModuleType>().FirstOrDefault();
                 if (mut == null)
-                    throw new InvalidOperationException("Does not contain a ModuleType.");
+                    throw new InvalidOperationException(Resources.ErrExpectedModuleType);
                 return mut;
             case ModuleType mt:
                 return mt;
             default:
-                throw new InvalidOperationException("This is not a ModuleType.");
+                throw new InvalidOperationException(Resources.ErrExpectedModuleType);
             }
         }
 

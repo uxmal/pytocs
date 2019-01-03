@@ -58,7 +58,7 @@ namespace Pytocs.TypeInference
         void putProblem(string filename, int start, int end, string msg);
 
         //void msg(string message);
-        void msg_(string message);
+        void msg_(string message, params object[] args);
         string Percent(long num, long total);
     }
 
@@ -147,8 +147,8 @@ namespace Pytocs.TypeInference
             string upath = FileSystem.GetFullPath(path);
             this.projectDir = FileSystem.DirectoryExists(upath) ? upath : FileSystem.GetDirectoryName(upath);
             LoadFileRecursive(upath);
-            msg("\nFinished loading files. " + CalledFunctions + " functions were called.");
-            msg("Analyzing uncalled functions");
+            msg(Resources.FinishedLoadingFiles, CalledFunctions);
+            msg(Resources.AnalyzingUncalledFunctions);
             ApplyUncalled();
         }
 
@@ -453,7 +453,7 @@ namespace Pytocs.TypeInference
             var p = FileSystem.CombinePath(FileSystem.getSystemTempDir(), "pytocs");
             cacheDir =FileSystem.CombinePath(p, "ast_cache");
             string f = cacheDir;
-            msg("AST cache is at: " + cacheDir);
+            msg(Resources.AstCacheIsAt, cacheDir);
 
             if (!FileSystem.FileExists(f))
             {
@@ -464,7 +464,8 @@ namespace Pytocs.TypeInference
                 catch (Exception ex)
                 {
                     throw new ApplicationException(
-                        "Failed to create tmp directory: " + cacheDir + ".", ex);
+                        string.Format(Resources.ErrFailedToCreateTmpDirectory, cacheDir),
+                        ex);
                 }
             }
         }
@@ -707,7 +708,7 @@ namespace Pytocs.TypeInference
                         !(b.type is ModuleType)
                         && b.References.Count == 0)
                 {
-                    putProblem(b.node, "Unused variable: " + b.name);
+                    putProblem(b.node, string.Format(Resources.UnusedVariable, b.name));
                 }
             }
             msg(GetAnalysisSummary());
@@ -718,20 +719,20 @@ namespace Pytocs.TypeInference
             astCache.Close();
         }
 
-        public void msg(string m)
+        public void msg(string m, params object[] args)
         {
             if (!HasOption("quiet"))
             {
-                Debug.Print(m);
-                Console.WriteLine(m);
+                Debug.Print(m, args);
+                Console.WriteLine(m, args);
             }
         }
 
-        public void msg_(string m)
+        public void msg_(string m, params object[] args)
         {
             if (!HasOption("quiet"))
             {
-                Console.Write(m);
+                Console.Write(string.Format(m, args));
             }
         }
 
@@ -771,13 +772,17 @@ namespace Pytocs.TypeInference
         {
             var sb = new StringBuilder();
             sb.AppendLine();
-            sb.AppendLine(Banner("Analysis summary"));
+            sb.AppendLine(Banner(Resources.AnalysisSummary));
 
             string duration = FormatTime(DateTime.Now  - this.startTime);
-            sb.AppendLine($"- total time: {duration}");
-            sb.AppendLine($"- modules loaded: {loadedFiles.Count}");
-            sb.AppendLine($"- semantic problems: {semanticErrors.Count}");
-            sb.AppendLine($"- failed to parse: {failedToParse.Count}");
+            sb.AppendFormat(Resources.AnalysisTotalTime, duration);
+            sb.AppendLine();
+            sb.AppendFormat(Resources.AnalysisModulesLoaded, loadedFiles.Count);
+            sb.AppendLine();
+            sb.AppendFormat(Resources.AnalysisSemanticProblems, semanticErrors.Count);
+            sb.AppendLine();
+            sb.AppendFormat(Resources.AnalysisParseFailures, failedToParse.Count);
+            sb.AppendLine();
 
             // calculate number of defs, refs, xrefs
             int nDef = 0, nXRef = 0;
@@ -787,15 +792,21 @@ namespace Pytocs.TypeInference
                 nXRef += b.References.Count;
             }
 
-            sb.AppendLine($"- number of definitions: {nDef}");
-            sb.AppendLine($"- number of cross references: {nXRef}");
-            sb.AppendLine($"- number of references: {References.Count}");
+            sb.AppendFormat(Resources.AnalysisNumberDefinitions, nDef);
+            sb.AppendLine();
+            sb.AppendFormat(Resources.AnalysisNumberXrefs, nXRef);
+            sb.AppendLine();
+            sb.AppendFormat(Resources.AnalysisNumberReferences, References.Count);
+            sb.AppendLine();
 
             long resolved = this.Resolved.Count;
             long unresolved = this.Unresolved.Count;
-            sb.AppendLine($"- resolved names: {resolved}");
-            sb.AppendLine($"- unresolved names: {unresolved}");
-            sb.AppendLine($"- name resolve rate: {Percent(resolved, resolved + unresolved)}");
+            sb.AppendFormat(Resources.AnalysisNumberResolvedNames, resolved);
+            sb.AppendLine();
+            sb.AppendFormat(Resources.AnalysisNumberUnresolvedNames, unresolved);
+            sb.AppendLine();
+            sb.AppendFormat(Resources.AnalysisNumberResolutionPercentage, Percent(resolved, resolved + unresolved));
+            sb.AppendLine();
 
             return sb.ToString();
         }

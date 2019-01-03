@@ -660,7 +660,7 @@ namespace Pytocs.Syntax
                         }
                         else
                         {
-                            throw new FormatException($"Invalid hexadecimal string {sb.ToString()}.");
+                            throw new FormatException(string.Format(Resources.ErrInvalidHexadecimalString, sb.ToString()));
                         }
                     }
                     break;
@@ -792,7 +792,7 @@ namespace Pytocs.Syntax
                         break;
                     default:
                         if (c < 0)
-                            throw Error("Unexpected end of input.");
+                            throw Error(Resources.ErrUnexpectedEndOfInput);
                         Accum(ch, State.QuoteString);
                         break;
                     }
@@ -807,7 +807,7 @@ namespace Pytocs.Syntax
                         break;
                     default:
                         if (c < 0)
-                            throw Error("Unexpected end of input.");
+                            throw Error(Resources.ErrUnexpectedEndOfInput);
                         Accum(ch, State.AposString);
                         break;
                     }
@@ -882,7 +882,7 @@ namespace Pytocs.Syntax
                 case State.StringEscape:
                     if (c < 0)
                     {
-                        throw Error("Unterminated string constant.");
+                        throw Error(Resources.ErrUnterminatedStringConstant);
                     }
                     Accum(ch, oldState);
                     break;
@@ -981,7 +981,7 @@ namespace Pytocs.Syntax
                     default: this.token = Token(TokenType.DOT); return Token(TokenType.DOT);
                     }
                 default:
-                    throw Error($"Unhandled state {st}.");
+                    throw Error(string.Format(Resources.ErrUnhandledState, st));
                 }
             }
         }
@@ -1062,7 +1062,7 @@ namespace Pytocs.Syntax
         private void AccumString(int c, State st)
         {
             if (c < 0)
-                throw Error("Unexpected end of string constant.");
+                throw Error(Resources.ErrUnexpectedEndOfStringConstant);
             Advance();
             this.sb.Append((char) c);
             this.st = st;
@@ -1070,7 +1070,7 @@ namespace Pytocs.Syntax
 
         private Exception Invalid(int c, char ch)
         {
-            throw Error($"Invalid character '{ch}' (U+{c:X4}).");
+            throw Error(string.Format(Resources.ErrInvalidCharacter, ch, c));
         }
 
         private Token EatChToken(TokenType t, object value = null)

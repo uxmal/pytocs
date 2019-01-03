@@ -370,8 +370,9 @@ yield_expr: 'yield' [testlist]
             return true;
         }
 
-        private Exception Error(string str)
+        private Exception Error(string str, params object [] args)
         {
+            str = string.Format(str, args);
             throw new InvalidOperationException($"{filename}({lexer.LineNumber}): {str}");
         }
 
@@ -382,7 +383,7 @@ yield_expr: 'yield' [testlist]
 
         private Exception Unexpected(Token token)
         {
-            return Error($"Unexpected token {token}.");
+            return Error(Resources.ErrUnexpectedToken, token); 
         }
 
 #if NEVER
@@ -463,7 +464,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             if (t.Type != tokenType)
             {
                 Debug.Print("Expect failed: {0} {1}", filename, t.LineNumber);
-                throw Error($"Expected token type {tokenType}, but saw {t.Type}.");
+                throw Error(Resources.ErrExpectedTokenButSaw, tokenType, t.Type);
             }
             return lexer.Get();
         }
@@ -500,7 +501,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 }
                 else if (!Peek(TokenType.COMMENT, TokenType.NEWLINE))
                 {
-                    Error($"Expected function or class definition, but saw {lexer.Peek()}.");
+                    Error(Resources.ErrExpectedFunctionOrClassDefinition, lexer.Peek());
                 }
                 //$TODO: keep the comments.
                 lexer.Get();
@@ -1516,7 +1517,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 posEnd = finallyHandler.End;
             }
             if (exHandlers.Count == 0 && finallyHandler == null)
-                throw Error("Expected at least one except clause or a finally clause.");
+                throw Error(Resources.ErrExpectedAtLeastOneExceptClause);
             var t = new TryStatement(body, exHandlers, elseHandler, finallyHandler, filename, posStart, posEnd);
             return new List<Statement> { t };
         }
@@ -2066,7 +2067,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 return new IntLiteral(i, filename, t.Start, t.End);
             }
             else
-                throw new FormatException($"Unparseable long integer token {t}.");
+                throw Error(Resources.ErrUnparseableIntegerToken, t);
         }
 
         //testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
@@ -2371,13 +2372,13 @@ eval_input: testlist NEWLINE* ENDMARKER
                 if (PeekAndDiscard(TokenType.OP_STAR))
                 {
                     if (stargs != null)
-                        throw Error("More than one stargs.");
+                        throw Error(Resources.ErrMoreThanOneStargs);
                     stargs = test();
                 }
                 else if (PeekAndDiscard(TokenType.OP_STARSTAR))
                 {
                     if (kwargs != null)
-                        throw Error("More than one kwargs.");
+                        throw Error(Resources.ErrMoreThanOneKwargs);
                     kwargs = test();
                 }
                 else

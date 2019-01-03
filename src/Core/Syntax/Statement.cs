@@ -230,10 +230,8 @@ namespace Pytocs.Syntax
         public FromStatement(DottedName name, List<AliasedName> aliasedNames, string filename, int pos, int end)
             : base(filename, pos, end)
         {
-            if (aliasedNames == null)
-                throw new ArgumentNullException("aliasedNames");
             this.DottedName = name;
-            this.AliasedNames = aliasedNames;
+            this.AliasedNames = aliasedNames ?? throw new ArgumentNullException(nameof(aliasedNames));
         }
 
         public override void Accept(IStatementVisitor v)

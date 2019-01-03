@@ -8,7 +8,7 @@
     <PackageProjectUrl>https://github.com/uxmal/pytocs</PackageProjectUrl>
     <RepositoryType>https://github.com/uxmal/pytocs</RepositoryType>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
-    <RootNamespace>Pytocs.Core</RootNamespace>
+    <RootNamespace>Pytocs</RootNamespace>
     <AssemblyName>Pytocs.Core</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net471|AnyCPU'">
@@ -37,5 +37,18 @@
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers</IncludeAssets>
     </PackageReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Update="Resources.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>
