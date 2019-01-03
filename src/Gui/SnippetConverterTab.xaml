@@ -1,0 +1,27 @@
+﻿<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*"></RowDefinition>
+      <RowDefinition Height="50"></RowDefinition>
+    </Grid.RowDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="1*"></ColumnDefinition>
+      <ColumnDefinition Width="1*"></ColumnDefinition>
+    </Grid.ColumnDefinitions>
+    <TextBox Grid.Row="0" Grid.Column="0" x:Name="PythonEditor" AcceptsReturn="True"></TextBox>
+    <TextBox Grid.Row="0" Grid.Column="1" x:Name="CSharpEditor" AcceptsReturn="True"></TextBox>
+    <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal">
+      <Button Margin="10 10 5 10" Click="Convert_Click">Convert</Button>
+      <Button Margin="5 10" Click="InsertFile_Click">Insert File...</Button>
+      <Button Margin="5 10" Click="Clear_Click">Clear</Button>
+    </StackPanel>
+    <DockPanel Grid.Row="1" Grid.Column="1">
+      <StackPanel DockPanel.Dock="Right" Orientation="Horizontal">
+        <Button Margin="5 10" Click="SelectAndCopyAll_Click">Select &amp; Copy All</Button>
+        <Button Margin="5 10 10 10" Click="Save_Click">Save...</Button>
+      </StackPanel>
+      <Separator></Separator>
+    </DockPanel>
+  </Grid>
+</UserControl>

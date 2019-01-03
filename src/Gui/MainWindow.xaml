@@ -1,5 +1,21 @@
 ﻿<Window xmlns="https://github.com/avaloniaui"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="MainWindow">
-    Hello World!
+        xmlns:local="clr-namespace:Pytocs.Gui"
+        Width="800" Height="600"
+        Title="Pytocs GUI">
+  <DockPanel>
+    <Menu DockPanel.Dock="Top">
+      <MenuItem Header="_File">
+        <MenuItem Header="_Exit" Click="Exit_Click"/>
+      </MenuItem>
+    </Menu>
+    <TabControl>
+      <TabItem Header="Folder Converter">
+        <local:FolderConverterTab></local:FolderConverterTab>
+      </TabItem>
+      <TabItem Header="File &amp; Snippet Converter">
+        <local:SnippetConverterTab></local:SnippetConverterTab>
+      </TabItem>
+    </TabControl>
+  </DockPanel>
 </Window>
