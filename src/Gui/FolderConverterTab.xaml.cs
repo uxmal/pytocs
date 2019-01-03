@@ -27,7 +27,7 @@ namespace Pytocs.Gui
 {
     public class FolderConverterTab : UserControl
     {
-        private object SyncRoot { get; } = new object();
+        private readonly object _syncRoot = new object();
 
         private bool _isConversionInProgress;
 
@@ -78,14 +78,14 @@ namespace Pytocs.Gui
 
         private async void Convert_Click(object sender, RoutedEventArgs e)
         {
-            var (sourceFolder, targetFolder) = GetValidPaths();
+            var (sourceFolder, targetFolder) = GetValidConversionFolders();
 
             if (sourceFolder == null)
             {
                 return;
             }
 
-            lock (SyncRoot)
+            lock (_syncRoot)
             {
                 if (_isConversionInProgress)
                 {
@@ -97,27 +97,27 @@ namespace Pytocs.Gui
 
             ConversionLogBox.Text = string.Empty;
 
-            await ConversionUtils.ConvertFolder(sourceFolder, targetFolder, new DelegateLogger(AppendLog));
+            await ConversionUtils.ConvertFolderAsync(sourceFolder, targetFolder, new DelegateLogger(AppendLog));
 
-            lock (SyncRoot)
+            lock (_syncRoot)
             {
                 _isConversionInProgress = false;
             }
         }
 
-        private (string, string) GetValidPaths()
+        private (string sourceFolder, string targetFolder) GetValidConversionFolders()
         {
             if (string.IsNullOrWhiteSpace(SourceFolderBox.Text))
             {
-                //todo: use a configuration file for UI message
-                ConversionLogBox.Text = "Error! Source directory path is empty";
+                //$TODO: use a configuration file for UI message
+                ConversionLogBox.Text = "Source directory path is empty.";
                 return (null, null);
             }
 
             if (string.IsNullOrWhiteSpace(TargetFolderBox.Text))
             {
-                //todo: use a configuration file for UI message
-                ConversionLogBox.Text = "Error! Target directory path is empty";
+                //$TODO: use a configuration file for UI message
+                ConversionLogBox.Text = "Target directory path is empty.";
                 return (null, null);
             }
 
@@ -130,8 +130,8 @@ namespace Pytocs.Gui
 
             if (!Directory.Exists(sourceFolder))
             {
-                //todo: use a configuration file for UI message
-                ConversionLogBox.Text = "Error! Invalid source directory path";
+                //$TODO: use a configuration file for UI message
+                ConversionLogBox.Text = "Invalid source directory path.";
                 return (null, null);
             }
 
@@ -143,8 +143,8 @@ namespace Pytocs.Gui
                 }
                 catch (Exception ex)
                 {
-                    //todo: use a configuration file for UI message
-                    ConversionLogBox.Text = "Error! Couldn't create target directory\n" + ex.Message;
+                    //$TODO: use a configuration file for UI message
+                    ConversionLogBox.Text = "Couldn't create target directory:\n" + ex.Message;
                     return (null, null);
                 }
             }

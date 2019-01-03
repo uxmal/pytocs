@@ -23,9 +23,10 @@ using Pytocs.TypeInference;
 
 namespace Pytocs.Gui
 {
+    //$REFACTOR: Extract common code from Cli and Gui application  
     public static class ConversionUtils
     {
-        public static async Task ConvertFolder(string sourcePath, string targetPath, ILogger logger)
+        public static async Task ConvertFolderAsync(string sourcePath, string targetPath, ILogger logger)
         {
             var fs = new FileSystem();
             var options = new Dictionary<string, object>();
@@ -63,7 +64,7 @@ namespace Pytocs.Gui
                 }
             });
 
-            //todo: use a configuration file for processing message
+            //$TODO: use a configuration file for processing message
             logger.Inform("Done!");
         }
 

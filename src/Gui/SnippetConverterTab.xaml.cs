@@ -53,7 +53,7 @@ namespace Pytocs.Gui
             }
             catch (Exception ex)
             {
-                //todo: use a configuration file for UI message
+                //$TODO: use a configuration file for UI message
                 CSharpEditor.Text = "// Conversion error!\n// " + ex.Message;
             }
         }
