@@ -27,15 +27,13 @@ namespace Pytocs.Gui
 {
     public class FolderConverterTab : UserControl
     {
-        private readonly object _syncRoot = new object();
-
-        private bool _isConversionInProgress;
-
         private TextBox TargetFolderBox { get; }
 
         private TextBox SourceFolderBox { get; }
 
         private TextBox ConversionLogBox { get; }
+
+        private Button ConvertButton { get; }
 
         private Func<string, Task> AppendLog { get; }
 
@@ -45,6 +43,7 @@ namespace Pytocs.Gui
             SourceFolderBox = this.FindControl<TextBox>(nameof(SourceFolderBox));
             TargetFolderBox = this.FindControl<TextBox>(nameof(TargetFolderBox));
             ConversionLogBox = this.FindControl<TextBox>(nameof(ConversionLogBox));
+            ConvertButton = this.FindControl<Button>(nameof(ConvertButton));
 
             AppendLog = x => Dispatcher.UIThread.InvokeAsync(() => ConversionLogBox.Text += x);
         }
@@ -78,31 +77,21 @@ namespace Pytocs.Gui
 
         private async void Convert_Click(object sender, RoutedEventArgs e)
         {
+            ConvertButton.IsEnabled = false;
+
             var (sourceFolder, targetFolder) = GetValidConversionFolders();
 
             if (sourceFolder == null)
             {
+                ConvertButton.IsEnabled = true;
                 return;
-            }
-
-            lock (_syncRoot)
-            {
-                if (_isConversionInProgress)
-                {
-                    return;
-                }
-
-                _isConversionInProgress = true;
             }
 
             ConversionLogBox.Text = string.Empty;
 
             await ConversionUtils.ConvertFolderAsync(sourceFolder, targetFolder, new DelegateLogger(AppendLog));
 
-            lock (_syncRoot)
-            {
-                _isConversionInProgress = false;
-            }
+            ConvertButton.IsEnabled = true;
         }
 
         private (string sourceFolder, string targetFolder) GetValidConversionFolders()

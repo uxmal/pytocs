@@ -23,49 +23,58 @@ using Pytocs.TypeInference;
 
 namespace Pytocs.Gui
 {
-    //$REFACTOR: Extract common code from Cli and Gui application  
+    //$REFACTOR: Extract common code from Cli and Gui application
     public static class ConversionUtils
     {
         public static async Task ConvertFolderAsync(string sourcePath, string targetPath, ILogger logger)
         {
-            var fs = new FileSystem();
-            var options = new Dictionary<string, object>();
-            var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
-            typeAnalysis.Analyze(sourcePath);
-            typeAnalysis.Finish();
-            var types = new TypeReferenceTranslator(typeAnalysis.BuildTypeDictionary());
-
-            var walker = new DirectoryWalker(fs, sourcePath, "*.py");
-            await walker.EnumerateAsync(state =>
+            try
             {
-                foreach (var file in fs.GetFiles(state.DirectoryName, "*.py", SearchOption.TopDirectoryOnly))
+                var fs = new FileSystem();
+                var options = new Dictionary<string, object>();
+                var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
+                typeAnalysis.Analyze(sourcePath);
+                typeAnalysis.Finish();
+                var types = new TypeReferenceTranslator(typeAnalysis.BuildTypeDictionary());
+
+                var walker = new DirectoryWalker(fs, sourcePath, "*.py");
+                await walker.EnumerateAsync(state =>
                 {
-                    var path = fs.GetFullPath(file);
-                    var xlator = new Translator(
-                        state.Namespace,
-                        fs.GetFileNameWithoutExtension(file),
-                        fs,
-                        logger);
-                    var module = typeAnalysis.GetAstForFile(path);
-
-                    var relativePath = MakeRelative(sourcePath, path);
-                    var targetFilePath = Path.ChangeExtension(MakeAbsolute(targetPath, relativePath), ".py.cs");
-                    var targetFileDirectory = Path.GetDirectoryName(targetFilePath);
-
-                    if (!Directory.Exists(targetFileDirectory))
+                    foreach (var file in fs.GetFiles(state.DirectoryName, "*.py", SearchOption.TopDirectoryOnly))
                     {
-                        Directory.CreateDirectory(targetFileDirectory);
+                        var path = fs.GetFullPath(file);
+                        var xlator = new Translator(
+                            state.Namespace,
+                            fs.GetFileNameWithoutExtension(file),
+                            fs,
+                            logger);
+                        var module = typeAnalysis.GetAstForFile(path);
+
+                        var relativePath = MakeRelative(sourcePath, path);
+                        var targetFilePath = Path.ChangeExtension(MakeAbsolute(targetPath, relativePath), ".py.cs");
+                        var targetFileDirectory = Path.GetDirectoryName(targetFilePath);
+
+                        if (!Directory.Exists(targetFileDirectory))
+                        {
+                            Directory.CreateDirectory(targetFileDirectory);
+                        }
+
+                        xlator.TranslateModuleStatements(
+                            module.body.stmts,
+                            types,
+                            targetFilePath);
                     }
+                });
 
-                    xlator.TranslateModuleStatements(
-                        module.body.stmts,
-                        types,
-                        targetFilePath);
-                }
-            });
-
-            //$TODO: use a configuration file for processing message
-            logger.Inform("Done!");
+                //$TODO: use a configuration file for processing message
+                logger.Inform("Done!");
+            }
+            catch (Exception ex)
+            {
+                //$TODO: use a configuration file for processing message
+                logger.Error($"Unexpected conversion error: {ex.Message}");
+                logger.Inform("Conversion was aborted!");
+            }
         }
 
         private static string MakeRelative(string basePath, string filePath)
