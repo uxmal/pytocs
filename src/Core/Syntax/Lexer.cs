@@ -14,7 +14,6 @@
 //  limitations under the License.
 #endregion
 
-using Xunit;
 using System;
 using System.Collections.Generic;
 using System.Globalization;

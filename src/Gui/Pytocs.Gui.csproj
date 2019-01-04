@@ -23,7 +23,7 @@
     <PackageReference Include="TextCopy" Version="1.5.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Core\Core.csproj" />
+    <ProjectReference Include="..\Core\Pytocs.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Compile Update="FolderConverterTab.xaml.cs">
