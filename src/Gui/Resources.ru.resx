@@ -117,6 +117,27 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="ConversionError" xml:space="preserve">
+    <value>//Ошибка преобразования!{0}// {1}</value>
+  </data>
+  <data name="ConversionWasAborted" xml:space="preserve">
+    <value>Преобразование прервано.</value>
+  </data>
+  <data name="Done" xml:space="preserve">
+    <value>Готово!</value>
+  </data>
+  <data name="ErrCouldntCreateTargetDirectory" xml:space="preserve">
+    <value>Невозможно создать целевую директорию {0}. {1}</value>
+  </data>
+  <data name="ErrInvalidSourceDirectoryPath" xml:space="preserve">
+    <value>Указана некорректная исходная директория.</value>
+  </data>
+  <data name="ErrSourceDirectoryPathEmpty" xml:space="preserve">
+    <value>Исходная директороия не указана.</value>
+  </data>
+  <data name="ErrTargetDirectoryPathEmpty" xml:space="preserve">
+    <value>Директория назначения не указана.</value>
+  </data>
   <data name="ErrUnexpectedConversionError" xml:space="preserve">
     <value>Неожиданная ошибка преобразования. {0}</value>
   </data>
