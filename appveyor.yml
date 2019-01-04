@@ -22,14 +22,21 @@ before_build:
 after_build:
   - ps : >-
         $shortHash = $env:APPVEYOR_REPO_COMMIT.Substring(0, 10);
-        $version = ls ./src/Cli/bin/$env:CONFIGURATION/net471/Pytocs.Cli.exe | % VersionInfo | % ProductVersion;
+        $versionCli = ls ./src/Cli/bin/$env:CONFIGURATION/net471/Pytocs.Cli.exe | % VersionInfo | % ProductVersion;
+        $versionGui = ls ./src/Gui/bin/$env:CONFIGURATION/net471/Pytocs.Gui.exe | % VersionInfo | % ProductVersion;
         mkdir $env:artifacts_dir;
         ;
         <# zip Pytocs.Cli.exe, append version and short hash #>;
-        "[after_build] compressing Pytocs (.NET Framework)...";
-        7z a $env:artifacts_dir/pytocs-net471-$version-$shortHash.zip ./src/Cli/bin/$env:CONFIGURATION/net471/.;
-        "[after_build] compressing Pytocs (.NET Core)...";
-        7z a $env:artifacts_dir/pytocs-netcore21-$version-$shortHash.zip ./src/Cli/bin/$env:CONFIGURATION/netcoreapp2.1/.;
+        "[after_build] compressing Pytocs.Cli (.NET Framework)...";
+        7z a $env:artifacts_dir/pytocs-cli-net471-$versionCli-$shortHash.zip ./src/Cli/bin/$env:CONFIGURATION/net471/.;
+        "[after_build] compressing Pytocs.Cli (.NET Core)...";
+        7z a $env:artifacts_dir/pytocs-cli-netcore21-$versionCli-$shortHash.zip ./src/Cli/bin/$env:CONFIGURATION/netcoreapp2.1/.;
+        ;
+        <# zip Pytocs.Gui.exe, append version and short hash #>;
+        "[after_build] compressing Pytocs.Gui (.NET Framework)...";
+        7z a $env:artifacts_dir/pytocs-gui-net471-$versionGui-$shortHash.zip ./src/Gui/bin/$env:CONFIGURATION/net471/.;
+        "[after_build] compressing Pytocs.Gui (.NET Core)...";
+        7z a $env:artifacts_dir/pytocs-gui-netcore21-$versionGui-$shortHash.zip ./src/Gui/bin/$env:CONFIGURATION/netcoreapp2.1/.;
         ;
 
 test_script:
