@@ -34,7 +34,7 @@ after_build:
 
 test_script:
   - cmd: dir /s .\src\Core\bin\%CONFIGURATION%
-  - cmd: '%xunit20%\xunit.console ./src/Pytocs.Tests/bin/%CONFIGURATION%/netcoreapp2.1/Pytocs.Tests.dll -appveyor'
+  - cmd: '%xunit20%\xunit.console ./src/Pytocs.Tests/bin/%CONFIGURATION%/net471/Pytocs.Tests.dll -appveyor'
  # - cmd: python ./subjects/regressionTests.py --check-output --configuration=%CONFIGURATION%
 
 artifacts:
