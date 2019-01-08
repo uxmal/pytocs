@@ -32,6 +32,7 @@ namespace Pytocs.Core.Translate
                 { "dict", Translate_dict },
                 { "len", Translate_len },
                 { "sum", Translate_sum },
+                { "range", Translate_range },
                 { "filter", Translate_filter },
                 { "complex", Translate_complex },
                 { "float", Translate_float },
@@ -165,6 +166,74 @@ namespace Pytocs.Core.Translate
                 var fn = m.Access(arg, "Sum");
                 return m.Appl(fn, args);
             }
+            return null;
+        }
+
+        CodeExpression Translate_range(Application appl, CodeExpression[] args)
+        {
+            var argsCount = args.Length;
+
+            if (1 <= argsCount && argsCount <= 3)
+            {
+                m.EnsureImport("System");
+                m.EnsureImport("System.Linq");
+
+                var enumerableRange = m.MethodRef(m.TypeRefExpr("Enumerable"), "Range");
+                var mathCeiling = m.MethodRef(m.TypeRefExpr("Math"), "Ceiling");
+                var convertToInt32 = m.MethodRef(m.TypeRefExpr("Convert"), "ToInt32");
+                var convertToDouble = m.MethodRef(m.TypeRefExpr("Convert"), "ToDouble");
+
+                switch (argsCount)
+                {
+                    case 1:
+                    {
+                        // Enumerable.Range(0, count);
+
+                        var startExp = new CodePrimitiveExpression(0);
+                        var countExp = args[0];
+                        return m.Appl(enumerableRange, startExp, countExp);
+                    }
+                    case 2:
+                    {
+                        // Enumerable.Range(0, count);
+
+                        var startExp = args[0];
+                        var stopExp = args[1];
+                        var countExp = new CodeBinaryOperatorExpression(stopExp, CodeOperatorType.Sub, startExp);
+                        return m.Appl(enumerableRange, startExp, countExp);
+                    }
+                    case 3:
+                    {
+                        // Enumerable.Range(0, count).Select(x => start + x * step);
+
+                        var startExp = args[0];
+                        var stopExp = args[1];
+                        var stepExp = args[2];
+
+                        // count = (stop - start) divide_ceiling_by step;
+                        var rawCountExp = new CodeBinaryOperatorExpression(stopExp, CodeOperatorType.Sub, startExp);
+                        var rawDoubleCountExp = m.Appl(convertToDouble, rawCountExp);
+                        var countDividedExp = new CodeBinaryOperatorExpression(rawDoubleCountExp, CodeOperatorType.Div, stepExp);
+                        var countCeilingExp = m.Appl(mathCeiling, countDividedExp); 
+                        var countExp = m.Appl(convertToInt32, countCeilingExp);
+                        
+                        // Enumerable.Range(0, count);
+                        var rangeExp = m.Appl(enumerableRange, new CodePrimitiveExpression(0), countExp);
+
+                        // x => start + x * step;
+                        var lambdaArgExp = new CodeVariableReferenceExpression("x");
+                        var offsetExp = new CodeBinaryOperatorExpression(lambdaArgExp, CodeOperatorType.Mul, stepExp);
+                        var positionExp = new CodeBinaryOperatorExpression(startExp, CodeOperatorType.Add, offsetExp);
+                        var mapLambdaExp = new CodeLambdaExpression(new CodeExpression[] {lambdaArgExp}, positionExp);
+
+                        
+                        var selectExt = m.Access(rangeExp, "Select");
+
+                        return m.Appl(selectExt, mapLambdaExp);
+                    }
+                }
+            }
+
             return null;
         }
 
