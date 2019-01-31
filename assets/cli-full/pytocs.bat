@@ -1,0 +1,1 @@
+Pytocs.Cli.exe %*

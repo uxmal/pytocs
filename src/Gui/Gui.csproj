@@ -3,6 +3,7 @@
     <OutputType>Exe</OutputType>
     <TargetFrameworks>netcoreapp2.1;net471</TargetFrameworks>
     <AssemblyName>Pytocs.Gui</AssemblyName>
+    <RootNamespace>Pytocs.Gui</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
     <Compile Update="**\*.xaml.cs">

@@ -1,0 +1,1 @@
+dotnet Pytocs.Cli.dll %*

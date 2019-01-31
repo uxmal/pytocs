@@ -1,0 +1,1 @@
+Pytocs.Gui.exe %*
