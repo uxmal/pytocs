@@ -1,1 +1,1 @@
-Pytocs.Cli.exe %*
+pytocs.exe %*
