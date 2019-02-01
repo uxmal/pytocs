@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Pytocs.Translate
+namespace Pytocs.Core.Translate
 {
     public enum CsAssignOp
     {

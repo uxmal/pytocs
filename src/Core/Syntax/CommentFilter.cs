@@ -21,7 +21,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.Syntax
+namespace Pytocs.Core.Syntax
 {
     /// <summary>
     /// Lexer post processor that deals with comments.

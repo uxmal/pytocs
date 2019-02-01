@@ -14,8 +14,8 @@
 //  limitations under the License.
 #endregion
 
-using Pytocs.Syntax;
-using Pytocs.CodeModel;
+using Pytocs.Core.Syntax;
+using Pytocs.Core.CodeModel;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -23,9 +23,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Numerics;
-using Pytocs.Types;
+using Pytocs.Core.Types;
 
-namespace Pytocs.Translate
+namespace Pytocs.Core.Translate
 {
     /// <summary>
     /// Translates a Python expression.

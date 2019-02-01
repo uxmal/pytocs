@@ -15,7 +15,7 @@
 #endregion
 
 #if DEBUG
-using Pytocs.CodeModel;
+using Pytocs.Core.CodeModel;
 using Xunit;
 using System;
 using System.Collections.Generic;
@@ -24,11 +24,12 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Pytocs.TypeInference;
-using Pytocs.Syntax;
-using Pytocs.Types;
+using Pytocs.Core.TypeInference;
+using Pytocs.Core.Syntax;
+using Pytocs.Core.Types;
+using Pytocs.Core.Translate;
 
-namespace Pytocs.Translate
+namespace Pytocs.UnitTests.Translate
 {
     public class StatementTranslatorTests
     {
@@ -44,9 +45,9 @@ namespace Pytocs.Translate
         private string XlatStmts(string pyStmt)
         {
             var rdr = new StringReader(pyStmt);
-            var lex = new Syntax.Lexer("foo.py", rdr);
-            var flt = new Syntax.CommentFilter(lex);
-            var par = new Syntax.Parser("foo.py", flt);
+            var lex = new Lexer("foo.py", rdr);
+            var flt = new CommentFilter(lex);
+            var par = new Parser("foo.py", flt);
             var stm = par.stmt();
             var gen = new CodeGenerator(new CodeCompileUnit(), "", "module");
             gen.SetCurrentMethod(new CodeMemberMethod());
@@ -70,9 +71,9 @@ namespace Pytocs.Translate
         private string XlatModule(string pyModule)
         {
             var rdr = new StringReader(pyModule);
-            var lex = new Syntax.Lexer("foo.py", rdr);
-            var flt = new Syntax.CommentFilter(lex);
-            var par = new Syntax.Parser("foo.py", flt);
+            var lex = new Lexer("foo.py", rdr);
+            var flt = new CommentFilter(lex);
+            var par = new Parser("foo.py", flt);
             var stm = par.stmt();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
@@ -115,8 +116,8 @@ namespace Pytocs.Translate
         private string XlatMember(string pyModule)
         {
             var rdr = new StringReader(pyModule);
-            var lex = new Syntax.Lexer("foo.py", rdr);
-            var par = new Syntax.Parser("foo.py", lex);
+            var lex = new Lexer("foo.py", rdr);
+            var par = new Parser("foo.py", lex);
             var stm = par.stmt();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");

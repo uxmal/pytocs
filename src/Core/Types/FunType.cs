@@ -14,12 +14,12 @@
 //  limitations under the License.
 #endregion
 
-using Pytocs.TypeInference;
-using Pytocs.Syntax;
+using Pytocs.Core.TypeInference;
+using Pytocs.Core.Syntax;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Pytocs.Types
+namespace Pytocs.Core.Types
 {
     public class FunType : DataType
     {

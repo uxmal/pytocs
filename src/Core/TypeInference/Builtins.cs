@@ -16,10 +16,10 @@
 
 using System;
 using System.Collections.Generic;
-using Url = Pytocs.Syntax.Url;
-using Pytocs.Types;
+using Url = Pytocs.Core.Syntax.Url;
+using Pytocs.Core.Types;
 
-namespace Pytocs.TypeInference
+namespace Pytocs.Core.TypeInference
 {
 #pragma warning disable IDE1006 // Naming Styles
 

@@ -14,15 +14,15 @@
 //  limitations under the License.
 #endregion
 
-using Pytocs.CodeModel;
-using Pytocs.Syntax;
+using Pytocs.Core.CodeModel;
+using Pytocs.Core.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.Translate
+namespace Pytocs.Core.Translate
 {
     /// <summary>
     /// Generates symbols unique for a given scope to avoid colissions.

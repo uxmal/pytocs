@@ -22,7 +22,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.TypeInference
+namespace Pytocs.Core.TypeInference
 {
     public interface IFileSystem
     {

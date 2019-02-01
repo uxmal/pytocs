@@ -20,7 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Pytocs.CodeModel
+namespace Pytocs.Core.CodeModel
 {
     public class CSharpStatementWriter : ICodeStatementVisitor<int>
     {

@@ -16,9 +16,9 @@
 
 #if DEBUG
 using Xunit;
-using Pytocs.CodeModel;
-using Pytocs.Syntax;
-using Pytocs.Types;
+using Pytocs.Core.CodeModel;
+using Pytocs.Core.Syntax;
+using Pytocs.Core.Types;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -26,8 +26,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pytocs.Core.Translate;
 
-namespace Pytocs.Translate
+namespace Pytocs.UnitTests.Translate
 {
     public class ExpTranslatorTests
     {
@@ -36,8 +37,8 @@ namespace Pytocs.Translate
         string Xlat(string pyExp)
         {
             var rdr = new StringReader(pyExp);
-            var lex = new Syntax.Lexer("foo.py", rdr);
-            var par = new Syntax.Parser("foo.py", lex);
+            var lex = new Lexer("foo.py", rdr);
+            var par = new Parser("foo.py", lex);
             var exp = par.test();
             Debug.Print("{0}", exp);
             var sym = new SymbolGenerator();

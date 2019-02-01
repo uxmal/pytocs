@@ -14,6 +14,7 @@
 //  limitations under the License.
 #endregion
 
+using Pytocs.Core;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -23,7 +24,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.Syntax
+namespace Pytocs.Core.Syntax
 {
     /// <summary>
     /// Lexer for Python.

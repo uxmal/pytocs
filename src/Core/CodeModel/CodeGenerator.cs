@@ -14,7 +14,7 @@
 //  limitations under the License.
 #endregion
 
-using Pytocs.Types;
+using Pytocs.Core.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -22,7 +22,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.CodeModel
+namespace Pytocs.Core.CodeModel
 {
     public class CodeGenerator
     {

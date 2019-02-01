@@ -14,9 +14,9 @@
 //  limitations under the License.
 #endregion
 
-namespace Pytocs.Types
+namespace Pytocs.Core.Types
 {
-    using Analyzer = Pytocs.TypeInference.Analyzer;
+    using Analyzer = Pytocs.Core.TypeInference.Analyzer;
 
     public class StrType : DataType
     {

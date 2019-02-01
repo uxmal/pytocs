@@ -19,9 +19,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Pytocs.CodeModel;
+using Pytocs.Core.CodeModel;
 
-namespace Pytocs.Translate
+namespace Pytocs.Core.Translate
 {
     public class LocalVariableGenerator : ICodeStatementVisitor<int>
     {

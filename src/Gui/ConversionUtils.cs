@@ -18,8 +18,9 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
-using Pytocs.Translate;
-using Pytocs.TypeInference;
+using Pytocs.Core;
+using Pytocs.Core.Translate;
+using Pytocs.Core.TypeInference;
 
 namespace Pytocs.Gui
 {

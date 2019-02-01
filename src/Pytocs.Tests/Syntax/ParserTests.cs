@@ -21,8 +21,9 @@ using System.Linq;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Pytocs.Core.Syntax;
 
-namespace Pytocs.Syntax
+namespace Pytocs.UnitTests.Syntax
 {
     public class ParserTests
     {

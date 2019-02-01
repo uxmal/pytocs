@@ -20,7 +20,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Pytocs.Syntax
+namespace Pytocs.Core.Syntax
 {
     public class FunctionDef : Statement
     {

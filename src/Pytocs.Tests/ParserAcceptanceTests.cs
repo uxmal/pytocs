@@ -15,17 +15,17 @@
 #endregion
 
 #if DEBUG
-using Pytocs.CodeModel;
-using Pytocs.Syntax;
-using Pytocs.Translate;
+using Pytocs.Core.CodeModel;
+using Pytocs.Core.Syntax;
+using Pytocs.Core.Translate;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Pytocs.TypeInference;
-using Pytocs.Types;
+using Pytocs.Core.TypeInference;
+using Pytocs.Core.Types;
 using Xunit;
 
 namespace Pytocs.Acceptance
@@ -43,8 +43,8 @@ namespace Pytocs.Acceptance
         private string XlatModule(string pyModule)
         {
             var rdr = new StringReader(pyModule);
-            var lex = new Syntax.Lexer("foo.py", rdr);
-            var par = new Syntax.Parser("foo.py", lex);
+            var lex = new Lexer("foo.py", rdr);
+            var par = new Parser("foo.py", lex);
             var stm = par.Parse(); ;
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");

@@ -14,9 +14,9 @@
 //  limitations under the License.
 #endregion
 
-using Pytocs.CodeModel;
-using Pytocs.Syntax;
-using Pytocs.Translate;
+using Pytocs.Core.CodeModel;
+using Pytocs.Core.Syntax;
+using Pytocs.Core.Translate;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -24,10 +24,10 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.Threading.Tasks;
-using Pytocs.TypeInference;
-using Pytocs.Types;
+using Pytocs.Core.TypeInference;
+using Pytocs.Core.Types;
 
-namespace Pytocs
+namespace Pytocs.Core
 {
     /// <summary>
     /// Top-level class responsible for translation from Python to C#.

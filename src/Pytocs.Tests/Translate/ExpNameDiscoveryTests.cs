@@ -15,7 +15,7 @@
 #endregion
 
 #if DEBUG
-using Pytocs.Syntax;
+using Pytocs.Core.Syntax;
 using Xunit;
 using System;
 using System.Collections.Generic;
@@ -23,8 +23,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pytocs.Core.Translate;
+using Pytocs.Core;
 
-namespace Pytocs.Translate
+namespace Pytocs.UnitTests.Translate
 {
     public class ExpNameDiscoveryTests
     {

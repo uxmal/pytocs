@@ -14,14 +14,14 @@
 //  limitations under the License.
 #endregion
 
-using Pytocs.Syntax;
+using Pytocs.Core.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.Translate
+namespace Pytocs.Core.Translate
 {
     public class ExpNameDiscovery : IExpVisitor
     {

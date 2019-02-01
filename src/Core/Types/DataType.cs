@@ -17,10 +17,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using State = Pytocs.TypeInference.State;
-using TypeStack = Pytocs.TypeInference.TypeStack;
+using State = Pytocs.Core.TypeInference.State;
+using TypeStack = Pytocs.Core.TypeInference.TypeStack;
 
-namespace Pytocs.Types
+namespace Pytocs.Core.Types
 {
     public abstract class DataType
     {

@@ -14,7 +14,7 @@
 //  limitations under the License.
 #endregion
 
-namespace Pytocs.CodeModel
+namespace Pytocs.Core.CodeModel
 {
     public abstract class CodeQueryClause
     {

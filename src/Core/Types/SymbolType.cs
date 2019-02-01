@@ -14,7 +14,7 @@
 //  limitations under the License.
 #endregion
 
-namespace Pytocs.Types
+namespace Pytocs.Core.Types
 {
     public class SymbolType : DataType
     {

@@ -21,7 +21,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.CodeModel
+namespace Pytocs.Core.CodeModel
 {
     public class CSharpCodeProvider : ICodeElementVisitor<int>
     {
@@ -30,20 +30,20 @@ namespace Pytocs.CodeModel
         private CSharpStatementWriter stmWriter;
         private CSharpTypeWriter typeWriter;
 
-        internal void GenerateCodeFromExpression(CodeExpression csExp, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
+        public void GenerateCodeFromExpression(CodeExpression csExp, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
         {
             this.writer = new IndentingTextWriter(writer);
             csExp.Accept(new CSharpExpressionWriter(this.writer));
         }
 
-        internal void GenerateCodeFromType(CodeTypeDeclaration type, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
+        public void GenerateCodeFromType(CodeTypeDeclaration type, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
         {
             this.writer = new IndentingTextWriter(writer);
             this.typeWriter = new CSharpTypeWriter(type, this.writer);
             type.Accept(typeWriter);
         }
 
-        internal void GenerateCodeFromStatement(CodeStatement csStmt, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
+        public void GenerateCodeFromStatement(CodeStatement csStmt, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
         {
             this.writer = new IndentingTextWriter(writer);
             stmWriter = new CSharpStatementWriter(this.writer);
@@ -60,14 +60,14 @@ namespace Pytocs.CodeModel
             return 0;
         }
 
-        internal void GenerateCodeFromMember(CodeMember member, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
+        public void GenerateCodeFromMember(CodeMember member, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
         {
             this.writer = new IndentingTextWriter(writer);
             var memberWriter = new CSharpTypeWriter(null, this.writer);
             member.Accept(memberWriter);
         }
 
-        internal void GenerateCodeFromCompileUnit(CodeCompileUnit compileUnit, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
+        public void GenerateCodeFromCompileUnit(CodeCompileUnit compileUnit, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
         {
             this.writer = new IndentingTextWriter(writer);
             var unitWriter = new CSharpUnitWriter(this, this.writer);

@@ -3,12 +3,12 @@
   <PropertyGroup>
     <TargetFrameworks>net471;netcoreapp2.1</TargetFrameworks>
     <OutputType>exe</OutputType>
-    <AssemblyName>Pytocs.Cli</AssemblyName>
+    <AssemblyName>pytocs</AssemblyName>
     <RootNamespace>Pytocs.Cli</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Core\Pytocs.csproj" />
+    <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
 
 </Project>

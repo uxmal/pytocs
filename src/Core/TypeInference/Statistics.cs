@@ -18,7 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Pytocs.TypeInference
+namespace Pytocs.Core.TypeInference
 {
     public class Statistics
     {

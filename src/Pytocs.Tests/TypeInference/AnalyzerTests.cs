@@ -21,12 +21,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pytocs.Core.TypeInference;
 
-namespace Pytocs.TypeInference
+namespace Pytocs.UnitTests.TypeInference
 {
     public class AnalyzerTests
     {
-        private Pytocs.TypeInference.FakeFileSystem fs;
+        private Pytocs.Core.TypeInference.FakeFileSystem fs;
         private ILogger logger;
         private Dictionary<string, object> options;
         private string nl;
@@ -34,7 +35,7 @@ namespace Pytocs.TypeInference
 
         public AnalyzerTests()
         {
-            this.fs = new Pytocs.TypeInference.FakeFileSystem();
+            this.fs = new Pytocs.Core.TypeInference.FakeFileSystem();
             this.logger = new FakeLogger();
             this.options = new Dictionary<string, object>();
             this.nl = Environment.NewLine;

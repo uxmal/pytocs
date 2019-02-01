@@ -21,12 +21,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.Syntax
+namespace Pytocs.Core.Syntax
 {
     class PyStatementWriter : IStatementVisitor
     {
         private TextWriter writer;
-        private Pytocs.CodeModel.IndentingTextWriter w;
+        private Pytocs.Core.CodeModel.IndentingTextWriter w;
 
         public PyStatementWriter(TextWriter textWriter)
         {

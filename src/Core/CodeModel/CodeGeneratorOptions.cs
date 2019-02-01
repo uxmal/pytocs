@@ -20,9 +20,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.CodeModel
+namespace Pytocs.Core.CodeModel
 {
-    class CodeGeneratorOptions
+    public class CodeGeneratorOptions
     {
     }
 }

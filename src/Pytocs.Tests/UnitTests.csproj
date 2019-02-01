@@ -4,6 +4,10 @@
     <TargetFramework>net471</TargetFramework>
 
     <IsPackable>false</IsPackable>
+
+    <AssemblyName>Pytocs.UnitTests</AssemblyName>
+
+    <RootNamespace>Pytocs.UnitTests</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -13,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Core\Pytocs.csproj" />
+    <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
 
 </Project>

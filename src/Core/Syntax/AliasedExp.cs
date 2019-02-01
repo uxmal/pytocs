@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-namespace Pytocs.Syntax
+namespace Pytocs.Core.Syntax
 {
     public class AliasedExp : Exp
     {

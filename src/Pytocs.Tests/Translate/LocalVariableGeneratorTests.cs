@@ -16,18 +16,19 @@
 
 #if DEBUG
 using Xunit;
-using Pytocs.CodeModel;
-using Pytocs.Syntax;
-using Pytocs.TypeInference;
-using Pytocs.Types;
+using Pytocs.Core.CodeModel;
+using Pytocs.Core.Syntax;
+using Pytocs.Core.TypeInference;
+using Pytocs.Core.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Pytocs.Core.Translate;
 
-namespace Pytocs.Translate
+namespace Pytocs.UnitTests.Translate
 {
     public class LocalVariableTranslator
     {
@@ -38,8 +39,8 @@ namespace Pytocs.Translate
         private string XlatModule(string pyModule)
         {
             var rdr = new StringReader(pyModule);
-            var lex = new Syntax.Lexer("foo.py", rdr);
-            var par = new Syntax.Parser("foo.py", lex);
+            var lex = new Lexer("foo.py", rdr);
+            var par = new Parser("foo.py", lex);
             var stm = par.stmt();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
@@ -71,8 +72,8 @@ namespace Pytocs.Translate
         private string XlatMember(string pyModule)
         {
             var rdr = new StringReader(pyModule);
-            var lex = new Syntax.Lexer("foo.py", rdr);
-            var par = new Syntax.Parser("foo.py", lex);
+            var lex = new Lexer("foo.py", rdr);
+            var par = new Parser("foo.py", lex);
             var stm = par.stmt();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");

@@ -14,17 +14,17 @@
 //  limitations under the License.
 #endregion
 
-using Pytocs.CodeModel;
-using Pytocs.Syntax;
-using Pytocs.TypeInference;
-using Pytocs.Types;
+using Pytocs.Core.CodeModel;
+using Pytocs.Core.Syntax;
+using Pytocs.Core.TypeInference;
+using Pytocs.Core.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.Translate
+namespace Pytocs.Core.Translate
 {
     /// <summary>
     /// Generates code for a Python function definition.

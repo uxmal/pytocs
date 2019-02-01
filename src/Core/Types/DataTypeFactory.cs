@@ -19,9 +19,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Pytocs.TypeInference;
+using Pytocs.Core.TypeInference;
 
-namespace Pytocs.Types
+namespace Pytocs.Core.Types
 {
     public class DataTypeFactory
     {

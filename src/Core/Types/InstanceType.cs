@@ -15,9 +15,9 @@
 #endregion
 
 using System.Collections.Generic;
-using State = Pytocs.TypeInference.State;
+using State = Pytocs.Core.TypeInference.State;
 
-namespace Pytocs.Types
+namespace Pytocs.Core.Types
 {
     public class InstanceType : DataType
     {

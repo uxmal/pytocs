@@ -20,7 +20,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.Syntax
+namespace Pytocs.Core.Syntax
 {
     public class Module : Node
     {

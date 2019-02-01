@@ -14,14 +14,14 @@
 //  limitations under the License.
 #endregion
 
-using Pytocs.Syntax;
+using Pytocs.Core.Syntax;
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Diagnostics;
 
-namespace Pytocs.TypeInference
+namespace Pytocs.Core.TypeInference
 {
     /// <summary>
     /// Provides a factory for python source ASTs.  Maintains configurable on-disk and

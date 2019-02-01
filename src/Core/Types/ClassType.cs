@@ -14,12 +14,12 @@
 //  limitations under the License.
 #endregion
 
-using Pytocs.Syntax;
+using Pytocs.Core.Syntax;
 using System;
 using System.Collections.Generic;
-using State = Pytocs.TypeInference.State;
+using State = Pytocs.Core.TypeInference.State;
 
-namespace Pytocs.Types
+namespace Pytocs.Core.Types
 {
     public class ClassType : DataType
     {

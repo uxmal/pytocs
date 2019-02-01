@@ -23,7 +23,7 @@ using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.TypeInference
+namespace Pytocs.Core.TypeInference
 {
     public class FakeFileSystem : IFileSystem
     {

@@ -18,7 +18,7 @@ using System;
 using System.Diagnostics;
 using System.Text;
 using System.Threading.Tasks;
-using Pytocs.TypeInference;
+using Pytocs.Core.TypeInference;
 
 namespace Pytocs.Gui
 {

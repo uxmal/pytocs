@@ -21,7 +21,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.TypeInference
+namespace Pytocs.Core.TypeInference
 {
     public interface ILogger
     {

@@ -24,7 +24,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.CodeModel
+namespace Pytocs.Core.CodeModel
 {
     public class CSharpExpressionWriter : ICodeExpressionVisitor
     {

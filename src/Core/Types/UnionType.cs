@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Pytocs.Types
+namespace Pytocs.Core.Types
 {
     public class UnionType : DataType
     {

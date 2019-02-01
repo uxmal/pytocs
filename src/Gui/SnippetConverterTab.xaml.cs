@@ -20,7 +20,8 @@ using System.Linq;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Pytocs.TypeInference;
+using Pytocs.Core;
+using Pytocs.Core.TypeInference;
 
 namespace Pytocs.Gui
 {

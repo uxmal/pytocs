@@ -16,9 +16,9 @@
 
 using System.Collections.Generic;
 using System;
-using Pytocs.Types;
+using Pytocs.Core.Types;
 
-namespace Pytocs.TypeInference
+namespace Pytocs.Core.TypeInference
 {
     public class TypeStack
     {

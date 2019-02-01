@@ -22,7 +22,7 @@ using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.Syntax
+namespace Pytocs.Core.Syntax
 {
     /// <summary>
     /// Parses the Python language grammar

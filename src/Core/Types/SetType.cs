@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.Types
+namespace Pytocs.Core.Types
 {
     public class SetType : DataType
     {

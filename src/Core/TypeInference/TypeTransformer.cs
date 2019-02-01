@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using Pytocs.Types;
-using Pytocs.Syntax;
+using Pytocs.Core.Types;
+using Pytocs.Core.Syntax;
 
-namespace Pytocs.TypeInference
+namespace Pytocs.Core.TypeInference
 {
     public class TypeTransformer : 
         IStatementVisitor<DataType>,
@@ -1544,7 +1544,7 @@ namespace Pytocs.TypeInference
         /// <summary>
         /// Utility method to resolve every node in <param name="nodes"/> and
         /// return the union of their types.  If <param name="nodes" /> is empty or
-        /// null, returns a new {@link Pytocs.Types.UnknownType}.
+        /// null, returns a new {@link Pytocs.Core.Types.UnknownType}.
         /// </summary>
         public DataType ResolveUnion(IEnumerable<Exp> nodes)
         {

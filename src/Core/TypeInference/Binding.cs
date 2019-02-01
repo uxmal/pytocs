@@ -14,14 +14,14 @@
 //  limitations under the License.
 #endregion
 
-using Pytocs.Syntax;
+using Pytocs.Core.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Pytocs.Types;
+using Pytocs.Core.Types;
 
-namespace Pytocs.TypeInference
+namespace Pytocs.Core.TypeInference
 {
     /// <summary>
     /// A binding associates a type with an entity.
@@ -108,7 +108,7 @@ namespace Pytocs.TypeInference
         public Str GetDocString()
         {
             Node parent = node.Parent;
-            if (parent is Pytocs.Syntax.FunctionDef funcDef && funcDef.name == node)
+            if (parent is Pytocs.Core.Syntax.FunctionDef funcDef && funcDef.name == node)
                 return parent.GetDocString();
             else
                 return node.GetDocString();

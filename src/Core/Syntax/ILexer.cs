@@ -14,7 +14,7 @@
 //  limitations under the License.
 #endregion
 
-namespace Pytocs.Syntax
+namespace Pytocs.Core.Syntax
 {
     public interface ILexer
     {

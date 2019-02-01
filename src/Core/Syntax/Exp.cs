@@ -23,7 +23,7 @@ using System.Text;
 using System.Numerics;
 using System.Globalization;
 
-namespace Pytocs.Syntax
+namespace Pytocs.Core.Syntax
 {
     public abstract class Exp : Node
     {

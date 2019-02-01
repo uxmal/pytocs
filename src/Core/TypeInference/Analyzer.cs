@@ -19,12 +19,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Pytocs.Syntax;
-using Pytocs.Types;
-using Name = Pytocs.Syntax.Identifier;
+using Pytocs.Core.Syntax;
+using Pytocs.Core.Types;
+using Name = Pytocs.Core.Syntax.Identifier;
 using System.Diagnostics;
+using Pytocs.Core;
 
-namespace Pytocs.TypeInference
+namespace Pytocs.Core.TypeInference
 {
     public interface Analyzer
     {

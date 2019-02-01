@@ -16,7 +16,7 @@
 
 using System;
 
-namespace Pytocs.TypeInference
+namespace Pytocs.Core.TypeInference
 {
     public class Diagnostic
     {

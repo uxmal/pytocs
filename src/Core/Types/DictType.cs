@@ -14,9 +14,9 @@
 //  limitations under the License.
 #endregion
 
-using Analyzer = Pytocs.TypeInference.Analyzer;
+using Analyzer = Pytocs.Core.TypeInference.Analyzer;
 
-namespace Pytocs.Types
+namespace Pytocs.Core.Types
 {
     public class DictType : DataType
     {

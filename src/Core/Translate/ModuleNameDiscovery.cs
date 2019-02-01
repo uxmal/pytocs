@@ -20,7 +20,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.Translate
+namespace Pytocs.Core.Translate
 {
     public class ModuleNameDiscovery
     {

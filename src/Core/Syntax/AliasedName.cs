@@ -19,7 +19,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Pytocs.Syntax
+namespace Pytocs.Core.Syntax
 {
     public class AliasedName : Node
     {

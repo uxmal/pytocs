@@ -17,9 +17,9 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using Analyzer = Pytocs.TypeInference.Analyzer;
+using Analyzer = Pytocs.Core.TypeInference.Analyzer;
 
-namespace Pytocs.Types
+namespace Pytocs.Core.Types
 {
     public class ListType : DataType
     {

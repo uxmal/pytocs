@@ -17,10 +17,10 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Pytocs.Types;
-using Pytocs.Syntax;
+using Pytocs.Core.Types;
+using Pytocs.Core.Syntax;
 
-namespace Pytocs.TypeInference
+namespace Pytocs.Core.TypeInference
 {
     /// <summary>
     /// Implements a scope, which maps names to sets of bindings.

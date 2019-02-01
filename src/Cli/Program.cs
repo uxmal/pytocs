@@ -21,9 +21,10 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Pytocs.Translate;
-using Pytocs.TypeInference;
-using Pytocs.Types;
+using Pytocs.Core;
+using Pytocs.Core.Translate;
+using Pytocs.Core.TypeInference;
+using Pytocs.Core.Types;
 
 namespace Pytocs.Cli
 {

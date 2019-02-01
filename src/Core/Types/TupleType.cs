@@ -14,12 +14,12 @@
 //  limitations under the License.
 #endregion
 
-//using Analyzer = Pytocs.TypeInference.Analyzer;
+//using Analyzer = Pytocs.Core.TypeInference.Analyzer;
 using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace Pytocs.Types
+namespace Pytocs.Core.Types
 {
     /// <summary>
     /// Represents a Python tuple.

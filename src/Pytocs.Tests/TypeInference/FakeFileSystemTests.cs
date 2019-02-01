@@ -1,6 +1,8 @@
-﻿using Xunit;
+﻿using Pytocs.Core.TypeInference;
+using Xunit;
 
-namespace Pytocs.TypeInference
+#if DEBUG
+namespace Pytocs.UnitTests.TypeInference
 {
     public class FakeFileSystemTests
     {
@@ -20,3 +22,4 @@ namespace Pytocs.TypeInference
         }
     }
 }
+#endif

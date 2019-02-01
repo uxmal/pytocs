@@ -14,9 +14,9 @@
 //  limitations under the License.
 #endregion
 
-using State = Pytocs.TypeInference.State;
+using State = Pytocs.Core.TypeInference.State;
 
-namespace Pytocs.Types
+namespace Pytocs.Core.Types
 {
     public class ModuleType : DataType
     {

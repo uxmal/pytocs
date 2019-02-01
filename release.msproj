@@ -49,6 +49,7 @@
 					$(OutDir)\*.xml">
 			</ReleaseFiles>
 		</ItemGroup>
+    <Message Importance="high" Text="The outdir is $(OutDir)" />
 		<Copy SourceFiles="@(ReleaseFiles)" DestinationFiles="@(ReleaseFiles -> '$(ReleaseDir)\%(RecursiveDir)%(Filename)%(Extension)')"/>
 
 	</Target>

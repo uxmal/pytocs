@@ -15,7 +15,7 @@
 #endregion
 
 #if DEBUG
-using Pytocs.CodeModel;
+using Pytocs.Core.CodeModel;
 using Xunit;
 using System;
 using System.Collections.Generic;
@@ -24,11 +24,13 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Pytocs.TypeInference;
-using Pytocs.Syntax;
-using Pytocs.Types;
+using Pytocs.Core.TypeInference;
+using Pytocs.Core.Syntax;
+using Pytocs.Core.Types;
+using Pytocs.Core.Translate;
+using System.Threading;
 
-namespace Pytocs.Translate
+namespace Pytocs.UnitTests.Translate
 {
     public class ModuleTranslatorTests
     {
@@ -39,6 +41,7 @@ namespace Pytocs.Translate
         {
             this.fs = new FakeFileSystem();
             this.logger = new FakeLogger();
+
         }
 
         private string XlatModule(string pyModule, string filename = "module.py")

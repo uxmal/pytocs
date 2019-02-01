@@ -21,9 +21,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Pytocs.TypeInference;
+using Pytocs.Core.TypeInference;
 
-namespace Pytocs
+namespace Pytocs.Core
 {
     public class DirectoryWalker
     {
