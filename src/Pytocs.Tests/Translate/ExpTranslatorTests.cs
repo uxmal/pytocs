@@ -412,7 +412,7 @@ namespace Pytocs.UnitTests.Translate
             Assert.Equal(sExp, Xlat(pysrc));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Ex_instrinsic_iterkeys))]
         public void Ex_instrinsic_iterkeys()
         {
             var pysrc = "foo.iterkeys()";
