@@ -189,8 +189,9 @@ namespace Pytocs.Core.Translate
                     {
                         // Enumerable.Range(0, count);
 
-                        var startExp = new CodePrimitiveExpression(0);
+                        var startExp = m.Prim(0);
                         var countExp = args[0];
+
                         return m.Appl(enumerableRange, startExp, countExp);
                     }
                     case 2:
@@ -199,7 +200,8 @@ namespace Pytocs.Core.Translate
 
                         var startExp = args[0];
                         var stopExp = args[1];
-                        var countExp = new CodeBinaryOperatorExpression(stopExp, CodeOperatorType.Sub, startExp);
+                        var countExp = m.Sub(stopExp, startExp);
+
                         return m.Appl(enumerableRange, startExp, countExp);
                     }
                     case 3:
@@ -211,19 +213,19 @@ namespace Pytocs.Core.Translate
                         var stepExp = args[2];
 
                         // count = (stop - start) divide_ceiling_by step;
-                        var rawCountExp = new CodeBinaryOperatorExpression(stopExp, CodeOperatorType.Sub, startExp);
+                        var rawCountExp = m.Sub(stopExp, startExp);
                         var rawDoubleCountExp = m.Appl(convertToDouble, rawCountExp);
-                        var countDividedExp = new CodeBinaryOperatorExpression(rawDoubleCountExp, CodeOperatorType.Div, stepExp);
+                        var countDividedExp = m.Div(rawDoubleCountExp, stepExp);
                         var countCeilingExp = m.Appl(mathCeiling, countDividedExp); 
                         var countExp = m.Appl(convertToInt32, countCeilingExp);
                         
                         // Enumerable.Range(0, count);
-                        var rangeExp = m.Appl(enumerableRange, new CodePrimitiveExpression(0), countExp);
+                        var rangeExp = m.Appl(enumerableRange, m.Prim(0), countExp);
 
                         // x => start + x * step;
-                        var lambdaArgExp = new CodeVariableReferenceExpression("x");
-                        var offsetExp = new CodeBinaryOperatorExpression(lambdaArgExp, CodeOperatorType.Mul, stepExp);
-                        var positionExp = new CodeBinaryOperatorExpression(startExp, CodeOperatorType.Add, offsetExp);
+                        var lambdaArgExp = expTranslator.gensym.GenSymLocal("_x_", m.TypeRef("object"));
+                        var offsetExp = m.Mul(lambdaArgExp, stepExp);
+                        var positionExp = m.Add(startExp, offsetExp);
                         var mapLambdaExp = new CodeLambdaExpression(new CodeExpression[] {lambdaArgExp}, positionExp);
 
                         
