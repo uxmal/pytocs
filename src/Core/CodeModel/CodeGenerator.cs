@@ -167,6 +167,26 @@ namespace Pytocs.Core.CodeModel
             return new CodeApplicationExpression(fn, args);
         }
 
+        public CodeExpression Sub(CodeExpression minuend, CodeExpression subtrahend)
+        {
+            return new CodeBinaryOperatorExpression(minuend, CodeOperatorType.Sub, subtrahend);
+        }
+
+        public CodeExpression Add(CodeExpression augend, CodeExpression addend)
+        {
+            return new CodeBinaryOperatorExpression(augend, CodeOperatorType.Add, addend);
+        }
+
+        public CodeExpression Div(CodeExpression dividend, CodeExpression divisor)
+        {
+            return new CodeBinaryOperatorExpression(dividend, CodeOperatorType.Div, divisor);
+        }
+
+        public CodeExpression Mul(CodeExpression multiplicand, CodeExpression multiplier)
+        {
+            return new CodeBinaryOperatorExpression(multiplicand, CodeOperatorType.Mul, multiplier);
+        }
+
         public CodeExpression ApplyMethod(CodeExpression obj, string method, params CodeExpression[] args)
         {
             return new CodeApplicationExpression(

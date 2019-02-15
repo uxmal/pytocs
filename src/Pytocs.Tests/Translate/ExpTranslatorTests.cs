@@ -348,6 +348,22 @@ namespace Pytocs.UnitTests.Translate
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
+        [Theory]
+        [InlineData("range(10)", "Enumerable.Range(0, 10)")]
+        [InlineData("range(10 + a)", "Enumerable.Range(0, 10 + a)")]
+        [InlineData("range(2, 10)", "Enumerable.Range(2, 10 - 2)")]
+        [InlineData("range(2 + x, 10)", "Enumerable.Range(2 + x, 10 - (2 + x))")]
+        [InlineData("range(2, 10 + y)", "Enumerable.Range(2, 10 + y - 2)")]
+        [InlineData("range(2, 10, 2)", "Enumerable.Range(0, Convert.ToInt32(Math.Ceiling(Convert.ToDouble(10 - 2) / 2))).Select(_x_1 => 2 + _x_1 * 2)")]
+        [InlineData("range(2, 10, 3 + a);", "Enumerable.Range(0, Convert.ToInt32(Math.Ceiling(Convert.ToDouble(10 - 2) / (3 + a)))).Select(_x_1 => 2 + _x_1 * (3 + a))")]
+        [InlineData("range(2, 10 + b, 5);", "Enumerable.Range(0, Convert.ToInt32(Math.Ceiling(Convert.ToDouble(10 + b - 2) / 5))).Select(_x_1 => 2 + _x_1 * 5)")]
+        [InlineData("range(2 + c, 10, 20);", "Enumerable.Range(0, Convert.ToInt32(Math.Ceiling(Convert.ToDouble(10 - (2 + c)) / 20))).Select(_x_1 => 2 + c + _x_1 * 20)")]
+        public void Ex_range(string pyStm, string sExp)
+        {
+            var x = Xlat(pyStm);
+            Assert.Equal(sExp, x);
+        }
+
         [Fact]
         public void Ex_HashTable()
         {
