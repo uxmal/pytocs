@@ -29,7 +29,8 @@ namespace Pytocs.Core.CodeModel
         void VisitAwait(CodeAwaitExpression awaitExp);
         void VisitBinary(CodeBinaryOperatorExpression bin);
         void VisitCollectionInitializer(CodeCollectionInitializer i);
-        void VisitCondition(CodeConditionExpression codeConditionExpression);
+        void VisitCondition(CodeConditionExpression condition);
+        void VisitNumericLiteral(CodeNumericLiteral literal);
         void VisitFieldReference(CodeFieldReferenceExpression field);
         void VisitLambda(CodeLambdaExpression l);
         void VisitMethodReference(CodeMethodReferenceExpression m);
@@ -61,6 +62,7 @@ namespace Pytocs.Core.CodeModel
         T VisitLambda(CodeLambdaExpression l);
         T VisitMethodReference(CodeMethodReferenceExpression m);
         T VisitNamedArgument(CodeNamedArgument arg);
+        T VisitNumericLiteral(CodeNumericLiteral literal);
         T VisitObjectCreation(CodeObjectCreateExpression c);
         T VisitObjectInitializer(CodeObjectInitializer i);
         T VisitParameterDeclaration(CodeParameterDeclarationExpression param);

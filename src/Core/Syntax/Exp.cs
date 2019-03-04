@@ -217,11 +217,13 @@ namespace Pytocs.Core.Syntax
 
     public class IntLiteral : Exp
     {
-        public readonly long Value;
+        public readonly string Value;
+        public readonly long NumericValue;
 
-        public IntLiteral(long p, string filename, int start, int end) : base(filename, start, end) 
+        public IntLiteral(string value, long p, string filename, int start, int end) : base(filename, start, end) 
         {
-            this.Value = p;
+            this.Value = value;
+            this.NumericValue = p;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -242,11 +244,13 @@ namespace Pytocs.Core.Syntax
 
     public class LongLiteral : Exp
     {
-        public readonly long Value;
+        public readonly string Value;
+        public readonly long NumericValue;
 
-        public LongLiteral(long p, string filename, int start, int end) : base(filename, start, end)
+        public LongLiteral(string value, long p, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Value = p;
+            this.Value = value;
+            this.NumericValue = p;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -266,13 +270,14 @@ namespace Pytocs.Core.Syntax
 
     public class BigLiteral : Exp
     {
-        public BigInteger Value { get; }
+        public string Value { get; }
+        public BigInteger NumericValue { get; }
 
-        public BigLiteral(BigInteger p, string filename, int start, int end) : base(filename, start, end)
+        public BigLiteral(string value, BigInteger p, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Value = p;
+            this.Value = value;
+            this.NumericValue = p;
         }
-
 
         public override T Accept<T>(IExpVisitor<T> v)
         {
@@ -293,12 +298,14 @@ namespace Pytocs.Core.Syntax
 
     public class RealLiteral : Exp
     {
-        public RealLiteral(double p, string filename, int start, int end) : base(filename, start, end)
+        public RealLiteral(string value, double p, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Value = p;
+            this.Value = value;
+            this.NumericValue = p;
         }
 
-        public readonly double Value;
+        public readonly string Value;
+        public readonly double NumericValue;
 
         public override void Accept(IExpVisitor v)
         {
@@ -312,25 +319,27 @@ namespace Pytocs.Core.Syntax
 
         public override void Write(TextWriter writer)
         {
-            if (Value == double.PositiveInfinity)
+            if (NumericValue == double.PositiveInfinity)
                 writer.Write("float('+inf')");
-            else if (Value == double.NegativeInfinity)
+            else if (NumericValue == double.NegativeInfinity)
                 writer.Write("float('-inf')");
             else
             {
-                writer.Write(Value.ToString(CultureInfo.InvariantCulture));
+                writer.Write(Value);
             }
         }
     }
 
     public class ImaginaryLiteral : Exp
     {
-        public ImaginaryLiteral(double im, string filename, int start, int end) : base(filename, start, end)
+        public ImaginaryLiteral(string value, double im, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Value = im;
+            this.Value = value;
+            this.NumericValue = im;
         }
 
-        public double Value { get; }
+        public string Value { get; }
+        public double NumericValue { get; }
 
         public override T Accept<T>(IExpVisitor<T> v)
         {
@@ -344,7 +353,7 @@ namespace Pytocs.Core.Syntax
 
         public override void Write(TextWriter writer)
         {
-            writer.Write(Value.ToString(CultureInfo.InvariantCulture));
+            writer.Write(Value);
             writer.Write("j");
         }
     }

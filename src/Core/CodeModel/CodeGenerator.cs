@@ -491,6 +491,11 @@ namespace Pytocs.Core.CodeModel
             return exp;
         }
 
+        public CodeNumericLiteral Number(string sNumber)
+        {
+            return new CodeNumericLiteral(sNumber);
+        }
+
         public CodePrimitiveExpression Prim(object o)
         {
             if (o is long l)

@@ -28,15 +28,17 @@ namespace Pytocs.Core.Syntax
         public readonly int Indent;
         public readonly TokenType Type;
         public readonly object Value;
+        public readonly object NumericValue;
         public readonly int Start;
         public readonly int End;
 
-        public Token(int lineNumber, int indent, TokenType type, object value, int start, int end)
+        public Token(int lineNumber, int indent, TokenType type, object value, object numericValue, int start, int end)
         {
             this.LineNumber = lineNumber;
             this.Indent = indent;
             this.Type = type;
             this.Value = value;
+            this.NumericValue = numericValue;
             this.Start = start;
             this.End = end;
         }

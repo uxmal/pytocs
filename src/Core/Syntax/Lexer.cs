@@ -121,7 +121,7 @@ namespace Pytocs.Core.Syntax
             if (token.Type != TokenType.NONE)
             {
                 Token t = this.token;
-                token = new Token(0, 0, TokenType.NONE, null, 0, 0);
+                token = new Token(0, 0, TokenType.NONE, null, null, 0, 0);
                 return t;
             }
             return GetToken();
@@ -203,6 +203,7 @@ namespace Pytocs.Core.Syntax
 
         private Token GetToken()
         {
+            string lexeme;
             this.sb = new StringBuilder();
             State oldState = (State)(-1);
             for (; ; )
@@ -483,20 +484,21 @@ namespace Pytocs.Core.Syntax
                     {
                     case 'x':
                     case 'X':
-                        Transition(State.Hex); break;
+                        Accum(ch, State.Hex); break;
                     case 'o':
                     case 'O':
                         Transition(State.Octal); break;
                     case 'b':
                     case 'B':
-                        Transition(State.Binary); break;
+                        Accum(ch, State.Binary); break;
                     case 'e':
                     case 'E':
                         Accum(ch, State.RealExponent);
                         break;
                     case 'L':
                     case 'l':
-                        return EatChToken(TokenType.LONGINTEGER, Convert.ToInt64(sb.ToString()));
+                        Advance();
+                        return Token(TokenType.LONGINTEGER, sb.ToString(), Convert.ToInt64(sb.ToString()));
                     case '.':
                         Accum(ch, State.RealFraction);
                         break;
@@ -509,7 +511,7 @@ namespace Pytocs.Core.Syntax
                             Accum(ch, State.Decimal);
                             break;
                         }
-                        return Token(TokenType.INTEGER, (object)0);
+                        return Token(TokenType.INTEGER, sb.ToString(), (object)0);
                     }
                     break;
                 case State.Decimal:
@@ -528,23 +530,28 @@ namespace Pytocs.Core.Syntax
                     case 'j':
                         Advance();
                         return Imaginary();
+                    case '_':
+                        Accum(ch, State.Decimal);
+                        break;
                     default:
                         if (Char.IsDigit(ch))
                         {
                             Accum(ch, State.Decimal);
                             break;
                         }
-                        if (int.TryParse(sb.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var num))
+                        lexeme =  sb.ToString();
+                        var sNumber = sb.Replace("_", "").ToString();
+                        if (int.TryParse(sNumber, NumberStyles.Any, CultureInfo.InvariantCulture, out var num))
                         {
-                            return Token(TokenType.INTEGER, num);
+                            return Token(TokenType.INTEGER, lexeme, num);
                         }
-                        else if (long.TryParse(sb.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var lnum))
+                        else if (long.TryParse(sNumber, NumberStyles.Any, CultureInfo.InvariantCulture, out var lnum))
                         {
-                            return Token(TokenType.LONGINTEGER, lnum);
+                            return Token(TokenType.LONGINTEGER, lexeme, lnum);
                         }
-                        else if (BigInteger.TryParse(sb.ToString(), NumberStyles.Any, CultureInfo.InvariantCulture, out var bignum))
+                        else if (BigInteger.TryParse(sNumber, NumberStyles.Any, CultureInfo.InvariantCulture, out var bignum))
                         {
-                            return Token(TokenType.LONGINTEGER, bignum);
+                            return Token(TokenType.LONGINTEGER, lexeme, bignum);
                         }
                         break;
                     }
@@ -630,35 +637,40 @@ namespace Pytocs.Core.Syntax
                     case 'd':
                     case 'e':
                     case 'f':
+                    case '_':
                         Accum(ch, State.Hex);
                         break;
                     case 'L':
                     case 'l':
                         Advance();
-                        if (long.TryParse(sb.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var l))
+                        lexeme = sb.ToString();
+                        var sNumber = sb.Replace("_", "").ToString(2, sb.Length-2);
+                        if (long.TryParse(sNumber, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var l))
                         {
-                            return Token(TokenType.LONGINTEGER, l);
+                            return Token(TokenType.LONGINTEGER, lexeme, l);
                         }
-                        else if (BigInteger.TryParse(sb.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var big))
+                        else if (BigInteger.TryParse(sNumber, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var big))
                         {
-                            return Token(TokenType.LONGINTEGER, big);
+                            return Token(TokenType.LONGINTEGER, lexeme, big);
                         }
                         else
                         {
                             throw new NotImplementedException($"Unexpected error lexing '{sb}'.");
                         }
                     default:
-                        if (int.TryParse(sb.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var num))
+                        lexeme = sb.ToString();
+                        sNumber = sb.Replace("_", "").ToString(2, sb.Length-2);
+                        if (int.TryParse(sNumber, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var num))
                         {
-                            return Token(TokenType.INTEGER, num);
+                            return Token(TokenType.INTEGER, lexeme, num);
                         }
-                        if (long.TryParse(sb.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var lnum))
+                        if (long.TryParse(sNumber, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var lnum))
                         {
-                            return Token(TokenType.LONGINTEGER, lnum);
+                            return Token(TokenType.LONGINTEGER, lexeme, lnum);
                         }
-                        else if (BigInteger.TryParse(sb.ToString(), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var bignum))
+                        else if (BigInteger.TryParse(sNumber, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var bignum))
                         {
-                            return Token(TokenType.LONGINTEGER, bignum);
+                            return Token(TokenType.LONGINTEGER, lexeme, bignum);
                         }
                         else
                         {
@@ -683,7 +695,7 @@ namespace Pytocs.Core.Syntax
                     case 'l':
                         return EatChToken(TokenType.LONGINTEGER, Convert.ToInt64(sb.ToString(), 8));
                     default:
-                        return Token(TokenType.INTEGER, Convert.ToInt64(sb.ToString(), 8));
+                        return Token(TokenType.INTEGER, sb.ToString(), Convert.ToInt64(sb.ToString(), 8));
                     }
                     break;
                 case State.Binary:
@@ -697,7 +709,7 @@ namespace Pytocs.Core.Syntax
                     case 'l':
                         return EatChToken(TokenType.LONGINTEGER, ConvertBinaryToInt(sb.ToString()));
                     default:
-                        return Token(TokenType.INTEGER, (long)ConvertBinaryToInt(sb.ToString()));
+                        return BinaryInteger(sb.ToString());
                     }
                     break;
                 case State.BlankLineComment:
@@ -1000,15 +1012,23 @@ namespace Pytocs.Core.Syntax
             }
         }
 
+        // Python and C# binary literals look the same.
+        private Token BinaryInteger(string lexeme)
+        {
+            return Token(TokenType.INTEGER, lexeme, (long)ConvertBinaryToInt(lexeme.Substring(2)));
+        }
+
         private Token LongInteger()
         {
+            Advance();
+            var value = sb.ToString();
             try
             {
-                return EatChToken(TokenType.LONGINTEGER,Convert.ToInt64(sb.ToString()));
+                return Token(TokenType.LONGINTEGER, value, Convert.ToInt64(value));
             }
             catch
             {
-                return EatChToken(TokenType.LONGINTEGER, (long)Convert.ToUInt64(sb.ToString()));
+                return Token(TokenType.LONGINTEGER, value, (long)Convert.ToUInt64(value));
             }
         }
 
@@ -1098,16 +1118,17 @@ namespace Pytocs.Core.Syntax
         }
 
         private Token Token(TokenType t) { return Token(t, null, State.Base); }
-        private Token Token(TokenType t, State newState) { return Token(t, null, newState); }
-        private Token Token(TokenType t, object value) { return Token(t, value, State.Base); }
-        private Token Token(TokenType t, object value, State newState)
+        private Token Token(TokenType t, State newState) { return Token(t, null, null, newState); }
+        private Token Token(TokenType t, object value) { return Token(t, value, null, State.Base); }
+        private Token Token(TokenType t, object value, object numValue) { return Token(t, value, numValue, State.Base); }
+        private Token Token(TokenType t, object value, object numValue, State newState)
         {
             if (t == TokenType.NEWLINE)
             {
                 this.lastLineEndedInComment = (this.lastTokenType == TokenType.COMMENT);
             }
             this.st = newState;
-            var token = new Token(LineNumber, indent, t, value, posStart, posEnd);
+            var token = new Token(LineNumber, indent, t, value, numValue, posStart, posEnd);
             posStart = posEnd;
             this.lastTokenType = t;
             return token;
@@ -1136,29 +1157,31 @@ namespace Pytocs.Core.Syntax
         private Token Real()
         {
             double d;
+            string value = sb.ToString();
             try
             {
-                d = Convert.ToDouble(sb.ToString(), CultureInfo.InvariantCulture);
+                d = Convert.ToDouble(value, CultureInfo.InvariantCulture);
             }
             catch (OverflowException)
             {
-                d = (sb[0] != '-') ? double.PositiveInfinity : double.NegativeInfinity;
+                d = (value[0] != '-') ? double.PositiveInfinity : double.NegativeInfinity;
             }
-            return Token(TokenType.REAL, d, State.Base);
+            return Token(TokenType.REAL, value, d, State.Base);
         }
 
         private Token Imaginary()
         {
             double d;
+            string value = sb.ToString();
             try
             {
-                d = Convert.ToDouble(sb.ToString(), CultureInfo.InvariantCulture);
+                d = Convert.ToDouble(value, CultureInfo.InvariantCulture);
             }
             catch (OverflowException)
             {
                 d = (sb[0] != '-') ? double.PositiveInfinity : double.NegativeInfinity;
             }
-            return Token(TokenType.IMAG, d, State.Base);
+            return Token(TokenType.IMAG, value, d, State.Base);
         }
     }
 }

@@ -202,7 +202,7 @@ namespace Pytocs.Core.Syntax
                     {
                         this.Tokens[i] = new Token(
                             t.LineNumber, t.Indent,
-                            TokenType.NEWLINE, null,
+                            TokenType.NEWLINE, null, null,
                             t.Start, t.End);
                     }
                 }

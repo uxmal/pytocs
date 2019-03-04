@@ -738,14 +738,22 @@ namespace Pytocs.UnitTests.Translate
         [Fact]
         public void Ex_set_unpackers()
         {
-            var pySec = "{ *set1, 0, 1, *set2, '3' }";
+            var pySrc = "{ *set1, 0, 1, *set2, '3' }";
             var sExp = "SetUtils.Unpack<object>(set1, new object[] {" + nl +
                 "    0," + nl +
                 "    1," + nl +
                 "}, set2, new object[] {" + nl +
                 "    \"3\"," + nl +
                 "})";
-            Assert.Equal(sExp, Xlat(pySec));
+            Assert.Equal(sExp, Xlat(pySrc));
+        }
+
+        [Fact]
+        public void Ex_hex_literal()
+        {
+            var pySrc = "0x_1234";
+            var sExp = "0x_1234";
+            Assert.Equal(sExp, Xlat(pySrc));
         }
     }
 }

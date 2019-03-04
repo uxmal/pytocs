@@ -22,6 +22,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using Pytocs.Core.Types;
+using System.Globalization;
 
 namespace Pytocs.Core.Translate
 {
@@ -276,15 +277,15 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitRealLiteral(RealLiteral r)
         {
-            if (r.Value == double.PositiveInfinity)
+            if (r.NumericValue == double.PositiveInfinity)
             {
                 return m.Access(m.TypeRefExpr("double"), "PositiveInfinity");
             }
-            else if (r.Value == double.NegativeInfinity)
+            else if (r.NumericValue == double.NegativeInfinity)
             {
                 return m.Access(m.TypeRefExpr("double"), "NegativeInfinity");
             }
-            return m.Prim(r.Value);
+            return m.Prim(r.NumericValue);
         }
 
 
@@ -393,7 +394,7 @@ namespace Pytocs.Core.Translate
         {
             if (u.op == Op.Sub && u.e is RealLiteral real)
             {
-                return new RealLiteral(-real.Value, real.Filename, real.Start, real.End).Accept(this);
+                return new RealLiteral("-" + real.Value, -real.NumericValue, real.Filename, real.Start, real.End).Accept(this);
             }
             var e = u.e.Accept(this);
             return new CodeUnaryOperatorExpression(mppyoptocsop[u.op], e);
@@ -471,15 +472,22 @@ namespace Pytocs.Core.Translate
 
         private CodeExpression CondenseComplexConstant(CodeExpression l, CodeExpression r, double imScale)
         {
-            if (r is CodePrimitiveExpression primR && primR.Value is Complex complexR &&
-                l is CodePrimitiveExpression primL)
+            if (r is CodePrimitiveExpression primR && primR.Value is Complex complexR)
             {
-                if (primL.Value is double doubleL)
+                if (l is CodePrimitiveExpression primL)
                 {
-                    return m.Prim(new Complex(doubleL + complexR.Real, imScale * complexR.Imaginary));
+                    if (primL.Value is double doubleL)
+                    {
+                        return m.Prim(new Complex(doubleL + complexR.Real, imScale * complexR.Imaginary));
+                    }
+                    else if (primL.Value is int intL)
+                    {
+                        return m.Prim(new Complex(intL + complexR.Real, imScale * complexR.Imaginary));
+                    }
                 }
-                else if (primL.Value is int intL)
+                else if (l is CodeNumericLiteral litL)
                 {
+                    var intL = Convert.ToInt64(litL.Literal, CultureInfo.InvariantCulture);
                     return m.Prim(new Complex(intL + complexR.Real, imScale * complexR.Imaginary));
                 }
             }
@@ -668,17 +676,17 @@ namespace Pytocs.Core.Translate
         public CodeExpression VisitImaginary(ImaginaryLiteral im)
         {
             m.EnsureImport("System.Numerics");
-            return m.Prim(new Complex(0, im.Value));
+            return m.Prim(new Complex(0, im.NumericValue));
         }
 
         public CodeExpression VisitIntLiteral(IntLiteral i)
         {
-            return m.Prim(i.Value);
+            return m.Number(i.Value);
         }
 
         public CodeExpression VisitLongLiteral(LongLiteral l)
         {
-            return m.Prim(l.Value);
+            return m.Number(l.Value);
         }
 
         public CodeExpression VisitStarExp(StarExp s)

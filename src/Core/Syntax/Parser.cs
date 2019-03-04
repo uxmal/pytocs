@@ -2084,10 +2084,10 @@ eval_input: testlist NEWLINE* ENDMARKER
                 return NumericLiteral(t);
             case TokenType.REAL:
                 t = lexer.Get();
-                return new RealLiteral((double)t.Value, filename, t.Start, t.End);
+                return new RealLiteral((string)t.Value, (double)t.NumericValue, filename, t.Start, t.End);
             case TokenType.IMAG:
                 t = lexer.Get();
-                return new ImaginaryLiteral((double)t.Value, filename, t.Start, t.End);
+                return new ImaginaryLiteral((string)t.Value, (double)t.NumericValue, filename, t.Start, t.End);
             case TokenType.ELLIPSIS:
                 t = lexer.Get();
                 return new Ellipsis(filename, t.Start, t.End);
@@ -2107,17 +2107,17 @@ eval_input: testlist NEWLINE* ENDMARKER
 
         private Exp NumericLiteral(Token t)
         {
-            if (t.Value is BigInteger bignum)
+            if (t.NumericValue is BigInteger bignum)
             {
-                return new BigLiteral(bignum, filename, t.Start, t.End);
+                return new BigLiteral((string)t.Value, bignum, filename, t.Start, t.End);
             }
-            else if (t.Value is long l)
+            else if (t.NumericValue is long l)
             {
-                return new LongLiteral(l, filename, t.Start, t.End);
+                return new LongLiteral((string)t.Value, l, filename, t.Start, t.End);
             }
-            else if (t.Value is int i)
+            else if (t.NumericValue is int i)
             {
-                return new IntLiteral(i, filename, t.Start, t.End);
+                return new IntLiteral((string)t.Value, i, filename, t.Start, t.End);
             }
             else
                 throw Error(Resources.ErrUnparseableIntegerToken, t);

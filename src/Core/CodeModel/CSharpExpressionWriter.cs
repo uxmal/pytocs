@@ -445,6 +445,10 @@ namespace Pytocs.Core.CodeModel
             writer.WriteName(var.Name);
         }
 
+        public void VisitNumericLiteral(CodeNumericLiteral literal)
+        {
+            writer.Write(literal.Literal);
+        }
         public void VisitObjectCreation(CodeObjectCreateExpression c)
         {
             writer.Write("new");

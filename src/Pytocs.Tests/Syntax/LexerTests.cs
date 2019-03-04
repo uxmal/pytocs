@@ -65,7 +65,7 @@ namespace Pytocs.UnitTests.Syntax
         [Fact]
         public void LexId()
         {
-            Assert.Equal(new Token(0, 0, TokenType.ID, "hoo", 0, 3), Lex("hoo"));
+            Assert.Equal(new Token(0, 0, TokenType.ID, "hoo", null, 0, 3), Lex("hoo"));
         }
 
         [Fact]
@@ -164,15 +164,15 @@ namespace Pytocs.UnitTests.Syntax
         [Fact]
         public void LexInt()
         {
-            Assert.Equal(0, (int)Lex("0").Value);
-            Assert.Equal(1, (int)Lex("1").Value);
-            Assert.Equal(30, (int)Lex("30").Value);
-            Assert.Equal(0xF, (int)Lex("0xF").Value);
-            Assert.Equal(0xed, (int)Lex("0xed").Value);
-            Assert.Equal(10, (long)Lex("0o12").Value);
-            Assert.Equal(13, (long)Lex("0O15").Value);
-            Assert.Equal(0xA, (long)Lex("0b1010").Value);
-            Assert.Equal(0xA, (long)Lex("0B1010").Value);
+            Assert.Equal(0, (int)Lex("0").NumericValue);
+            Assert.Equal(1, (int)Lex("1").NumericValue);
+            Assert.Equal(30, (int)Lex("30").NumericValue);
+            Assert.Equal(0xF, (int)Lex("0xF").NumericValue);
+            Assert.Equal(0xed, (int)Lex("0xed").NumericValue);
+            Assert.Equal(10, (long)Lex("0o12").NumericValue);
+            Assert.Equal(13, (long)Lex("0O15").NumericValue);
+            Assert.Equal(0xA, (long)Lex("0b1010").NumericValue);
+            Assert.Equal(0B1010, (long)Lex("0B1010").NumericValue);
         }
 
         private string LexString(string pyStr)
@@ -272,7 +272,7 @@ namespace Pytocs.UnitTests.Syntax
         {
             var token = Lex("0.1");
             Assert.Equal(TokenType.REAL, token.Type);
-            Assert.Equal(0.1, token.Value);
+            Assert.Equal(0.1, token.NumericValue);
         }
 
         [Fact]
@@ -412,7 +412,7 @@ namespace Pytocs.UnitTests.Syntax
         public void Lex_Float_ScientificNotation()
         {
             var tok = Lex("1E-5");
-            var str = (double)tok.Value;
+            var str = (double)tok.NumericValue;
             Assert.Equal("1E-05", str.ToString());
         }
 
@@ -420,7 +420,7 @@ namespace Pytocs.UnitTests.Syntax
         public void Lex_Float_ScientificNotation_Zero()
         {
             var tok = Lex("0E0");
-            var str = (double)tok.Value;
+            var str = (double)tok.NumericValue;
             Assert.Equal("0", str.ToString());
         }
 
@@ -429,7 +429,7 @@ namespace Pytocs.UnitTests.Syntax
         {
             var tok = Lex("1e300000");
             Assert.Equal(TokenType.REAL, tok.Type);
-            Assert.Equal(double.PositiveInfinity, (double)tok.Value);
+            Assert.Equal(double.PositiveInfinity, (double)tok.NumericValue);
         }
 
         [Fact]
@@ -437,7 +437,17 @@ namespace Pytocs.UnitTests.Syntax
         {
             var tok = Lex("3j");
             Assert.Equal(TokenType.IMAG, tok.Type);
-            Assert.Equal(3.0, (double)tok.Value);
+            Assert.Equal("3", (string)tok.Value);
+            Assert.Equal(3.0, (double)tok.NumericValue);
+        }
+
+        [Fact]
+        public void Lex_Numeric_With_Visual_Separators()
+        {
+            var tok = Lex("3_000");
+            Assert.Equal(TokenType.INTEGER, tok.Type);
+            Assert.Equal("3_000", tok.Value);
+            Assert.Equal(3000, tok.NumericValue);
         }
 
         [Fact]
@@ -459,6 +469,14 @@ namespace Pytocs.UnitTests.Syntax
         {
             var tok = Lex("rb'foo'");
             Assert.Equal("br\"foo\"", tok.Value.ToString());
+        }
+
+        [Fact]
+        public void Lex_integer_literal()
+        {
+            var tok = Lex("2_147_483_648");
+            Assert.Equal("2_147_483_648", tok.Value.ToString());
+            Assert.Equal("2147483648", tok.NumericValue.ToString());
         }
     }
 }
