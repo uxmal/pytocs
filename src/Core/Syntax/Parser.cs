@@ -967,6 +967,10 @@ eval_input: testlist NEWLINE* ENDMARKER
                     var tok = lexer.Get();
                     args = arglist(printId, tok.Start).args;
                     Expect(TokenType.RPAREN);
+                    if (PeekAndDiscard(TokenType.COMMA))
+                    {
+                        trailing_comma = true;
+                    }
                 }
                 else
                 {

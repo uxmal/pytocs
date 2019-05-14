@@ -1553,6 +1553,17 @@ public static object func(object cfg_node) {
 ";
             Assert.Equal(sExp, XlatModule(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Stmt_print_trailing_comma))]
+        public void Stmt_print_trailing_comma()
+        {
+            var pySrc =
+@"print('Hello:'),
+";
+            var sExp = "Console.Write(\"Hello:\");" + Environment.NewLine;
+
+            Assert.Equal(sExp, XlatStmts(pySrc));
+        }
     }
 }
 #endif

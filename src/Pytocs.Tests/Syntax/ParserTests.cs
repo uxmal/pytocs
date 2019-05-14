@@ -841,5 +841,17 @@ else:
 
             AssertStmt(sExp, ParseStmt(pySrc));
         }
+
+
+        [Fact(DisplayName = nameof(Parser_print_trailing_comma))]
+        public void Parser_print_trailing_comma()
+        {
+            var pySrc =
+@"print('foo:'),
+";
+            var sExp = "print \"foo:\"," + Environment.NewLine;
+
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
     }
 }

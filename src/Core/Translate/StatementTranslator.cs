@@ -571,7 +571,7 @@ namespace Pytocs.Core.Translate
                 e = gen.TypeRefExpr("Console");
             }
             e = gen.MethodRef(
-                e, "WriteLine");
+                e, p.trailingComma ? "Write" : "WriteLine");
             gen.SideEffect(
                 gen.Appl(
                     e,
