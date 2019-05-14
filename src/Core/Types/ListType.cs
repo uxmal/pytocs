@@ -27,14 +27,13 @@ namespace Pytocs.Core.Types
         public List<DataType> positional = new List<DataType>();
         public List<object> values = new List<object>();
 
-        public ListType()
-            : this(DataType.Unknown)
+        public ListType() : this(DataType.Unknown)
         {
         }
 
-        public ListType(DataType elt0)
+        public ListType(DataType elt)
         {
-            eltType = elt0;
+            eltType = elt;
         }
 
         public override T Accept<T>(IDataTypeVisitor<T> visitor)
@@ -52,7 +51,6 @@ namespace Pytocs.Core.Types
             eltType = UnionType.Union(eltType, another);
             positional.Add(another);
         }
-
 
         public void addValue(object v)
         {

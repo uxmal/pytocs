@@ -34,10 +34,10 @@ namespace Pytocs.Core
     /// </summary>
     public class Translator
     {
-        private string nmspace;
-        private string moduleName;
-        private IFileSystem fs;
-        private ILogger logger;
+        private readonly string nmspace;
+        private readonly string moduleName;
+        private readonly IFileSystem fs;
+        private readonly ILogger logger;
 
         public Translator(string nmspace, string moduleName, IFileSystem fs, ILogger logger)
         {

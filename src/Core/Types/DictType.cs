@@ -58,12 +58,11 @@ namespace Pytocs.Core.Types
             {
                 return true;
             }
-            else if (other is DictType)
+            else if (other is DictType co)
             {
                 typeStack.Push(this, dtOther);
-                DictType co = (DictType) other;
                 bool ret = (co.KeyType.Equals(KeyType) &&
-                        co.ValueType.Equals(ValueType));
+                            co.ValueType.Equals(ValueType));
                 typeStack.Pop(this, other);
                 return ret;
             }

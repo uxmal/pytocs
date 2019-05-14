@@ -24,6 +24,7 @@ namespace Pytocs.Core.Types
 {
     public interface IDataTypeVisitor<T>
     {
+        T VisitAwaitable(AwaitableType awaitable);
         T VisitBool(BoolType b);
         T VisitClass(ClassType c);
         T VisitComplex(ComplexType c);

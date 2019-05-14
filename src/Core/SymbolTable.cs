@@ -37,16 +37,14 @@ namespace Pytocs.Core
 
         public Symbol GetSymbol(string name)
         {
-            Symbol s;
-            if (!symbols.TryGetValue(name, out s))
+            if (!symbols.TryGetValue(name, out Symbol s))
                 s = null;
             return s;
         }
 
         public Symbol Reference(string name)
         {
-            Symbol s;
-            if (!symbols.TryGetValue(name, out s))
+            if (!symbols.TryGetValue(name, out Symbol s))
             {
                 s = new Symbol { Name = name };
                 symbols.Add(s.Name, s);

@@ -35,6 +35,11 @@ namespace Pytocs.Core.Types
             this.ctr = new CyclicTypeRecorder();
         }
 
+        public string VisitAwaitable(AwaitableType awaitable)
+        {
+            return "awaitable(" + awaitable.ResultType.Accept(this) + ")";
+        }
+
         public string VisitBool(BoolType b)
         {
             if (showLiterals)

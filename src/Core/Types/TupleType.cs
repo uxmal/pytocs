@@ -34,7 +34,6 @@ namespace Pytocs.Core.Types
         }
 
         public TupleType(List<DataType> eltTypes)
-            : this()
         {
             this.eltTypes = eltTypes;
         }
@@ -43,13 +42,6 @@ namespace Pytocs.Core.Types
             : this()
         {
             this.eltTypes.Add(elt0);
-        }
-
-        public TupleType(DataType elt0, DataType elt1) :
-            this()
-        {
-            this.eltTypes.Add(elt0);
-            this.eltTypes.Add(elt1);
         }
 
         public TupleType(params DataType[] types)

@@ -29,7 +29,7 @@ namespace Pytocs.Core.Types
         public ClassType(string name, State parent, string path)
         {
             this.name = name;
-            this.Table = new State(parent, State.StateType.CLASS) { Type = this };
+            this.Table = new State(parent, State.StateType.CLASS) { DataType = this };
             if (parent != null)
             {
                 Table.Path = path;

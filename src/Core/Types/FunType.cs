@@ -49,7 +49,7 @@ namespace Pytocs.Core.Types
 
         public FunType(DataType from, DataType to)
         {
-            addMapping(from, to);
+            AddMapping(from, to);
         }
 
         public DataType SelfType { get; set; }                 // self's type for calls
@@ -59,7 +59,7 @@ namespace Pytocs.Core.Types
             return visitor.VisitFun(this);
         }
 
-        public void addMapping(DataType from, DataType to)
+        public void AddMapping(DataType from, DataType to)
         {
             if (from is TupleType tuple)
             {
@@ -118,6 +118,21 @@ namespace Pytocs.Core.Types
         public override int GetHashCode()
         {
             return "FunType".GetHashCode();
+        }
+
+        /// <summary>
+        /// Create a new FunType which is an awaitable version of this FunType.
+        /// </summary>
+        public FunType MakeAwaitable()
+        {
+            var fnAwaitable = new FunType(this.Definition, this.env)
+            {
+                arrows = this.arrows.ToDictionary(k => k.Key, v => (DataType)new AwaitableType(v.Value)),
+                lambda = this.lambda,
+                Class = this.Class,
+                defaultTypes = this.defaultTypes
+            };
+            return fnAwaitable;
         }
 
         private bool Subsumed(DataType type1, DataType type2)

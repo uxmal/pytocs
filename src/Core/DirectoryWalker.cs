@@ -27,9 +27,9 @@ namespace Pytocs.Core
 {
     public class DirectoryWalker
     {
-        private IFileSystem fs;
-        private string rootDirectory;
-        private string pattern;
+        private readonly IFileSystem fs;
+        private readonly string rootDirectory;
+        private readonly string pattern;
 
         public DirectoryWalker(IFileSystem fs, string directory, string pattern) 
         {

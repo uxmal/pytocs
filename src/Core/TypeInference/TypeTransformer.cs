@@ -32,7 +32,8 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitAsync(AsyncStatement a)
         {
-            throw new NotImplementedException();
+            var dt = VisitFunctionDef((FunctionDef)a.Statement, true);
+            return dt;
         }
 
         public DataType VisitAssert(AssertStatement a)
@@ -99,7 +100,8 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitAwait(AwaitExp e)
         {
-            throw new NotImplementedException();
+            var dt = e.exp.Accept(this);
+            return dt;
         }
 
         public DataType VisitFieldAccess(AttributeAccess a)
@@ -132,7 +134,7 @@ namespace Pytocs.Core.TypeInference
             ISet<Binding> bs = targetType.Table.LookupAttribute(a.FieldName.Name);
             if (bs == null)
             {
-                analyzer.putProblem(a.FieldName, "attribute not found in type: " + targetType);
+                analyzer.AddProblem(a.FieldName, "attribute not found in type: " + targetType);
                 DataType t = DataType.Unknown;
                 t.Table.Path = targetType.Table.ExtendPath(analyzer, a.FieldName.Name);
                 return t;
@@ -359,15 +361,15 @@ namespace Pytocs.Core.TypeInference
                 DataType toType = func.Definition.body.Accept(new TypeTransformer(funcTable, analyzer));
                 if (MissingReturn(toType))
                 {
-                    analyzer.putProblem(func.Definition.name, "Function doesn't always return a value");
+                    analyzer.AddProblem(func.Definition.name, "Function doesn't always return a value");
                     if (call != null)
                     {
-                        analyzer.putProblem(call, "Call doesn't always return a value");
+                        analyzer.AddProblem(call, "Call doesn't always return a value");
                     }
                 }
 
                 toType = UnionType.Remove(toType, DataType.Cont);
-                func.addMapping(fromType, toType);
+                func.AddMapping(fromType, toType);
                 func.SelfType = null;
                 return toType;
             }
@@ -488,7 +490,7 @@ namespace Pytocs.Core.TypeInference
                             aType = DataType.Unknown;
                             if (call != null)
                             {
-                                analyzer.putProblem(parameters[i].Id, //$REVIEW: should be using identifiers
+                                analyzer.AddProblem(parameters[i].Id, //$REVIEW: should be using identifiers
                                         "unable to bind argument:" + parameters[i]);
                             }
                         }
@@ -562,7 +564,7 @@ namespace Pytocs.Core.TypeInference
         {
             if (cl.Table.Parent != null)
             {
-                DataType cls = cl.Table.Parent.Type;
+                DataType cls = cl.Table.Parent.DataType;
                 if (cls != null && cls is ClassType)
                 {
                     AddReadOnlyAttr(analyzer, cl, "im_class", cls, BindingKind.CLASS);
@@ -615,7 +617,7 @@ namespace Pytocs.Core.TypeInference
                     }
                     break;
                 default:
-                    analyzer.putProblem(@base, @base + " is not a class");
+                    analyzer.AddProblem(@base, @base + " is not a class");
                     break;
                 }
                 baseTypes.Add(baseType);
@@ -800,13 +802,22 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitFunctionDef(FunctionDef f)
         {
+            return VisitFunctionDef(f, false);
+        }
+
+        public DataType VisitFunctionDef(FunctionDef f, bool isAsync)
+        {
             State env = scope.getForwarding();
-            FunType fun =  new FunType(f, env);
+            FunType fun = new FunType(f, env);
             fun.Table.Parent = this.scope;
             fun.Table.Path = scope.ExtendPath(analyzer, f.name.Name);
             fun.SetDefaultTypes(ResolveList(f.parameters
                 .Where(p => p.test != null)
                 .Select(p => p.test)));
+            if (isAsync)
+            {
+                fun = fun.MakeAwaitable();
+            }
             analyzer.AddUncalled(fun);
 
             BindingKind funkind;
@@ -826,7 +837,7 @@ namespace Pytocs.Core.TypeInference
                 funkind = BindingKind.FUNCTION;
             }
 
-            var ct = scope.Type as ClassType;
+            var ct = scope.DataType as ClassType;
             if (ct != null)
             {
                 fun.Class = ct;
@@ -958,7 +969,7 @@ namespace Pytocs.Core.TypeInference
                 DataType mod = analyzer.LoadModule(a.orig.segs, scope);
                 if (mod == null)
                 {
-                    analyzer.putProblem(i, "Cannot load module");
+                    analyzer.AddProblem(i, $"Cannot load module {a}");
                 }
                 else if (a.alias != null)
                 {
@@ -978,7 +989,7 @@ namespace Pytocs.Core.TypeInference
             DataType dtModule = analyzer.LoadModule(i.DottedName.segs, scope);
             if (dtModule == null)
             {
-                analyzer.putProblem(i, "Cannot load module");
+                analyzer.AddProblem(i, "Cannot load module");
             }
             else if (i.isImportStar())
             {
@@ -1187,7 +1198,7 @@ namespace Pytocs.Core.TypeInference
             }
             else
             {
-                analyzer.putProblem(id, "unbound variable " + id.Name);
+                analyzer.AddProblem(id, "unbound variable " + id.Name);
                 analyzer.Unresolved.Add(id);
                 DataType t = DataType.Unknown;
                 t.Table.Path = scope.ExtendPath(analyzer, id.Name);
@@ -1516,12 +1527,12 @@ namespace Pytocs.Core.TypeInference
 
         protected void AddError(Node n, string msg)
         {
-            analyzer.putProblem(n, msg);
+            analyzer.AddProblem(n, msg);
         }
 
         protected void AddWarning(Node n, string msg)
         {
-            analyzer.putProblem(n, msg);
+            analyzer.AddProblem(n, msg);
         }
 
         /// <summary>

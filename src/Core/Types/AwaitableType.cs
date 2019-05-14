@@ -16,13 +16,25 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace Pytocs.Core
+namespace Pytocs.Core.Types
 {
-    public class Modules
+    /// <summary>
+    /// Model a Python awaitable type.
+    /// </summary>
+    public class AwaitableType : DataType
     {
+        public AwaitableType(DataType resultType)
+        {
+            this.ResultType = resultType;
+        }
+
+        public DataType ResultType { get; }
+
+        public override T Accept<T>(IDataTypeVisitor<T> visitor)
+        {
+            return visitor.VisitAwaitable(this);
+        }
     }
 }

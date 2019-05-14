@@ -30,7 +30,7 @@ namespace Pytocs.Core.Types
             this.qname = qName;
             this.Table = new State(parent, State.StateType.MODULE);
             Table.Path = qname;
-            Table.Type = this;
+            Table.DataType = this;
         }
 
         public override T Accept<T>(IDataTypeVisitor<T> visitor)
@@ -50,9 +50,8 @@ namespace Pytocs.Core.Types
 
         public override bool Equals(object other)
         {
-            if (other is ModuleType)
+            if (other is ModuleType co)
             {
-                ModuleType co = (ModuleType) other;
                 if (file != null)
                 {
                     return file.Equals(co.file);

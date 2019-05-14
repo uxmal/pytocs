@@ -32,9 +32,9 @@ namespace Pytocs.Core.Types
 
         public override bool Equals(object other)
         {
-            if (other is SymbolType)
+            if (other is SymbolType that)
             {
-                return this.name.Equals(((SymbolType) other).name);
+                return this.name.Equals(that.name);
             }
             else
             {

@@ -40,9 +40,11 @@ namespace Pytocs.Core.TypeInference
         public IDictionary<string, ISet<Binding>> table = new Dictionary<string, ISet<Binding>>(0);
         public State Parent { get; set; }      // all are non-null except global table
         public State Forwarding { get; set; }  // link to the closest non-class scope, for lifting functions out
-        public List<State> supers;
+        private List<State> supers;
         public ISet<string> globalNames;
-        public StateType stateType;
+        public StateType stateType { get; set; }
+        public string Path { get; set; }
+        public DataType DataType { get; set; }
 
         public State(State parent, StateType type)
         {
@@ -68,12 +70,9 @@ namespace Pytocs.Core.TypeInference
             this.Forwarding = s.Forwarding;
             this.supers = s.supers;
             this.globalNames = s.globalNames;
-            this.Type = s.Type;
+            this.DataType = s.DataType;
             this.Path = s.Path;
         }
-
-        public string Path { get; set; }
-        public DataType Type { get; set; } 
 
         // erase and overwrite this to s's contents
         public void Overwrite(State s)
@@ -84,7 +83,7 @@ namespace Pytocs.Core.TypeInference
             this.Forwarding = s.Forwarding;
             this.supers = s.supers;
             this.globalNames = s.globalNames;
-            this.Type = s.Type;
+            this.DataType = s.DataType;
             this.Path = s.Path;
         }
 
@@ -470,7 +469,7 @@ namespace Pytocs.Core.TypeInference
             }
             else if (target != null)
             {
-                analyzer.putProblem(target, "invalid location for assignment");
+                analyzer.AddProblem(target, "invalid location for assignment");
             }
         }
 
@@ -554,7 +553,7 @@ namespace Pytocs.Core.TypeInference
                 }
                 else if (xs.Count > 0)
                 {
-                    analyzer.putProblem(xs[0].Filename,
+                    analyzer.AddProblem(xs[0].Filename,
                             xs[0].Start,
                             xs[xs.Count - 1].End,
                             "unpacking non-iterable: " + rvalue);
@@ -577,7 +576,7 @@ namespace Pytocs.Core.TypeInference
             {
                 msg = "ValueError: too many values to unpack";
             }
-            analyzer.putProblem(xs[0].Filename, beg, end, msg);
+            analyzer.AddProblem(xs[0].Filename, beg, end, msg);
         }
 
         // iterator
@@ -602,7 +601,7 @@ namespace Pytocs.Core.TypeInference
                         {
                             if (!iterType.isUnknownType())
                             {
-                                analyzer.putProblem(iter, "not an iterable type: " + iterType);
+                                analyzer.AddProblem(iter, "not an iterable type: " + iterType);
                             }
                             this.Bind(analyzer, target, DataType.Unknown, kind);
                         }
@@ -639,7 +638,7 @@ namespace Pytocs.Core.TypeInference
         {
             if (targetType.isUnknownType())
             {
-                analyzer.putProblem(attr, "Can't set attribute for UnknownType");
+                analyzer.AddProblem(attr, "Can't set attribute for UnknownType");
                 return;
             }
             ISet<Binding> bs = targetType.Table.LookupAttribute(attr.FieldName.Name);

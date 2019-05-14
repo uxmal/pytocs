@@ -55,8 +55,8 @@ namespace Pytocs.Core.TypeInference
         string ModuleName(string path);
         string ExtendPath(string path, string name);
 
-        void putProblem(Node loc, string msg);
-        void putProblem(string filename, int start, int end, string msg);
+        void AddProblem(Node loc, string msg);
+        void AddProblem(string filename, int start, int end, string msg);
 
         //void msg(string message);
         void msg_(string message, params object[] args);
@@ -365,7 +365,7 @@ namespace Pytocs.Core.TypeInference
             this.expTypes[exp] = dt;
         }
 
-        public void putProblem(Node loc, string msg)
+        public void AddProblem(Node loc, string msg)
         {
             string file = loc.Filename;
             if (file != null)
@@ -375,7 +375,7 @@ namespace Pytocs.Core.TypeInference
         }
 
         // for situations without a Node
-        public void putProblem(string file, int begin, int end, string msg)
+        public void AddProblem(string file, int begin, int end, string msg)
         {
             if (file != null)
             {
@@ -386,10 +386,10 @@ namespace Pytocs.Core.TypeInference
         private void AddFileError(string file, int begin, int end, string msg)
         {
             var d = new Diagnostic(file, Diagnostic.Category.ERROR, begin, end, msg);
-            getFileErrs(file, semanticErrors).Add(d);
+            GetFileErrors(file, semanticErrors).Add(d);
         }
 
-        List<Diagnostic> getFileErrs(string file, Dictionary<string, List<Diagnostic>> map)
+        List<Diagnostic> GetFileErrors(string file, Dictionary<string, List<Diagnostic>> map)
         {
             if (!map.TryGetValue(file, out var msgs))
             {
@@ -490,16 +490,7 @@ namespace Pytocs.Core.TypeInference
             {
                 return "";
             }
-
-            string ret = "";
-
-            for (int i = 0; i < names.Count - 1; i++)
-            {
-                ret += names[i].Name + ".";
-            }
-
-            ret += names[names.Count - 1].Name;
-            return ret;
+            return string.Join(".", names.Select(n => n.Name));
         }
 
         /// <summary>
@@ -709,7 +700,7 @@ namespace Pytocs.Core.TypeInference
                         !(b.type is ModuleType)
                         && b.References.Count == 0)
                 {
-                    putProblem(b.node, string.Format(Resources.UnusedVariable, b.name));
+                    AddProblem(b.node, string.Format(Resources.UnusedVariable, b.name));
                 }
             }
             msg(GetAnalysisSummary());

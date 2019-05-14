@@ -14,7 +14,6 @@
 //  limitations under the License.
 #endregion
 
-#if DEBUG
 using Xunit;
 using System;
 using System.Collections.Generic;
@@ -418,7 +417,23 @@ class Derived(Base):
 
             ExpectBindings(sExp);
         }
+
+        // Reported in issue #51
+        [Fact(DisplayName = nameof(TypeAn_async_function))]
+        public void TypeAn_async_function()
+        {
+            fs.Dir("foo")
+                .File("test.py",
+@"async def foo(field) -> bool:
+    return field == ""hello""
+");
+            an.Analyze(@"\foo");
+            an.Finish();
+            var sExp =
+@"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
+@"(binding:kind=FUNCTION:node=foo:type=? -> bool:qname=.foo.test.foo:refs=[])" + nl +
+@"(binding:kind=PARAMETER:node=field:type=?:qname=foo.field:refs=[field])" + nl;
+            ExpectBindings(sExp);
+        }
     }
 }
-
-#endif
