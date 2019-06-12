@@ -241,6 +241,15 @@ namespace Pytocs.Core {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Invalid syntax. Expected {0}..
+        /// </summary>
+        internal static string ErrInvalidSyntax {
+            get {
+                return ResourceManager.GetString("ErrInvalidSyntax", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to More than one keyword argument specifier..
         /// </summary>
         internal static string ErrMoreThanOneKwargs {

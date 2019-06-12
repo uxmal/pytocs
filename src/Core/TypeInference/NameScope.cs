@@ -32,9 +32,9 @@ namespace Pytocs.Core.TypeInference
         public NameScope? Parent { get; set; }      // all are non-null except global table
         public NameScope? Forwarding { get; set; }  // link to the closest non-class scope, for lifting functions out
         private List<NameScope>? superClasses;
-        public ISet<string>? globalNames;
+        private ISet<string>? globalNames;
         public NameScopeType stateType { get; set; }
-        public string Path { get; set; }
+        public string? Path { get; set; }
 
         /// <summary>
         /// The data type of this scope.
@@ -223,7 +223,7 @@ namespace Pytocs.Core.TypeInference
         /// </summary>
         public ISet<Binding>? LookupBindingsOf(string name)
         {
-            ISet<Binding>? b = getModuleBindingIfGlobal(name);
+            ISet<Binding>? b = GetModuleBindingIfGlobal(name);
             if (b != null)
             {
                 return b;
@@ -249,7 +249,7 @@ namespace Pytocs.Core.TypeInference
         /// </summary>
         public ISet<Binding>? LookupScope(string name)
         {
-            ISet<Binding>? b = getModuleBindingIfGlobal(name);
+            ISet<Binding>? b = GetModuleBindingIfGlobal(name);
             if (b != null)
             {
                 return b;
@@ -268,11 +268,14 @@ namespace Pytocs.Core.TypeInference
          * rule. The new MRO can be implemented, but will probably not introduce
          * much difference.
          */
-        private static ISet<NameScope> looked = new HashSet<NameScope>();    // circularity prevention
-
         public ISet<Binding>? LookupAttribute(string attr)
         {
-            if (looked.Contains(this))
+            return LookupAttribute(attr, new HashSet<NameScope>());
+        }
+
+        private ISet<Binding>? LookupAttribute(string attr, ISet<NameScope> visited)
+        {
+            if (visited.Contains(this))
             {
                 return null;
             }
@@ -284,17 +287,16 @@ namespace Pytocs.Core.TypeInference
             }
                 if (superClasses != null && superClasses.Count > 0)
                 {
-                    looked.Add(this);
+                    visited.Add(this);
                     foreach (NameScope p in superClasses)
                     {
-                        b = p.LookupAttribute(attr);
+                        b = p.LookupAttribute(attr, visited);
                         if (b != null)
                         {
-                            looked.Remove(this);
                             return b;
                         }
                     }
-                    looked.Remove(this);
+                    visited.Remove(this);
                 }
                 return null;
             }
@@ -361,7 +363,7 @@ namespace Pytocs.Core.TypeInference
         /// <summary>
         /// Find a symbol table of a certain type in the enclosing scopes.
         /// </summary>
-        public NameScope? GetClosestStateOfType(NameScopeType type)
+        public NameScope? GetClosestScopeOfType(NameScopeType type)
         {
             if (stateType == type)
             {
@@ -373,7 +375,7 @@ namespace Pytocs.Core.TypeInference
             }
             else
             {
-                return Parent.GetClosestStateOfType(type);
+                return Parent.GetClosestScopeOfType(type);
             }
         }
 
@@ -382,7 +384,7 @@ namespace Pytocs.Core.TypeInference
          */
         public NameScope GetGlobalTable()
         {
-            NameScope? result = GetClosestStateOfType(NameScopeType.MODULE);
+            NameScope? result = GetClosestScopeOfType(NameScopeType.MODULE);
             Debug.Assert(result != null, "Couldn't find global table.");
             return result;
         }
@@ -391,7 +393,7 @@ namespace Pytocs.Core.TypeInference
         /// <summary>
         /// If {@code name} is declared as a global, return the module binding.
         /// </summary>
-        private ISet<Binding>? getModuleBindingIfGlobal(string name)
+        private ISet<Binding>? GetModuleBindingIfGlobal(string name)
         {
             if (IsGlobalName(name))
             {
@@ -404,7 +406,7 @@ namespace Pytocs.Core.TypeInference
             return null;
         }
 
-        public void CopyAllBindings(NameScope other)
+        public void AddAllBindings(NameScope other)
         {
             foreach (var de in other.table)
             {
@@ -456,19 +458,19 @@ namespace Pytocs.Core.TypeInference
                 this.Bind(analyzer, id, rvalue, kind);
                 break;
             case PyTuple tup:
-                this.Bind(analyzer, tup.values, rvalue, kind);
+                this.Bind(analyzer, tup.Values, rvalue, kind);
                 break;
             case PyList list:
-                this.Bind(analyzer, list.elts, rvalue, kind);
+                this.Bind(analyzer, list.Initializer, rvalue, kind);
                 break;
             case AttributeAccess attr:
                 DataType targetType = TransformExp(analyzer, attr.Expression, this);
                 setAttr(analyzer, attr, rvalue, targetType);
                 break;
             case ArrayRef sub:
-                DataType valueType = TransformExp(analyzer, sub.array, this);
+                DataType valueType = TransformExp(analyzer, sub.Array, this);
                 var xform = new TypeCollector(this, analyzer);
-                TransformExprs(analyzer, sub.subs, this);
+                TransformExprs(analyzer, sub.Subs, this);
                 if (valueType is ListType t)
                 {
                     t.setElementType(UnionType.Union(t.eltType, rvalue));
@@ -611,7 +613,7 @@ namespace Pytocs.Core.TypeInference
                 {
                     foreach (Binding ent in ents)
                     {
-                        if (!(ent?.Type is FunType fun))
+                        if (!(ent?.Type is FunType fnType))
                         {
                             if (!iterType.IsUnknownType())
                             {
@@ -621,7 +623,7 @@ namespace Pytocs.Core.TypeInference
                         }
                         else
                         {
-                            this.Bind(analyzer, target, fun.GetReturnType(), kind);
+                            this.Bind(analyzer, target, fnType.GetReturnType(), kind);
                         }
                     }
                 }

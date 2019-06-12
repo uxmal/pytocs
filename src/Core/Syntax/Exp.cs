@@ -14,6 +14,8 @@
 //  limitations under the License.
 #endregion
 
+#nullable enable
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -48,52 +50,52 @@ namespace Pytocs.Core.Syntax
             writer.Write(GetType().FullName);
         }
 
-        internal string OpToString(Op op)
+        public string OpToString(Op op)
         {
-            switch (op)
+            return op switch
             {
-            default: throw new NotSupportedException(string.Format("Unknown op {0}.", op));
-            case Op.Ge: return " >= ";
-            case Op.Le: return " <= ";
-            case Op.Lt: return " < ";
-            case Op.Gt: return " > ";
-            case Op.Eq: return "=";
-            case Op.Ne: return " != ";
-            case Op.In: return "in";
-            case Op.NotIn: return "not in";
-            case Op.Is: return "is";
-            case Op.IsNot: return "is not";
-            case Op.Xor: return "^";
-            case Op.LogOr: return "or";
-            case Op.LogAnd: return "and";
-            case Op.Shl: return " << ";
-            case Op.Shr: return " >> ";
-            case Op.Add: return " + ";
-            case Op.Sub: return " - ";
-            case Op.Mul: return " * ";
-            case Op.Div: return " /";
-            case Op.IDiv: return " // ";
-            case Op.Mod: return "%";
-            case Op.Complement: return "~";
-            case Op.AugAdd: return " += ";
-            case Op.AugSub: return " -= ";
-            case Op.AugMul: return " *= ";
-            case Op.AugDiv: return " /= ";
-            case Op.AugMod: return " %= ";
-            case Op.AugAnd: return " &= ";
-            case Op.AugOr: return " |= ";
-            case Op.AugXor: return " ^= ";
-            case Op.AugShl: return " <<= ";
-            case Op.AugShr: return " >>= ";
-            case Op.AugExp: return " **= ";
-            case Op.AugIDiv: return " //= ";
-            case Op.BitAnd: return "&";
-            case Op.BitOr: return "|";
-            case Op.Not: return "not ";
-            case Op.Exp: return " ** ";
-            case Op.Assign: return "=";
+                Op.Ge => " >= ",
+                Op.Le => " <= ",
+                Op.Lt => " < ",
+                Op.Gt => " > ",
+                Op.Eq => "=",
+                Op.Ne => " != ",
+                Op.In => "in",
+                Op.NotIn => "not in",
+                Op.Is => "is",
+                Op.IsNot => "is not",
+                Op.Xor => "^",
+                Op.LogOr => "or",
+                Op.LogAnd => "and",
+                Op.Shl => " << ",
+                Op.Shr => " >> ",
+                Op.Add => " + ",
+                Op.Sub => " - ",
+                Op.Mul => " * ",
+                Op.Div => " /",
+                Op.IDiv => " // ",
+                Op.Mod => "%",
+                Op.Complement => "~",
+                Op.AugAdd => " += ",
+                Op.AugSub => " -= ",
+                Op.AugMul => " *= ",
+                Op.AugDiv => " /= ",
+                Op.AugMod => " %= ",
+                Op.AugAnd => " &= ",
+                Op.AugOr => " |= ",
+                Op.AugXor => " ^= ",
+                Op.AugShl => " <<= ",
+                Op.AugShr => " >>= ",
+                Op.AugExp => " **= ",
+                Op.AugIDiv => " //= ",
+                Op.BitAnd => "&",
+                Op.BitOr => "|",
+                Op.Not => "not ",
+                Op.Exp => " ** ",
+                Op.Assign => "=",
+                _ => throw new NotSupportedException(string.Format("Unknown op {0}.", op))
+            };
             }
-        }
 
         public virtual IEnumerable<Exp> AsList()
         {
@@ -103,7 +105,8 @@ namespace Pytocs.Core.Syntax
 
     public class NoneExp : Exp
     {
-        public NoneExp(string filename, int start, int end) : base(filename, start, end) { }
+        public NoneExp(string filename, int start, int end) 
+            : base(filename, start, end) { }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -129,12 +132,12 @@ namespace Pytocs.Core.Syntax
 
     public class BooleanLiteral : Exp
     {
-        public readonly bool Value;
-
         public BooleanLiteral(bool b, string filename, int start, int end) : base(filename, start, end) 
         {
             Value = b;
         }
+
+        public bool Value { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -200,17 +203,17 @@ namespace Pytocs.Core.Syntax
     /// </summary>
     public class Str : Exp
     {
-        public readonly string s;
         public bool Raw;
         public bool Unicode;
         public bool Long;
         public bool Format; // true if this is a format string.
 
-
         public Str(string str, string filename, int start, int end) : base(filename, start, end) 
         {
-            this.s = str;
+            this.Value = str;
         }
+
+        public string Value { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -232,21 +235,22 @@ namespace Pytocs.Core.Syntax
             if (Raw)
                 writer.Write("r");
             writer.Write('\"');
-            writer.Write(s);
+            writer.Write(Value);
             writer.Write('\"');
         }
         }
 
     public class IntLiteral : Exp
     {
-        public readonly string Value;
-        public readonly long NumericValue;
-
         public IntLiteral(string value, long p, string filename, int start, int end) : base(filename, start, end) 
         {
             this.Value = value;
             this.NumericValue = p;
         }
+
+        public long NumericValue { get; }
+
+        public string Value { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -271,14 +275,15 @@ namespace Pytocs.Core.Syntax
 
     public class LongLiteral : Exp
     {
-        public readonly string Value;
-        public readonly long NumericValue;
-
         public LongLiteral(string value, long p, string filename, int start, int end) : base(filename, start, end)
         {
             this.Value = value;
             this.NumericValue = p;
         }
+
+        public long NumericValue { get; }
+
+        public string Value { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -302,14 +307,15 @@ namespace Pytocs.Core.Syntax
 
     public class BigLiteral : Exp
     {
-        public string Value { get; }
-        public BigInteger NumericValue { get; }
-
         public BigLiteral(string value, BigInteger p, string filename, int start, int end) : base(filename, start, end)
         {
             this.Value = value;
             this.NumericValue = p;
         }
+
+        public BigInteger NumericValue { get; }
+
+        public string Value { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -341,8 +347,9 @@ namespace Pytocs.Core.Syntax
             this.NumericValue = p;
         }
 
-        public readonly string Value;
-        public readonly double NumericValue;
+        public double NumericValue { get; }
+
+        public string Value { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -407,14 +414,16 @@ namespace Pytocs.Core.Syntax
 
     public class BinExp : Exp
     {
-        public Op op;
-        public Exp l;
-        public Exp r;
-
         public BinExp(Op op, Exp l, Exp r, string filename, int start, int end) : base(filename, start, end)
         {
-            this.op = op; this.l = l; this.r = r;
+            this.Operator = op;
+            this.Left = l;
+            this.Right = r;
         }
+
+        public Op Operator { get; }
+        public Exp Left { get; }
+        public Exp Right { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -433,30 +442,32 @@ namespace Pytocs.Core.Syntax
         public override void Write(TextWriter writer)
         {
             writer.Write("(");
-            l.Write(writer);
-            writer.Write(" {0} ", base.OpToString(op));
-            r.Write(writer);
+            Left.Write(writer);
+            writer.Write(" {0} ", base.OpToString(Operator));
+            Right.Write(writer);
             writer.Write(")");
         }
     }
 
     public class DictComprehension : Exp
     {
-        public Exp key;
-        public Exp value;
-        public CompFor source;
-
-        public DictComprehension(Exp key, Exp value, CompFor collection,  string filename, int start, int end) : base(filename, start, end) 
+        public DictComprehension(Exp key, Exp value, CompFor collection,  string filename, int start, int end) 
+            : base(filename, start, end) 
         {
-            this.key = key;
-            this.value = value;
-            this.source = collection;
+            this.Key = key;
+            this.Value = value;
+            this.Source = collection;
         }
+
+        public Exp Key { get; }
+        public Exp Value { get; }
+        public CompFor Source { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
             return v.VisitDictComprehension(this, context);
         }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitDictComprehension(this);
@@ -470,13 +481,13 @@ namespace Pytocs.Core.Syntax
 
     public class DictInitializer : Exp
     {
-        public DictInitializer(List<KeyValuePair<Exp?, Exp>> keyValues, string filename, int start, int end)
+        public DictInitializer(List<(Exp? Key, Exp Value)> keyValues, string filename, int start, int end)
             : base(filename, start, end)
         {
             this.KeyValues = keyValues;
         }
 
-        public List<KeyValuePair<Exp?, Exp>> KeyValues { get; }
+        public List<(Exp? Key, Exp Value)> KeyValues { get; }
 
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
@@ -520,12 +531,12 @@ namespace Pytocs.Core.Syntax
 
     public class IterableUnpacker : Exp
     {
-        public readonly Exp Iterable;
-
         public IterableUnpacker(Exp iterable, string filename, int start, int end) : base(filename, start, end)
         {
             this.Iterable = iterable;
         }
+
+        public Exp Iterable { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -571,14 +582,14 @@ namespace Pytocs.Core.Syntax
 
     public class UnaryExp : Exp
     {
-        public Op op;
-        public Exp e;       //$TODO: rename to Expression.
-
         public UnaryExp(Op op, Exp exp, string filename, int start, int end) : base(filename, start, end)
         {
-            this.op = op;
-            this.e = exp;
+            this.Operator = op;
+            this.Exp = exp;
         }
+
+        public Op Operator { get; }
+        public Exp Exp { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -597,17 +608,13 @@ namespace Pytocs.Core.Syntax
 
         public override void Write(TextWriter writer)
         {
-            writer.Write(OpToString(op));
-            e.Write(writer);
+            writer.Write(OpToString(Operator));
+            Exp.Write(writer);
         }
     }
 
     public class TestExp : Exp
     {
-        public Exp Consequent;
-        public Exp Condition;
-        public Exp Alternative;
-
         public TestExp(Exp consequent, Exp condition, Exp alternative, string filename, int start, int end)
             : base(filename, start, end)
         {
@@ -615,6 +622,10 @@ namespace Pytocs.Core.Syntax
             this.Condition = condition;
             this.Alternative = alternative;
         }
+
+        public Exp Condition { get; }
+        public Exp Consequent { get; }
+        public Exp Alternative { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -647,10 +658,12 @@ namespace Pytocs.Core.Syntax
 
     public class Identifier : Exp
     {
-        public Identifier(string name, string filename, int start, int end) : base(filename, start, end) {
-            base.Name = name;
+        public Identifier(string name, string filename, int start, int end) : base(filename, start, end) 
+        { 
+            this.Name = name;
         }
 
+        public string Name { get; }
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
             return v.VisitIdentifier(this, context);
@@ -673,21 +686,21 @@ namespace Pytocs.Core.Syntax
 
     public class Application : Exp
     {
-        public readonly Exp fn;
-        public readonly List<Argument> args;
-        public readonly List<Argument> keywords;
-        public readonly Exp? stargs;
-        public readonly Exp? kwargs;
-
         public Application(Exp fn, List<Argument> args, List<Argument> keywords, Exp? stargs, Exp? kwargs,
             string filename, int start, int end) : base(filename, start, end)
         {
-            this.fn = fn;
-            this.args = args;
-            this.keywords = keywords;
-            this.stargs = stargs;
-            this.kwargs = kwargs;
+            this.Function = fn;
+            this.Args = args;
+            this.Keywords = keywords;
+            this.StArgs = stargs;
+            this.KwArgs = kwargs;
         }
+
+        public Exp Function { get; }
+        public List<Argument> Args { get; }
+        public List<Argument> Keywords { get; }
+        public Exp? StArgs { get; }
+        public Exp? KwArgs { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -706,33 +719,33 @@ namespace Pytocs.Core.Syntax
 
         public override void Write(TextWriter writer)
         {
-            fn.Write(writer);
+            Function.Write(writer);
             writer.Write("(");
             var sep = "";
-            foreach (var arg in args)
+            foreach (var arg in Args)
             {
                 writer.Write(sep);
                 arg.Write(writer);
                 sep = ",";
             }
-                foreach (var arg in keywords)
+            foreach (var arg in Keywords)
                 {
                     writer.Write(sep);
                     arg.Write(writer);
                     sep = ",";
                 }
-            if (stargs != null)
+            if (StArgs != null)
             {
                 writer.Write(sep);
                 writer.Write("*");
-                stargs.Write(writer);
+                StArgs.Write(writer);
                 sep = ",";
             }
-            if (kwargs != null)
+            if (KwArgs != null)
             {
                 writer.Write(sep);
                 writer.Write("**");
-                kwargs.Write(writer);
+                KwArgs.Write(writer);
             }
             writer.Write(")");
         }
@@ -740,14 +753,14 @@ namespace Pytocs.Core.Syntax
 
     public class ArrayRef : Exp
     {
-        public readonly Exp array;
-        public readonly List<Slice> subs;
-
         public ArrayRef(Exp array, List<Slice> subs, string filename, int start, int end) : base(filename, start, end)
         {
-            this.array = array;
-            this.subs = subs;
+            this.Array = array;
+            this.Subs = subs;
         }
+
+        public Exp Array { get; }
+        public List<Slice> Subs { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -766,9 +779,9 @@ namespace Pytocs.Core.Syntax
 
         public override void Write(TextWriter writer)
         {
-            array.Write(writer);
+            Array.Write(writer);
             writer.Write("[");
-            foreach (var slice in subs)
+            foreach (var slice in Subs)
             {
                 slice.Write(writer);
             }
@@ -778,16 +791,17 @@ namespace Pytocs.Core.Syntax
 
     public class Slice : Exp
     {
-        public Exp? Lower;
-        public Exp? Step;
-        public Exp? Upper;
-
-        public Slice(Exp? start, Exp? end, Exp? slice, string filename, int s, int e) : base(filename, s, e)
+        public Slice(Exp? start, Exp? end, Exp? stride, string filename, int s, int e) : base(filename, s, e)
         {
             this.Lower = start;
-            this.Step = end;
-            this.Upper = slice;
+            this.Upper = end;
+            this.Stride = stride;
         }
+
+        public Exp? Lower { get; }
+        public Exp? Upper { get; }
+        public Exp? Stride { get; }
+
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -806,22 +820,21 @@ namespace Pytocs.Core.Syntax
 
         public override void Write(TextWriter writer)
         {
-            if (Lower == null && Step == null && Upper == null)
+            if (Lower == null && Upper == null && Stride == null)
             {
-                writer.Write("::");
+                writer.Write(":");
             }
             else if (Lower != null)
             {
                 Lower.Write(writer);
-                if (Step != null)
+                if (Upper != null)
                 {
                     writer.Write(':');
-                    Step.Write(writer);
-                    writer.Write(':');
-                    if (Upper != null)
+                    Upper.Write(writer);
+                    if (Stride != null)
                     {
                         writer.Write(':');
-                        Upper.Write(writer);
+                        Stride.Write(writer);
                     }
                 }
             }
@@ -830,14 +843,14 @@ namespace Pytocs.Core.Syntax
 
     public class AttributeAccess : Exp
     {
-        public readonly Exp Expression;
-        public readonly Identifier FieldName;
-
         public AttributeAccess(Exp expr, Identifier fieldName, string filename, int start, int end) : base(filename, start, end)
         {
             Expression = expr; 
             FieldName = fieldName; 
         }
+
+        public Exp Expression { get; }
+        public Identifier FieldName { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -854,8 +867,6 @@ namespace Pytocs.Core.Syntax
             v.VisitFieldAccess(this);
         }
 
-
-
         public override void Write(TextWriter w)
         {
             Expression.Write(w);
@@ -865,17 +876,18 @@ namespace Pytocs.Core.Syntax
 
     public class AwaitExp : Exp
     {
-        public readonly Exp exp;
-
         public AwaitExp(Exp exp, string filename, int start, int end) :base(filename, start, end)
         {
-            this.exp = exp;
+            this.Exp = exp;
         }
+
+        public Exp Exp { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
             return v.VisitAwait(this, context);
         }
+
         public override void Accept(IExpVisitor v)
         {
             v.VisitAwait(this);
@@ -890,15 +902,13 @@ namespace Pytocs.Core.Syntax
         {
             writer.Write("await");
             writer.Write(" ");
-            this.exp.Write(writer);
+            this.Exp.Write(writer);
         }
     }
 
     public class YieldExp : Exp
     {
-        public readonly Exp? exp;
-
-        public YieldExp(Exp? exp, string filename, int start, int end) : base(filename, start, end) { this.exp = exp; }
+        public YieldExp(Exp? exp, string filename, int start, int end) : base(filename, start, end) { this.Expression = exp; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -910,6 +920,8 @@ namespace Pytocs.Core.Syntax
             return v.VisitYieldExp(this);
         }
 
+        public Exp? Expression { get; }
+
         public override void Accept(IExpVisitor v)
         {
             v.VisitYieldExp(this);
@@ -918,19 +930,19 @@ namespace Pytocs.Core.Syntax
         public override void Write(TextWriter writer)
         {
             writer.Write("yield");
-            if (exp != null)
+            if (Expression != null)
             {
                 writer.Write(" ");
-            exp.Write(writer);
+                Expression.Write(writer);
         }
     }
     }
 
     public class YieldFromExp : Exp
     {
-        public readonly Exp Expression;
-
         public YieldFromExp(Exp exp, string filename, int start, int end) : base(filename, start, end) { this.Expression = exp; }
+
+        public Exp Expression { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -959,7 +971,10 @@ namespace Pytocs.Core.Syntax
     {
         public CompIter? next;
 
-        public CompIter(string filename, int start, int end) : base(filename, start, end) { }
+        public CompIter(string filename, int start, int end) 
+            : base(filename, start, end)
+        {
+        }
     }
 
     public class CompFor : CompIter
@@ -1016,12 +1031,12 @@ namespace Pytocs.Core.Syntax
 
     public class CompIf : CompIter
     {
-        public Exp test;
-
         public CompIf(Exp test, string filename, int start, int end) : base(filename, start, end)
         {
-            this.test = test;
+            this.Test = test;
         }
+
+        public Exp Test { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -1042,7 +1057,7 @@ namespace Pytocs.Core.Syntax
         {
             writer.Write("if");
             writer.Write(" ");
-            test.Write(writer);
+            Test.Write(writer);
             if (next != null)
             {
                 writer.Write(" ");
@@ -1053,13 +1068,13 @@ namespace Pytocs.Core.Syntax
 
     public class PySet : Exp
     {
-        public List<Exp> exps;
-
         public PySet(List<Exp> exps, string filename, int start, int end)
             : base(filename, start, end)
         {
-            this.exps = exps;
+            this.Initializer = exps;
         }
+
+        public List<Exp> Initializer { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -1080,7 +1095,7 @@ namespace Pytocs.Core.Syntax
         {
             writer.Write("{ ");
             var sep = "";
-            foreach (var item in exps)
+            foreach (var item in Initializer)
             {
                 writer.Write(sep);
                 sep = ", ";
@@ -1092,12 +1107,12 @@ namespace Pytocs.Core.Syntax
 
     public class StarExp : Exp
     {
-        public Exp e;
-
         public StarExp(Exp e, string filename, int start, int end) : base(filename, start, end)
         {
-            this.e = e;
+            this.Expression = e;
         }
+
+        public Exp Expression { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -1117,18 +1132,18 @@ namespace Pytocs.Core.Syntax
         public override void Write(TextWriter writer)
         {
             writer.Write("*");
-            this.e.Write(writer);
+            this.Expression.Write(writer);
     }
     }
 
     public class ExpList : Exp
     {
-        public readonly List<Exp> Expressions;
-
         public ExpList(List<Exp> exps, string filename, int start, int end) : base(filename, start, end)
         {
             this.Expressions = exps;
         }
+
+        public List<Exp> Expressions { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -1175,13 +1190,13 @@ namespace Pytocs.Core.Syntax
     /// </summary>
     public class PyList : Exp
     {
-        public readonly List<Exp> elts;
-
         public PyList(List<Exp> elts, string filename, int start, int end)
             : base(filename, start, end)
         {
-            this.elts = elts;
+            this.Initializer = elts;
         }
+
+        public List<Exp> Initializer { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -1202,7 +1217,7 @@ namespace Pytocs.Core.Syntax
         {
             writer.Write("[");
             var sep = "";
-            foreach (var exp in elts)
+            foreach (var exp in Initializer)
             {
                 writer.Write(sep);
                 sep = ",";
@@ -1214,14 +1229,15 @@ namespace Pytocs.Core.Syntax
 
     public class GeneratorExp : Exp
     {
-        public Exp Projection;
-        public Exp Collection;
-
         public GeneratorExp(Exp proj, Exp coll, string filename, int start, int end) : base(filename,start, end)
         {
             this.Projection = proj;
             this.Collection = coll;
         }
+
+        public Exp Projection { get; }
+        public Exp Collection { get; }
+
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -1241,12 +1257,12 @@ namespace Pytocs.Core.Syntax
 
     public class ListComprehension : Exp
     {
-        public Exp Collection;
-
         public ListComprehension(Exp coll, string filename, int start, int end) : base(filename, start, end)
         {
             this.Collection = coll;
         }
+
+        public Exp Collection { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -1273,12 +1289,13 @@ namespace Pytocs.Core.Syntax
 
     public class SetComprehension : Exp
     {
-        public Exp Collection;
-
         public SetComprehension(Exp coll, string filename, int start, int end) : base(filename, start, end)
         {
             this.Collection = coll;
         }
+
+        public Exp Collection { get; }
+
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -1305,16 +1322,11 @@ namespace Pytocs.Core.Syntax
 
     public class AssignExp : Exp
     {
-        public readonly Exp Dst;
-        public readonly Op op;
-        public readonly Exp? Src;
-        public readonly Exp? Annotation;
-
         public AssignExp(Exp lhs, Op op, Exp rhs, string filename, int start, int end)
             : base(filename, start, end)
         {
             this.Dst = lhs;
-            this.op = op;
+            this.Operator = op;
             this.Src = rhs;
             this.Annotation = null;
         }
@@ -1323,11 +1335,16 @@ namespace Pytocs.Core.Syntax
             : base(filename, start, end)
         {
             this.Dst = lhs;
-            this.op = op;
+            this.Operator = op;
             this.Src = rhs;
             this.Annotation = annotation;
         }
 
+        public Exp Dst { get; }
+        public Op Operator { get; }
+        public Exp Src { get; }
+        public Exp? Annotation { get; }
+    
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
             return v.VisitAssignExp(this, context);
@@ -1351,7 +1368,7 @@ namespace Pytocs.Core.Syntax
                 writer.Write(": ");
                 this.Annotation.Write(writer);
             }
-            writer.Write(base.OpToString(op));
+            writer.Write(base.OpToString(Operator));
             if (Src != null)
             {
             Src.Write(writer);
@@ -1364,10 +1381,10 @@ namespace Pytocs.Core.Syntax
         public PyTuple(List<Exp> values, string filename, int start, int end)
             : base(filename, start, end)
         {
-            this.values = values;
+            this.Values = values;
         }
 
-        public List<Exp> values { get; }
+        public List<Exp> Values { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -1388,7 +1405,7 @@ namespace Pytocs.Core.Syntax
         {
             writer.Write("(");
             var sep = "";
-            foreach (var e in values)
+            foreach (var e in Values)
             {
                 writer.Write(sep);
                 sep = ",";
@@ -1404,16 +1421,17 @@ namespace Pytocs.Core.Syntax
  /// </sumary>
     public class Url : Exp
     {
-        public string url;
 
-        public Url(string url) : base(null!, -1, -1)
+        public Url(string url) : base("", -1, -1)
         {
-            this.url = url;
+            this.Value = url;
         }
+
+        public string Value { get; }
 
         public override void Write(TextWriter writer)
         {
-            writer.Write("<Url:\"{0}\">", url);
+            writer.Write("<Url:\"{0}\">", Value);
         }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)

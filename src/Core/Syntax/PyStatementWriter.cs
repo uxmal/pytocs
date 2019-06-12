@@ -53,7 +53,7 @@ namespace Pytocs.Core.Syntax
 
         public void VisitClass(ClassDef c)
         {
-            VisitDecorators(c.decorators);
+            VisitDecorators(c.Decorators);
             w.Write("class");
             w.Write(" ");
             w.Write(c.name.Name);
@@ -117,11 +117,11 @@ namespace Pytocs.Core.Syntax
         {
             w.Write("for");
             w.Write(" ");
-            f.exprs.Write(writer);
+            f.Exprs.Write(writer);
             w.Write(" ");
             w.Write("in");
             w.Write(" ");
-            f.tests.Write(writer);
+            f.Tests.Write(writer);
             w.WriteLine(":");
             ++w.IndentLevel;
             f.Body.Accept(this);
@@ -134,8 +134,8 @@ namespace Pytocs.Core.Syntax
             w.Write(" ");
             if (f.DottedName != null)
             {
-                w.Write(f.DottedName.ToString());
-                w.Write(" ");
+            w.Write(f.DottedName.ToString());
+            w.Write(" ");
             }
             w.Write("import");
             if (f.AliasedNames != null && f.AliasedNames.Count > 0)
@@ -147,18 +147,18 @@ namespace Pytocs.Core.Syntax
                     w.Write(listSep);
                     listSep = ", ";
                     var segSep = "";
-                    foreach (var seg in aliasedName.orig.segs)
+                    foreach (var seg in aliasedName.Orig.segs)
                     {
                         w.Write(segSep);
                         segSep = ".";
                         w.Write(seg.Name);
                     }
-                    if (aliasedName.alias != null)
+                    if (aliasedName.Alias != null)
                     {
                         w.Write(" ");
                         w.Write("as");
                         w.Write(" ");
-                        w.Write(aliasedName.alias.Name);
+                        w.Write(aliasedName.Alias.Name);
                     }
                 }
                 w.Write(")");
@@ -167,7 +167,7 @@ namespace Pytocs.Core.Syntax
 
         public void VisitFuncdef(FunctionDef f)
         {
-            VisitDecorators(f.decorators);
+            VisitDecorators(f.Decorators);
             w.Write("def");
             w.Write(" ");
             w.WriteName(f.name.Name);
@@ -238,9 +238,9 @@ namespace Pytocs.Core.Syntax
 
         private IfStatement? GetElif(SuiteStatement s)
         {
-            if (s.stmts.Count != 1)
+            if (s.Statements.Count != 1)
                 return null;
-            return s.stmts[0] as IfStatement;
+            return s.Statements[0] as IfStatement;
         }
 
         public void VisitImport(ImportStatement i)
@@ -262,33 +262,33 @@ namespace Pytocs.Core.Syntax
         {
             w.Write("print");
             var sep = " ";
-            if (p.outputStream != null)
+            if (p.OutputStream != null)
             {
                 w.Write(" >> ");
-                p.outputStream.Write(writer);
+                p.OutputStream.Write(writer);
                 sep = ", ";
             }
-            foreach (var a in p.args)
+            foreach (var a in p.Args)
             {
                 w.Write(sep);
                 sep = ", ";
                 a.Write(writer);
             }
-            if (p.trailingComma)
+            if (p.TrailingComma)
                 w.Write(",");
         }
 
         public void VisitRaise(RaiseStatement r)
         {
             w.Write("raise");
-            if (r.exToRaise != null)
+            if (r.ExToRaise != null)
             {
                 w.Write(" ");
-                r.exToRaise.Write(writer);
-                if (r.exOriginal != null)
+                r.ExToRaise.Write(writer);
+                if (r.ExOriginal != null)
                 {
                     w.Write(", ");
-                    r.exOriginal.Write(writer);
+                    r.ExOriginal.Write(writer);
                 }
             }
         }
@@ -305,7 +305,7 @@ namespace Pytocs.Core.Syntax
 
         public void VisitSuite(SuiteStatement s)
         {
-            foreach (var stm in s.stmts)
+            foreach (var stm in s.Statements)
             {
                 stm.Accept(this);
                 if (!(stm is SuiteStatement))
@@ -320,9 +320,9 @@ namespace Pytocs.Core.Syntax
             w.Write("try");
             w.WriteLine(":");
             ++w.IndentLevel;
-            t.body.Accept(this);
+            t.Body.Accept(this);
             --w.IndentLevel;
-            foreach (var h in t.exHandlers)
+            foreach (var h in t.ExHandlers)
             {
                 w.Write("except");
                 w.Write(" ");
@@ -356,7 +356,7 @@ namespace Pytocs.Core.Syntax
             this.w.Write("with");
             this.w.Write(" ");
             var sep = "";
-            foreach (var ws in w.items)
+            foreach (var ws in w.Items)
             {
                 this.w.Write(sep);
                 sep = ", ";
@@ -372,7 +372,7 @@ namespace Pytocs.Core.Syntax
             this.w.Write(":");
             this.w.WriteLine();
             ++this.w.IndentLevel;
-            w.body.Accept(this);
+            w.Body.Accept(this);
             --this.w.IndentLevel;
         }
 
@@ -387,17 +387,17 @@ namespace Pytocs.Core.Syntax
         {
             w.Write("exec");
             w.Write(" ");
-            exec.code.Write(writer);
-            if (exec.globals != null)
+            exec.Code.Write(writer);
+            if (exec.Globals != null)
             {
                 w.Write(" ");
                 w.Write("in");
                 w.Write(" ");
-                exec.globals.Write(writer);
-                if (exec.locals != null)
+                exec.Globals.Write(writer);
+                if (exec.Locals != null)
                 {
                     w.Write(", ");
-                    exec.locals.Write(writer);
+                    exec.Locals.Write(writer);
                 }
             }
         }

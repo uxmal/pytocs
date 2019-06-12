@@ -24,13 +24,13 @@ namespace Pytocs.Core.Syntax
 {
     public class VarArg
     {
-        public Exp? name;    // could be tuple
-        public Exp? test;
+        public Exp? Name;    // could be tuple
+        public Exp? Test;
         public bool IsKeyword;
         public bool IsIndexed;
 
-        public static VarArg Keyword(Identifier name) { return new VarArg { name= name, IsKeyword = true }; }
+        public static VarArg Keyword(Identifier name) { return new VarArg { Name= name, IsKeyword = true }; }
 
-        public static VarArg Indexed(Identifier name) { return new VarArg { name = name ,IsIndexed = true }; }
+        public static VarArg Indexed(Identifier name) { return new VarArg { Name = name ,IsIndexed = true }; }
     }
 }

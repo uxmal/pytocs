@@ -44,7 +44,7 @@ namespace Pytocs.Core.Types
         public ClassType(string name, NameScope parent, string path, ClassType? superClass)
             : this(name, parent, path)
         {
-            if (superClass != null)
+            if (!(superClass is null))
             {
                 AddSuper(superClass);
             }
@@ -74,7 +74,7 @@ namespace Pytocs.Core.Types
 
         public InstanceType GetInstance()
         {
-            if (instance == null)
+            if (instance is null)
             {
                 instance = new InstanceType(this);
             }
@@ -83,10 +83,10 @@ namespace Pytocs.Core.Types
 
         public InstanceType GetInstance(IList<DataType> args, DataType inferencer, Exp call)
         {
-            if (instance == null)
+            if (instance is null)
             {
-                IList<DataType> initArgs = args ?? new List<DataType>();
-                throw new NotImplementedException(" instance = new InstanceType(this, initArgs, inferencer, call);");
+                var initArgs = args ?? new List<DataType>();
+                this.instance = new InstanceType(this);
             }
             return instance;
         }

@@ -214,7 +214,7 @@ except Bar:
 except:
     c = ''
 ")[0];
-            Assert.Equal(3, pyStm.exHandlers.Count);
+            Assert.Equal(3, pyStm.ExHandlers.Count);
         }
 
         [Fact]
@@ -448,7 +448,7 @@ def wrapper(*args,**kwargs):
         {
             var pySrc = "a[::]";
             var e = ParseExp(pySrc);
-            AssertExp("a[::]", e);
+            AssertExp("a[:]", e);
         }
 
         [Fact]

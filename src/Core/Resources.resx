@@ -177,6 +177,9 @@
   <data name="ErrInvalidHexadecimalString" xml:space="preserve">
     <value>Invalid hexadecimal string {0}.</value>
   </data>
+  <data name="ErrInvalidSyntax" xml:space="preserve">
+    <value>Invalid syntax. Expected {0}.</value>
+  </data>
   <data name="ErrMoreThanOneKwargs" xml:space="preserve">
     <value>More than one keyword argument specifier.</value>
   </data>

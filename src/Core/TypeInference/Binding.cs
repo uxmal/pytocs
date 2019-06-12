@@ -39,7 +39,7 @@ namespace Pytocs.Core.TypeInference
 
             if (node is Url u)
             {
-                string url = u.url;
+                string url = u.Value;
                 if (url.StartsWith("file://"))
                 {
                     fileOrUrl = url.Substring("file://".Length);

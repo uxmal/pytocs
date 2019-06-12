@@ -23,19 +23,19 @@ namespace Pytocs.Core.Syntax
 {
     public class AliasedName : Node
     {
-        public readonly DottedName orig;
-        public readonly Identifier? alias;
-
         public AliasedName(Identifier orig, Identifier? alias, string filename, int start, int end) : base(filename, start, end)
         {
-            this.orig = new DottedName(new List<Identifier> {orig }, filename, start, end);
-            this.alias = alias;
+            this.Orig = new DottedName(new List<Identifier> {orig }, filename, start, end);
+            this.Alias = alias;
         }
 
         public AliasedName(DottedName orig, Identifier? alias, string filename, int start, int end) : base(filename, start, end)
         {
-            this.orig = orig;
-            this.alias = alias;
+            this.Orig = orig;
+            this.Alias = alias;
         }
+
+        public DottedName Orig { get; }
+        public Identifier? Alias { get; }
     }
 }

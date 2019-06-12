@@ -1,4 +1,4 @@
-#region License
+﻿#region License
 //  Copyright 2015-2021 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -45,7 +45,7 @@ namespace Pytocs.Core.TypeInference
 
 
         DataType? LoadModule(List<Name> name, NameScope state);
-        Module GetAstForFile(string file);
+        Module? GetAstForFile(string file);
         string GetModuleQname(string file);
 
         Binding CreateBinding(string id, Node node, DataType type, BindingKind kind);
@@ -167,7 +167,7 @@ namespace Pytocs.Core.TypeInference
         }
 
 
-        public void SetWorkingDirectory(string cd)
+        public void SetWorkingDirectory(string? cd)
         {
             if (cd != null)
             {
@@ -290,7 +290,7 @@ namespace Pytocs.Core.TypeInference
                             !g.IsBuiltin && !g.IsSynthetic);
         }
 
-        ModuleType? GetCachedModule(string file)
+        private ModuleType? GetCachedModule(string file)
         {
             DataType? t = ModuleScope.LookupTypeOf(GetModuleQname(file));
             switch (t)
@@ -366,7 +366,7 @@ namespace Pytocs.Core.TypeInference
         public void AddProblem(Node loc, string msg)
         {
             string? file = loc?.Filename;
-            if (file is not null)
+            if (loc is {} && file is {})
             {
                 AddFileError(file, loc!.Start, loc.End, msg);
             }
@@ -461,7 +461,7 @@ namespace Pytocs.Core.TypeInference
             return new TypeCollector(this.ModuleScope, this).VisitModule(ast);
         }
 
-        private void CreateCacheDirectory()
+        private string CreateCacheDirectory()
         {
             string f = cacheDir;
             msg(Resources.AstCacheIsAt, cacheDir);
@@ -479,6 +479,7 @@ namespace Pytocs.Core.TypeInference
                         ex);
                 }
             }
+            return f;
         }
 
         /// <summary>
@@ -486,7 +487,7 @@ namespace Pytocs.Core.TypeInference
         /// </summary>
         public Module? GetAstForFile(string file)
         {
-            return astCache.GetAst(file);
+            return astCache?.GetAst(file);
         }
 
         public ModuleType? GetBuiltinModule(string qname)
@@ -614,15 +615,15 @@ namespace Pytocs.Core.TypeInference
         /// directory; otherwise just load a file.  Looks at file extension to
         /// determine whether to load a given file.
         /// </summary>
-        public void LoadFileRecursive(string fullname)
+        public void LoadFileRecursive(string fullpath)
         {
-            int count = CountFileRecursive(fullname);
+            int count = CountFileRecursive(fullpath);
             if (loadingProgress == null)
             {
                 loadingProgress = new Progress(s => { this.msg_(s); }, count, 50, this.HasOption("quiet"));
             }
 
-            string file_or_dir = fullname;
+            string file_or_dir = fullpath;
 
             if (FileSystem.DirectoryExists(file_or_dir))
             {
@@ -633,9 +634,9 @@ namespace Pytocs.Core.TypeInference
             }
             else if (file_or_dir.EndsWith(suffix))
             {
-                    LoadFile(file_or_dir);
-                }
+                LoadFile(file_or_dir);
             }
+        }
 
         /// <summary>
         /// Count number of .py files

@@ -22,12 +22,12 @@ namespace Pytocs.Core.Types
 {
     public class ModuleType : DataType
     {
-        public string name;
+        public string Name;
         public string qname;
 
         public ModuleType(string name, string? file, string qName, NameScope parent)
         {
-            this.name = name;
+            this.Name = name;
             this.file = file;  // null for builtin modules
             this.qname = qName;
             this.Scope = new NameScope(parent, NameScopeType.MODULE);
@@ -42,7 +42,7 @@ namespace Pytocs.Core.Types
 
         public void setName(string name)
         {
-            this.name = name;
+            this.Name = name;
         }
 
         public override int GetHashCode()

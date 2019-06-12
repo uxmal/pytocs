@@ -1,5 +1,5 @@
 #region License
-//  Copyright 2015-2021 John Källén
+//  Copyright 2015-2022 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ namespace Pytocs.Core.Translate
                 {
                     if (c == 0 && IsStringStatement(s, out Str lit))
                     {
-                        GenerateDocComment(lit.s, gen.CurrentNamespace.Comments);
+                    GenerateDocComment(lit.Value, gen.CurrentNamespace.Comments);
                     }
                     else
                     {
@@ -71,7 +71,7 @@ namespace Pytocs.Core.Translate
                 {
                     if (c == 0 && IsStringStatement(s, out Str lit))
                     {
-                        GenerateDocComment(lit.s, gen.CurrentNamespace.Comments);
+                        GenerateDocComment(lit.Value, gen.CurrentNamespace.Comments);
                     }
                     else if (IsAssignment(s, out AssignExp? ass) &&
                         ass.Dst is Identifier id)
@@ -108,7 +108,7 @@ namespace Pytocs.Core.Translate
             {
                 if (stm is SuiteStatement sstm)
                 {
-                    switch (sstm.stmts[0])
+                    switch (sstm.Statements[0])
                     {
                     case ExpStatement estm:
                         switch (estm.Expression)
@@ -148,7 +148,7 @@ namespace Pytocs.Core.Translate
             {
                 if (s is not SuiteStatement suite)
                     return false;
-                strStmt = suite.stmts[0] as ExpStatement;
+                strStmt = suite.Statements[0] as ExpStatement;
                 if (strStmt == null)
                     return false;
             }
@@ -160,7 +160,7 @@ namespace Pytocs.Core.Translate
         {
             if (s is SuiteStatement ss)
             {
-                s = ss.stmts[0];
+                s = ss.Statements[0];
             }
             if (s is ExpStatement es && es.Expression is AssignExp a)
             {

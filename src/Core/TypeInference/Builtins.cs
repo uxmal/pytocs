@@ -162,7 +162,7 @@ namespace Pytocs.Core.TypeInference
 
         FunType newFunc(DataType type)
         {
-            if (type == null)
+            if (type is null)
             {
                 type = DataType.Unknown;
             }
@@ -911,7 +911,7 @@ namespace Pytocs.Core.TypeInference
                 addFunction("__import__", newLibUrl("functions"), outer.newModule("<?>"));
 
                 outer.analyzer.GlobalTable.AddExpressionBinding(outer.analyzer, "__builtins__", liburl(), module, BindingKind.ATTRIBUTE).IsBuiltin = true;
-                outer.analyzer.GlobalTable.CopyAllBindings(table);
+                outer.analyzer.GlobalTable.AddAllBindings(table);
             }
         }
 
@@ -2420,7 +2420,7 @@ namespace Pytocs.Core.TypeInference
 
             public override void initBindings()
             {
-                table.CopyAllBindings(DataType.Str.Scope);
+                table!.AddAllBindings(DataType.Str.Scope);
             }
         }
 

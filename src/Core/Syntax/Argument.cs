@@ -24,20 +24,20 @@ namespace Pytocs.Core.Syntax
 {
     public class Argument : Node
     {
-        public readonly Exp? name;
-        public readonly Exp? defval;
-
-        public Argument(Exp name, string filename, int start, int end)
+        public Argument(Exp? name, string filename, int start, int end)
             : base(filename, start, end)
         {
-            this.name = name;
-            this.defval = null;
+            this.Name = name;
+            this.DefaultValue = null;
         }
 
-        public Argument(Exp? name, Exp? defval, string filename, int start, int end) : base(filename, start, end)
+        public Exp? Name { get; }
+        public Exp? DefaultValue { get; }
+
+        public Argument(Exp? name, Exp defval, string filename, int start, int end) : base(filename, start, end)
         {
-            this.name = name;
-            this.defval = defval;
+            this.Name = name;
+            this.DefaultValue = defval;
         }
 
         public override string ToString()
@@ -49,11 +49,10 @@ namespace Pytocs.Core.Syntax
 
         public virtual void Write(TextWriter writer)
         {
-            if (name != null)
+            if (Name != null)
             {
-                name.Write(writer);
-                var compFor = defval as CompFor;
-                if (compFor != null)
+                Name.Write(writer);
+                if (DefaultValue is CompFor compFor)
                 {
                     writer.Write(" ");
                     compFor.Write(writer);
@@ -61,9 +60,9 @@ namespace Pytocs.Core.Syntax
                 }
                 writer.Write("=");
             }
-            if (defval != null)
+            if (DefaultValue != null)
             {
-                defval.Write(writer);
+                DefaultValue.Write(writer);
             }
         }
     }

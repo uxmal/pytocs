@@ -62,11 +62,11 @@ namespace Pytocs.Core.Syntax
 
         public bool IsStaticMethod()
         {
-            if (decorators == null)
+            if (Decorators == null)
                 return false;
-            foreach (var d in decorators)
+            foreach (var d in Decorators)
             {
-                if (d.Name == "staticmethod")
+                if (d.className.segs.Last().Name == "staticmethod")
                 {
                     return true;
                 }
@@ -76,11 +76,11 @@ namespace Pytocs.Core.Syntax
 
         public bool IsClassMethod()
         {
-            if (decorators == null)
+            if (Decorators == null)
                 return false;
-            foreach (var d in decorators)
+            foreach (var d in Decorators)
             {
-                if (d.Name == "classmethod")
+                if (d.className.segs.Last().Name == "classmethod")
                 {
                     return true;
                 }
@@ -128,8 +128,8 @@ namespace Pytocs.Core.Syntax
                     writer.Write("*");
                 else if (v.IsKeyword)
                     writer.Write("**");
-                if (v.name != null)
-                    v.name.Write(writer);
+                if (v.Name != null)
+                    v.Name.Write(writer);
             }
             writer.Write(":");
             writer.Write(" ");

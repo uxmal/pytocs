@@ -28,14 +28,15 @@ namespace Pytocs.Core.Types
         public Lambda? Lambda;
         public ClassType? Class = null;
         public readonly NameScope? scope;
-        public List<DataType?>? defaultTypes;       // types for default parameters (evaluated at def time)
+        public List<DataType>? DefaultTypes;       // types for default parameters (evaluated at def time)
+        public DataType? SelfType { get; set; }                 // self's type for calls
 
         public FunType()
         {
             this.Class = null;
         }
 
-        public FunType(FunctionDef func, NameScope? env)
+        public FunType(FunctionDef? func, NameScope? env)
         {
             this.Definition = func;
             this.scope = env;
@@ -51,8 +52,6 @@ namespace Pytocs.Core.Types
         {
             AddMapping(from, to);
         }
-
-        public DataType? SelfType { get; set; }                 // self's type for calls
 
 
         public override T Accept<T>(IDataTypeVisitor<T> visitor)
@@ -101,7 +100,7 @@ namespace Pytocs.Core.Types
 
         public void SetDefaultTypes(List<DataType?>? defaultTypes)
         {
-            this.defaultTypes = defaultTypes;
+            this.DefaultTypes = defaultTypes;
         }
 
         public override bool Equals(object? other)
@@ -126,12 +125,12 @@ namespace Pytocs.Core.Types
         /// </summary>
         public FunType MakeAwaitable()
         {
-            var fnAwaitable = new FunType(this.Definition!, this.scope!)
+            var fnAwaitable = new FunType(this.Definition, this.scope)
             {
                 arrows = this.arrows.ToDictionary(k => k.Key, v => (DataType)new AwaitableType(v.Value)),
                 Lambda = this.Lambda,
                 Class = this.Class,
-                defaultTypes = this.defaultTypes
+                DefaultTypes = this.DefaultTypes
             };
             return fnAwaitable;
         }
@@ -212,7 +211,7 @@ namespace Pytocs.Core.Types
             var simplified = new List<DataType>();     //$NO regs
             if (from.eltTypes.Length > 0)
             {
-                if (Class != null)
+                if (Class is not null)
                 {
                     simplified.Add(Class.GetInstance());
                 }

@@ -23,7 +23,7 @@ namespace Pytocs.Core
 {
     public class SymbolTable
     {
-        private Dictionary<string, Symbol> symbols;
+        private readonly Dictionary<string, Symbol> symbols;
 
         public SymbolTable()
         {
@@ -46,7 +46,7 @@ namespace Pytocs.Core
         {
             if (!symbols.TryGetValue(name, out Symbol s))
             {
-                s = new Symbol { Name = name };
+                s = new Symbol(name);
                 symbols.Add(s.Name, s);
             }
             return s;

@@ -31,19 +31,12 @@ namespace Pytocs.Core.Syntax
     public class Parser
     {
 #pragma warning disable IDE1006 // Naming Styles
-        #region Python 3.4 grammar
+        #region Python 3.7 grammar
         /*
 # Grammar for Python
 
-# Note:  Changing the grammar specified in this file will most likely
-#        require corresponding changes in the parser module
-#        (../Modules/parsermodule.c).  If you can't make the changes to
-#        that module yourself, please co-ordinate the required changes
-#        with someone who can; ask around on python-dev for help.  Fred
-#        Drake <fdrake@acm.org> will probably be listening there.
-
-# NOTE WELL: You should also follow all the steps listed in PEP 306,
-# "How to Change Python's Grammar"
+# NOTE WELL: You should also follow all the steps listed at
+# https://devguide.python.org/grammar/
 
 # Start symbols for the grammar:
 #       single_input is a single interactive statement;
@@ -56,28 +49,37 @@ eval_input: testlist NEWLINE* ENDMARKER
 
 decorator: '@' dotted_name [ '(' [arglist] ')' ] NEWLINE
 decorators: decorator+
-decorated: decorators (classdef | funcdef)
+decorated: decorators (classdef | funcdef | async_funcdef)
+
+async_funcdef: 'async' funcdef
 funcdef: 'def' NAME parameters ['->' test] ':' suite
+
 parameters: '(' [typedargslist] ')'
-typedargslist: (tfpdef ['=' test] (',' tfpdef ['=' test])* [','
-       ['*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef]]
-     |  '*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef)
+typedargslist: (tfpdef ['=' test] (',' tfpdef ['=' test])* [',' [
+        '*' [tfpdef] (',' tfpdef ['=' test])* [',' ['**' tfpdef [',']]]
+      | '**' tfpdef [',']]]
+  | '*' [tfpdef] (',' tfpdef ['=' test])* [',' ['**' tfpdef [',']]]
+  | '**' tfpdef [','])
 tfpdef: NAME [':' test]
-varargslist: (vfpdef ['=' test] (',' vfpdef ['=' test])* [','
-       ['*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] | '**' vfpdef]]
-     |  '*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] | '**' vfpdef)
+varargslist: (vfpdef ['=' test] (',' vfpdef ['=' test])* [',' [
+        '*' [vfpdef] (',' vfpdef ['=' test])* [',' ['**' vfpdef [',']]]
+      | '**' vfpdef [',']]]
+  | '*' [vfpdef] (',' vfpdef ['=' test])* [',' ['**' vfpdef [',']]]
+  | '**' vfpdef [',']
+)
 vfpdef: NAME
 
 stmt: simple_stmt | compound_stmt
 simple_stmt: small_stmt (';' small_stmt)* [';'] NEWLINE
 small_stmt: (expr_stmt | del_stmt | pass_stmt | flow_stmt |
              import_stmt | global_stmt | nonlocal_stmt | assert_stmt)
-expr_stmt: testlist_star_expr (augassign (yield_expr|testlist) |
+expr_stmt: testlist_star_expr (annassign | augassign (yield_expr|testlist) |
                      ('=' (yield_expr|testlist_star_expr))*)
+annassign: ':' test ['=' test]
 testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
-augassign: ('+=' | '-=' | '*=' | '/=' | '%=' | '&=' | '|=' | '^=' |
+augassign: ('+=' | '-=' | '*=' | '@=' | '/=' | '%=' | '&=' | '|=' | '^=' |
             '<<=' | '>>=' | '**=' | '//=')
-# For normal assignments, additional restrictions enforced by the interpreter
+# For normal and annotated assignments, additional restrictions enforced by the interpreter
 del_stmt: 'del' exprlist
 pass_stmt: 'pass'
 flow_stmt: break_stmt | continue_stmt | return_stmt | raise_stmt | yield_stmt
@@ -100,7 +102,8 @@ global_stmt: 'global' NAME (',' NAME)*
 nonlocal_stmt: 'nonlocal' NAME (',' NAME)*
 assert_stmt: 'assert' test [',' test]
 
-compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated
+compound_stmt: if_stmt | while_stmt | for_stmt | try_stmt | with_stmt | funcdef | classdef | decorated | async_stmt
+async_stmt: 'async' (funcdef | with_stmt | for_stmt)
 if_stmt: 'if' test ':' suite ('elif' test ':' suite)* ['else' ':' suite]
 while_stmt: 'while' test ':' suite ['else' ':' suite]
 for_stmt: 'for' exprlist 'in' testlist ':' suite ['else' ':' suite]
@@ -124,7 +127,7 @@ and_test: not_test ('and' not_test)*
 not_test: 'not' not_test | comparison
 comparison: expr (comp_op expr)*
 # <> isn't actually a valid comparison operator in Python. It's here for the
-# sake of a __future__ import described in PEP 401
+# sake of a __future__ import described in PEP 401 (which really works :-)
 comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
 star_expr: '*' expr
 expr: xor_expr ('|' xor_expr)*
@@ -132,7 +135,7 @@ xor_expr: and_expr ('^' and_expr)*
 and_expr: shift_expr ('&' shift_expr)*
 shift_expr: arith_expr (('<<'|'>>') arith_expr)*
 arith_expr: term (('+'|'-') term)*
-term: factor (('*'|'/'|'%'|'//') factor)*
+term: factor (('*'|'@'|'/'|'%'|'//') factor)*
 factor: ('+'|'-'|'~') factor | power
 power: atom_expr ['**' factor]
 atom_expr: ['await'] atom trailer*
@@ -143,23 +146,36 @@ atom: ('(' [yield_expr|testlist_comp] ')' |
 testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
 trailer: '(' [arglist] ')' | '[' subscriptlist ']' | '.' NAME
 subscriptlist: subscript (',' subscript)* [',']
-subscript: test | [Fact] ':' [Fact] [sliceop]
-sliceop: ':' [Fact]
+subscript: test | [test] ':' [test] [sliceop]
+sliceop: ':' [test]
 exprlist: (expr|star_expr) (',' (expr|star_expr))* [',']
 testlist: test (',' test)* [',']
-dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
-                  (test (comp_for | (',' test)* [','])) )
+dictorsetmaker: ( ((test ':' test | '**' expr)
+                   (comp_for | (',' (test ':' test | '**' expr))* [','])) |
+                  ((test | star_expr)
+                   (comp_for | (',' (test | star_expr))* [','])) )
 
 classdef: 'class' NAME ['(' [arglist] ')'] ':' suite
 
-arglist: (argument ',')* (argument [',']
-                         |'*' test (',' argument)* [',' '**' test] 
-                         |'**' test)
+arglist: argument (',' argument)*  [',']
+
 # The reason that keywords are test nodes instead of NAME is that using NAME
 # results in an ambiguity. ast.c makes sure it's a NAME.
-argument: test [comp_for] | test '=' test  # Really [keyword '='] test
+# "test '=' test" is really "keyword '=' test", but we have no such token.
+# These need to be in a single rule to avoid grammar that is ambiguous
+# to our LL(1) parser. Even though 'test' includes '*expr' in star_expr,
+# we explicitly match '*' here, too, to give it proper precedence.
+# Illegal combinations and orderings are blocked in ast.c:
+# multiple (test comp_for) arguments are blocked; keyword unpackings
+# that precede iterable unpackings are blocked; etc.
+argument: ( test [comp_for] |
+            test '=' test |
+            '**' test |
+            '*' test )
+
 comp_iter: comp_for | comp_if
-comp_for: 'for' exprlist 'in' or_test [comp_iter]
+sync_comp_for: 'for' exprlist 'in' or_test [comp_iter]
+comp_for: ['async'] sync_comp_for
 comp_if: 'if' test_nocond [comp_iter]
 
 # not used in grammar, but may appear in "node" passed from Parser to Compiler
@@ -423,7 +439,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 if (!Peek(TokenType.RPAREN))
                 {
-                    args = arglist(dn, token.Start).args;
+                    args = arglist(dn, token.Start).Args;
                 }
                 Expect(TokenType.RPAREN);
             }
@@ -488,6 +504,16 @@ eval_input: testlist NEWLINE* ENDMARKER
             return lexer.Get();
         }
 
+        private T Expect<T>(Func<T?> parserFn, string msg) where T : class
+        {
+            T? t = parserFn();
+            if (t == null)
+            {
+                throw Error(Resources.ErrInvalidSyntax, msg);
+            }
+            return t;
+        }
+
         //decorators: decorator+
         public List<Decorator> decorators()
         {
@@ -525,7 +551,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 //$TODO: keep the comments.
                 lexer.Get();
             }
-            d.decorators = decs;
+            d.Decorators = decs;
             return new List<Statement> { d };
         }
 
@@ -787,7 +813,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 init = test();
             }
-            return new VarArg { name = id, test = init };
+            return new VarArg { Name = id, Test = init };
         }
 
         //vfpdef: NAME
@@ -1019,7 +1045,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 else if (Peek(TokenType.LPAREN))
                 {
                     var tok = lexer.Get();
-                    args = arglist(printId, tok.Start).args;
+                    args = arglist(printId, tok.Start).Args;
                     Expect(TokenType.RPAREN);
                     if (PeekAndDiscard(TokenType.COMMA))
                     {
@@ -1244,7 +1270,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             Expect(TokenType.Import);
             int posEnd;
-            List<AliasedName> aliasNames;
+            List<AliasedName>? aliasNames;
             if (PeekAndDiscard(TokenType.OP_STAR, out var token))
             {
                 aliasNames = new List<AliasedName>();
@@ -1400,6 +1426,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 if (PeekAndDiscard(TokenType.COMMA))
                 {
                     l = ExpectTest();
+                    if (l != null)
                     posEnd = l.End;
                 }
             }
@@ -1466,7 +1493,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 t = ExpectTest();
                 Expect(TokenType.COLON);
                 ts = suite();
-                ts.stmts.InsertRange(0, comments);
+                ts.Statements.InsertRange(0, comments);
                 stack.Push(Tuple.Create(token.Start, (Exp?)t, ts));
                 comments = CollectComments();
             }
@@ -1474,7 +1501,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 Expect(TokenType.COLON);
                 ts = suite();
-                ts.stmts.InsertRange(0, comments);
+                ts.Statements.InsertRange(0, comments);
                 comments.Clear();
                 stack.Push(new Tuple<int, Exp?, SuiteStatement>(token2.Start, null, ts));
             }
@@ -1569,13 +1596,13 @@ eval_input: testlist NEWLINE* ENDMARKER
                 var ec = except_clause();
                 Expect(TokenType.COLON);
                 var handler = suite();
-                handler.stmts.InsertRange(0, comments);
+                handler.Statements.InsertRange(0, comments);
                 posEnd = handler.End;
-                exHandlers.Add(new ExceptHandler(ec.exp, ec.alias, handler, filename, token.Start, posEnd));
+                exHandlers.Add(new ExceptHandler(ec.Exp, ec.Alias, handler, filename, token.Start, posEnd));
                 comments = CollectComments();
                 if (PeekAndDiscard(TokenType.Else))
                 {
-                    handler.stmts.AddRange(comments);
+                    handler.Statements.AddRange(comments);
                     Expect(TokenType.COLON);
                     elseHandler = suite();
                     posEnd = elseHandler.End;
@@ -1585,7 +1612,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 Expect(TokenType.COLON);
                 finallyHandler = suite();
-                finallyHandler.stmts.InsertRange(0, comments);
+                finallyHandler.Statements.InsertRange(0, comments);
                 posEnd = finallyHandler.End;
             }
             if (exHandlers.Count == 0 && finallyHandler == null)
@@ -1614,19 +1641,30 @@ eval_input: testlist NEWLINE* ENDMARKER
         public List<Statement> with_stmt()
         {
             var posStart = Expect(TokenType.With).Start;
+            var ws = new List<WithItem>();
             var w = with_item();
-            var ws = new List<WithItem> { w };
-            while (PeekAndDiscard(TokenType.COMMA))
-                ws.Add(with_item());
-            Expect(TokenType.COLON);
-            var s = suite();
-            return new List<Statement> {
-                new WithStatement(ws, s, filename, posStart, s.End)
-            };
+            if (w != null)
+            {
+                ws.Add(w);
+                while (PeekAndDiscard(TokenType.COMMA))
+                {
+                    w = with_item();
+                    if (w == null)
+                        break;
+                    ws.Add(w);
+                }
+                Expect(TokenType.COLON);
+                var s = suite();
+                return new List<Statement> {
+                    new WithStatement(ws, s, filename, posStart, s.End)
+                };
+            }
+            else
+                return new List<Statement>();
         }
 
         //with_item: test ['as' expr]
-        public WithItem with_item()
+        public WithItem? with_item()
         {
             var t = test();
             if (t is null)
@@ -1701,28 +1739,28 @@ eval_input: testlist NEWLINE* ENDMARKER
                 ;
             if (Peek(TokenType.Lambda))
                 return lambdef();
-            var o = or_test();
-            if (o == null)
-                return o;
+            var consequent = or_test();
+            if (consequent == null)
+                return consequent;
             if (PeekAndDiscard(TokenType.If))
             {
                 var condition = or_test();
-                if (condition is null) throw Unexpected();
-            Expect(TokenType.Else);
+                if (condition == null)
+                    return null;
+                Expect(TokenType.Else);
                 var alternative = test();
                 if (alternative is null) throw Unexpected();
-                return new TestExp(o, condition, alternative, filename, o.Start, alternative.End);
+                return new TestExp(consequent, condition, alternative, filename, consequent.Start, alternative.End);
             }
-            if (o is Identifier id)
+            if (consequent is Identifier id)
             {
                 if (PeekAndDiscard(TokenType.COLONEQ))
                 {
                     var e = ExpectTest();
                     return new AssignmentExp(id, e, filename, id.Start, e.End);
-        }
+                }
             }
-            return o;
-
+            return consequent;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -1743,7 +1781,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         }
 
         //lambdef: 'lambda' [varargslist] ':' test
-        public Lambda lambdef()
+        public Lambda? lambdef()
         {
             var posStart = Expect(TokenType.Lambda).Start;
             var argsList = new List<VarArg>();
@@ -1755,17 +1793,17 @@ eval_input: testlist NEWLINE* ENDMARKER
         }
 
         //lambdef_nocond: 'lambda' [varargslist] ':' test_nocond
-        public Lambda lambdef_nocond()
+        public Lambda? lambdef_nocond()
         {
             var posStart = Expect(TokenType.Lambda).Start;
             var argsList = new List<VarArg>();
             if (!Peek(TokenType.COLON))
                 argsList = varargslist();
             Expect(TokenType.COLON);
-            var t = test_nocond();
-            if (t is null)
-                throw Unexpected();
-            return new Lambda(argsList, t, filename, posStart, t.End);
+            var body = test_nocond();
+            if (body == null)
+                return null;
+            return new Lambda(argsList, body, filename, posStart, body.End);
         }
 
         //or_test: and_test ('or' and_test)*
@@ -1877,10 +1915,12 @@ eval_input: testlist NEWLINE* ENDMARKER
         // sake of a __future__ import described in PEP 401
         //comp_op: '<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
         //star_expr: '*' expr
-        public Exp star_expr()
+        public Exp? star_expr()
         {
             var posStart = Expect(TokenType.OP_STAR).Start;
-            var e = ExpectExpr();
+            var e = expr();
+            if (e == null)
+                return e;
             return new StarExp(e, filename, posStart, e.End);
         }
 
@@ -2079,7 +2119,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         //       NAME | NUMBER | STRING+ | '...' | 'None' | 'True' | 'False')
         public Exp? atom()
         {
-            Exp e;
+            Exp? e;
             Token t;
             while (PeekAndDiscard(TokenType.COMMENT))
                 ;
@@ -2126,7 +2166,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                         if (!Peek(TokenType.STRING))
                             break;
                         t = lexer.Get();
-                        str = new Str(str.s + ((Str)t.Value!).s, filename, start, t.End);
+                        str = new Str(str.Value + ((Str)t.Value!).Value, filename, start, t.End);
                     }
                     return str;
                 }
@@ -2183,9 +2223,8 @@ eval_input: testlist NEWLINE* ENDMARKER
         }
 
         //testlist_comp: (test|star_expr) ( comp_for | (',' (test|star_expr))* [','] )
-        public Exp testlist_comp(bool tuple)
+        public Exp? testlist_comp(bool tuple)
         {
-            Exp? e;
             Token startToken = lexer.Peek();
             if (startToken.Type == TokenType.RBRACKET || startToken.Type == TokenType.RPAREN)
             {
@@ -2196,11 +2235,11 @@ eval_input: testlist NEWLINE* ENDMARKER
                     return new PyList(empty, filename, startToken.Start, startToken.End);
             }
 
+            Exp? e;
             if (Peek(TokenType.OP_STAR))
                 e = star_expr();
             else
                 e = test();
-
             if (Peek(TokenType.COMMENT))
             {
                 var comment = (string) Expect(TokenType.COMMENT).Value!;
@@ -2233,9 +2272,12 @@ eval_input: testlist NEWLINE* ENDMARKER
                         break;
                     }
                     if (Peek(TokenType.OP_STAR))
-                        exprs.Add(star_expr());
+                        e = star_expr();
                     else
-                        exprs.Add(ExpectTest());
+                        e = test();
+                    if (e is null)
+                        throw Unexpected();
+                    exprs.Add(e);
                     if (Peek(TokenType.COMMENT))
                         e!.Comment = (string)Expect(TokenType.COMMENT).Value!;
                 }
@@ -2304,7 +2346,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             Exp? start = null;
             Exp? end = null;
-            Exp? slice = null;
+            Exp? stride = null;
             int lexPos = lexer.LineNumber;
             if (!Peek(TokenType.COLON))
             {
@@ -2318,11 +2360,11 @@ eval_input: testlist NEWLINE* ENDMARKER
                 }
                 if (Peek(TokenType.COLON))
                 {
-                    slice = sliceop();
+                    stride = sliceop();
                 }
             }
             //$REVIEW: fix this [2:]
-            return new Slice(start, end, slice,
+            return new Slice(start, end, stride,
                 filename,
                 lexPos,
                 lexer.LineNumber);       //$BUG: should be position, not line number.
@@ -2341,10 +2383,14 @@ eval_input: testlist NEWLINE* ENDMARKER
             var exprs = new List<Exp>();
             for (; ; )
             {
+                Exp? e;
                 if (Peek(TokenType.OP_STAR))
-                    exprs.Add(star_expr());
+                    e = star_expr();
                 else
-                    exprs.Add(ExpectExpr());
+                    e = expr();
+                if (e is null)
+                    throw Unexpected();
+                exprs.Add(e);
                 if (!PeekAndDiscard(TokenType.COMMA))
                     break;
                 if (Peek(TokenType.In, TokenType.NEWLINE))
@@ -2375,7 +2421,8 @@ eval_input: testlist NEWLINE* ENDMARKER
         //                  (test (comp_for | (',' test)* [','])) )
         public Exp dictorsetmaker(int posStart)
         {
-            var dictItems = new List<KeyValuePair<Exp?, Exp>>();
+            int posEnd;
+            var dictItems = new List<(Exp? Key, Exp Value)>();
             var setItems = new List<Exp>();
             while (PeekAndDiscard(TokenType.COMMENT))
                 ;
@@ -2383,60 +2430,65 @@ eval_input: testlist NEWLINE* ENDMARKER
                 return new DictInitializer(dictItems, filename, posStart, token.End);
 
             Exp? k = null;
-            Exp? v = null;
+            Exp? v;
             if (PeekAndDiscard(TokenType.OP_STARSTAR))
             {
                 v = ExpectTest();
-                dictItems.Add(new KeyValuePair<Exp?, Exp>(null, v));
+                dictItems.Add((null, v));
+                posEnd = v.End;
             }
             else if (PeekAndDiscard(TokenType.OP_STAR))
             {
                 v = ExpectTest();
                 setItems.Add(new IterableUnpacker(v, filename, posStart, v.End));
+                posEnd = v.End;
             }
             else
             {
                 k = ExpectTest();
+                posEnd = k.End;
             }
             if (dictItems.Count > 0 || PeekAndDiscard(TokenType.COLON))
             {
                 if (k != null)
                 {
                     v = ExpectTest();
-                if (Peek(TokenType.For))
-                {
-                    var f = comp_for(null);
-                    return new DictComprehension(k, v, f, filename, k.Start, f.End);
-                }
-                else
-                {
-                    // dict initializer
-                        dictItems.Add(new KeyValuePair<Exp?, Exp>(k, v));
+                    if (Peek(TokenType.For))
+                    {
+                        var f = comp_for(null);
+                        return new DictComprehension(k, v, f, filename, k.Start, f.End);
+                    }
+                    else
+                    {
+                        // dict initializer
+                        dictItems.Add((k, v));
+                        posEnd = v.End;
                     }
                 }
-                    while (PeekAndDiscard(TokenType.COMMA))
-                    {
-                        if (Peek(TokenType.RBRACE))
-                            break;
+                while (PeekAndDiscard(TokenType.COMMA))
+                {
+                    if (Peek(TokenType.RBRACE))
+                        break;
                     if (PeekAndDiscard(TokenType.OP_STARSTAR))
                     {
-                        v = test();
-                        if (v is null) throw Unexpected();
-                        dictItems.Add(new KeyValuePair<Exp?, Exp>(null, v));
+                        v = ExpectTest();
+                        dictItems.Add((null, v));
+                        posEnd = v.End;
                     }
                     else
                     {
                         k = test();
                         if (k != null)
                         {
+                            posEnd = k.End;
                             Expect(TokenType.COLON);
-                            v = test();
-                            if (v is null) throw Unexpected();
-                            dictItems.Add(new KeyValuePair<Exp?, Exp>(k, v));
+                            v = ExpectTest();
+                            dictItems.Add((k, v));
+                            posEnd = v.End;
                         }
                     }
                 }
-                return new DictInitializer(dictItems, filename, posStart, (v ?? k!).End);
+                return new DictInitializer(dictItems, filename, posStart, posEnd);
             }
             else
             {
@@ -2449,7 +2501,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 else if (PeekAndDiscard(TokenType.OP_STARSTAR))
                 {
                     v = ExpectTest();
-                    dictItems.Add(new KeyValuePair<Exp?, Exp>(null, v));
+                    dictItems.Add((null, v));
                     return new DictInitializer(dictItems, filename, posStart, v.End);
                 }
                 else
@@ -2467,15 +2519,15 @@ eval_input: testlist NEWLINE* ENDMARKER
                         {
                             v = ExpectTest();
                             setItems.Add(new IterableUnpacker(v, filename, v.Start, v.End));
-                    }
+                        }
                         else
                         {
                             k = ExpectTest();
                             setItems.Add(k);
-                }
-            }
+                        }
+                    }
                     return new PySet(setItems, filename, setItems[0].Start, setItems[^1].End);
-        }
+                }
             }
         }
 
@@ -2489,7 +2541,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             if (!Peek(TokenType.COLON))
             {
                 var token = Expect(TokenType.LPAREN);
-                args = arglist(name, token.Start).args;
+                args = arglist(name, token.Start).Args;
                 Expect(TokenType.RPAREN);
             }
             Expect(TokenType.COLON);
@@ -2498,22 +2550,6 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 new ClassDef(name, args, body, filename, posStart, body.End)
             };
-        }
-
-        public List<Exp> dotted_name_list()
-        {
-            var list = new List<Exp>();
-            var exp = test();
-            if (exp == null)
-                return list;
-            list.Add(exp);
-            while (PeekAndDiscard(TokenType.COMMA))
-            {
-                if (Peek(TokenType.RPAREN))
-                    break;
-                list.Add(ExpectTest());
-            }
-            return list;
         }
 
         public Identifier id()
@@ -2567,16 +2603,15 @@ eval_input: testlist NEWLINE* ENDMARKER
         //argument: test [comp_for] | test '=' test  # Really [keyword '='] test
         public Argument? argument()
         {
-            var name = test();
-            if (name is null)
+            var argName = test();
+            if (argName is null)
                 return null;
-            var posStart = name.Start;
-            var posEnd = name.End;
-            CompFor f;
+            var posStart = argName.Start;
+            var posEnd = argName.End;
             Exp? defval;
             if (Peek(TokenType.For))
             {
-                f = comp_for(name);
+                CompFor f = comp_for(argName);
                 return new Argument(null, f, filename, posStart, f.End);
             }
             else if (PeekAndDiscard(TokenType.EQ))
@@ -2586,10 +2621,10 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             else
             {
-                defval = name;
-                name = null;
+                defval = argName;
+                argName = null;
             }
-            return new Argument(name, defval, filename, posStart, posEnd);
+            return new Argument(argName, defval, filename, posStart, posEnd);
         }
 
         //comp_iter: comp_for | comp_if

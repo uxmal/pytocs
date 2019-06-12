@@ -656,9 +656,9 @@ namespace Pytocs.Core.CodeModel
                 writer.Write("\"");
             }
 
-            for (int i = 0; i < literal.s.Length; ++i)
+            for (int i = 0; i < literal.Value.Length; ++i)
             {
-                var ch = literal.s[i];
+                var ch = literal.Value[i];
                 switch (ch)
                 {
                 case '\\':
@@ -668,7 +668,7 @@ namespace Pytocs.Core.CodeModel
                     }
                     else if (literal.Long)
                     {
-                        ch = literal.s[++i];
+                        ch = literal.Value[++i];
                         switch (ch)
                         {
                         default:
@@ -692,7 +692,7 @@ namespace Pytocs.Core.CodeModel
                     }
                     else
                     {
-                        ch = literal.s[++i];
+                        ch = literal.Value[++i];
                         writer.Write(@"\{0}", ch);
                     }
                     break;

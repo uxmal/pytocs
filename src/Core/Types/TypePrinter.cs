@@ -176,7 +176,7 @@ namespace Pytocs.Core.Types
 
         public string VisitModule(ModuleType m)
         {
-            return m.name;
+            return m.Name;
         }
 
         public string VisitSet(SetType s)

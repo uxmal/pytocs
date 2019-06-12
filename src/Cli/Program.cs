@@ -1,5 +1,5 @@
 #region License
-//  Copyright 2015-2021 John Källén
+//  Copyright 2015-2022 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -73,7 +73,7 @@ namespace Pytocs.Cli
                              logger);
                         var module = typeAnalysis.GetAstForFile(path);
                         xlator.TranslateModuleStatements(
-                            module.Body.stmts,
+                            module.Body.Statements,
                             types,
                             Path.ChangeExtension(path, ".py.cs"));
                     }
@@ -98,7 +98,7 @@ namespace Pytocs.Cli
                          logger);
                     var module = typeAnalysis.GetAstForFile(path);
                     xlator.TranslateModuleStatements(
-                        module.Body.stmts,
+                        module.Body.Statements,
                         types,
                         Path.ChangeExtension(path, ".py.cs"));
                 }

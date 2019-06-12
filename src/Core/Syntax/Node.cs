@@ -29,14 +29,13 @@ namespace Pytocs.Core.Syntax
         public readonly int End;
 
         public Node? Parent;
-        public string Name;
+        //public string? Name;
 
         public Node(string filename, int start, int end)
         {
             this.Filename = filename;
             this.Start = start;
             this.End = end;
-            this.Name = "";
         }
 
         public virtual Str GetDocString() { throw new NotImplementedException();  }

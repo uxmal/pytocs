@@ -51,7 +51,7 @@ namespace Pytocs.Core.Translate
             if (stmt == null)
                 return;
 
-            var comments = StatementTranslator.ConvertFirstStringToComments(stmt.stmts);
+            var comments = StatementTranslator.ConvertFirstStringToComments(stmt.Statements);
             stmt.Accept(this.stmtXlat);
             if (gen.Scope.Count == 0)
                 return;

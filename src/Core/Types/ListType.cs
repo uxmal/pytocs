@@ -79,8 +79,7 @@ namespace Pytocs.Core.Types
 
         public override bool Equals(object? other)
         {
-            var dtOther = other as DataType;
-            if (dtOther == null)
+            if (!(other is DataType dtOther))
                 return false;
             if (typeStack.Contains(this, dtOther))
             {

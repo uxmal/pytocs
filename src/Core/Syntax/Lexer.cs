@@ -122,7 +122,7 @@ namespace Pytocs.Core.Syntax
             if (token.Type != TokenType.NONE)
             {
                 Token t = this.token;
-                token = new Token(0, 0, TokenType.NONE, null, null, 0, 0);
+                token = new Token(0, 0, TokenType.NONE, "", 0, 0, 0);
                 return t;
             }
             return GetToken();

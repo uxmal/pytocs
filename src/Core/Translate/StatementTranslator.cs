@@ -63,11 +63,11 @@ namespace Pytocs.Core.Translate
         {
             if (VisitDecorators(c))
                 return;
-            var baseClasses = c.args.Select(a => GenerateBaseClassName(a.defval!)).ToList();
-            var comments = ConvertFirstStringToComments(c.body.stmts);
+            var baseClasses = c.args.Select(a => GenerateBaseClassName(a.DefaultValue)).ToList();
+            var comments = ConvertFirstStringToComments(c.body.Statements);
             var gensym = new SymbolGenerator();
             var stmtXlt = new StatementTranslator(c, types, gen, gensym, new HashSet<string>());
-            stmtXlt.properties = FindProperties(c.body.stmts);
+            stmtXlt.properties = FindProperties(c.body.Statements);
             var csClass = gen.Class(
                 c.name.Name, 
                 baseClasses, 
@@ -116,9 +116,9 @@ namespace Pytocs.Core.Translate
             var result = new Dictionary<Statement, PropertyDefinition>();
             foreach (var stmt in stmts)
             {
-                if (stmt.decorators == null)
+                if (stmt.Decorators == null)
                     continue;
-                foreach (var decorator in stmt.decorators)
+                foreach (var decorator in stmt.Decorators)
                 {
                     if (IsGetterDecorator(decorator))
                     {
@@ -172,7 +172,7 @@ namespace Pytocs.Core.Translate
             {
                 if (statements[i] is SuiteStatement ste)
                 {
-                    if (!(ste.stmts[0] is CommentStatement))
+                    if (!(ste.Statements[0] is CommentStatement))
                         break;
                 }
             }
@@ -181,14 +181,14 @@ namespace Pytocs.Core.Translate
             var suiteStmt = statements[i] as SuiteStatement;
             if (suiteStmt == null)
                 return nothing;
-            var expStm  = suiteStmt.stmts[0] as ExpStatement;
+            var expStm = suiteStmt.Statements[0] as ExpStatement;
             if (expStm == null)
                 return nothing;
             var str = expStm.Expression as Str;
             if (str == null)
                 return nothing;
             statements.RemoveAt(i);
-            return str.s.Replace("\r\n", "\n").Split('\r', '\n').Select(line => new CodeCommentStatement(" " + line));
+            return str.Value.Replace("\r\n", "\n").Split('\r', '\n').Select(line => new CodeCommentStatement(" " + line));
         }
 
         public void VisitComment(CommentStatement c)
@@ -199,7 +199,7 @@ namespace Pytocs.Core.Translate
         public void VisitTry(TryStatement t)
         {
             CodeVariableReferenceExpression? successVar = null;
-            if (t.elseHandler != null)
+            if (t.ElseHandler != null)
             {
                 // C# has no equivalent to Python's else handler, so we have
                 // to emulate it with a boolean flag.
@@ -208,22 +208,22 @@ namespace Pytocs.Core.Translate
             }
             var tryStmt = gen.Try(
                 () => {
-                    t.body.Accept(this);
+                    t.Body.Accept(this);
                     if (successVar != null)
                     {
                         gen.Assign(successVar, gen.Prim(true));
                     }
                 },
-                t.exHandlers.Select(eh => GenerateClause(eh)),
+                t.ExHandlers.Select(eh => GenerateClause(eh)),
                 () =>
                 {
-                    if (t.finallyHandler != null)
-                        t.finallyHandler.Accept(this);
+                    if (t.FinallyHandler != null)
+                        t.FinallyHandler.Accept(this);
                 });
             if (successVar != null)
             {
                 gen.If(successVar,
-                    () => t.elseHandler!.Accept(this));
+                    () => t.ElseHandler!.Accept(this));
         }
         }
 
@@ -253,13 +253,13 @@ namespace Pytocs.Core.Translate
         public void VisitExec(ExecStatement e)
         {
             var args = new List<CodeExpression>();
-            args.Add(e.code.Accept(xlat));
-            if (e.globals != null)
+            args.Add(e.Code.Accept(xlat));
+            if (e.Globals != null)
             {
-                args.Add(e.globals.Accept(xlat));
-                if (e.locals != null)
+                args.Add(e.Globals.Accept(xlat));
+                if (e.Locals != null)
                 {
-                    args.Add(e.locals.Accept(xlat));
+                    args.Add(e.Locals.Accept(xlat));
                 }
             }
             gen.SideEffect(
@@ -298,12 +298,12 @@ namespace Pytocs.Core.Translate
                 if (gen.CurrentMember != null)
                 {
                     // We're inside a method/fun.
-                    if (ass.op == Op.Assign)
+                    if (ass.Operator == Op.Assign)
                     {
                         if (rhs != null)
                         {
-                        gen.Assign(lhs, rhs);
-                    }
+                            gen.Assign(lhs, rhs);
+                        }
                     }
                     else
                     {
@@ -384,13 +384,13 @@ namespace Pytocs.Core.Translate
                 var target = lhs[index];
                 if (target is StarExp sTarget)
                 {
-                    var lvalue = sTarget.e.Accept(xlat);
+                    var lvalue = sTarget.Expression.Accept(xlat);
                     var rvalue = gen.ApplyMethod(tmp, "Skip", gen.Prim(index));
                     rvalue = gen.ApplyMethod(rvalue, "ToList");
                     gen.Assign(lvalue, rvalue);
                     return;
                 }
-                else if (target != null && target.Name != "_")
+                else if (target is Identifier id && id.Name != "_")
                 {
                     var lvalue = target.Accept(xlat);
                     var rvalue = gen.ApplyMethod(tmp, "Element", gen.Prim(index));
@@ -418,7 +418,7 @@ namespace Pytocs.Core.Translate
             foreach (Exp value in lhs)
             {
                 ++i;
-                if (value == null || value.Name == "_")
+                if (value == null || (value is Identifier idIgnore && idIgnore.Name == "_"))
                     continue;
                 var tupleField = gen.Access(tup, "Item" + i);
                 if (value is Identifier id)
@@ -498,18 +498,18 @@ namespace Pytocs.Core.Translate
 
         public void VisitFor(ForStatement f)
         {
-            switch (f.exprs)
+            switch (f.Exprs)
             {
             case Identifier id:
                 var exp = id.Accept(xlat);
-                var v = f.tests.Accept(xlat);
+                var v = f.Tests.Accept(xlat);
                 gen.Foreach(exp, v, () => f.Body.Accept(this));
                 return;
             case ExpList expList:
                 GenerateForTuple(f, expList.Expressions);
                 return;
             case PyTuple tuple:
-                GenerateForTuple(f, tuple.values);
+                GenerateForTuple(f, tuple.Values);
                 return;
             case AttributeAccess attributeAccess:
                 GenerateForAttributeAccess(f, attributeAccess.Expression);
@@ -521,8 +521,8 @@ namespace Pytocs.Core.Translate
         private void GenerateForAttributeAccess(ForStatement f, Exp id)
         {
             var localVar = gensym.GenSymLocal("_tmp_", gen.TypeRef("object"));
-            var exp = f.exprs.Accept(xlat);
-            var v = f.tests.Accept(xlat);
+            var exp = f.Exprs.Accept(xlat);
+            var v = f.Tests.Accept(xlat);
             gen.Foreach(localVar, v, () =>
             {
                 gen.Assign(exp, localVar);
@@ -533,7 +533,7 @@ namespace Pytocs.Core.Translate
         private void GenerateForTuple(ForStatement f, List<Exp> ids)
         {
             var tuple = gen.ValueTuple(ids.Select(i => i.Accept(xlat)));
-            var v = f.tests.Accept(xlat);
+            var v = f.Tests.Accept(xlat);
             gen.Foreach(tuple, v, () =>
             {
                 f.Body.Accept(this);
@@ -616,16 +616,16 @@ namespace Pytocs.Core.Translate
             {
                 if (f.DottedName != null)
                 {
-                    var total = f.DottedName.segs.Concat(alias.orig.segs)
+                    var total = f.DottedName.segs.Concat(alias.Orig.segs)
                         .Select(s => gen.EscapeKeywordName(s.Name));
                     string aliasName;
-                    if (alias.alias == null)
+                    if (alias.Alias == null)
                     {
                         aliasName = total.Last();
                 }
                     else
                     {
-                        aliasName = alias.alias.Name;
+                        aliasName = alias.Alias.Name;
             }
                     gen.Using(aliasName, string.Join(".", total));
         }
@@ -634,19 +634,19 @@ namespace Pytocs.Core.Translate
 
         public void VisitImport(ImportStatement i)
         {
-            foreach (var name in i.names)
+            foreach (var name in i.Names)
             {
-                if (name.alias == null)
+                if (name.Alias == null)
                 {
-                    gen.Using(name.orig.ToString());
+                    gen.Using(name.Orig.ToString());
                 }
                 else
                 {
                     gen.Using(
-                        name.alias.Name,
+                        name.Alias.Name,
                         string.Join(
                             ".",
-                            name.orig.segs.Select(s => gen.EscapeKeywordName(s.Name))));
+                            name.Orig.segs.Select(s => gen.EscapeKeywordName(s.Name))));
                 }
             }
         }
@@ -666,20 +666,20 @@ namespace Pytocs.Core.Translate
         public void VisitPrint(PrintStatement p)
         {
             CodeExpression? e = null;
-            if (p.outputStream != null)
+            if (p.OutputStream != null)
             {
-                e = p.outputStream.Accept(xlat);
+                e = p.OutputStream.Accept(xlat);
             }
             else
             {
                 e = gen.TypeRefExpr("Console");
             }
             e = gen.MethodRef(
-                e, p.trailingComma ? "Write" : "WriteLine");
+                e, p.TrailingComma ? "Write" : "WriteLine");
             gen.SideEffect(
                 gen.Appl(
                     e,
-                    p.args.Select(a => xlat.VisitArgument(a)).ToArray()));
+                    p.Args.Select(a => xlat.VisitArgument(a)).ToArray()));
         }
 
         public void VisitReturn(ReturnStatement r)
@@ -692,9 +692,9 @@ namespace Pytocs.Core.Translate
 
         public void VisitRaise(RaiseStatement r)
         {
-            if (r.exToRaise != null)
+            if (r.ExToRaise != null)
             {
-                var dt = types.TypeOf(r.exToRaise);
+                var dt = types.TypeOf(r.ExToRaise);
                 if (dt is ClassType)
                 {
                     // Python allows expressions like
@@ -706,7 +706,7 @@ namespace Pytocs.Core.Translate
                 }
                 else
                 {
-                gen.Throw(r.exToRaise.Accept(xlat));
+                    gen.Throw(r.ExToRaise.Accept(xlat));
             }
             }
             else
@@ -717,13 +717,13 @@ namespace Pytocs.Core.Translate
 
         public void VisitSuite(SuiteStatement s)
         {
-            if (s.stmts.Count == 1)
+            if (s.Statements.Count == 1)
             {
-                s.stmts[0].Accept(this);
+                s.Statements[0].Accept(this);
             }
             else
             {
-                foreach (var stmt in s.stmts)
+                foreach (var stmt in s.Statements)
                 {
                     stmt.Accept(this);
                 }
@@ -775,9 +775,9 @@ namespace Pytocs.Core.Translate
         /// translated, so don't do it again.</returns>
         public bool VisitDecorators(Statement stmt)
         {
-            if (stmt.decorators == null)
+            if (stmt.Decorators == null)
                 return false;
-            var decorators = stmt.decorators;
+            var decorators = stmt.Decorators;
             if (this.properties.TryGetValue(stmt, out var propdef))
             {
                 if (propdef.IsTranslated)
@@ -801,7 +801,7 @@ namespace Pytocs.Core.Translate
             }
             else
             {
-                this.customAttrs = stmt.decorators.Select(dd => VisitDecorator(dd));
+                this.customAttrs = stmt.Decorators.Select(dd => VisitDecorator(dd));
                 return false;
             }
         }
@@ -810,7 +810,7 @@ namespace Pytocs.Core.Translate
         {
             var def = (FunctionDef)getter;
             var mgen = new MethodGenerator(this.classDef, def, null, def.parameters, false, async, types, gen);
-            var comments = ConvertFirstStringToComments(def.body.stmts);
+            var comments = ConvertFirstStringToComments(def.body.Statements);
             gen.CurrentComments!.AddRange(comments);
             mgen.Xlat(def.body);
         }
@@ -821,7 +821,7 @@ namespace Pytocs.Core.Translate
                 return;
             var def = (FunctionDef)setter;
             var mgen = new MethodGenerator(this.classDef, def, null, def.parameters, false, async, types, gen);
-            var comments = ConvertFirstStringToComments(def.body.stmts);
+            var comments = ConvertFirstStringToComments(def.body.Statements);
             gen.CurrentComments!.AddRange(comments);
             mgen.Xlat(def.body);
         }
@@ -832,8 +832,8 @@ namespace Pytocs.Core.Translate
                 gen.TypeRef(d.className.ToString()),
                 d.arguments.Select(a => new CodeAttributeArgument
                 {
-                    Name = a.name?.ToString(),
-                    Value = a.defval?.Accept(xlat),
+                    Name = a.Name?.ToString(),
+                    Value = a.DefaultValue?.Accept(xlat),
                 }).ToArray());
         }
 
@@ -865,7 +865,7 @@ namespace Pytocs.Core.Translate
 
         public void VisitGlobal(GlobalStatement g)
         {
-            foreach (var name in g.names)
+            foreach (var name in g.Names)
             {
                 globals.Add(name.Name);
         }
@@ -873,7 +873,7 @@ namespace Pytocs.Core.Translate
 
         public void VisitNonLocal(NonlocalStatement n)
         {
-            gen.Comment("LOCAL " + string.Join(", ", n.names));
+            gen.Comment("LOCAL " + string.Join(", ", n.Names));
         }
 
         public void VisitWhile(WhileStatement w)
@@ -898,8 +898,8 @@ namespace Pytocs.Core.Translate
         public void VisitWith(WithStatement w)
         {
             gen.Using(
-                w.items.Select(wi => Translate(wi)),
-                () => w.body.Accept(this));
+                w.Items.Select(wi => Translate(wi)),
+                () => w.Body.Accept(this));
         }
 
         private CodeStatement Translate(WithItem wi)

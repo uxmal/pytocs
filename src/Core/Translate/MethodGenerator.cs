@@ -117,7 +117,7 @@ namespace Pytocs.Core.Translate
 
         public void Xlat(SuiteStatement suite)
         {
-            var comments = StatementTranslator.ConvertFirstStringToComments(suite.stmts);
+            var comments = StatementTranslator.ConvertFirstStringToComments(suite.Statements);
             stmtXlat.Xlat(suite);
             gen.CurrentComments!.AddRange(comments);
         }

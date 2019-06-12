@@ -142,7 +142,7 @@ namespace Pytocs.Core.Translate
                 return TranslateClass(classType);
             case ModuleType module:
                 return (
-                    new CodeTypeReference(module.name),
+                    new CodeTypeReference(module.Name),
                     null);
             }
             throw new NotImplementedException($"Data type {dt} ({dt.GetType().Name}).");

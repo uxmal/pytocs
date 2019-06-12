@@ -131,25 +131,25 @@ namespace Pytocs.Core.Translate
 
         private IEnumerable<CodeExpression> TranslateArgs(Application args)
         {
-            foreach (var arg in args.args)
+            foreach (var arg in args.Args)
             {
                 yield return VisitArgument(arg);
             }
-            foreach (var arg in args.keywords)
+            foreach (var arg in args.Keywords)
             {
                 yield return VisitArgument(arg);
             }
-            if (args.stargs != null)
-                yield return args.stargs.Accept(this);
-            if (args.kwargs != null)
-                yield return args.kwargs.Accept(this);
+            if (args.StArgs != null)
+                yield return args.StArgs.Accept(this);
+            if (args.KwArgs != null)
+                yield return args.KwArgs.Accept(this);
         }
 
         public CodeExpression VisitApplication(Application appl)
         {
-            var fn = appl.fn.Accept(this);
+            var fn = appl.Function.Accept(this);
             var args = TranslateArgs(appl).ToArray();
-            var dtFn = types.TypeOf(appl.fn);
+            var dtFn = types.TypeOf(appl.Function);
             if (dtFn is ClassType c)
             {
                 // applying a class type => calling constructor.
@@ -220,20 +220,20 @@ namespace Pytocs.Core.Translate
         
         public CodeExpression VisitArrayRef(ArrayRef aref)
         {
-            var target = aref.array.Accept(this);
-            var subs = aref.subs
+            var target = aref.Array.Accept(this);
+            var subs = aref.Subs
                 .Select(s =>
                 {
-                    if (s.Upper != null || s.Step != null)
+                    if (s.Stride != null || s.Upper != null)
                         return new CodeVariableReferenceExpression(string.Format(
                             "{0}:{1}:{2}",
-                            s.Lower, s.Upper, s.Step));
+                            s.Lower, s.Upper, s.Stride));
                     if (s.Lower != null)
                         return s.Lower.Accept(this);
                     else if (s.Upper != null)
                         return s.Upper.Accept(this);
-                    else if (s.Step != null)
-                        return s.Step.Accept(this);
+                    else if (s.Stride != null)
+                        return s.Stride.Accept(this);
                     else
                         return m.Prim(":");
                 })
@@ -248,26 +248,26 @@ namespace Pytocs.Core.Translate
             {
                 return m.Appl(
                     new CodeVariableReferenceExpression("__flatten___"),
-                    new CodeNamedArgument(a.name!.Accept(this), null));
+                    new CodeNamedArgument(a.Name.Accept(this), null));
             }
-            if (a.name == null)
+            if (a.Name == null)
             {
-                Debug.Assert(a.defval != null);
-                return a.defval!.Accept(this);
+                Debug.Assert(a.DefaultValue != null);
+                return a.DefaultValue.Accept(this);
             }
             else
             {
-                if (a.defval is CompFor compFor)
+                if (a.DefaultValue is CompFor compFor)
                 {
-                    var v = a.name.Accept(this);
+                    var v = a.Name.Accept(this);
                     var c = TranslateToLinq(v, compFor);
                     return c;
                 }
                 else
                 {
                     return new CodeNamedArgument(
-                        a.name.Accept(this),
-                        a.defval?.Accept(this));
+                        a.Name.Accept(this),
+                        a.DefaultValue?.Accept(this));
                 }
             }
         }
@@ -276,7 +276,7 @@ namespace Pytocs.Core.Translate
         {
             return m.BinOp(
                 e.Dst.Accept(this),
-                mppyoptocsop[e.op],
+                mppyoptocsop[e.Operator],
                 e.Src!.Accept(this));
         }
 
@@ -292,7 +292,7 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitAwait(AwaitExp awaitExp)
         {
-            var exp = awaitExp.exp.Accept(this);
+            var exp = awaitExp.Exp.Accept(this);
             return m.Await(exp);
         }
 
@@ -355,12 +355,12 @@ namespace Pytocs.Core.Translate
         public CodeExpression VisitSet(PySet s)
         {
             m.EnsureImport("System.Collections");
-            if (s.exps.OfType<IterableUnpacker>().Any())
+            if (s.Initializer.OfType<IterableUnpacker>().Any())
             {
                 // Found iterable unpackers.
                 var seq = new List<CodeExpression>();
                 var subseq = new List<CodeExpression>();
-                foreach (var item in s.exps)
+                foreach (var item in s.Initializer)
                 {
                     CodeExpression? exp = null;
                     if (item is IterableUnpacker unpacker)
@@ -393,7 +393,7 @@ namespace Pytocs.Core.Translate
             }
             else
             {
-                var items = s.exps.Select(e => e.Accept(this));
+                var items = s.Initializer.Select(e => e.Accept(this));
                 var init = m.New(m.TypeRef("HashSet"));
                 init.Initializers.AddRange(items);
                 return init;
@@ -414,12 +414,12 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitUnary(UnaryExp u)
         {
-            if (u.op == Op.Sub && u.e is RealLiteral real)
+            if (u.Operator == Op.Sub && u.Exp is RealLiteral real)
             {
                 return new RealLiteral("-" + real.Value, -real.NumericValue, real.Filename, real.Start, real.End).Accept(this);
             }
-            var e = u.e.Accept(this);
-            return new CodeUnaryOperatorExpression(mppyoptocsop[u.op], e);
+            var e = u.Exp.Accept(this);
+            return new CodeUnaryOperatorExpression(mppyoptocsop[u.Operator], e);
         }
 
         public CodeExpression VisitBigLiteral(BigLiteral bigLiteral)
@@ -429,15 +429,15 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitBinExp(BinExp bin)
         {
-            if (bin.op == Op.Mod &&
-                (bin.r is PyTuple || bin.l is Str))
+            if (bin.Operator == Op.Mod &&
+                (bin.Right is PyTuple || bin.Left is Str))
             {
-                return TranslateFormatExpression(bin.l, bin.r);
+                return TranslateFormatExpression(bin.Left, bin.Right);
             }
 
-            var l = bin.l.Accept(this);
-            var r = bin.r.Accept(this);
-            switch (bin.op)
+            var l = bin.Left.Accept(this);
+            var r = bin.Right.Accept(this);
+            switch (bin.Operator)
             {
             case Op.Add:
                 var cAdd = CondenseComplexConstant(l, r, 1);
@@ -450,10 +450,10 @@ namespace Pytocs.Core.Translate
                     return cSub;
                 break;
             }
-            switch (bin.op)
+            switch (bin.Operator)
             {
             case Op.Is:
-                if (bin.r is NoneExp)
+                if (bin.Right is NoneExp)
                 {
                     return m.BinOp(l, CodeOperatorType.IdentityEquality, r);
                 }
@@ -490,11 +490,11 @@ namespace Pytocs.Core.Translate
             case Op.Le:
                 if (l is CodeBinaryOperatorExpression binL && IsComparison(binL))
                 {
-                    return FuseComparisons(binL, bin.op, r);
+                    return FuseComparisons(binL, bin.Operator, r);
             }
                 break;
             }
-            return m.BinOp(l, mppyoptocsop[bin.op], r);
+            return m.BinOp(l, mppyoptocsop[bin.Operator], r);
         }
 
         private CodeExpression FuseComparisons(CodeBinaryOperatorExpression binL, Op op, CodeExpression r)
@@ -546,7 +546,7 @@ namespace Pytocs.Core.Translate
             var args = new List<CodeExpression> { arg };
             if (pyArgs is PyTuple tuple)
             {
-                args.AddRange(tuple.values
+                args.AddRange(tuple.Values
                     .Select(e => e.Accept(this)));
             }
             else
@@ -567,10 +567,7 @@ namespace Pytocs.Core.Translate
             var compFor = (CompFor) lc.Collection;
             var v = compFor.projection.Accept(this);
             var c = TranslateToLinq(v, compFor);
-            return m.Appl(
-                m.MethodRef(
-                    c,
-                    "ToList"));
+            return m.Appl(m.MethodRef(c, "ToList"));
         }
 
         public CodeExpression VisitIterableUnpacker(IterableUnpacker unpacker)
@@ -586,7 +583,7 @@ namespace Pytocs.Core.Translate
         public CodeExpression VisitLambda(Lambda l)
         {
             var e = new CodeLambdaExpression(
-                l.args.Select(a => a.name!.Accept(this)).ToArray(),
+                l.args.Select(a => a.Name.Accept(this)).ToArray(),
                 l.Body.Accept(this));
             return e;
         }
@@ -601,7 +598,7 @@ namespace Pytocs.Core.Translate
             {
                 if (iter is CompIf filter)
                 {
-                    e = filter.test.Accept(this);
+                    e = filter.Test.Accept(this);
                     queryClauses.Add(m.Where(e));
                 }
                 else if (iter is CompFor join)
@@ -636,8 +633,8 @@ namespace Pytocs.Core.Translate
                 }
             case PyTuple tuple:
                 {
-                    var vars = tuple.values.Select(v => v.Accept(this)).ToArray();
-                    var type = MakeTupleType(tuple.values);
+                var vars = tuple.Values.Select(v => v.Accept(this)).ToArray();
+                var type = MakeTupleType(tuple.Values);
                     var it = gensym.GenSymAutomatic("_tup_", type, false);
                 queryClauses.Add(m.From(it, collection));
                 AddTupleItemsToQueryClauses(it, vars, queryClauses);
@@ -674,16 +671,16 @@ namespace Pytocs.Core.Translate
             var (elemType, nms) = types.TranslateListElementType(l);
             m.EnsureImports(nms);
 
-            var elements = l.elts;
+            var elements = l.Initializer;
             if (ContainsStarExp(elements))
             {
-                return ExpandIterableExpanders("ListUtils", l.elts, elemType);
+                return ExpandIterableExpanders("ListUtils", l.Initializer, elemType);
             }
             else
             {
             return m.ListInitializer(
                     elemType,
-                l.elts
+                    l.Initializer
                 .Where(e => e != null)
                 .Select(e => e.Accept(this)));
         }
@@ -705,7 +702,7 @@ namespace Pytocs.Core.Translate
                         seq.Add(exp);
                         subseq.Clear();
                     }
-                    exp = unpacker.e.Accept(this);
+                    exp = unpacker.Expression.Accept(this);
                     seq.Add(exp);
                 }
                 else
@@ -809,7 +806,7 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitTuple(PyTuple tuple)
         {
-            if (tuple.values.Count == 0)
+            if (tuple.Values.Count == 0)
             {
                 return MakeTupleCreate(m.Prim("<Empty>"));
             }
@@ -817,13 +814,13 @@ namespace Pytocs.Core.Translate
             {
                 //$BUG: tuple elements can be of different types.
                 var elemType = m.TypeRef(typeof(object));
-                if (ContainsStarExp(tuple.values))
+                if (ContainsStarExp(tuple.Values))
                 {
-                    return ExpandIterableExpanders("TupleUtils", tuple.values, elemType);
+                    return ExpandIterableExpanders("TupleUtils", tuple.Values, elemType);
                 }
                 else
                 {
-                    return MakeTupleCreate(tuple.values.Select(v => v.Accept(this)).ToArray());
+                    return MakeTupleCreate(tuple.Values.Select(v => v.Accept(this)).ToArray());
                 }
             }
         }
@@ -835,10 +832,10 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitYieldExp(YieldExp yieldExp)
         {
-            if (yieldExp.exp == null)
+            if (yieldExp.Expression == null)
                 return m.Prim(null);
             else
-                return yieldExp.exp.Accept(this);
+                return yieldExp.Expression.Accept(this);
         }
 
         public CodeExpression VisitYieldFromExp(YieldFromExp yieldExp)
@@ -858,8 +855,8 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitDictComprehension(DictComprehension dc)
         {
-            var list = dc.source.collection.Accept(this);
-            switch (dc.source.variable)
+            var list = dc.Source.collection.Accept(this);
+            switch (dc.Source.variable)
             {
             case ExpList varList:
                 {
@@ -869,8 +866,8 @@ namespace Pytocs.Core.Translate
 
                     gensym.PushIdMappings(varList.Expressions.ToDictionary(e => e.ToString(), e => m.Access(tpl, args[e])));
 
-                    var kValue = dc.key.Accept(this);
-                    var vValue = dc.value.Accept(this);
+                    var kValue = dc.Key.Accept(this);
+                    var vValue = dc.Value.Accept(this);
 
                     gensym.PopIdMappings();
 
@@ -881,8 +878,8 @@ namespace Pytocs.Core.Translate
                 }
             case Identifier id:
                 {
-                    var kValue = dc.key.Accept(this);
-                    var vValue = dc.value.Accept(this);
+                    var kValue = dc.Key.Accept(this);
+                    var vValue = dc.Value.Accept(this);
                     return m.Appl(
                         m.MethodRef(list, "ToDictionary"),
                         m.Lambda(new CodeExpression[] { id.Accept(this) }, kValue),
@@ -891,15 +888,15 @@ namespace Pytocs.Core.Translate
             case PyTuple tuple:
                 {
                     var csTuple = tuple.Accept(this);
-                    if (tuple.values.Count != 2)
+                    if (tuple.Values.Count != 2)
                     {
                         //TODO: tuples, especially nested tuples, are hard.
                         //$TODO: should use type knowledge about the tuple.
-                        var k = dc.key.Accept(this);
-                        var v = dc.value.Accept(this);
+                        var k = dc.Key.Accept(this);
+                        var v = dc.Value.Accept(this);
 
-                        var c = TranslateToLinq(m.ValueTuple(k, v), dc.source);
-                        var type = MakeTupleType(tuple.values);
+                        var c = TranslateToLinq(m.ValueTuple(k, v), dc.Source);
+                        var type = MakeTupleType(tuple.Values);
                         var e = gensym.GenSymAutomatic("_de_", null!, false);
                         return m.Appl(
                             m.MethodRef(c, "ToDictionary"),
@@ -910,12 +907,12 @@ namespace Pytocs.Core.Translate
                     var enumvar = gensym.GenSymAutomatic("_de", null!, false);
                     gensym.PushIdMappings(new Dictionary<string, CodeExpression>
                 {
-                    { tuple.values[0].ToString(), m.Access(enumvar, "Key") },
-                    { tuple.values[1].ToString(), m.Access(enumvar, "Value") },
+                    { tuple.Values[0].ToString(), m.Access(enumvar, "Key") },
+                    { tuple.Values[1].ToString(), m.Access(enumvar, "Value") },
                 });
 
-                    var kValue = dc.key.Accept(this);
-                    var vValue = dc.value.Accept(this);
+                    var kValue = dc.Key.Accept(this);
+                    var vValue = dc.Value.Accept(this);
 
                     gensym.PopIdMappings();
 

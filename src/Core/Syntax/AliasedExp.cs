@@ -23,14 +23,14 @@ namespace Pytocs.Core.Syntax
 {
     public class AliasedExp : Exp
     {
-        public Exp? exp;
-        public Identifier? alias;
-
-        public AliasedExp(Exp? exp, Identifier? alias, string filename, int start, int end) : base(filename, start, end)
+        public AliasedExp(Exp? t, Identifier? alias, string filename, int start, int end) : base(filename, start, end)
         {
-            this.exp = exp;
-            this.alias = alias;
+            this.Exp = t;
+            this.Alias = alias;
         }
+
+        public Exp Exp { get; }
+        public Identifier Alias { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
@@ -49,9 +49,9 @@ namespace Pytocs.Core.Syntax
 
         public override void Write(System.IO.TextWriter writer)
         {
-            if (exp == null)
+            if (Exp == null)
                 return;
-            writer.Write(alias != null ? " {0}, {1}" : "{0}", exp, alias);
+            writer.Write(Alias != null ? " {0}, {1}" : "{0}", Exp, Alias);
         }
     }
 }

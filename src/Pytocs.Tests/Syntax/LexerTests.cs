@@ -177,7 +177,7 @@ namespace Pytocs.UnitTests.Syntax
 
         private string LexString(string pyStr)
         {
-            return ((Str)Lex(pyStr).Value).s;
+            return ((Str)Lex(pyStr).Value).Value;
         }
 
         [Fact]
@@ -280,7 +280,7 @@ namespace Pytocs.UnitTests.Syntax
         {
             var token = Lex("u'foo'");
             Assert.Equal(TokenType.STRING, token.Type);
-            Assert.Equal("foo", ((Str)token.Value).s);
+            Assert.Equal("foo", ((Str)token.Value).Value);
         }
 
         [Fact]
@@ -288,7 +288,7 @@ namespace Pytocs.UnitTests.Syntax
         {
             var token = Lex("u'\u00e9'");
             Assert.Equal(TokenType.STRING, token.Type);
-            Assert.Equal("é", ((Str)token.Value).s);
+            Assert.Equal("é", ((Str)token.Value).Value);
         }
 
         [Fact]

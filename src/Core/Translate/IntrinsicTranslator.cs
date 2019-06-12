@@ -74,19 +74,19 @@ namespace Pytocs.Core.Translate
 
         CodeExpression? Translate_isinstance(Application appl, CodeExpression[] args)
         {
-            if (appl.args.Count != 2)
+            if (appl.Args.Count != 2)
                 return null;
             List<Exp> types;
-            if (appl.args[1].defval is PyTuple tuple)
+            if (appl.Args[1].DefaultValue is PyTuple tuple)
             {
-                types = tuple.values.ToList();
+                types = tuple.Values.ToList();
             }
             else
             {
-                types = new List<Exp> { appl.args[1].defval! };
+                types = new List<Exp> { appl.Args[1].DefaultValue };
             }
 
-            var exp = appl.args[0].defval!.Accept(expTranslator);
+            var exp = appl.Args[0].DefaultValue.Accept(expTranslator);
             return types.
                 Select(t => m.BinOp(
                     exp,
@@ -95,7 +95,7 @@ namespace Pytocs.Core.Translate
                 .Aggregate((a, b) => m.BinOp(a, CodeOperatorType.LogOr, b));
         }
 
-        CodeExpression Translate_int(Application appl, CodeExpression[] args)
+        CodeExpression? Translate_int(Application appl, CodeExpression[] args)
         {
             m.EnsureImport("System");
             var fn = m.MethodRef(m.TypeRefExpr("Convert"), "ToInt32");
@@ -252,7 +252,6 @@ namespace Pytocs.Core.Translate
                     }
                 }
             }
-
             return null;
         }
 
@@ -263,7 +262,7 @@ namespace Pytocs.Core.Translate
                 m.EnsureImport(TypeReferenceTranslator.GenericCollectionNamespace);
                 m.EnsureImport(TypeReferenceTranslator.LinqNamespace);
                 var filter = args[0];
-                if (appl.args[0].defval is NoneExp)
+                if (appl.Args[0].DefaultValue is NoneExp)
                 {
                     var formal = expTranslator.gensym.GenSymLocal("_p_", m.TypeRef("object"));
                     filter = m.Lambda(
@@ -293,7 +292,7 @@ namespace Pytocs.Core.Translate
         {
             if (args[0] is CodePrimitiveExpression c && c.Value is Str str)
             {
-                switch (str.s)
+                switch (str.Value)
                 {
                 case "inf":
                 case "+inf":

@@ -61,7 +61,7 @@ namespace Pytocs.Gui
                         }
 
                         xlator.TranslateModuleStatements(
-                            module.Body.stmts,
+                            module.Body.Statements,
                             types,
                             targetFilePath);
                     }

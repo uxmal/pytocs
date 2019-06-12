@@ -24,12 +24,14 @@ namespace Pytocs.Core.Syntax
 {
     public class Module : Node
     {
-        public SuiteStatement Body;
-
-        public Module(string moduleName, SuiteStatement body, string filename, int begin, int end) : base(filename, begin, end) {
+        public Module(string moduleName, SuiteStatement body, string filename, int begin, int end) : base(filename, begin, end)
+        {
             this.Name = moduleName;
             this.Body = body;
         }
+
+        public string Name { get; }
+        public SuiteStatement Body { get; }
 
         public override string ToString()
         {

@@ -178,7 +178,7 @@ namespace Pytocs.Core.Types
         /// 
         /// @return the first non-unknown, non-{@code None} alternate, or {@code null} if none found
         /// </summary>
-        public DataType FirstUseful()
+        public DataType? FirstUseful()
         {
             return types
                 .Where(type => (!type.IsUnknownType() && type != DataType.None))
@@ -187,9 +187,9 @@ namespace Pytocs.Core.Types
 
         public override bool Equals(object? other)
         {
-            if (other is not DataType dtOther)
+            if (other is not DataType that)
                 return false;
-            if (typeStack.Contains(this, dtOther))
+            if (typeStack.Contains(this, that))
             {
                 return true;
             }
@@ -203,7 +203,7 @@ namespace Pytocs.Core.Types
                 }
                 else
                 {
-                    typeStack.Push(this, dtOther);
+                    typeStack.Push(this, that);
                     foreach (DataType t in types2)
                     {
                         if (!types1.Contains(t))

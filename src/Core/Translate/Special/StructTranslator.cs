@@ -67,7 +67,7 @@ namespace Pytocs.Core.Translate.Special
             if (formatString is CodePrimitiveExpression p && 
                 p.Value is Str s)
             {
-                return s.s;
+                return s.Value;
             }
             return null;
         }
