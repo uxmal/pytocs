@@ -132,6 +132,7 @@ namespace Pytocs.Core.Translate
         {
             var convs = parameters
                 .OrderBy(ta => ta.vararg)
+                .Where(ta => ta.Id != null)
                 .Select(ta => Tuple.Create(ta, GenerateFunctionParameter(ta))).ToArray();
             this.mpPyParamToCs = convs.ToDictionary(k => k.Item1, v => v.Item2);
             return convs.Select(c => c.Item2).ToArray();

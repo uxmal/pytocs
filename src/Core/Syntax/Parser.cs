@@ -619,7 +619,15 @@ eval_input: testlist NEWLINE* ENDMARKER
                         }
                         else if (PeekAndDiscard(TokenType.OP_STAR))
                         {
-                            arg = fpdef();
+                            if (!Peek(TokenType.COMMA))
+                            {
+                                // *args
+                                arg = fpdef();
+                            }
+                            else
+                            {
+                                arg = new Parameter();
+                            }
                             arg.vararg = true;
                             args.Add(arg);
                         }

@@ -1564,6 +1564,27 @@ public static object func(object cfg_node) {
 
             Assert.Equal(sExp, XlatStmts(pySrc));
         }
+
+        // Reported in https://github.com/uxmal/pytocs/issues/56
+        [Fact(DisplayName = nameof(Stmt_issue_65))]
+        public void Stmt_issue_65()
+        {
+            var pySrc =
+@"def foo(replay_buffer, verbose=0, *, requires_vec_env, policy_base, policy_kwargs=None):
+    pass
+";
+            var sExp =
+@"public static object foo(
+    object replay_buffer,
+    object verbose = 0,
+    object requires_vec_env,
+    object policy_base,
+    object policy_kwargs = null) {
+}
+
+";
+            Assert.Equal(sExp, XlatMember(pySrc));
+        }
     }
 }
 #endif
