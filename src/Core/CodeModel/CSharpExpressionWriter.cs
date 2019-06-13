@@ -716,5 +716,32 @@ namespace Pytocs.Core.CodeModel
         {
             GenerateTypeName(t.TypeName);
         }
+
+        public void VisitValueTuple(CodeValueTupleExpression tuple)
+        {
+            if (tuple.Expressions.Length <= 1)
+            {
+                writer.Write("ValueTuple.Create");
+                writer.Write("(");
+                if (tuple.Expressions.Length == 1)
+                {
+                    tuple.Expressions[0].Accept(this);
+                }
+                writer.Write(")");
+            }
+            else
+            {
+                writer.Write("(");
+                var sep = "";
+                foreach (var exp in tuple.Expressions)
+                {
+                    writer.Write(sep);
+                    sep = ", ";
+                    exp.Accept(this);
+                }
+                writer.Write(")");
+
+            }
+        }
     }
 }

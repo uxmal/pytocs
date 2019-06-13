@@ -43,6 +43,7 @@ namespace Pytocs.Core.CodeModel
         void VisitThisReference(CodeThisReferenceExpression t);
         void VisitTypeReference(CodeTypeReferenceExpression t);
         void VisitUnary(CodeUnaryOperatorExpression u);
+        void VisitValueTuple(CodeValueTupleExpression codeValueTupleExpression);
         void VisitVariableReference(CodeVariableReferenceExpression var);
 
     }
@@ -68,6 +69,7 @@ namespace Pytocs.Core.CodeModel
         T VisitThisReference(CodeThisReferenceExpression t);
         T VisitTypeReference(CodeTypeReferenceExpression t);
         T VisitUnary(CodeUnaryOperatorExpression u);
+        T VisitValueTuple(CodeValueTupleExpression codeValueTupleExpression);
         T VisitVariableReference(CodeVariableReferenceExpression var);
 
     }

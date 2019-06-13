@@ -545,6 +545,11 @@ namespace Pytocs.Core.CodeModel
             return u;
         }
 
+        public CodeValueTupleExpression ValueTuple(params CodeExpression [] exprs)
+        {
+            return new CodeValueTupleExpression(exprs);
+        }
+
         public CodeMemberProperty PropertyDef(string name, Action generatePropertyGetter, Action generatePropertySetter)
         {
             var prop = new CodeMemberProperty
