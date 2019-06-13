@@ -419,9 +419,17 @@ namespace Pytocs.Core.Syntax
             writer.Write(" ");
             foreach (var kv in KeyValues)
             {
-                kv.Key.Write(writer);
-                writer.Write(" : ");
-                kv.Value.Write(writer);
+                if (kv.Key != null)
+                {
+                    kv.Key.Write(writer);
+                    writer.Write(" : ");
+                    kv.Value.Write(writer);
+                }
+                else
+                {
+                    writer.Write("**");
+                    kv.Value.Write(writer);
+                }
                 writer.Write(", ");
             }
             writer.Write(" ");

@@ -853,5 +853,13 @@ else:
 
             AssertStmt(sExp, ParseStmt(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Parser_issue_57))]
+        public void Parser_issue_57()
+        {
+            var pySrc = "{'a': 'str', **kwargs }";
+            var sExp = @"{ ""a"" : ""str"", **kwargs,  }";
+            AssertExp(sExp, ParseExp(pySrc));
+        }
     }
 }

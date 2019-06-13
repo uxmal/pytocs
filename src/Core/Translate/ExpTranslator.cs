@@ -292,19 +292,45 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitDictInitializer(DictInitializer s)
         {
-            var items = s.KeyValues.Select(kv => new CodeCollectionInitializer(
-                kv.Key.Accept(this),
-                kv.Value.Accept(this)));
-            m.EnsureImport("System.Collections.Generic");
-            var init = new CodeObjectCreateExpression
+            if (s.KeyValues.All(kv => kv.Key != null))
             {
-                Type = m.TypeRef("Dictionary", "object", "object"),
-                Initializer = new CodeCollectionInitializer
+                var items = s.KeyValues.Select(kv => new CodeCollectionInitializer(
+                    kv.Key.Accept(this),
+                    kv.Value.Accept(this)));
+                m.EnsureImport("System.Collections.Generic");
+                var init = new CodeObjectCreateExpression
                 {
-                    Values = items.ToArray()
-                }
-            };
-            return init;
+                    Type = m.TypeRef("Dictionary", "object", "object"),
+                    Initializer = new CodeCollectionInitializer
+                    {
+                        Values = items.ToArray()
+                    }
+                };
+                return init;
+            }
+            else
+            {
+                m.EnsureImport("pytocs.runtime");
+                // There was a dictionary unpacking present. 
+                var items = s.KeyValues.Select(kv =>
+                {
+                    var v = kv.Value.Accept(this);
+                    if (kv.Key != null)
+                    {
+                        var k = kv.Key.Accept(this);
+                        return m.ValueTuple(k, v);
+                    }
+                    else
+                    {
+                        return v;
+                    }
+                });
+                var unpack = m.ApplyMethod(
+                    m.TypeRefExpr("DictionaryUtils"),
+                    "Unpack",
+                    items.ToArray());
+                return unpack;
+            }
         }
 
         public CodeExpression VisitSet(PySet s)

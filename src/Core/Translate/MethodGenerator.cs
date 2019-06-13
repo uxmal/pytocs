@@ -132,8 +132,8 @@ namespace Pytocs.Core.Translate
         {
             var convs = parameters
                 .OrderBy(ta => ta.vararg)
-                .Where(ta => ta.Id != null)
-                .Select(ta => Tuple.Create(ta, GenerateFunctionParameter(ta))).ToArray();
+                .Where(ta => !ta.vararg || ta.Id != null)
+                .Select(ta => (ta, GenerateFunctionParameter(ta))).ToArray();
             this.mpPyParamToCs = convs.ToDictionary(k => k.Item1, v => v.Item2);
             return convs.Select(c => c.Item2).ToArray();
         }
@@ -163,7 +163,7 @@ namespace Pytocs.Core.Translate
             return new CodeParameterDeclarationExpression
             {
                 ParameterType = parameterType,
-                ParameterName = ta.Id.Name,
+                ParameterName = ta.Id?.Name,
                 IsVarargs = ta.vararg,
                 DefaultValue = ta.test?.Accept(this.xlat)
             };

@@ -876,7 +876,7 @@ foo.y = _tup_1.Item2;
             Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Stmt_TupleArguments))]
         public void Stmt_TupleArguments()
         {
             var pySrc =

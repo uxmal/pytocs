@@ -14,7 +14,6 @@
 //  limitations under the License.
 #endregion
 
-#if DEBUG
 using Xunit;
 using Pytocs.Core.CodeModel;
 using Pytocs.Core.Syntax;
@@ -719,6 +718,13 @@ namespace Pytocs.UnitTests.Translate
             var sExp = "Encoding.GetEncoding(\"utf-8\").GetString(a)";
             Assert.Equal(sExp, Xlat(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Ex_issue_57))]
+        public void Ex_issue_57()
+        {
+            var pySrc = "{'a': 'str', **kwargs }";
+            var sExp = @"DictionaryUtils.Unpack((""a"", ""str""), kwargs)";
+            Assert.Equal(sExp, Xlat(pySrc));
+        }
     }
 }
-#endif

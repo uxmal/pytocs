@@ -2288,12 +2288,20 @@ eval_input: testlist NEWLINE* ENDMARKER
                     {
                         if (Peek(TokenType.RBRACE))
                             break;
-                        k = test();
-                        if (k != null)
+                        if (PeekAndDiscard(TokenType.OP_STARSTAR))
                         {
-                            Expect(TokenType.COLON);
-                            v = test();
-                            kvs.Add(new KeyValuePair<Exp, Exp>(k, v));
+                            v = or_test();
+                            kvs.Add(new KeyValuePair<Exp, Exp>(null, v));
+                        }
+                        else
+                        {
+                            k = test();
+                            if (k != null)
+                            {
+                                Expect(TokenType.COLON);
+                                v = test();
+                                kvs.Add(new KeyValuePair<Exp, Exp>(k, v));
+                            }
                         }
                     }
                     return new DictInitializer(kvs, filename, posStart, (v ?? k).End);
