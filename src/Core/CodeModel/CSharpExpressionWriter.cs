@@ -356,6 +356,18 @@ namespace Pytocs.Core.CodeModel
                 writer.Write(".");
             }
             writer.WriteName(m.MethodName);
+            if (m.TypeReferences.Count > 0)
+            {
+                writer.Write("<");
+                var sep = "";
+                foreach (var tr in m.TypeReferences)
+                {
+                    writer.Write(sep);
+                    sep = ", ";
+                    VisitTypeReference(tr);
+                }
+                writer.Write(">");
+            }
         }
 
         public void VisitNamedArgument(CodeNamedArgument arg)

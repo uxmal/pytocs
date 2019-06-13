@@ -723,7 +723,7 @@ namespace Pytocs.UnitTests.Translate
         public void Ex_issue_57()
         {
             var pySrc = "{'a': 'str', **kwargs }";
-            var sExp = @"DictionaryUtils.Unpack((""a"", ""str""), kwargs)";
+            var sExp = @"DictionaryUtils.Unpack<string, object>((""a"", ""str""), kwargs)";
             Assert.Equal(sExp, Xlat(pySrc));
         }
     }

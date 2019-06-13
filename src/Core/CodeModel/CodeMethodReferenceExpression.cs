@@ -28,10 +28,13 @@ namespace Pytocs.Core.CodeModel
         {
             this.TargetObject = r;
             this.MethodName = p;
+            this.TypeReferences = new List<CodeTypeReference>();
         }
 
         public CodeExpression TargetObject { get; set; }
         public string MethodName { get; set; }
+
+        public List<CodeTypeReference> TypeReferences { get; set; }
 
         public override void Accept(ICodeExpressionVisitor visitor)
         {

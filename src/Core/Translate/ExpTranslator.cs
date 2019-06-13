@@ -325,11 +325,10 @@ namespace Pytocs.Core.Translate
                         return v;
                     }
                 });
-                var unpack = m.ApplyMethod(
-                    m.TypeRefExpr("DictionaryUtils"),
-                    "Unpack",
-                    items.ToArray());
-                return unpack;
+                var unpack = m.MethodRef(m.TypeRefExpr("DictionaryUtils"),"Unpack");
+                unpack.TypeReferences.Add(m.TypeRef(typeof(string)));
+                unpack.TypeReferences.Add(m.TypeRef(typeof(object)));
+                return m.Appl(unpack, items.ToArray());
             }
         }
 

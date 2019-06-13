@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Runtime\Runtime.csproj" />
     <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
 

@@ -470,7 +470,7 @@ namespace Pytocs.Core.CodeModel
             return y;
         }
 
-        public CodeExpression MethodRef(CodeExpression exp, string methodName)
+        public CodeMethodReferenceExpression MethodRef(CodeExpression exp, string methodName)
         {
             return new CodeMethodReferenceExpression(exp, methodName);
         }
@@ -495,6 +495,11 @@ namespace Pytocs.Core.CodeModel
                 }
             }
             return new CodePrimitiveExpression(o);
+        }
+
+        public CodeTypeReference TypeRef(Type type)
+        {
+            return new CodeTypeReference(type);
         }
 
         public CodeTypeReference TypeRef(string typeName)
