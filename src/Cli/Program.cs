@@ -42,14 +42,13 @@ namespace Pytocs.Cli
                 return;
             }
 
+                var options = new Dictionary<string, object>();
+            var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
             if (args[0].ToLower() == "-r")
             {
                 var startDir = args.Length == 2
                     ? args[1]
                     : Directory.GetCurrentDirectory();
-                var options = new Dictionary<string, object>();
-#if !NOT_READY_FOR_TYPES
-                var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
                 typeAnalysis.Analyze(startDir);
                 typeAnalysis.Finish();
                 var types = new TypeReferenceTranslator(
@@ -78,21 +77,29 @@ namespace Pytocs.Cli
                             Path.ChangeExtension(path, ".py.cs"));
                     }
                 });
-#else
-                var walker = new DirectoryWalker(fs, startDir, "*.py");
-                walker.Enumerate(walker.ProcessDirectoryFiles);
-#endif
             }
             else
             {
-                foreach (var fileName in args)
+                foreach (var file in args)
                 {
+                    typeAnalysis.LoadFileRecursive(file);
+                }
+                typeAnalysis.Finish();
+                var types = new TypeReferenceTranslator(
+                    typeAnalysis.BuildTypeDictionary());
+                foreach (var file in args)
+                {
+                    var path = fs.GetFullPath(file);
                     var xlator = new Translator(
-                        "",
-                        fs.GetFileNameWithoutExtension(fileName),
-                        fs,
-                        new ConsoleLogger());
-                    xlator.TranslateFile(fileName, fileName + ".cs");
+                         "",
+                         fs.GetFileNameWithoutExtension(file),
+                         fs,
+                         logger);
+                    var module = typeAnalysis.GetAstForFile(path);
+                    xlator.TranslateModuleStatements(
+                        module.body.stmts,
+                        types,
+                        Path.ChangeExtension(path, ".py.cs"));
                 }
             }
         }
