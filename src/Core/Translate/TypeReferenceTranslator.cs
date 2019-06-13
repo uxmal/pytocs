@@ -45,7 +45,7 @@ namespace Pytocs.Core.Translate
             this.pyToCsClasses = pyToCsClasses ?? DefaultClassTranslations;
         }
 
-        public DataType TypeOf(Node node)
+        public virtual DataType TypeOf(Node node)
         {
             if (!types.TryGetValue(node, out var result))
             {

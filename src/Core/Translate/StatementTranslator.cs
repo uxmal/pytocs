@@ -590,7 +590,20 @@ namespace Pytocs.Core.Translate
         {
             if (r.exToRaise != null)
             {
-                gen.Throw(r.exToRaise.Accept(xlat));
+                var dt = types.TypeOf(r.exToRaise);
+                if (dt is ClassType)
+                {
+                    // Python allows expressions like
+                    //   raise FooError
+
+                    var (exceptionType, namespaces) = types.Translate(dt);
+                    gen.EnsureImports(namespaces);
+                    gen.Throw(gen.New(exceptionType));
+                }
+                else
+                {
+                    gen.Throw(r.exToRaise.Accept(xlat));
+                }
             }
             else
             {
