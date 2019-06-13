@@ -34,13 +34,15 @@ namespace Pytocs.Core.Translate
         private const string SystemNamespace = "System";
         private const string GenericCollectionNamespace = "System.Collections.Generic";
 
-        private Dictionary<Node, DataType> types;
-        private Stack<DataType> stackq;
+        private readonly Dictionary<Node, DataType> types;
+        private readonly Stack<DataType> stackq;
+        private readonly Dictionary<string, (string, string)> pyToCsClasses;
 
-        public TypeReferenceTranslator(Dictionary<Node, DataType> types)
+        public TypeReferenceTranslator(Dictionary<Node, DataType> types, Dictionary<string, (string,string)> pyToCsClasses = null)
         {
             this.types = types;
             this.stackq = new Stack<DataType>();
+            this.pyToCsClasses = pyToCsClasses ?? DefaultClassTranslations;
         }
 
         public DataType TypeOf(Node node)
@@ -64,7 +66,15 @@ namespace Pytocs.Core.Translate
             }
         }
 
-        public (CodeTypeReference, ISet<string>) Translate(DataType dt)
+        /// <summary>
+        /// Given a Python <see cref="DataType"/>, translates it to its C# equivalent 
+        /// and wraps it in a <see cref="CodeTypeReference"/>
+        /// </summary>
+        /// <param name="dt">Data type reference to translate.</param>
+        /// <returns>A tuple of the resulting <see cref="CodeTypeReference"/> and a set 
+        /// of any namespaces that should be imported.
+        /// </returns>
+        public (CodeTypeReference csTypeRef, ISet<string> namespaces) Translate(DataType dt)
         {
             if (stackq.Contains(dt))
                 return (new CodeTypeReference(typeof(object)), null);
@@ -99,11 +109,11 @@ namespace Pytocs.Core.Translate
                 return (
                     new CodeTypeReference(typeof(object)),
                     null);
-            case ComplexType complex:
+            case ComplexType _:
                 return (
                     new CodeTypeReference("Complex"),
                     new HashSet<string> { "System.Numeric" });
-            case StrType str:
+            case StrType _:
                 return (
                     new CodeTypeReference(typeof(string)),
                     null);
@@ -127,15 +137,26 @@ namespace Pytocs.Core.Translate
                 stackq.Pop();
                 return ft;
             case ClassType classType:
-                return (
-                    new CodeTypeReference(classType.name),
-                    null);
+                return TranslateClass(classType);
             case ModuleType module:
                 return (
                     new CodeTypeReference(module.name),
                     null);
             }
             throw new NotImplementedException($"Data type {dt} ({dt.GetType().Name}).");
+        }
+
+        private (CodeTypeReference csTypeRef, ISet<string> namespaces) TranslateClass(ClassType classType)
+        {
+            if (!this.pyToCsClasses.TryGetValue(classType.name, out var nameAndSpace))
+            {
+                nameAndSpace = (classType.name, null);
+            }
+            var csClass = new CodeTypeReference(nameAndSpace.Item1);
+            var nmset = nameAndSpace.Item2 != null
+                ? new HashSet<string> { nameAndSpace.Item2 }
+                : null;
+            return (csClass, nmset);
         }
 
         private (CodeTypeReference, ISet<string>) TranslateInstance(InstanceType inst)
@@ -239,5 +260,10 @@ namespace Pytocs.Core.Translate
                     null);
             }
         }
+
+        private static Dictionary<string, (string, string)> DefaultClassTranslations = new Dictionary<string, (string, string)>
+        {
+            { "NotImplementedError", ("NotImplementedException", "System") }
+        };
     }
 }

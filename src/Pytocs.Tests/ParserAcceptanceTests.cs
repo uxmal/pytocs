@@ -27,12 +27,14 @@ using System.Threading.Tasks;
 using Pytocs.Core.TypeInference;
 using Pytocs.Core.Types;
 using Xunit;
+using System.Diagnostics;
 
 namespace Pytocs.Acceptance
 {
     public class ParserAcceptanceTests
     {
         private static readonly string nl = Environment.NewLine;
+
         private State scope;
 
         public ParserAcceptanceTests()
@@ -45,7 +47,7 @@ namespace Pytocs.Acceptance
             var rdr = new StringReader(pyModule);
             var lex = new Lexer("foo.py", rdr);
             var par = new Parser("foo.py", lex);
-            var stm = par.Parse(); ;
+            var stm = par.Parse();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
             var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
@@ -63,7 +65,7 @@ namespace Pytocs.Acceptance
             return writer.ToString();
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Accept1))]
         public void Accept1()
         {
             var s = XlatModule(
@@ -307,7 +309,7 @@ namespace test {
             Assert.Equal(sExp, s);
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Accept2))]
         public void Accept2()
         {
             var s = XlatModule(

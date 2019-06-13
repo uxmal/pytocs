@@ -26,11 +26,11 @@ namespace Pytocs.UnitTests.TypeInference
 {
     public class AnalyzerTests
     {
-        private Pytocs.Core.TypeInference.FakeFileSystem fs;
-        private ILogger logger;
-        private Dictionary<string, object> options;
-        private string nl;
-        private AnalyzerImpl an;
+        private readonly Pytocs.Core.TypeInference.FakeFileSystem fs;
+        private readonly ILogger logger;
+        private readonly Dictionary<string, object> options;
+        private readonly string nl;
+        private readonly AnalyzerImpl an;
 
         public AnalyzerTests()
         {
@@ -418,7 +418,7 @@ class Derived(Base):
             ExpectBindings(sExp);
         }
 
-        // Reported in issue #51
+        // Reported in https://github.com/uxmal/pytocs/issues/51
         [Fact(DisplayName = nameof(TypeAn_async_function))]
         public void TypeAn_async_function()
         {
@@ -435,5 +435,6 @@ class Derived(Base):
 @"(binding:kind=PARAMETER:node=field:type=?:qname=foo.field:refs=[field])" + nl;
             ExpectBindings(sExp);
         }
+
     }
 }

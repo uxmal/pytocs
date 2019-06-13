@@ -25,7 +25,7 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeNamespaceImport(string @namespace)
         {
-            this.Namespace = @namespace;
+            this.Namespace = @namespace ?? throw new ArgumentNullException(nameof(@namespace));
         }
 
         public string Namespace { get; set; }
