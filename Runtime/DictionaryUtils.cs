@@ -15,9 +15,18 @@ namespace Runtime
             var result = new Dictionary<K, V>();
             foreach (var oItem in items)
             {
-                if (oItem is ITuple tuple)
+                // We could have used ITuple here, but that interface 
+                // is only supported in .NET Standard 2.1, which at the 
+                // time of writing hadn't been released.
+
+                var t = oItem.GetType();
+                var kf = t.GetField("Item1");
+                var vf = t.GetField("Item2");
+                if (kf != null && vf != null)
                 {
-                    result[(K)tuple[0]] = (V)tuple[1];
+                    var key = (K)kf.GetValue(oItem);
+                    var value = (V)vf.GetValue(oItem);
+                    result[key] = value;
                 }
                 else if (oItem is IDictionary dict)
                 {
