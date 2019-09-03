@@ -149,7 +149,7 @@ namespace Pytocs.Core.TypeInference
                 type = DataType.Unknown;
             }
             var fun = new FunType(DataType.Unknown, type);
-            fun.Table.addSuper(analyzer.Builtins.BaseFunction.Table);
+            fun.Table.AddSuper(analyzer.Builtins.BaseFunction.Table);
             fun.Table.Path = analyzer.Builtins.BaseFunction.Table.Path;
             return fun;
         }
@@ -801,7 +801,7 @@ namespace Pytocs.Core.TypeInference
             public override void initBindings()
             {
                 outer.analyzer.ModuleTable.Insert(outer.analyzer, name, liburl(), module, BindingKind.MODULE).IsBuiltin = true;
-                table.addSuper(outer.BaseModule.Table);
+                table.AddSuper(outer.BaseModule.Table);
 
                 addClass("None", newLibUrl("constants"), DataType.None);
                 addFunction("bool", newLibUrl("functions", "bool"), DataType.Bool);

@@ -27,7 +27,7 @@ namespace Pytocs.Core.Types
         public readonly FunctionDef Definition;
         public Lambda lambda;
         public ClassType Class = null;
-        public State env;
+        public readonly State scope;
         public List<DataType> defaultTypes;       // types for default parameters (evaluated at def time)
 
         public FunType()
@@ -38,13 +38,13 @@ namespace Pytocs.Core.Types
         public FunType(FunctionDef func, State env)
         {
             this.Definition = func;
-            this.env = env;
+            this.scope = env;
         }
 
         public FunType(Lambda lambda, State env)
         {
             this.lambda = lambda;
-            this.env = env;
+            this.scope = env;
         }
 
         public FunType(DataType from, DataType to)
@@ -125,7 +125,7 @@ namespace Pytocs.Core.Types
         /// </summary>
         public FunType MakeAwaitable()
         {
-            var fnAwaitable = new FunType(this.Definition, this.env)
+            var fnAwaitable = new FunType(this.Definition, this.scope)
             {
                 arrows = this.arrows.ToDictionary(k => k.Key, v => (DataType)new AwaitableType(v.Value)),
                 lambda = this.lambda,
@@ -152,10 +152,10 @@ namespace Pytocs.Core.Types
                 return true;
             }
 
-            if (type1 is TupleType && type2 is TupleType)
+            if (type1 is TupleType tuple1 && type2 is TupleType tuple2)
             {
-                List<DataType> elems1 = ((TupleType) type1).eltTypes;
-                List<DataType> elems2 = ((TupleType) type2).eltTypes;
+                List<DataType> elems1 = tuple1.eltTypes;
+                List<DataType> elems2 = tuple2.eltTypes;
 
                 if (elems1.Count == elems2.Count)
                 {

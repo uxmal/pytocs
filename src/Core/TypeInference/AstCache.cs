@@ -33,13 +33,13 @@ namespace Pytocs.Core.TypeInference
         private Analyzer analyzer;
         private IFileSystem fs;
         private string cacheDir;
-        private ILogger LOG;
+        private ILogger logger;
 
         public AstCache(Analyzer analyzer, IFileSystem fs, ILogger logger, string cacheDir)
         {
             this.analyzer = analyzer;
             this.fs = fs;
-            this.LOG = logger;
+            this.logger = logger;
             this.cacheDir = cacheDir;
             this.cache = new Dictionary<string, Module>();
         }
@@ -67,7 +67,7 @@ namespace Pytocs.Core.TypeInference
             }
             catch (Exception x)
             {
-                LOG.Error(x, "Failed to clear disk cache. ");
+                logger.Error(x, "Failed to clear disk cache. ");
                 return false;
             }
         }
@@ -96,7 +96,7 @@ namespace Pytocs.Core.TypeInference
             module = GetSerializedModule(path);
             if (module != null)
             {
-                LOG.Verbose("Reusing " + path);
+                logger.Verbose("Reusing " + path);
                 cache[path] = module;
                 return module;
             }
@@ -104,10 +104,10 @@ namespace Pytocs.Core.TypeInference
             module = null;
             try
             {
-                LOG.Verbose("parsing " + path);
+                logger.Verbose("parsing " + path);
                 var lexer = new Lexer(path, fs.CreateStreamReader(path));
                 var filter = new CommentFilter(lexer);
-                var parser = new Parser(path, filter);
+                var parser = new Parser(path, filter, logger);
                 var moduleStmts = parser.Parse().ToList();
                 int posStart = 0;
                 int posEnd = 0;

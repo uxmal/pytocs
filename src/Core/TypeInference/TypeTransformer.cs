@@ -228,9 +228,8 @@ namespace Pytocs.Core.TypeInference
             var dtStar = c.stargs?.Accept(this);
             if (fun is UnionType un)
             {
-                ISet<DataType> types = un.types;
                 DataType retType = DataType.Unknown;
-                foreach (DataType ft in types)
+                foreach (DataType ft in un.types)
                 {
                     DataType t = ResolveCall(c, ft, dtPos, hash, dtKw, dtStar);
                     retType = UnionType.Union(retType, t);
@@ -336,7 +335,7 @@ namespace Pytocs.Core.TypeInference
 
             BindMethodAttrs(analyzer, func);
 
-            State funcTable = new State(func.env, State.StateType.FUNCTION);
+            State funcTable = new State(func.scope, State.StateType.FUNCTION);
             if (func.Table.Parent != null)
             {
                 funcTable.Path = func.Table.Parent.ExtendPath(analyzer, func.Definition.name.Name);
@@ -387,7 +386,8 @@ namespace Pytocs.Core.TypeInference
                     {
                         return func.Class;
                     }
-                    else if (selfType != null && selfType is InstanceType inst) {
+                    else if (selfType != null && selfType is InstanceType inst)
+                    {
                         return inst.classType;
                     }
                 }
@@ -398,18 +398,15 @@ namespace Pytocs.Core.TypeInference
                     {
                         return selfType;
                     }
-                    else
+                    else if (func.Class != null)
                     {
-                        if (func.Class != null)
+                        if (func.Definition.name.Name != "__init__")
                         {
-                            if (func.Definition.name.Name != "__init__")
-                            {
-                                throw new NotImplementedException("return func.Class.getInstance(null, this, call));");
-                            }
-                            else
-                            {
-                                return func.Class.GetInstance();
-                            }
+                            throw new NotImplementedException("return func.Class.getInstance(null, this, call));");
+                        }
+                        else
+                        {
+                            return func.Class.GetInstance();
                         }
                     }
                 }
@@ -472,10 +469,10 @@ namespace Pytocs.Core.TypeInference
                 }
                 else
                 {
-                    if (hash != null && hash.ContainsKey(parameters[i].Id.Name))
+                    if (hash != null && hash.ContainsKey(param.Id.Name))
                     {
-                        aType = hash[parameters[i].Id.Name];
-                        hash.Remove(parameters[i].Id.Name);
+                        aType = hash[param.Id.Name];
+                        hash.Remove(param.Id.Name);
                     }
                     else
                     {
@@ -490,8 +487,8 @@ namespace Pytocs.Core.TypeInference
                             aType = DataType.Unknown;
                             if (call != null)
                             {
-                                analyzer.AddProblem(parameters[i].Id, //$REVIEW: should be using identifiers
-                                        "unable to bind argument:" + parameters[i]);
+                                analyzer.AddProblem(param.Id, //$REVIEW: should be using identifiers
+                                        "unable to bind argument:" + param);
                             }
                         }
                     }
@@ -749,7 +746,6 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitExpList(ExpList list)
         {
-            var t = new TupleType();
             var elTypes = new List<DataType>();
             foreach (var el in list.Expressions)
             {
@@ -1189,7 +1185,7 @@ namespace Pytocs.Core.TypeInference
             }
             else
             {
-                analyzer.AddProblem(id, "unbound variable " + id.Name);
+                analyzer.AddProblem(id, $"unbound variable {id.Name}");
                 analyzer.Unresolved.Add(id);
                 DataType t = DataType.Unknown;
                 t.Table.Path = scope.ExtendPath(analyzer, id.Name);

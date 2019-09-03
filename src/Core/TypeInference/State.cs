@@ -129,7 +129,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-        public void addSuper(State sup)
+        /// <summary>
+        /// Add add reference to a superclass scope to this scope.
+        /// </summary>
+        /// <param name="sup"></param>
+        public void AddSuper(State sup)
         {
             if (supers == null)
             {
@@ -445,25 +449,22 @@ namespace Pytocs.Core.TypeInference
         /// </summary>
         public void Bind(Analyzer analyzer, Exp target, DataType rvalue, BindingKind kind)
         {
-            if (target is Identifier id)
+            switch (target)
             {
+            case Identifier id:
                 this.Bind(analyzer, id, rvalue, kind);
-            }
-            else if (target is PyTuple tup)
-            {
+                break;
+            case PyTuple tup:
                 this.Bind(analyzer, tup.values, rvalue, kind);
-            }
-            else if (target is PyList list)
-            {
+                break;
+            case PyList list:
                 this.Bind(analyzer, list.elts, rvalue, kind);
-            }
-            else if (target is AttributeAccess attr)
-            {
+                break;
+            case AttributeAccess attr:
                 DataType targetType = TransformExp(analyzer, attr.Expression, this);
                 setAttr(analyzer, attr, rvalue, targetType);
-            }
-            else if (target is ArrayRef sub)
-            {
+                break;
+            case ArrayRef sub:
                 DataType valueType = TransformExp(analyzer, sub.array, this);
                 var xform = new TypeTransformer(this, analyzer);
                 TransformExprs(analyzer, sub.subs, this);
@@ -471,10 +472,13 @@ namespace Pytocs.Core.TypeInference
                 {
                     t.setElementType(UnionType.Union(t.eltType, rvalue));
                 }
-            }
-            else if (target != null)
-            {
-                analyzer.AddProblem(target, "invalid location for assignment");
+                break;
+            default:
+                if (target != null)
+                {
+                    analyzer.AddProblem(target, "invalid location for assignment");
+                }
+                break;
             }
         }
 

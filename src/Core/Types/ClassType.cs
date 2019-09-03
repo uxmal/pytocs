@@ -56,7 +56,7 @@ namespace Pytocs.Core.Types
 
         public void AddSuper(DataType superclass)
         {
-            Table.addSuper(superclass.Table);
+            Table.AddSuper(superclass.Table);
         }
 
         public InstanceType GetInstance()
