@@ -740,6 +740,12 @@ eval_input: testlist NEWLINE* ENDMARKER
         public List<VarArg> varargslist()
         {
             var args = new List<VarArg>();
+            if (PeekAndDiscard(TokenType.LPAREN))
+            {
+                args = varargslist();
+                Expect(TokenType.RPAREN);
+                return args;
+            }
             if (Peek(TokenType.ID))
             {
                 var vfp = vfpdef_init();
@@ -1268,9 +1274,9 @@ eval_input: testlist NEWLINE* ENDMARKER
             aliases.Add(import_as_name());
             while (PeekAndDiscard(TokenType.COMMA))
             {
+                CollectComments();
                 if (!Peek(TokenType.ID))
                     break;
-                CollectComments();
                 aliases.Add(import_as_name());
             }
             return aliases;

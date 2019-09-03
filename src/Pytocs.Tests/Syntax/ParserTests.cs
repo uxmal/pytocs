@@ -473,7 +473,7 @@ def wrapper(*args,**kwargs):
 @"segs = sorted(all_segments, key=lambda (_, seg): seg.offset)
 ";
             var sExp =
-@"segs=sorted(all_segments,key=lambda (_,seg): seg.offset)
+@"segs=sorted(all_segments,key=lambda _,seg: seg.offset)
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
         }
@@ -893,6 +893,21 @@ else:
 ";
             var sExp =
 @"from utils import (baz)
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
+
+        [Fact]
+        public void Parser_Import_commented2()
+        {
+            var pySrc =
+@"from utils import (
+    foo,
+    # bar 
+    baz,)
+";
+            var sExp =
+@"from utils import (foo, baz)
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
         }
