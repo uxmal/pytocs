@@ -27,7 +27,7 @@ namespace Pytocs.Core.TypeInference
     {
         private const int MAX_SPEED_DIGITS = 5;
 
-        private Analyzer analyzer;
+        private Action<string> msg_;
         private DateTime startTime;
         private DateTime lastTickTime;
         private long lastCount;
@@ -39,9 +39,9 @@ namespace Pytocs.Core.TypeInference
         private long segSize;
         private bool quiet;
 
-        public Progress(Analyzer analyzer, long total, long width, bool quiet)
+        public Progress(Action<string> msg_, long total, long width, bool quiet)
         {
-            this.analyzer = analyzer;
+            this.msg_ = msg_;
             this.startTime = DateTime.Now;
             this.lastTickTime = DateTime.Now;
             this.lastCount = 0;
@@ -69,9 +69,9 @@ namespace Pytocs.Core.TypeInference
 
             if (elapsed > 500 || count == total)
             {
-                analyzer.msg_("\r");
+                msg_("\r");
                 int dlen = (int) Math.Ceiling(Math.Log10((double) total));
-                analyzer.msg_(analyzer.Percent(count, total) + " (" +
+                msg_(AnalyzerImpl.Percent(count, total) + " (" +
                         FormatNumber(count, dlen) +
                         " of " + FormatNumber(total, dlen) + ")");
 
@@ -86,7 +86,7 @@ namespace Pytocs.Core.TypeInference
                 }
 
                 lastRate = rate;
-                analyzer.msg_("   SPEED: " + FormatNumber(rate, MAX_SPEED_DIGITS) + "/s");
+                msg_("   SPEED: " + FormatNumber(rate, MAX_SPEED_DIGITS) + "/s");
 
                 double totalElapsed = (DateTime.Now - startTime).TotalMilliseconds;
                 int avgRate;
@@ -101,14 +101,14 @@ namespace Pytocs.Core.TypeInference
                 }
                 avgRate = avgRate == 0 ? 1 : avgRate;
 
-                analyzer.msg_("   AVG SPEED: " + FormatNumber(avgRate, MAX_SPEED_DIGITS) + "/s");
+                msg_("   AVG SPEED: " + FormatNumber(avgRate, MAX_SPEED_DIGITS) + "/s");
 
                 long remain = total - count;
                 //long remainTime = remain / avgRate * 1000;
                 //_.msg_("   ETA: " + _.formatTime(remainTime));
 
 
-                analyzer.msg_("       ");      // overflow area
+                msg_("       ");      // overflow area
 
                 lastTickTime = DateTime.Now;
                 lastAvgRate = avgRate;

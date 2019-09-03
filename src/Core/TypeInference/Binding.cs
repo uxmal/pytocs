@@ -146,9 +146,9 @@ namespace Pytocs.Core.TypeInference
         {
             string file;
             DataType bt = type;
-            if (bt is ModuleType)
+            if (bt is ModuleType mt)
             {
-                file = bt.asModuleType().file;
+                file = mt.file;
                 return file ?? "<built-in module>";
             }
 

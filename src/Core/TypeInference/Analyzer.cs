@@ -34,12 +34,10 @@ namespace Pytocs.Core.TypeInference
         State GlobalTable { get; }
         HashSet<Name> Resolved { get; }
         HashSet<Name> Unresolved { get; }
-        Dictionary<Node,List<Binding>> References { get; }
 
         DataType LoadModule(List<Name> name, State state);
         Module GetAstForFile(string file);
         string GetModuleQname(string file);
-        IEnumerable<Binding> GetModuleBindings();
 
         Binding CreateBinding(string id, Node node, DataType type, BindingKind kind);
         void addRef(AttributeAccess attr, DataType targetType, ISet<Binding> bs);
@@ -57,10 +55,6 @@ namespace Pytocs.Core.TypeInference
 
         void AddProblem(Node loc, string msg);
         void AddProblem(string filename, int start, int end, string msg);
-
-        //void msg(string message);
-        void msg_(string message, params object[] args);
-        string Percent(long num, long total);
     }
 
     /// <summary>
@@ -71,27 +65,26 @@ namespace Pytocs.Core.TypeInference
     public class AnalyzerImpl : Analyzer
     {
         //public const string MODEL_LOCATION = "org/yinwang/pysonar/models";
-        private List<string> loadedFiles = new List<string>();
-        private List<Binding> allBindings = new List<Binding>();
-        private Dictionary<Node, DataType> expTypes = new Dictionary<Node, DataType>();
-        private Dictionary<string, List<Diagnostic>> semanticErrors = new Dictionary<string, List<Diagnostic>>();
-        private Dictionary<string, List<Diagnostic>> parseErrors = new Dictionary<string, List<Diagnostic>>();
-        private string cwd = null;
-        private List<string> path = new List<string>();
-        private HashSet<FunType> uncalled = new HashSet<FunType>();
-        private HashSet<object> callStack = new HashSet<object>();
-        private HashSet<object> importStack = new HashSet<object>();
-
-        private AstCache astCache;
-        private string cacheDir;
-        private HashSet<string> failedToParse = new HashSet<string>();
-        private IProgress loadingProgress;
-        private string projectDir;
+        private readonly List<string> loadedFiles = new List<string>();
+        private readonly List<Binding> allBindings = new List<Binding>();
+        private readonly Dictionary<Node, DataType> expTypes = new Dictionary<Node, DataType>();
+        private readonly Dictionary<string, List<Diagnostic>> semanticErrors = new Dictionary<string, List<Diagnostic>>();
+        private readonly Dictionary<string, List<Diagnostic>> parseErrors = new Dictionary<string, List<Diagnostic>>();
+        private readonly List<string> path = new List<string>();
+        private readonly HashSet<FunType> uncalled = new HashSet<FunType>();
+        private readonly HashSet<object> callStack = new HashSet<object>();
+        private readonly HashSet<object> importStack = new HashSet<object>();
+        private readonly ILogger logger;
+        private readonly IFileSystem FileSystem;
+        private readonly AstCache astCache;
+        private readonly HashSet<string> failedToParse = new HashSet<string>();
         private readonly string suffix;
-        private ILogger logger;
-        private IFileSystem FileSystem;
 
-        public Dictionary<string, object> options;
+        private IProgress loadingProgress;
+        private string cacheDir;
+        private string cwd = null;
+        private string projectDir;
+        private Dictionary<string, object> options;
         private DateTime startTime;
 
         public AnalyzerImpl(ILogger logger)
@@ -109,14 +102,7 @@ namespace Pytocs.Core.TypeInference
             this.Unresolved = new HashSet<Name>();
             this.References = new Dictionary<Node, List<Binding>>();
 
-            if (options != null)
-            {
-                this.options = options;
-            }
-            else
-            {
-                this.options = new Dictionary<string, object>();
-            }
+            this.options = options ?? new Dictionary<string, object>();
             this.startTime = startTime;
             this.suffix = ".py";
             this.Builtins = new Builtins(this);
@@ -178,14 +164,13 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-
         public void setPath(List<string> path)
         {
             this.path = new List<string>(path.Count);
             addPaths(path);
         }
 #endif
+
         private void AddPath(string p)
         {
             path.Add(FileSystem.GetFullPath(p));
@@ -611,7 +596,7 @@ namespace Pytocs.Core.TypeInference
             int count = CountFileRecursive(fullname);
             if (loadingProgress == null)
             {
-                loadingProgress = new Progress(this, count, 50, this.HasOption("quiet"));
+                loadingProgress = new Progress(s => { this.msg_(s); }, count, 50, this.HasOption("quiet"));
             }
 
             string file_or_dir = fullname;
@@ -696,9 +681,9 @@ namespace Pytocs.Core.TypeInference
             foreach (Binding b in allBindings)
             {
                 if (!(b.type is ClassType) &&
-                        !(b.type is FunType) &&
-                        !(b.type is ModuleType)
-                        && b.References.Count == 0)
+                    !(b.type is FunType) &&
+                    !(b.type is ModuleType)
+                    && b.References.Count == 0)
                 {
                     AddProblem(b.node, string.Format(Resources.UnusedVariable, b.name));
                 }
@@ -743,7 +728,7 @@ namespace Pytocs.Core.TypeInference
 
         public void ApplyUncalled()
         {
-            IProgress progress = new Progress(this, uncalled.Count, 50, this.HasOption("quiet"));
+            IProgress progress = new Progress(s => this.msg_(s), uncalled.Count, 50, this.HasOption("quiet"));
             while (uncalled.Count != 0)
             {
                 var uncalledDup = uncalled.ToList();
@@ -866,7 +851,7 @@ namespace Pytocs.Core.TypeInference
             return b;
         }
 
-        public string Percent(long num, long total)
+        public static string Percent(long num, long total)
         {
             if (total == 0)
             {

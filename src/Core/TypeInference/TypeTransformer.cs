@@ -10,8 +10,8 @@ namespace Pytocs.Core.TypeInference
         IStatementVisitor<DataType>,
         IExpVisitor<DataType>
     {
-        private State scope;
-        private Analyzer analyzer;
+        private readonly State scope;
+        private readonly Analyzer analyzer;
 
         public TypeTransformer(State s, Analyzer analyzer)
         {
@@ -637,10 +637,8 @@ namespace Pytocs.Core.TypeInference
             scope.Bind(analyzer, c.name, classType, BindingKind.CLASS);
             if (c.body != null)
             {
-                var sOld = this.scope;
-                this.scope = classType.Table;
-                c.body.Accept(this);
-                this.scope = sOld;
+                var xform = new TypeTransformer(classType.Table, this.analyzer);
+                c.body.Accept(xform);
             }
             return DataType.Cont;
         }
@@ -850,11 +848,7 @@ namespace Pytocs.Core.TypeInference
                 fun.Table.Bind(analyzer, f.parameters[0].Id, firstArgType, BindingKind.PARAMETER);
             }
 
-            var sOld = this.scope;
-            this.scope = fun.Table;
-            f.body.Accept(this);
-            this.scope = sOld;
-            
+            f.body.Accept(new TypeTransformer(fun.Table, this.analyzer));
             return DataType.Cont;
         }
 
@@ -1174,10 +1168,7 @@ namespace Pytocs.Core.TypeInference
             scope.Insert(analyzer, analyzer.GetModuleQname(m.Filename), m, mt, BindingKind.MODULE);
             if (m.body != null)
             {
-                var sOld = this.scope;
-                this.scope = mt.Table;
-                m.body.Accept(this);
-                this.scope = sOld;
+                m.body.Accept(new TypeTransformer(mt.Table, this.analyzer));
             }
             return mt;
         }

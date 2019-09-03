@@ -176,9 +176,9 @@ namespace Pytocs.Core.TypeInference
         public Binding Insert(Analyzer analyzer, string id, Module node, DataType type, BindingKind kind)
         {
             Binding b = analyzer.CreateBinding(id, node, type, kind);
-            if (type is ModuleType)
+            if (type is ModuleType mt)
             {
-                b.qname = type.asModuleType().qname;
+                b.qname = mt.qname;
             }
             else
             {
@@ -191,9 +191,9 @@ namespace Pytocs.Core.TypeInference
         public Binding Insert(Analyzer analyzer, string id, Exp node, DataType type, BindingKind kind)
         {
             Binding b = analyzer.CreateBinding(id, node, type, kind);
-            if (type is ModuleType)
+            if (type is ModuleType mt)
             {
-                b.qname = type.asModuleType().qname;
+                b.qname = mt.qname;
             }
             else
             {
@@ -203,13 +203,18 @@ namespace Pytocs.Core.TypeInference
             return b;
         }
 
-        // directly insert a given binding
+        /// <summary>
+        /// Directly insert a set of bindings
+        /// </summary>
         public ISet<Binding> Update(string id, ISet<Binding> bs)
         {
             table[id] = bs;
             return bs;
         }
 
+        /// <summary>
+        /// Directly set a binding
+        /// </summary>
         public ISet<Binding> Update(string id, Binding b)
         {
             ISet<Binding> bs = new HashSet<Binding> { b };

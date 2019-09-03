@@ -69,22 +69,6 @@ namespace Pytocs.Core.Types
             return this == DataType.Unknown;
         }
 
-        public ModuleType asModuleType()
-        {
-            switch (this)
-            {
-            case UnionType ut:
-                var mut = ut.types.OfType<ModuleType>().FirstOrDefault();
-                if (mut == null)
-                    throw new InvalidOperationException(Resources.ErrExpectedModuleType);
-                return mut;
-            case ModuleType mt:
-                return mt;
-            default:
-                throw new InvalidOperationException(Resources.ErrExpectedModuleType);
-            }
-        }
-
         public abstract T Accept<T>(IDataTypeVisitor<T> visitor);
 
         public override string ToString()
