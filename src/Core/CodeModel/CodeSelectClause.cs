@@ -22,6 +22,9 @@ using System.Threading.Tasks;
 
 namespace Pytocs.Core.CodeModel
 {
+    /// <summary>
+    /// Models the "select" clause of a C# LinQ expression.
+    /// </summary>
     public class CodeSelectClause : CodeQueryClause
     {
         public CodeExpression Projection;

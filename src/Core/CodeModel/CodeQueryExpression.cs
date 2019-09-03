@@ -22,6 +22,9 @@ using System.Threading.Tasks;
 
 namespace Pytocs.Core.CodeModel
 {
+    /// <summary>
+    /// Models a C# LinQ query expression.
+    /// </summary>
     public class CodeQueryExpression : CodeExpression
     {
         public List<CodeQueryClause> Clauses { get; } = new List<CodeQueryClause>();
