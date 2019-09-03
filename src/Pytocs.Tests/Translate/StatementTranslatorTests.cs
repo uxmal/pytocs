@@ -1585,6 +1585,15 @@ public static object func(object cfg_node) {
 ";
             Assert.Equal(sExp, XlatMember(pySrc));
         }
+
+        [Fact]
+        public void Stmt_issue_40()
+        {
+            var pySrc = "(a,b,c) = get_tuple()";
+            var sExp = @"(a, b, c) = get_tuple();
+";
+            Assert.Equal(sExp, XlatStmts(pySrc));
+        }
     }
 }
 #endif

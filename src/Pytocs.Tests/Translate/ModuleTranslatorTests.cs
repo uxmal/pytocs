@@ -169,7 +169,7 @@ namespace test {
     public static class module {
         
         public static object _tokenizer = antlrre.Tokenizer(tokens: new List<Tuple<object, string>> {
-            Tuple.Create(foo.a, ""sss"")
+            (foo.a, ""sss"")
         });
     }
 }

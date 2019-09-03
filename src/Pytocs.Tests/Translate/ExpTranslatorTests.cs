@@ -297,10 +297,10 @@ namespace Pytocs.UnitTests.Translate
         {
             var pySrc = "{(a.addr,b.addr) for a,b in fdiff.block_matches}";
             var sExp =
-@"(from _tup_1 in fdiff.block_matches.Chop((a,b) => Tuple.Create(a, b))
+@"(from _tup_1 in fdiff.block_matches.Chop((a,b) => (a, b))
     let a = _tup_1.Item1
     let b = _tup_1.Item2
-    select Tuple.Create(a.addr, b.addr)).ToHashSet()";
+    select (a.addr, b.addr)).ToHashSet()";
 
             Assert.Equal(sExp, Xlat(pySrc));
         }
@@ -668,7 +668,7 @@ namespace Pytocs.UnitTests.Translate
             string sExp = 
 @"(from a in stackframe.alocs.values()
     from s in a._segment_list
-    select Tuple.Create(a, s)).ToList()";
+    select (a, s)).ToList()";
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
@@ -677,7 +677,7 @@ namespace Pytocs.UnitTests.Translate
         {
             var pySrc = "[state for (stash, states) in self.simgr.stashes.items() if stash != 'pruned' for state in states]";
             var sExp =
-@"(from _tup_1 in this.simgr.stashes.items().Chop((stash,states) => Tuple.Create(stash, states))
+@"(from _tup_1 in this.simgr.stashes.items().Chop((stash,states) => (stash, states))
     let stash = _tup_1.Item1
     let states = _tup_1.Item2
     where stash != ""pruned""
@@ -693,13 +693,13 @@ namespace Pytocs.UnitTests.Translate
         {
             var pySrc = "((a, b) for a,b in list for a,b in (a,b)))";
             var sExp =
-@"from _tup_1 in list.Chop((a,b) => Tuple.Create(a, b))
+@"from _tup_1 in list.Chop((a,b) => (a, b))
     let a = _tup_1.Item1
     let b = _tup_1.Item2
-    from _tup_2 in Tuple.Create(a, b).Chop((a,b) => Tuple.Create(a, b))
+    from _tup_2 in (a, b).Chop((a,b) => (a, b))
     let a = _tup_2.Item1
     let b = _tup_2.Item2
-    select Tuple.Create(a, b)";
+    select (a, b)";
             Assert.Equal(sExp, Xlat(pySrc));
         }
 

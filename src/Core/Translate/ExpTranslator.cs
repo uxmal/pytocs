@@ -20,8 +20,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Numerics;
 using Pytocs.Core.Types;
 
@@ -676,10 +674,9 @@ namespace Pytocs.Core.Translate
 
         private CodeExpression MakeTupleCreate(params CodeExpression[] exprs)
         {
-            var fn = m.MethodRef(
-                m.TypeRefExpr("Tuple"), "Create");
-            return m.Appl(fn, exprs);
+            return m.ValueTuple(exprs);
         }
+
         public CodeExpression VisitYieldExp(YieldExp yieldExp)
         {
             if (yieldExp.exp == null)
