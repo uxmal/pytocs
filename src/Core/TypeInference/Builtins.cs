@@ -838,7 +838,7 @@ namespace Pytocs.Core.TypeInference
                     "abs", "all", "any", "cmp", "coerce", "divmod",
                     "hasattr", "hash", "id", "isinstance", "issubclass", "len", "max",
                     "min", "ord", "pow", "round", "sum"
-            };
+                };
                 foreach (string f in builtin_func_num)
                 {
                     addFunction(f, newLibUrl("functions.html#" + f), DataType.Int);
@@ -2624,6 +2624,17 @@ namespace Pytocs.Core.TypeInference
                 addFunction("crc32", liburl(), DataType.Int);
                 addFunction("decompress", liburl(), DataType.Str);
                 addFunction("decompressobj", liburl(), decompress);
+            }
+        }
+
+        class MsvcrtModule : NativeModule
+        {
+            public MsvcrtModule(Builtins outer) : base(outer, "msvcrt") { }
+
+            public override void initBindings()
+            {
+                addFunction("getch", liburl(), DataType.Str);
+                throw new NotImplementedException();
             }
         }
     }

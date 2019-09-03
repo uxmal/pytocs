@@ -21,6 +21,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Pytocs.Core.TypeInference;
+using Pytocs.Core;
 
 namespace Pytocs.UnitTests.TypeInference
 {

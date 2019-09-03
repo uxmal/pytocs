@@ -1,0 +1,9 @@
+{
+  "profiles": {
+    "Cli": {
+      "commandName": "Project",
+      "commandLineArgs": "foo.py",
+      "workingDirectory": "c:\\tmp\\test"
+    }
+  }
+}

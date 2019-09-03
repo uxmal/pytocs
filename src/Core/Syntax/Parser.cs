@@ -320,13 +320,15 @@ yield_expr: 'yield' [testlist]
         */
         #endregion
 
-        private string filename;
-        private ILexer lexer;
+        private readonly string filename;
+        private readonly ILexer lexer;
+        private readonly ILogger logger;
 
-        public Parser(string filename, ILexer lexer)
+        public Parser(string filename, ILexer lexer, ILogger logger = null)
         {
             this.filename = filename;
             this.lexer = lexer;
+            this.logger = logger ?? NullLogger.Instance;
         }
 
         public void ParseSingleStatement()
@@ -1634,24 +1636,32 @@ eval_input: testlist NEWLINE* ENDMARKER
         //test: or_test ['if' or_test 'else' test] | lambdef
         public Exp test()
         {
-            while (PeekAndDiscard(TokenType.COMMENT))
-                ;
-            if (Peek(TokenType.Lambda))
-                return lambdef();
-            var o = or_test();
-            if (o == null)
-                return o;
-            if (!PeekAndDiscard(TokenType.If))
-                return o;
-            var o2 = or_test();
-            Expect(TokenType.Else);
-            var o3 = test();
-            return new TestExp(filename, o.Start, o3.End)
+            try
             {
-                Consequent = o,
-                Condition = o2,
-                Alternative = o3
-            };
+                while (PeekAndDiscard(TokenType.COMMENT))
+                    ;
+                if (Peek(TokenType.Lambda))
+                    return lambdef();
+                var o = or_test();
+                if (o == null)
+                    return o;
+                if (!PeekAndDiscard(TokenType.If))
+                    return o;
+                var o2 = or_test();
+                Expect(TokenType.Else);
+                var o3 = test();
+                return new TestExp(filename, o.Start, o3.End)
+                {
+                    Consequent = o,
+                    Condition = o2,
+                    Alternative = o3
+                };
+            }
+            catch (Exception ex)
+            {
+                logger.Error(ex, $"({this.filename},{lexer.LineNumber}): parser error. Please report on https://github.com/uxmal/pytocs");
+                return new Identifier("<parser-error>", this.filename, 0, 0);
+            }
         }
 
         //test_nocond: or_test | lambdef_nocond

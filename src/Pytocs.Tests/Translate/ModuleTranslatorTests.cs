@@ -15,20 +15,17 @@
 #endregion
 
 #if DEBUG
+using Pytocs.Core;
 using Pytocs.Core.CodeModel;
-using Xunit;
+using Pytocs.Core.Syntax;
+using Pytocs.Core.Translate;
+using Pytocs.Core.TypeInference;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Pytocs.Core.TypeInference;
-using Pytocs.Core.Syntax;
-using Pytocs.Core.Types;
-using Pytocs.Core.Translate;
-using System.Threading;
+using Xunit;
 
 namespace Pytocs.UnitTests.Translate
 {
