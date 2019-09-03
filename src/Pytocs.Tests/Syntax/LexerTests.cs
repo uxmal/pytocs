@@ -446,6 +446,20 @@ namespace Pytocs.UnitTests.Syntax
             var tok = Lex(@"r'\''");
             Assert.Equal(@"r""\'""", tok.Value.ToString());
         }
+
+        [Fact]
+        public void Lex_BinaryRawString()
+        {
+            var tok = Lex("br'foo'");
+            Assert.Equal("br\"foo\"", tok.Value.ToString());
+        }
+
+        [Fact]
+        public void Lex_BinaryRawString_rb()
+        {
+            var tok = Lex("rb'foo'");
+            Assert.Equal("br\"foo\"", tok.Value.ToString());
+        }
     }
 }
 #endif

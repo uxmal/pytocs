@@ -198,6 +198,7 @@ namespace Pytocs.Core.Syntax
             StringEscapeHex,
             BinaryStringPrefix,
             FormatStringPrefix,
+            BinaryRawStringPrefix,
         }
 
         private Token GetToken()
@@ -717,6 +718,8 @@ namespace Pytocs.Core.Syntax
                     {
                     case '"': rawString = true; sb.Clear(); Transition(State.Quote); break;
                     case '\'': rawString = true; sb.Clear(); Transition(State.Apos); break;
+                    case 'b':
+                    case 'B': st = State.BinaryRawStringPrefix; Advance(); break;
                     default: st = State.Id; break;
                     }
                     break;
@@ -733,6 +736,16 @@ namespace Pytocs.Core.Syntax
                     {
                     case '"': binaryString = true; sb.Clear(); Transition(State.Quote); break;
                     case '\'': binaryString = true; sb.Clear(); Transition(State.Apos); break;
+                    case 'r':
+                    case 'R': st = State.BinaryRawStringPrefix; Advance(); break;
+                    default: st = State.Id; break;
+                    }
+                    break;
+                case State.BinaryRawStringPrefix:
+                    switch (ch)
+                    {
+                    case '"': binaryString = true; rawString = true; sb.Clear(); Transition(State.Quote); break;
+                    case '\'': binaryString = true; rawString = true; sb.Clear(); Transition(State.Apos); break;
                     default: st = State.Id; break;
                     }
                     break;
@@ -1009,7 +1022,10 @@ namespace Pytocs.Core.Syntax
             Exp e;
             if (binaryString)
             {
-                e = new Bytes(sb.ToString(), filename, posStart, posEnd);
+                e = new Bytes(sb.ToString(), filename, posStart, posEnd)
+                {
+                    Raw = rawString
+                };
             }
             else
             {

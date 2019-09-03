@@ -148,6 +148,7 @@ namespace Pytocs.Core.Syntax
     public class Bytes : Exp
     {
         public readonly string s;
+        public bool Raw;
 
         public Bytes(string str, string filename, int start, int end)
             : base(filename, start, end)
@@ -164,6 +165,17 @@ namespace Pytocs.Core.Syntax
         {
             v.VisitBytes(this);
         }
+
+        public override void Write(TextWriter writer)
+        {
+            writer.Write("b");
+            if (Raw)
+                writer.Write("r");
+            writer.Write('\"');
+            writer.Write(s);
+            writer.Write('\"');
+        }
+
     }
 
     /// <summary>
@@ -188,6 +200,11 @@ namespace Pytocs.Core.Syntax
             return v.VisitStr(this);
         }
 
+        public override void Accept(IExpVisitor v)
+        {
+            v.VisitStr(this);
+        }
+
         public override void Write(TextWriter writer)
         {
             if (Raw)
@@ -195,11 +212,6 @@ namespace Pytocs.Core.Syntax
             writer.Write('\"');
             writer.Write(s);
             writer.Write('\"');
-        }
-
-        public override void Accept(IExpVisitor v)
-        {
-            v.VisitStr(this);
         }
     }
 
