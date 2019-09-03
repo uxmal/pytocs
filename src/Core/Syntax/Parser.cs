@@ -740,48 +740,42 @@ eval_input: testlist NEWLINE* ENDMARKER
         public List<VarArg> varargslist()
         {
             var args = new List<VarArg>();
-            switch (lexer.Peek().Type)
+            if (Peek(TokenType.ID))
             {
-            case TokenType.LPAREN:
-            case TokenType.ID:
-                do
+                var vfp = vfpdef_init();
+                args.Add(vfp);
+                while (PeekAndDiscard(TokenType.COMMA) && Peek(TokenType.ID))
                 {
-                    if (PeekAndDiscard(TokenType.LPAREN))
-                    {
-                        var tuple = testlist_comp(true);
-                        Expect(TokenType.RPAREN);
-                        args.Add(new VarArg { name = tuple });
-                    }
-                    else
-                    {
-                        var id = vfpdef();
-                        Exp init = null;
-                        if (PeekAndDiscard(TokenType.EQ))
-                        {
-                            init = test();
-                        }
-                        args.Add(new VarArg { name = id, test = init });
-                    }
-
-                } while (PeekAndDiscard(TokenType.COMMA));
-                break;
-            case TokenType.OP_STAR:
-                Expect(TokenType.OP_STAR);
-                args.Add(VarArg.Indexed(vfpdef()));
-                if (PeekAndDiscard(TokenType.COMMA))
-                {
-                    if (!PeekAndDiscard(TokenType.OP_STARSTAR))
-                        throw Unexpected();
-                    args.Add(VarArg.Keyword(vfpdef()));
-                    return args;
+                    vfp = vfpdef_init();
+                    args.Add(vfp);
                 }
-                break;
-            case TokenType.OP_STARSTAR:
+            }
+            if (PeekAndDiscard(TokenType.OP_STAR))
+            {
+                args.Add(VarArg.Indexed(vfpdef()));
+                while (PeekAndDiscard(TokenType.COMMA) && Peek(TokenType.ID))
+                {
+                    var vfp = vfpdef_init();
+                    args.Add(vfp);
+                }
+            }
+            if (PeekAndDiscard(TokenType.OP_STARSTAR)) {
                 args.Add(VarArg.Keyword(vfpdef()));
-                break;
             }
             return args;
         }
+
+        public VarArg vfpdef_init()
+        {
+            var id = vfpdef();
+            Exp init = null;
+            if (PeekAndDiscard(TokenType.EQ))
+            {
+                init = test();
+            }
+            return new VarArg { name = id, test = init };
+        }
+
         //vfpdef: NAME
         public Identifier vfpdef()
         {

@@ -726,5 +726,13 @@ namespace Pytocs.UnitTests.Translate
             var sExp = @"DictionaryUtils.Unpack<string, object>((""a"", ""str""), kwargs)";
             Assert.Equal(sExp, Xlat(pySrc));
         }
+
+        [Fact]
+        public void Ex_lambda_kwargs()
+        {
+            var pySrc = "lambda x, **k: xpath_text(hd_doc, './/video/' + x, **k)";
+            var sExp = "(x,k) => xpath_text(hd_doc, \".//video/\" + x, k)";
+            Assert.Equal(sExp, Xlat(pySrc));
+        }
     }
 }

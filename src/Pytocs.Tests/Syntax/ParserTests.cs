@@ -896,5 +896,13 @@ else:
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
         }
+
+        [Fact]
+        public void Parser_lambda_kwargs()
+        {
+            var pySrc = "lambda x, **k: xpath_text(hd_doc, './/video/' + x, **k)";
+            var sExp = "lambda x,**k: xpath_text(hd_doc,(\".//video/\"  +  x),**k)";
+            AssertExp(sExp, ParseExp(pySrc));
+        }
     }
 }
