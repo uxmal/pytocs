@@ -23,12 +23,10 @@ namespace Pytocs.Core.CodeModel
 {
     public class CSharpUnitWriter
     {
-        private CSharpCodeProvider pvd;
-        private IndentingTextWriter writer;
+        private readonly IndentingTextWriter writer;
 
-        public CSharpUnitWriter(CSharpCodeProvider pvd, IndentingTextWriter indentingTextWriter)
+        public CSharpUnitWriter(IndentingTextWriter indentingTextWriter)
         {
-            this.pvd = pvd;
             this.writer = indentingTextWriter;
         }
          

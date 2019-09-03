@@ -26,7 +26,6 @@ namespace Pytocs.Core.CodeModel
     public class CSharpCodeProvider : ICodeElementVisitor<int>
     {
         private IndentingTextWriter writer;
-        //private CodeGeneratorOptions options;
         private CSharpStatementWriter stmWriter;
         private CSharpTypeWriter typeWriter;
 
@@ -70,7 +69,7 @@ namespace Pytocs.Core.CodeModel
         public void GenerateCodeFromCompileUnit(CodeCompileUnit compileUnit, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
         {
             this.writer = new IndentingTextWriter(writer);
-            var unitWriter = new CSharpUnitWriter(this, this.writer);
+            var unitWriter = new CSharpUnitWriter(this.writer);
             unitWriter.Write(compileUnit);
         }
     }

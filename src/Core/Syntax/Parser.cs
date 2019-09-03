@@ -2315,6 +2315,13 @@ eval_input: testlist NEWLINE* ENDMARKER
                     var f = comp_for();
                     return new SetComprehension(k, f, filename, k.Start, k.End);
                 }
+                else if (Peek(TokenType.OP_STARSTAR))
+                {
+                    lexer.Get();
+                    var v = or_test();
+                    kvs.Add(new KeyValuePair<Exp, Exp>(null, v));
+                    return new DictInitializer(kvs, filename, posStart, v.End);
+                }
                 else
                 {
                     var items = new List<Exp> { k };

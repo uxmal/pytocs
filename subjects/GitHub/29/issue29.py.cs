@@ -1,6 +1,8 @@
 
 using System.Collections.Generic;
 
+using System.Linq;
+
 public static class issue29 {
     
     public static object meshgrid2(params object [] arrs) {

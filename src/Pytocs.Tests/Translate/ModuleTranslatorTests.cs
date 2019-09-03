@@ -379,6 +379,38 @@ class Frob:
             Debug.Print(XlatModule(pyModule));
             Assert.Equal(sExp, XlatModule(pyModule));
         }
+
+        [Fact(DisplayName = nameof(Module_issue_61))]
+        public void Module_issue_61()
+        {
+            var pyModule = @"
+class TestClass:
+    def TestFunction(self):
+        return TestValue(
+            {
+                **something
+            }
+        )
+";
+            var sExp =
+@"namespace test {
+    
+    using pytocs.runtime;
+    
+    public static class module {
+        
+        public class TestClass {
+            
+            public virtual object TestFunction() {
+                return TestValue(DictionaryUtils.Unpack<string, object>(something));
+            }
+        }
+    }
+}
+";
+            Debug.Print(XlatModule(pyModule));
+            Assert.Equal(sExp, XlatModule(pyModule));
+        }
     }
 }
 #endif

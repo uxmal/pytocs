@@ -861,5 +861,25 @@ else:
             var sExp = @"{ ""a"" : ""str"", **kwargs,  }";
             AssertExp(sExp, ParseExp(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Parser_issue_61))]
+        public void Parser_issue_61()
+        {
+            var pySrc =
+@"class TestClass:
+    def TestFunction(self):
+        return TestValue(
+            {
+                **something
+            }
+        )";
+            var sExp =
+@"class TestClass:
+    def TestFunction(self):
+        return TestValue({ **something,  })
+    
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
     }
 }

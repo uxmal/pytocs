@@ -695,7 +695,7 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitDictInitializer(DictInitializer d)
         {
-            DataType keyType = ResolveUnion(d.KeyValues.Select(kv => kv.Key));
+            DataType keyType = ResolveUnion(d.KeyValues.Where(kv => kv.Key != null).Select(kv => kv.Key));
             DataType valType = ResolveUnion(d.KeyValues.Select(kv => kv.Value));
             return analyzer.TypeFactory.CreateDict(keyType, valType);
         }
