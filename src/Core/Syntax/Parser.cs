@@ -460,6 +460,15 @@ eval_input: testlist NEWLINE* ENDMARKER
             return tokentypes.Contains(lexer.Peek().Type);
         }
 
+        private void SkipUntil(params TokenType[] tokenTypes)
+        {
+            while (!Peek(tokenTypes))
+            {
+                var tok = lexer.Get();
+                if (tok.Type == TokenType.EOF)
+                    return;
+            }
+        }
         private Token Expect(TokenType tokenType)
         {
             var t = lexer.Peek();
@@ -802,13 +811,28 @@ eval_input: testlist NEWLINE* ENDMARKER
         // stmt: simple_stmt | compound_stmt
         public List<Statement> stmt()
         {
-            if (Peek(compoundStatement_first))
+            try
             {
-                return compound_stmt();
+
+                if (Peek(compoundStatement_first))
+                {
+                    return compound_stmt();
+                }
+                else
+                {
+                    return simple_stmt();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                return simple_stmt();
+                logger.Error(ex, $"({this.filename},{lexer.LineNumber}): parser error. Please report on https://github.com/uxmal/pytocs");
+                SkipUntil(TokenType.COMMENT, TokenType.Def, TokenType.Class);
+                return new List<Statement> {
+                    new CommentStatement(this.filename, 0, 0)
+                    {
+                        comment = "<parser-error>",
+                    }
+                };
             }
         }
 
@@ -1216,10 +1240,15 @@ eval_input: testlist NEWLINE* ENDMARKER
         public AliasedName import_as_name()
         {
             var orig = id();
-            var alias = orig;
             if (PeekAndDiscard(TokenType.As))
-                alias = id();
-            return new AliasedName(orig,  alias, filename, orig.Start, alias.End);
+            {
+                var alias = id();
+                return new AliasedName(orig, alias, filename, orig.Start, alias.End);
+            }
+            else
+            {
+                return new AliasedName(orig, null, filename, orig.Start, orig.End);
+            }
         }
 
         //dotted_as_name: dotted_name ['as' NAME]
@@ -1241,11 +1270,13 @@ eval_input: testlist NEWLINE* ENDMARKER
         public List<AliasedName> import_as_names()
         {
             var aliases = new List<AliasedName>();
+            CollectComments();  //$TODO: we should be keeping these somehow
             aliases.Add(import_as_name());
             while (PeekAndDiscard(TokenType.COMMA))
             {
                 if (!Peek(TokenType.ID))
                     break;
+                CollectComments();
                 aliases.Add(import_as_name());
             }
             return aliases;
@@ -1546,7 +1577,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 {
                     comment = (string)token.Value
                 });
-                Expect(TokenType.NEWLINE);
+                PeekAndDiscard(TokenType.NEWLINE);
             }
             return cmts;
 
@@ -1636,32 +1667,24 @@ eval_input: testlist NEWLINE* ENDMARKER
         //test: or_test ['if' or_test 'else' test] | lambdef
         public Exp test()
         {
-            try
+            while (PeekAndDiscard(TokenType.COMMENT))
+                ;
+            if (Peek(TokenType.Lambda))
+                return lambdef();
+            var o = or_test();
+            if (o == null)
+                return o;
+            if (!PeekAndDiscard(TokenType.If))
+                return o;
+            var o2 = or_test();
+            Expect(TokenType.Else);
+            var o3 = test();
+            return new TestExp(filename, o.Start, o3.End)
             {
-                while (PeekAndDiscard(TokenType.COMMENT))
-                    ;
-                if (Peek(TokenType.Lambda))
-                    return lambdef();
-                var o = or_test();
-                if (o == null)
-                    return o;
-                if (!PeekAndDiscard(TokenType.If))
-                    return o;
-                var o2 = or_test();
-                Expect(TokenType.Else);
-                var o3 = test();
-                return new TestExp(filename, o.Start, o3.End)
-                {
-                    Consequent = o,
-                    Condition = o2,
-                    Alternative = o3
-                };
-            }
-            catch (Exception ex)
-            {
-                logger.Error(ex, $"({this.filename},{lexer.LineNumber}): parser error. Please report on https://github.com/uxmal/pytocs");
-                return new Identifier("<parser-error>", this.filename, 0, 0);
-            }
+                Consequent = o,
+                Condition = o2,
+                Alternative = o3
+            };
         }
 
         //test_nocond: or_test | lambdef_nocond

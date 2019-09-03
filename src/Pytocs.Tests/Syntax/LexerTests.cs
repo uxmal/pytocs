@@ -439,6 +439,13 @@ namespace Pytocs.UnitTests.Syntax
             Assert.Equal(TokenType.IMAG, tok.Type);
             Assert.Equal(3.0, (double)tok.Value);
         }
+
+        [Fact]
+        public void Lex_RawString_QuotedString()
+        {
+            var tok = Lex(@"r'\''");
+            Assert.Equal(@"r""\'""", tok.Value.ToString());
+        }
     }
 }
 #endif

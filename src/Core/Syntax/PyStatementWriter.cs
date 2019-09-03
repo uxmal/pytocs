@@ -130,7 +130,36 @@ namespace Pytocs.Core.Syntax
 
         public void VisitFrom(FromStatement f)
         {
-            throw new NotImplementedException();
+            w.Write("from");
+            w.Write(" ");
+            w.Write(f.DottedName.ToString());
+            w.Write(" ");
+            w.Write("import");
+            if (f.AliasedNames != null && f.AliasedNames.Count > 0)
+            {
+                w.Write(" (");
+                var listSep = "";
+                foreach (var aliasedName in f.AliasedNames)
+                {
+                    w.Write(listSep);
+                    listSep = ", ";
+                    var segSep = "";
+                    foreach (var seg in aliasedName.orig.segs)
+                    {
+                        w.Write(segSep);
+                        segSep = ".";
+                        w.Write(seg.Name);
+                    }
+                    if (aliasedName.alias != null)
+                    {
+                        w.Write(" ");
+                        w.Write("as");
+                        w.Write(" ");
+                        w.Write(aliasedName.alias.Name);
+                    }
+                }
+                w.Write(")");
+            }
         }
 
         public void VisitFuncdef(FunctionDef f)

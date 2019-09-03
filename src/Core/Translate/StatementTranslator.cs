@@ -523,7 +523,16 @@ namespace Pytocs.Core.Translate
                 {
                     var total = f.DottedName.segs.Concat(alias.orig.segs)
                         .Select(s => gen.EscapeKeywordName(s.Name));
-                    gen.Using(alias.alias.Name, string.Join(".", total));
+                    string aliasName;
+                    if (alias.alias == null)
+                    {
+                        aliasName = total.Last();
+                    }
+                    else
+                    {
+                        aliasName = alias.alias.Name;
+                    }
+                    gen.Using(aliasName, string.Join(".", total));
                 }
             }
         }

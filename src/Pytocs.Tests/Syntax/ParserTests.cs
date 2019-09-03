@@ -881,5 +881,20 @@ else:
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
         }
+
+        [Fact]
+        public void Parser_Import_commented()
+        {
+            var pySrc =
+@"from utils import (
+    # foo
+    # bar 
+    baz,)
+";
+            var sExp =
+@"from utils import (baz)
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
     }
 }

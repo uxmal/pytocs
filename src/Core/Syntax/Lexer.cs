@@ -157,6 +157,7 @@ namespace Pytocs.Core.Syntax
             AposString3Cr,
             EApos,
             EApos2,
+            RawStringEscape,
 
             Zero,
             Decimal,
@@ -788,7 +789,7 @@ namespace Pytocs.Core.Syntax
                     case '"': return EatChToken(TokenType.STRING, CreateStringLiteral(false));
                     case '\\':
                         oldState = st;
-                        Accum(ch, (rawString) ? st : State.StringEscape);
+                        Accum(ch, State.StringEscape);
                         break;
                     default:
                         if (c < 0)
