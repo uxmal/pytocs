@@ -1011,5 +1011,21 @@ return late
             var sExp = "\"prefixsuffix\"";
             AssertExp(sExp, ParseExp(pySrc));
         }
+
+        [Fact]
+        public void Parser_decorator_trailing_comment()
+        {
+            var pySrc = @"
+@decorator   #trailing comment
+def foo():
+    pass
+";
+            var sExp = 
+@"@decorator()
+def foo():
+    pass
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
     }
 }

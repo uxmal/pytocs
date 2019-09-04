@@ -755,5 +755,20 @@ namespace Pytocs.UnitTests.Translate
             var sExp = "0x_1234";
             Assert.Equal(sExp, Xlat(pySrc));
         }
+
+        [Fact]
+        public void Ex_list_unpackers()
+        {
+            var pySrc = "[ 1, 2, *foo, 3, 4]";
+            var sExp =
+@"ListUtils.Unpack<object>(new object[] {
+    1,
+    2,
+}, foo, new object[] {
+    3,
+    4,
+})";
+            Assert.Equal(sExp, Xlat(pySrc));
+        }
     }
 }

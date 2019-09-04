@@ -621,7 +621,7 @@ namespace Pytocs.Core.Translate
 
         private CodeTypeReference MakeTupleType(List<Exp> expressions)
         {
-            //$TODO: make an effor to make this correct.
+            //$TODO: make an effort to make this correct.
             return new CodeTypeReference(typeof(object));
         }
 
@@ -629,11 +629,50 @@ namespace Pytocs.Core.Translate
         {
             var (elemType, nms) = types.TranslateListElementType(l);
             m.EnsureImports(nms);
-            return m.ListInitializer(
-                elemType,
-                l.elts
-                .Where(e => e != null)
-                .Select(e => e.Accept(this)));
+
+            if (l.elts.OfType<StarExp>().Any())
+            {
+                // Found iterable unpackers.
+                var seq = new List<CodeExpression>();
+                var subseq = new List<CodeExpression>();
+                foreach (var item in l.elts)
+                {
+                    CodeExpression exp = null;
+                    if (item is StarExp unpacker)
+                    {
+                        if (subseq.Count > 0)
+                        {
+                            exp = m.NewArray(elemType, subseq.ToArray());
+                            seq.Add(exp);
+                            subseq.Clear();
+                        }
+                        exp = unpacker.e.Accept(this);
+                        seq.Add(exp);
+                    }
+                    else
+                    {
+                        exp = item.Accept(this);
+                        subseq.Add(exp);
+                    }
+                }
+                if (subseq.Count > 0)
+                {
+                    var exp = m.NewArray(elemType, subseq.ToArray());
+                    seq.Add(exp);
+                }
+
+                var unpack = m.MethodRef(m.TypeRefExpr("ListUtils"), "Unpack");
+                unpack.TypeReferences.Add(elemType);
+                return m.Appl(unpack, seq.ToArray());
+            }
+            else
+            {
+                return m.ListInitializer(
+                    elemType,
+                    l.elts
+                    .Where(e => e != null)
+                    .Select(e => e.Accept(this)));
+            }
         }
 
         public CodeExpression VisitFieldAccess(AttributeAccess acc)
