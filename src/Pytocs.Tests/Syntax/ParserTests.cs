@@ -812,7 +812,7 @@ else:
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
-        [Fact(DisplayName =nameof(Parser_ListComprehension_Alternating_fors))]
+        [Fact(DisplayName = nameof(Parser_ListComprehension_Alternating_fors))]
         public void Parser_ListComprehension_Alternating_fors()
         {
             var pySrc = "states = [state for (stash, states) in self.simgr.stashes.items() if stash != 'pruned' for state in states]\n";
@@ -918,6 +918,42 @@ else:
             var pySrc = "lambda x, **k: xpath_text(hd_doc, './/video/' + x, **k)";
             var sExp = "lambda x,**k: xpath_text(hd_doc,(\".//video/\"  +  x),**k)";
             AssertExp(sExp, ParseExp(pySrc));
+        }
+
+        [Fact]
+        public void Parser_Dictionary_unpacker()
+        {
+            var pySrc =
+@"return TestValue(
+    {
+        **foo,
+        **bar
+    }
+)";
+            var sExp =
+@"return TestValue({ **foo, **bar,  })
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
+
+        [Fact]
+        public void Parser_AndExp_Comment()
+        {
+            var pySrc = @"
+if (
+    condition1
+    and
+    # Comment here => ""not"" is Unexpected
+    not condition2
+):
+    return early
+return late
+";
+            var sExp = 
+@"if (condition1 and not condition2):
+    return early
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
         }
     }
 }

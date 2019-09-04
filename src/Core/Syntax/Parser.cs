@@ -1769,6 +1769,11 @@ eval_input: testlist NEWLINE* ENDMARKER
         //not_test: 'not' not_test | comparison
         public Exp not_test()
         {
+            if (Peek(TokenType.COMMENT))
+            {
+                //$TODO: discarding a comment here.
+                Expect(TokenType.COMMENT);
+            }
             if (PeekAndDiscard(TokenType.Not, out var token))
             {
                 var test = not_test();
@@ -2303,42 +2308,56 @@ eval_input: testlist NEWLINE* ENDMARKER
             if (Peek(TokenType.RBRACE, out var token))
                 return new DictInitializer(kvs, filename, posStart, token.End);
 
-            var k = test();
-            if (PeekAndDiscard(TokenType.COLON))
+            Exp k = null;
+            Exp v = null;
+            if (PeekAndDiscard(TokenType.OP_STARSTAR))
             {
-                // dict comprehension
-                var v = test();
-                if (Peek(TokenType.For))
+                v = test();
+                kvs.Add(new KeyValuePair<Exp, Exp>(null, v));
+            }
+            else
+            {
+                k = test();
+            }
+            if (kvs.Count > 0 || PeekAndDiscard(TokenType.COLON))
+            {
+                if (k != null)
                 {
-                    var f = comp_for();
-                    return new DictComprehension(k, v, f, filename, k.Start, f.End);
-                }
-                else
-                {
-                    // dict initializer
-                    kvs.Add(new KeyValuePair<Exp, Exp>(k, v));
-                    while (PeekAndDiscard(TokenType.COMMA))
+                    v = test();
+                    if (Peek(TokenType.For))
                     {
-                        if (Peek(TokenType.RBRACE))
-                            break;
-                        if (PeekAndDiscard(TokenType.OP_STARSTAR))
+                        // dict comprehension
+
+                        var f = comp_for();
+                        return new DictComprehension(k, v, f, filename, k.Start, f.End);
+                    }
+                    else
+                    {
+                        // dict initializer
+                        kvs.Add(new KeyValuePair<Exp, Exp>(k, v));
+                    }
+                }
+                while (PeekAndDiscard(TokenType.COMMA))
+                {
+                    if (Peek(TokenType.RBRACE))
+                        break;
+                    if (PeekAndDiscard(TokenType.OP_STARSTAR))
+                    {
+                        v = test();
+                        kvs.Add(new KeyValuePair<Exp, Exp>(null, v));
+                    }
+                    else
+                    {
+                        k = test();
+                        if (k != null)
                         {
-                            v = or_test();
-                            kvs.Add(new KeyValuePair<Exp, Exp>(null, v));
-                        }
-                        else
-                        {
-                            k = test();
-                            if (k != null)
-                            {
-                                Expect(TokenType.COLON);
-                                v = test();
-                                kvs.Add(new KeyValuePair<Exp, Exp>(k, v));
-                            }
+                            Expect(TokenType.COLON);
+                            v = test();
+                            kvs.Add(new KeyValuePair<Exp, Exp>(k, v));
                         }
                     }
-                    return new DictInitializer(kvs, filename, posStart, (v ?? k).End);
                 }
+                return new DictInitializer(kvs, filename, posStart, (v ?? k).End);
             }
             else
             {
@@ -2351,7 +2370,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 else if (Peek(TokenType.OP_STARSTAR))
                 {
                     lexer.Get();
-                    var v = or_test();
+                    v = test();
                     kvs.Add(new KeyValuePair<Exp, Exp>(null, v));
                     return new DictInitializer(kvs, filename, posStart, v.End);
                 }
