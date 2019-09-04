@@ -52,7 +52,7 @@ namespace Pytocs.Core
             Debug.Print("Translating module {0} in namespace {1}", moduleName, nmspace);
             var lex = new Lexer(filename, input);
             var flt = new CommentFilter(lex);
-            var par = new Parser(filename, flt);
+            var par = new Parser(filename, flt, true, logger);
             var stm = par.Parse();
             var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
             TranslateModuleStatements(stm, types, output);

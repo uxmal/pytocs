@@ -322,12 +322,14 @@ yield_expr: 'yield' [testlist]
 
         private readonly string filename;
         private readonly ILexer lexer;
+        private readonly bool catchExceptions;
         private readonly ILogger logger;
 
-        public Parser(string filename, ILexer lexer, ILogger logger = null)
+        public Parser(string filename, ILexer lexer, bool catchExceptions = false, ILogger logger = null)
         {
             this.filename = filename;
             this.lexer = lexer;
+            this.catchExceptions = catchExceptions;
             this.logger = logger ?? NullLogger.Instance;
         }
 
@@ -423,6 +425,11 @@ eval_input: testlist NEWLINE* ENDMARKER
                     args = arglist(dn, token.Start).args;
                 }
                 Expect(TokenType.RPAREN);
+            }
+            if (Peek(TokenType.COMMENT))
+            {
+                //$TODO: do something with this?
+                var eolComment = (string)Expect(TokenType.COMMENT).Value;
             }
             var posEnd = Expect(TokenType.NEWLINE).Start;
             return new Decorator(dn, args, filename, posStart, posEnd);
@@ -813,7 +820,6 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             try
             {
-
                 if (Peek(compoundStatement_first))
                 {
                     return compound_stmt();
@@ -825,6 +831,8 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             catch (Exception ex)
             {
+                if (!catchExceptions)
+                    throw;
                 logger.Error(ex, $"({this.filename},{lexer.LineNumber}): parser error. Please report on https://github.com/uxmal/pytocs");
                 SkipUntil(TokenType.COMMENT, TokenType.Def, TokenType.Class);
                 return new List<Statement> {
