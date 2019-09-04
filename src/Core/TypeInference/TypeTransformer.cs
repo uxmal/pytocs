@@ -469,7 +469,7 @@ namespace Pytocs.Core.TypeInference
                 }
                 else
                 {
-                    if (hash != null && hash.ContainsKey(param.Id.Name))
+                    if (hash != null && param.Id.Name != null && hash.ContainsKey(param.Id.Name))
                     {
                         aType = hash[param.Id.Name];
                         hash.Remove(param.Id.Name);
@@ -601,7 +601,7 @@ namespace Pytocs.Core.TypeInference
             var baseTypes = new List<DataType>();
             foreach (var @base in c.args)
             {
-                DataType baseType = @base.Accept(this);
+                DataType baseType = @base.defval.Accept(this);
                 switch (baseType)
                 {
                 case ClassType _:
@@ -781,6 +781,13 @@ namespace Pytocs.Core.TypeInference
                 ret = UnionType.Union(ret, f.Else.Accept(this));
             }
             return ret;
+        }
+
+        public DataType VisitIterableUnpacker(IterableUnpacker unpacker)
+        {
+            var it = unpacker.Iterable.Accept(this);
+            var iterType = analyzer.TypeFactory.CreateIterable(it);
+            return iterType;
         }
 
         public DataType VisitLambda(Lambda lambda)

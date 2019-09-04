@@ -24,9 +24,9 @@ namespace Pytocs.Core.CodeModel
 {
     public class CodeArrayCreateExpression : CodeExpression
     {
-        public CodeArrayCreateExpression(Type type, CodeExpression[] codeExpression)
+        public CodeArrayCreateExpression(CodeTypeReference type, CodeExpression[] codeExpression)
         {
-            this.ElementType = new CodeTypeReference(type);
+            this.ElementType = type;
             this.Initializers = codeExpression;
         }
 

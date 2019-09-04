@@ -18,28 +18,16 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace Pytocs.Core.Types
+namespace pytocs.runtime
 {
-    public interface IDataTypeVisitor<T>
+    public static class SetUtils
     {
-        T VisitAwaitable(AwaitableType awaitable);
-        T VisitBool(BoolType b);
-        T VisitClass(ClassType c);
-        T VisitComplex(ComplexType c);
-        T VisitDict(DictType d);
-        T VisitFloat(FloatType f);
-        T VisitFun(FunType f);
-        T VisitInstance(InstanceType i);
-        T VisitInt(IntType i);
-        T VisitIterable(IterableType i);
-        T VisitList(ListType l);
-        T VisitModule(ModuleType m);
-        T VisitSet(SetType s);
-        T VisitStr(StrType s);
-        T VisitSymbol(SymbolType s);
-        T VisitTuple(TupleType t);
-        T VisitUnion(UnionType u);
+        public static HashSet<T> Unpack<T>(params object[] items)
+        {
+            var flat = items.Cast<IEnumerable<T>>()
+                .SelectMany(it => it);
+            return new HashSet<T>(flat);
+        }
     }
 }

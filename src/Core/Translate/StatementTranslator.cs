@@ -54,7 +54,7 @@ namespace Pytocs.Core.Translate
         {
             if (VisitDecorators(c))
                 return;
-            var baseClasses = c.args.Select(a => GenerateBaseClassName(a)).ToList();
+            var baseClasses = c.args.Select(a => GenerateBaseClassName(a.defval)).ToList();
             var comments = ConvertFirstStringToComments(c.body.stmts);
             var gensym = new SymbolGenerator();
             var stmtXlt = new StatementTranslator(types, gen, gensym, new HashSet<string>());

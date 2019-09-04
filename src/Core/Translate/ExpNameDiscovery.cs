@@ -216,5 +216,10 @@ namespace Pytocs.Core.Translate
         {
             throw new NotImplementedException();
         }
+
+        public void VisitIterableUnpacker(IterableUnpacker unpacker)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

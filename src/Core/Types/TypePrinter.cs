@@ -150,6 +150,10 @@ namespace Pytocs.Core.Types
             return "int";
         }
 
+        public string VisitIterable(IterableType it)
+        {
+            return $"iter({it.ElementType.Accept(this)})";
+        }
         public string VisitList(ListType l)
         {
             StringBuilder sb = new StringBuilder();

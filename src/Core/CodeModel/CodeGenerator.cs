@@ -485,6 +485,12 @@ namespace Pytocs.Core.CodeModel
             return exp;
         }
 
+        public CodeArrayCreateExpression NewArray(CodeTypeReference type, params CodeExpression[] items)
+        {
+            var exp = new CodeArrayCreateExpression(type, items);
+            return exp;
+        }
+
         public CodePrimitiveExpression Prim(object o)
         {
             if (o is long l)

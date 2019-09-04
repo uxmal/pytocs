@@ -37,6 +37,12 @@ namespace Pytocs.Core.Types
             return Register(new DictType(key, value));
         }
 
+
+        public IterableType CreateIterable(DataType it)
+        {
+            return Register(new IterableType(it));
+        }
+
         public ListType CreateList()
         {
             return Register(new ListType());
@@ -96,6 +102,13 @@ namespace Pytocs.Core.Types
             dictType.Table.AddSuper(analyzer.Builtins.BaseDict.Table);
             dictType.Table.Path = analyzer.Builtins.BaseDict.Table.Path;
             return dictType;
+        }
+
+        private IterableType Register(IterableType iterableType)
+        {
+            iterableType.Table.AddSuper(analyzer.Builtins.BaseIterable.Table);
+            iterableType.Table.Path = analyzer.Builtins.BaseIterable.Table.Path;
+            return iterableType;
         }
     }
 }

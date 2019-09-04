@@ -734,5 +734,18 @@ namespace Pytocs.UnitTests.Translate
             var sExp = "(x,k) => xpath_text(hd_doc, \".//video/\" + x, k)";
             Assert.Equal(sExp, Xlat(pySrc));
         }
+
+        [Fact]
+        public void Ex_set_unpackers()
+        {
+            var pySec = "{ *set1, 0, 1, *set2, '3' }";
+            var sExp = "SetUtils.Unpack<object>(set1, new object[] {" + nl +
+                "    0," + nl +
+                "    1," + nl +
+                "}, set2, new object[] {" + nl +
+                "    \"3\"," + nl +
+                "})";
+            Assert.Equal(sExp, Xlat(pySec));
+        }
     }
 }

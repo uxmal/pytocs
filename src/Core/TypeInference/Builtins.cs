@@ -75,6 +75,7 @@ namespace Pytocs.Core.TypeInference
         public InstanceType BaseListInst;
         public ClassType BaseArray;
         public ClassType BaseDict;
+        public ClassType BaseIterable;
         public ClassType BaseTuple;
         public ClassType BaseModule;
         public ClassType BaseFile;
@@ -350,6 +351,7 @@ namespace Pytocs.Core.TypeInference
             BaseListInst = new InstanceType(BaseList);
             BaseArray = newClass("array", bt);
             BaseDict = newClass("dict", bt, objectType);
+            BaseIterable = newClass("iter", bt, objectType);
             ClassType numClass = newClass("int", bt, objectType);
             BaseModule = newClass("module", bt);
             BaseFile = newClass("file", bt, objectType);

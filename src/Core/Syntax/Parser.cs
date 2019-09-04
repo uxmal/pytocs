@@ -2302,24 +2302,30 @@ eval_input: testlist NEWLINE* ENDMARKER
         //                  (test (comp_for | (',' test)* [','])) )
         public Exp dictorsetmaker(int posStart)
         {
-            var kvs = new List<KeyValuePair<Exp, Exp>>();
+            var dictItems = new List<KeyValuePair<Exp, Exp>>();
+            var setItems = new List<Exp>();
             while (PeekAndDiscard(TokenType.COMMENT))
                 ;
             if (Peek(TokenType.RBRACE, out var token))
-                return new DictInitializer(kvs, filename, posStart, token.End);
+                return new DictInitializer(dictItems, filename, posStart, token.End);
 
             Exp k = null;
             Exp v = null;
             if (PeekAndDiscard(TokenType.OP_STARSTAR))
             {
                 v = test();
-                kvs.Add(new KeyValuePair<Exp, Exp>(null, v));
+                dictItems.Add(new KeyValuePair<Exp, Exp>(null, v));
+            }
+            else if (PeekAndDiscard(TokenType.OP_STAR))
+            {
+                v = test();
+                setItems.Add(new IterableUnpacker(v, filename, posStart, v.End));
             }
             else
             {
                 k = test();
             }
-            if (kvs.Count > 0 || PeekAndDiscard(TokenType.COLON))
+            if (dictItems.Count > 0 || PeekAndDiscard(TokenType.COLON))
             {
                 if (k != null)
                 {
@@ -2334,7 +2340,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                     else
                     {
                         // dict initializer
-                        kvs.Add(new KeyValuePair<Exp, Exp>(k, v));
+                        dictItems.Add(new KeyValuePair<Exp, Exp>(k, v));
                     }
                 }
                 while (PeekAndDiscard(TokenType.COMMA))
@@ -2344,7 +2350,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                     if (PeekAndDiscard(TokenType.OP_STARSTAR))
                     {
                         v = test();
-                        kvs.Add(new KeyValuePair<Exp, Exp>(null, v));
+                        dictItems.Add(new KeyValuePair<Exp, Exp>(null, v));
                     }
                     else
                     {
@@ -2353,11 +2359,11 @@ eval_input: testlist NEWLINE* ENDMARKER
                         {
                             Expect(TokenType.COLON);
                             v = test();
-                            kvs.Add(new KeyValuePair<Exp, Exp>(k, v));
+                            dictItems.Add(new KeyValuePair<Exp, Exp>(k, v));
                         }
                     }
                 }
-                return new DictInitializer(kvs, filename, posStart, (v ?? k).End);
+                return new DictInitializer(dictItems, filename, posStart, (v ?? k).End);
             }
             else
             {
@@ -2371,12 +2377,13 @@ eval_input: testlist NEWLINE* ENDMARKER
                 {
                     lexer.Get();
                     v = test();
-                    kvs.Add(new KeyValuePair<Exp, Exp>(null, v));
-                    return new DictInitializer(kvs, filename, posStart, v.End);
+                    dictItems.Add(new KeyValuePair<Exp, Exp>(null, v));
+                    return new DictInitializer(dictItems, filename, posStart, v.End);
                 }
                 else
                 {
-                    var items = new List<Exp> { k };
+                    if (k != null)
+                        setItems.Add(k);
                     while (PeekAndDiscard(TokenType.COMMA))
                     {
                         while (PeekAndDiscard(TokenType.COMMENT))
@@ -2384,10 +2391,18 @@ eval_input: testlist NEWLINE* ENDMARKER
                         if (Peek(TokenType.RBRACE))
                             break;
 
-                        k = test();
-                        items.Add(k);
+                        if (PeekAndDiscard(TokenType.OP_STAR))
+                        {
+                            v = test();
+                            setItems.Add(new IterableUnpacker(v, filename, v.Start, v.End));
+                        }
+                        else
+                        {
+                            k = test();
+                            setItems.Add(k);
+                        }
                     }
-                    return new PySet(items, filename, items[0].Start, items[items.Count - 1].End);
+                    return new PySet(setItems, filename, setItems[0].Start, setItems[setItems.Count - 1].End);
                 }
             }
         }
@@ -2398,11 +2413,11 @@ eval_input: testlist NEWLINE* ENDMARKER
             var posStart = Expect(TokenType.Class).Start;
             var name = id();
             Debug.Print("Parsing class {0}", name.Name);
-            var args = new List<Exp>();
+            var args = new List<Argument>();
             if (!Peek(TokenType.COLON))
             {
                 var token = Expect(TokenType.LPAREN);
-                args = dotted_name_list();
+                args = arglist(name, token.Start).args;
                 Expect(TokenType.RPAREN);
             }
             Expect(TokenType.COLON);

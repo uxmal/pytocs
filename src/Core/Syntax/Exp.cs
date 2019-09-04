@@ -449,6 +449,32 @@ namespace Pytocs.Core.Syntax
         }
     }
 
+    public class IterableUnpacker : Exp
+    {
+        public readonly Exp Iterable;
+
+        public IterableUnpacker(Exp iterable, string filename, int start, int end) : base(filename, start, end)
+        {
+            this.Iterable = iterable;
+        }
+
+        public override T Accept<T>(IExpVisitor<T> v)
+        {
+            return v.VisitIterableUnpacker(this);
+        }
+
+        public override void Accept(IExpVisitor v)
+        {
+            v.VisitIterableUnpacker(this);
+        }
+
+        public override void Write(TextWriter w)
+        {
+            w.Write("*");
+            this.Iterable.Write(w);
+        }
+    }
+
     public class Ellipsis : Exp
     {
         public Ellipsis(string filename, int start, int end) : base(filename, start, end) { }
@@ -887,8 +913,11 @@ namespace Pytocs.Core.Syntax
         public override void Write(TextWriter writer)
         {
             writer.Write("{ ");
+            var sep = "";
             foreach (var item in exps)
             {
+                writer.Write(sep);
+                sep = ", ";
                 item.Write(writer);
             }
             writer.Write(" }");

@@ -333,9 +333,48 @@ namespace Pytocs.Core.Translate
         public CodeExpression VisitSet(PySet s)
         {
             m.EnsureImport("System.Collections");
-            var items = s.exps.Select(e => new CodeCollectionInitializer(e.Accept(this)));
-            var init = m.New(m.TypeRef("HashSet"), items.ToArray());
-            return init;
+            if (s.exps.OfType<IterableUnpacker>().Any())
+            {
+                // Found iterable unpackers.
+                var seq = new List<CodeExpression>();
+                var subseq = new List<CodeExpression>();
+                foreach (var item in s.exps)
+                {
+                    CodeExpression exp = null;
+                    if (item is IterableUnpacker unpacker)
+                    {
+                        if (subseq.Count > 0)
+                        {
+                            exp = m.NewArray(m.TypeRef(typeof(object)), subseq.ToArray());
+                            seq.Add(exp);
+                            subseq.Clear();
+                        }
+                        exp = unpacker.Iterable.Accept(this);
+                        seq.Add(exp);
+                    }
+                    else
+                    {
+                        exp = item.Accept(this);
+                        subseq.Add(exp);
+                    }
+                }
+                if (subseq.Count > 0)
+                {
+                    var exp = m.NewArray(m.TypeRef(typeof(object)), subseq.ToArray());
+                    seq.Add(exp);
+                }
+
+                var unpack = m.MethodRef(m.TypeRefExpr("SetUtils"), "Unpack");
+                unpack.TypeReferences.Add(m.TypeRef(typeof(object)));
+                return m.Appl(unpack, seq.ToArray());
+
+            }
+            else
+            {
+                var items = s.exps.Select(e => new CodeCollectionInitializer(e.Accept(this)));
+                var init = m.New(m.TypeRef("HashSet"), items.ToArray());
+                return init;
+            }
         }
 
         public CodeExpression VisitSetComprehension(SetComprehension sc)
@@ -485,6 +524,11 @@ namespace Pytocs.Core.Translate
                 m.MethodRef(
                     c,
                     "ToList"));
+        }
+
+        public CodeExpression VisitIterableUnpacker(IterableUnpacker unpacker)
+        {
+            throw new NotImplementedException();
         }
 
         public CodeExpression VisitLambda(Lambda l)

@@ -43,6 +43,7 @@ namespace Pytocs.Core.Syntax
         void VisitIdentifier(Identifier id);
         void VisitImaginaryLiteral(ImaginaryLiteral im);
         void VisitIntLiteral(IntLiteral s);
+        void VisitIterableUnpacker(IterableUnpacker iterableUnpacker);
         void VisitLambda(Lambda lambda);
         void VisitListComprehension(ListComprehension lc);
         void VisitList(PyList l);
@@ -86,6 +87,7 @@ namespace Pytocs.Core.Syntax
         T VisitIdentifier(Identifier id);
         T VisitImaginary(ImaginaryLiteral im);
         T VisitIntLiteral(IntLiteral s);
+        T VisitIterableUnpacker(IterableUnpacker unpacker);
         T VisitLambda(Lambda lambda);
         T VisitListComprehension(ListComprehension lc);
         T VisitList(PyList l);

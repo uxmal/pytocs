@@ -955,5 +955,22 @@ return late
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
         }
+
+        [Fact]
+        public void Parser_Set_unpacker()
+        {
+            var pySrc =
+@"return TestValue(
+    {
+        *foo,
+        *bar
+    }
+)";
+            var sExp =
+@"return TestValue({ *foo, *bar })
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
+
     }
 }
