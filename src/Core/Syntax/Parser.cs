@@ -2058,13 +2058,16 @@ eval_input: testlist NEWLINE* ENDMARKER
             case TokenType.STRING:
                 t = lexer.Get();
                 var start = t.Start;
-                var str = t.Value as Str;
-                if (str != null)
+                if (t.Value is Str str)
                 {
-                    while (Peek(TokenType.STRING))
+                    for (; ; )
                     {
+                        if (PeekAndDiscard(TokenType.COMMENT))
+                            continue;
+                        if (!Peek(TokenType.STRING))
+                            break;
                         t = lexer.Get();
-                        str = new Str(str.s + t.Value, filename, start, t.End);
+                        str = new Str(str.s + ((Str)t.Value).s, filename, start, t.End);
                     }
                     return str;
                 }
@@ -2124,15 +2127,14 @@ eval_input: testlist NEWLINE* ENDMARKER
         public Exp testlist_comp(bool tuple)
         {
             Exp e;
-            Token token;
-            if (Peek(TokenType.RBRACKET, TokenType.RPAREN))
+            Token startToken = lexer.Peek();
+            if (startToken.Type == TokenType.RBRACKET || startToken.Type == TokenType.RPAREN)
             {
-                token = lexer.Peek();
                 var empty = new List<Exp>();
                 if (tuple)
-                    return new PyTuple(empty, filename, token.Start, token.End);
+                    return new PyTuple(empty, filename, startToken.Start, startToken.End);
                 else
-                    return new PyList(empty, filename, token.Start, token.End);
+                    return new PyList(empty, filename, startToken.Start, startToken.End);
             }
 
             if (Peek(TokenType.OP_STAR))
@@ -2153,7 +2155,9 @@ eval_input: testlist NEWLINE* ENDMARKER
             else
             {
                 bool forceTuple = false;
-                var exprs = new List<Exp> { e };
+                var exprs = new List<Exp>();
+                if (e != null)
+                    exprs.Add(e);
                 while (PeekAndDiscard(TokenType.COMMA))
                 {
                     while (PeekAndDiscard(TokenType.COMMENT))
@@ -2171,6 +2175,8 @@ eval_input: testlist NEWLINE* ENDMARKER
                     if (Peek(TokenType.COMMENT))
                         e.Comment = (string)Expect(TokenType.COMMENT).Value;
                 }
+                var posStart = startToken.Start;
+                var posEnd = exprs.Count > 0 ? exprs.Last().End : posStart;
                 if (tuple)
                 {
                     if (exprs.Count == 1 && !forceTuple)
@@ -2179,12 +2185,12 @@ eval_input: testlist NEWLINE* ENDMARKER
                     }
                     else
                     {
-                        return new PyTuple(exprs, filename, exprs[0].Start, exprs.Last().End);
+                        return new PyTuple(exprs, filename, posStart, posEnd);
                     }
                 }
                 else
                 {
-                    return new PyList(exprs, filename, exprs[0].Start, exprs.Last().End);
+                    return new PyList(exprs, filename, posStart, posEnd);
                 }
             }
         }

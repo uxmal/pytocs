@@ -469,7 +469,7 @@ namespace Pytocs.Core.TypeInference
                 }
                 else
                 {
-                    if (hash != null && param.Id.Name != null && hash.ContainsKey(param.Id.Name))
+                    if (hash != null && param.Id != null && hash.ContainsKey(param.Id.Name))
                     {
                         aType = hash[param.Id.Name];
                         hash.Remove(param.Id.Name);

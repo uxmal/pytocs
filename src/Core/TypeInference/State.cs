@@ -508,6 +508,8 @@ namespace Pytocs.Core.TypeInference
 
         public void Bind(Analyzer analyzer, Identifier id, DataType rvalue, BindingKind kind)
         {
+            if (id == null)
+                return;
             if (this.IsGlobalName(id.Name))
             {
                 ISet<Binding> bs = this.Lookup(id.Name);

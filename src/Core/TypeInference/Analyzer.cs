@@ -352,7 +352,7 @@ namespace Pytocs.Core.TypeInference
 
         public void AddProblem(Node loc, string msg)
         {
-            string file = loc.Filename;
+            string file = loc?.Filename;
             if (file != null)
             {
                 AddFileError(file, loc.Start, loc.End, msg);

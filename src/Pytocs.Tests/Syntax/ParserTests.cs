@@ -972,5 +972,28 @@ return late
             AssertStmt(sExp, ParseStmt(pySrc));
         }
 
+        [Fact]
+        public void Parser_list_initializer_with_comment()
+        {
+            var pySrc =
+@"foo = [
+    # empty
+]";
+            var sExp =
+@"foo=[]
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
+
+        [Fact]
+        public void Parser_adjacent_string_constants()
+        {
+            var pySrc = @"(
+    'prefix'    # prefix
+    'suffix'    # suffix
+)";
+            var sExp = "prefixsuffix";
+            AssertExp(sExp, ParseExp(pySrc));
+        }
     }
 }
