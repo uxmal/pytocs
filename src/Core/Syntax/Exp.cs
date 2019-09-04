@@ -939,6 +939,12 @@ namespace Pytocs.Core.Syntax
         {
             v.VisitStarExp(this);
         }
+
+        public override void Write(TextWriter writer)
+        {
+            writer.Write("*");
+            this.e.Write(writer);
+        }
     }
 
     public class ExpList : Exp

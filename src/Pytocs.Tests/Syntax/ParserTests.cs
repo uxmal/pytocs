@@ -973,6 +973,22 @@ return late
         }
 
         [Fact]
+        public void Parser_List_unpacker()
+        {
+            var pySrc =
+@"return TestValue(
+    [
+        *foo,
+        *bar
+    ]
+)";
+            var sExp =
+@"return TestValue([*foo,*bar])
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
+
+        [Fact]
         public void Parser_list_initializer_with_comment()
         {
             var pySrc =
@@ -992,7 +1008,7 @@ return late
     'prefix'    # prefix
     'suffix'    # suffix
 )";
-            var sExp = "prefixsuffix";
+            var sExp = "\"prefixsuffix\"";
             AssertExp(sExp, ParseExp(pySrc));
         }
     }

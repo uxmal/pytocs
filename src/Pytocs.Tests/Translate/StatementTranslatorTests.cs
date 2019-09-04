@@ -14,7 +14,6 @@
 //  limitations under the License.
 #endregion
 
-#if DEBUG
 using Pytocs.Core.CodeModel;
 using Xunit;
 using System;
@@ -1594,6 +1593,18 @@ public static object func(object cfg_node) {
 ";
             Assert.Equal(sExp, XlatStmts(pySrc));
         }
+
+        [Fact]
+        public void Stmt_tuple_assignment_starred_target()
+        {
+            var pySrc = "a, b, *c = get_items()";
+            var sExp =
+@"var _it_1 = get_items();
+a = _it_1.Element(0);
+b = _it_1.Element(1);
+c = _it_1.Skip(2).ToList();
+";
+            Assert.Equal(sExp, XlatStmts(pySrc));
+        }
     }
 }
-#endif

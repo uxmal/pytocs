@@ -314,9 +314,52 @@ namespace Pytocs.Core.Translate
 
         private void EmitTupleAssignment(List<Exp> lhs, CodeExpression rhs)
         {
-            var tup = GenSymLocalTuple();
-            gen.Assign(tup, rhs);
-            EmitTupleFieldAssignments(lhs, tup);
+            if (lhs.Any(e => e is StarExp))
+            {
+                EmitStarredTupleAssignments(lhs, rhs);
+            }
+            else
+            {
+                var tup = GenSymLocalTuple();
+                gen.Assign(tup, rhs);
+                EmitTupleFieldAssignments(lhs, tup);
+            }
+
+        }
+
+        /// <summary>
+        /// Translate a starred target by first emitting assignments for 
+        /// all non-starred targets, then collecting the remainder in
+        /// the starred target.
+        /// </summary>
+        private void EmitStarredTupleAssignments(List<Exp> lhs, CodeExpression rhs)
+        {
+            //$TODO: we don't handle (a, *b, c, d) = ... yet. Who writes code like that?
+            gen.EnsureImport("System.Linq");
+
+            var tmp = GenSymLocalIterator();
+            gen.Scope.Add(new CodeVariableDeclarationStatement("var", tmp.Name)
+            {
+                InitExpression = rhs
+            });
+            for (int index = 0; index < lhs.Count; ++index)
+            {
+                var target = lhs[index];
+                if (target is StarExp sTarget)
+                {
+                    var lvalue = sTarget.e.Accept(xlat);
+                    var rvalue = gen.ApplyMethod(tmp, "Skip", gen.Prim(index));
+                    rvalue = gen.ApplyMethod(rvalue, "ToList");
+                    gen.Assign(lvalue, rvalue);
+                    return;
+                }
+                else if (target != null && target.Name != "_")
+                {
+                    var lvalue = target.Accept(xlat);
+                    var rvalue = gen.ApplyMethod(tmp, "Element", gen.Prim(index));
+                    gen.Assign(lvalue, rvalue);
+                }
+            }
         }
 
         private void EmitTupleToTupleAssignment(List<Exp> dstTuple, List<Exp> srcTuple)
@@ -357,6 +400,11 @@ namespace Pytocs.Core.Translate
         private CodeVariableReferenceExpression GenSymLocalTuple()
         {
             return gensym.GenSymLocal("_tup_", new CodeTypeReference(typeof(object)));
+        }
+
+        private CodeVariableReferenceExpression GenSymLocalIterator()
+        {
+            return gensym.GenSymLocal("_it_", new CodeTypeReference(typeof(object)));
         }
 
         public CodeVariableReferenceExpression GenSymParameter(string prefix, CodeTypeReference type)

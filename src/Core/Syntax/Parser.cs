@@ -2169,7 +2169,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                         break;
                     }
                     if (Peek(TokenType.OP_STAR))
-                        e2 = star_expr();
+                        exprs.Add(star_expr());
                     else
                         exprs.Add(test());
                     if (Peek(TokenType.COMMENT))
