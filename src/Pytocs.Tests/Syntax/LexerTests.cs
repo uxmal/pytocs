@@ -478,6 +478,13 @@ namespace Pytocs.UnitTests.Syntax
             Assert.Equal("2_147_483_648", tok.Value.ToString());
             Assert.Equal("2147483648", tok.NumericValue.ToString());
         }
+
+        [Fact]
+        public void Lex_regression1()
+        {
+            var tok = Lex("bridge");
+            Assert.Equal("bridge", tok.Value.ToString());
+        }
     }
 }
 #endif

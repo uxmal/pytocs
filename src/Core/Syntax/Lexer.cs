@@ -749,7 +749,7 @@ namespace Pytocs.Core.Syntax
                     case '"': binaryString = true; sb.Clear(); Transition(State.Quote); break;
                     case '\'': binaryString = true; sb.Clear(); Transition(State.Apos); break;
                     case 'r':
-                    case 'R': st = State.BinaryRawStringPrefix; Advance(); break;
+                    case 'R': sb.Append(ch); st = State.BinaryRawStringPrefix; Advance(); break;
                     default: st = State.Id; break;
                     }
                     break;
