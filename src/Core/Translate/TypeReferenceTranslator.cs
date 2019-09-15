@@ -263,7 +263,7 @@ namespace Pytocs.Core.Translate
 
         private static Dictionary<string, (string, string)> DefaultClassTranslations = new Dictionary<string, (string, string)>
         {
-            { "NotImplementedError", ("NotImplementedException", "System") }
+            { "NotImplementedError", (nameof(NotImplementedException), SystemNamespace) }
         };
     }
 }

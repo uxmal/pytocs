@@ -79,13 +79,13 @@ namespace Pytocs.Core.TypeInference
         private readonly AstCache astCache;
         private readonly HashSet<string> failedToParse = new HashSet<string>();
         private readonly string suffix;
+        private readonly DateTime startTime;
 
         private IProgress loadingProgress;
         private string cacheDir;
         private string cwd = null;
         private string projectDir;
         private Dictionary<string, object> options;
-        private DateTime startTime;
 
         public AnalyzerImpl(ILogger logger)
             : this(new FileSystem(), logger, new Dictionary<string, object>(), DateTime.Now)

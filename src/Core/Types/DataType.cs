@@ -28,9 +28,9 @@ namespace Pytocs.Core.Types
 
         protected static TypeStack typeStack = new TypeStack();
 
-        public DataType()
+        protected DataType(State.StateType scopeType = State.StateType.SCOPE)
         {
-            this.Table = new State(null, State.StateType.SCOPE);
+            this.Table = new State(null, scopeType);
         }
 
         public State Table { get; set; }

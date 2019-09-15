@@ -54,6 +54,7 @@ namespace Pytocs.Core.Types
 
         public DataType SelfType { get; set; }                 // self's type for calls
 
+
         public override T Accept<T>(IDataTypeVisitor<T> visitor)
         {
             return visitor.VisitFun(this);

@@ -23,9 +23,8 @@ namespace Pytocs.Core.Types
     {
         public DataType classType;
 
-        public InstanceType(DataType c)
+        public InstanceType(DataType c) : base(State.StateType.INSTANCE)
         {
-            Table.setStateType(State.StateType.INSTANCE);
             Table.AddSuper(c.Table);
             Table.Path = c.Table.Path;
             classType = c;
@@ -38,9 +37,9 @@ namespace Pytocs.Core.Types
 
         public override bool Equals(object other)
         {
-            if (other is InstanceType)
+            if (other is InstanceType that)
             {
-                return classType.Equals(((InstanceType) other).classType);
+                return this.classType.Equals(that.classType);
             }
             return false;
         }

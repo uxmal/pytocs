@@ -42,7 +42,7 @@ namespace Pytocs.Cli
                 return;
             }
 
-                var options = new Dictionary<string, object>();
+            var options = new Dictionary<string, object>();
             var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
             if (args[0].ToLower() == "-r")
             {
@@ -51,8 +51,7 @@ namespace Pytocs.Cli
                     : Directory.GetCurrentDirectory();
                 typeAnalysis.Analyze(startDir);
                 typeAnalysis.Finish();
-                var types = new TypeReferenceTranslator(
-                    typeAnalysis.BuildTypeDictionary());
+                var types = new TypeReferenceTranslator(typeAnalysis.BuildTypeDictionary());
                 //Console.WriteLine($"== Type dictionary: {types.Count}");
                 //foreach (var de in types.OrderBy(d => d.Key.ToString()))
                 //{

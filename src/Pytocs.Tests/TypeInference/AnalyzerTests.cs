@@ -27,7 +27,7 @@ namespace Pytocs.UnitTests.TypeInference
 {
     public class AnalyzerTests
     {
-        private readonly Pytocs.Core.TypeInference.FakeFileSystem fs;
+        private readonly FakeFileSystem fs;
         private readonly ILogger logger;
         private readonly Dictionary<string, object> options;
         private readonly string nl;
@@ -35,7 +35,7 @@ namespace Pytocs.UnitTests.TypeInference
 
         public AnalyzerTests()
         {
-            this.fs = new Pytocs.Core.TypeInference.FakeFileSystem();
+            this.fs = new FakeFileSystem();
             this.logger = new FakeLogger();
             this.options = new Dictionary<string, object>();
             this.nl = Environment.NewLine;

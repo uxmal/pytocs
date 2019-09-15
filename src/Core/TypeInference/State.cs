@@ -530,37 +530,38 @@ namespace Pytocs.Core.TypeInference
 
         public void Bind(Analyzer analyzer, List<Exp> xs, DataType rvalue, BindingKind kind)
         {
-            if (rvalue is TupleType)
+            switch (rvalue)
             {
-                List<DataType> vs = ((TupleType) rvalue).eltTypes;
-                if (xs.Count != vs.Count)
+            case TupleType tuple:
                 {
-                    ReportUnpackMismatch(analyzer, xs, vs.Count);
-                }
-                else
-                {
-                    for (int i = 0; i < xs.Count; i++)
+                    List<DataType> vs = tuple.eltTypes;
+                    if (xs.Count != vs.Count)
                     {
-                        this.Bind(analyzer, xs[i], vs[i], kind);
+                        ReportUnpackMismatch(analyzer, xs, vs.Count);
                     }
+                    else
+                    {
+                        for (int i = 0; i < xs.Count; i++)
+                        {
+                            this.Bind(analyzer, xs[i], vs[i], kind);
+                        }
+                    }
+                    break;
                 }
-            }
-            else
-            {
-                if (rvalue is ListType)
-                {
-                    Bind(analyzer, xs, ((ListType) rvalue).toTupleType(xs.Count), kind);
-                }
-                else if (rvalue is DictType)
-                {
-                    Bind(analyzer, xs, ((DictType) rvalue).ToTupleType(xs.Count), kind);
-                }
-                else if (rvalue.isUnknownType())
+            case ListType list:
+                Bind(analyzer, xs, list.toTupleType(xs.Count), kind);
+                break;
+            case DictType dict:
+                Bind(analyzer, xs, dict.ToTupleType(xs.Count), kind);
+                break;
+            default:
+                if (rvalue.isUnknownType())
                 {
                     foreach (Exp x in xs)
                     {
                         this.Bind(analyzer, x, DataType.Unknown, kind);
                     }
+                    break;
                 }
                 else if (xs.Count > 0)
                 {
@@ -569,6 +570,7 @@ namespace Pytocs.Core.TypeInference
                             xs[xs.Count - 1].End,
                             "unpacking non-iterable: " + rvalue);
                 }
+                break;
             }
         }
 
