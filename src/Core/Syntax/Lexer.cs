@@ -797,14 +797,14 @@ namespace Pytocs.Core.Syntax
                     switch (ch)
                     {
                     case '"': Transition(State.QuoteString3); break;
-                    default: return Token(TokenType.STRING, new Str("", filename, posStart, posEnd));
+                    default: return Token(TokenType.STRING, CreateStringLiteral(false));
                     }
                     break;
                 case State.Apos2:
                     switch (ch)
                     {
                     case '\'': Transition(State.AposString3); break;
-                    default: return Token(TokenType.STRING, new Str("", filename, posStart, posEnd));
+                    default: return Token(TokenType.STRING, CreateStringLiteral(false));
                     }
                     break;
 

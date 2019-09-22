@@ -485,6 +485,18 @@ namespace Pytocs.UnitTests.Syntax
             var tok = Lex("bridge");
             Assert.Equal("bridge", tok.Value.ToString());
         }
+
+        [Fact]
+        public void Lex_binstring_string()
+        {
+            var tok = Lex("b''('bar'");
+            Assert.True(tok.Value is Bytes);
+            tok = LexMore();
+            Assert.Equal(TokenType.LPAREN, tok.Type);
+            tok = LexMore();
+            Assert.Equal(TokenType.STRING, tok.Type);
+            Assert.True(tok.Value is Str);
+        }
     }
 }
 #endif
