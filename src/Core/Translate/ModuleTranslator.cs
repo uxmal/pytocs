@@ -30,7 +30,7 @@ namespace Pytocs.Core.Translate
     {
         private CodeGenerator gen;
 
-        public ModuleTranslator(TypeReferenceTranslator types, CodeGenerator gen) : base(types, gen, new SymbolGenerator(), new HashSet<string>())
+        public ModuleTranslator(TypeReferenceTranslator types, CodeGenerator gen) : base(null, types, gen, new SymbolGenerator(), new HashSet<string>())
         {
             this.gen = gen;
         }

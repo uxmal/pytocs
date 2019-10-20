@@ -38,7 +38,6 @@ namespace Pytocs.UnitTests.Translate
         {
             this.fs = new FakeFileSystem();
             this.logger = new FakeLogger();
-
         }
 
         private string XlatModule(string pyModule, string filename = "module.py")
@@ -407,6 +406,80 @@ class TestClass:
 ";
             Debug.Print(XlatModule(pyModule));
             Assert.Equal(sExp, XlatModule(pyModule));
+        }
+
+        [Fact]
+        public void Stmt_super_call()
+        {
+            var pySrc =
+@"class Foo(Bar):
+    def froz(self):
+        super(Bar,self).froz()
+";
+            var sExp =
+@"namespace test {
+    
+    public static class module {
+        
+        public class Foo
+            : Bar {
+            
+            public virtual object froz() {
+                base.froz();
+            }
+        }
+    }
+}
+";
+            Assert.Equal(sExp, XlatModule(pySrc));
+        }
+
+        [Fact]
+        public void Stmt_super_call_multiple_base_classes()
+        {
+            var pySrc =
+@"class Foo(Bar1, Bar2):
+    def froz(self):
+        super(Bar2,self).froz()
+";
+            var sExp =
+@"namespace test {
+    
+    public static class module {
+        
+        public class Foo
+            : Bar1, Bar2 {
+            
+            public virtual object froz() {
+                ((Bar2) this).froz();
+            }
+        }
+    }
+}
+";
+            Assert.Equal(sExp, XlatModule(pySrc));
+        }
+
+
+        [Fact(Skip = "Not ready yet")]
+        public void Module_void_function()
+        {
+            var pySrc =
+@"def test(s):
+    print(s)
+";
+            var sExp = 
+@"namespace test {
+    
+    public static class module {
+        
+        public static void test(object s) {
+            Console.Write(s);
+        }
+    }
+}
+";
+            Assert.Equal(sExp, XlatModule(pySrc));
         }
     }
 }

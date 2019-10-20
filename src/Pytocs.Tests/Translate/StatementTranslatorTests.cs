@@ -51,7 +51,7 @@ namespace Pytocs.UnitTests.Translate
             var gen = new CodeGenerator(new CodeCompileUnit(), "", "module");
             gen.SetCurrentMethod(new CodeMemberMethod());
             var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
-            var xlt = new StatementTranslator(types, gen, new SymbolGenerator(), new HashSet<string>());
+            var xlt = new StatementTranslator(null, types, gen, new SymbolGenerator(), new HashSet<string>());
             stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -77,7 +77,7 @@ namespace Pytocs.UnitTests.Translate
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
             var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
-            var xlt = new StatementTranslator(types, gen, new SymbolGenerator(), new HashSet<string>());
+            var xlt = new StatementTranslator(null, types, gen, new SymbolGenerator(), new HashSet<string>());
             stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();
@@ -121,7 +121,7 @@ namespace Pytocs.UnitTests.Translate
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", "testModule");
             var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
-            var xlt = new StatementTranslator(types, gen, new SymbolGenerator(), new HashSet<string>());
+            var xlt = new StatementTranslator(null, types, gen, new SymbolGenerator(), new HashSet<string>());
             stm[0].Accept(xlt);
             var pvd = new CSharpCodeProvider();
             var writer = new StringWriter();

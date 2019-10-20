@@ -387,11 +387,21 @@ namespace Pytocs.Core.CodeModel
             return list;
         }
 
+        public CodeExpression Base()
+        {
+            return new CodeBaseReferenceExpression();
+        }
+
         public void EnsureImport(string nmespace)
         {
             if (CurrentNamespace.Imports.Where(i => i.Namespace == nmespace).Any())
                 return;
             CurrentNamespace.Imports.Add(new CodeNamespaceImport(nmespace));
+        }
+
+        public CodeCastExpression Cast(CodeTypeReference type, CodeExpression exp)
+        {
+            return new CodeCastExpression(type, exp);
         }
 
         public void EnsureImports(IEnumerable<string> nmespaces)
@@ -621,6 +631,11 @@ namespace Pytocs.Core.CodeModel
         public CodeQueryExpression Query(params CodeQueryClause[] clauses)
         {
             return new CodeQueryExpression(clauses);
+        }
+
+        public CodeExpression This()
+        {
+            return new CodeThisReferenceExpression();
         }
     }
 }

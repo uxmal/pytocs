@@ -67,13 +67,15 @@ namespace Pytocs.Core.Translate
             { Op.AugXor, CodeOperatorType.XorEq },
         };
 
+        internal readonly ClassDef classDef;
         internal CodeGenerator m;
         internal SymbolGenerator gensym;
         internal IntrinsicTranslator intrinsic;
         private TypeReferenceTranslator types;
 
-        public ExpTranslator(TypeReferenceTranslator types, CodeGenerator gen, SymbolGenerator gensym)
+        public ExpTranslator(ClassDef classDef, TypeReferenceTranslator types, CodeGenerator gen, SymbolGenerator gensym)
         {
+            this.classDef = classDef;
             this.types = types;
             this.m = gen;
             this.gensym = gensym;
@@ -694,7 +696,7 @@ namespace Pytocs.Core.Translate
         {
             if (id.Name == "self")
             {
-                return new CodeThisReferenceExpression();
+                return m.This();
             }
             else
             {

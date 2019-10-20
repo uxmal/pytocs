@@ -38,6 +38,7 @@ namespace Pytocs.Core.Translate
                 { "float", Translate_float },
                 { "sorted", Translate_sorted },
                 { "str", Translate_str },
+                { "super", Translate_super },
                 { "enumerate", Translate_enumerate },
             };
         }
@@ -343,6 +344,34 @@ namespace Pytocs.Core.Translate
                 return m.ApplyMethod(getEncoding, "GetString", args[0]);
             default:
                 throw new NotImplementedException($"str({string.Join<CodeExpression>(",", args)})");
+            }
+        }
+
+        /// <summary>
+        /// Translates a `super(X,Y)` function call.
+        /// </summary>
+        /// <param name="appl"></param>
+        /// <param name="args"></param>
+        /// <returns></returns>
+        private CodeExpression Translate_super(Application appl, CodeExpression [] args)
+        {
+            if (expTranslator.classDef.args.Count <= 1)
+            {
+                return m.Base();
+            }
+            else
+            {
+                if (args[0] is CodeVariableReferenceExpression id)
+                {
+                    var cast = m.Cast(new CodeTypeReference(id.Name), m.This());
+                    return cast;
+                }
+                else
+                {
+                    var cast = m.Cast(new CodeTypeReference(args[0].ToString()), m.This());
+                    return cast;
+
+                }
             }
         }
 

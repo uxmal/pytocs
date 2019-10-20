@@ -12,12 +12,15 @@ namespace Pytocs.Core.Translate
 {
     public class LambdaBodyGenerator : MethodGenerator
     {
-        public LambdaBodyGenerator(FunctionDef f, List<Parameter> args,
+        public LambdaBodyGenerator(
+            ClassDef classDef, 
+            FunctionDef f, 
+            List<Parameter> args,
             bool isStatic,
             bool isAsync, 
             TypeReferenceTranslator types,
             CodeGenerator gen)
-            : base(f, null, args, isStatic, isAsync, types, gen)
+            : base(classDef, f, null, args, isStatic, isAsync, types, gen)
         {
         }
 

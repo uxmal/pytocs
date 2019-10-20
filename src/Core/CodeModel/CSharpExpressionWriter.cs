@@ -173,6 +173,11 @@ namespace Pytocs.Core.CodeModel
             Write(awaitExp.Expression, PrecUnary, false);
         }
 
+        public void VisitBase(CodeBaseReferenceExpression _)
+        {
+            writer.Write("base");
+        }
+
         public void VisitBinary(CodeBinaryOperatorExpression bin)
         {
             var prec = operatorPrecedence[bin.Operator];
@@ -186,6 +191,23 @@ namespace Pytocs.Core.CodeModel
             Write(bin.Left, prec, false);
             writer.Write(" {0} ", OpToString(bin.Operator));
             Write(bin.Right, prec, true);
+            if (needParens)
+            {
+                writer.Write(")");
+            }
+        }
+
+        public void VisitCast(CodeCastExpression cast)
+        {
+            bool needParens = (this.precedence > PrecUnary);
+            if (needParens)
+            {
+                writer.Write("(");
+            }
+            writer.Write("(");
+            VisitTypeReference(cast.TargetType);
+            writer.Write(") ");
+            Write(cast.Expression, PrecUnary, true);
             if (needParens)
             {
                 writer.Write(")");

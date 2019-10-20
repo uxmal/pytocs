@@ -437,5 +437,23 @@ class Derived(Base):
             ExpectBindings(sExp);
         }
 
+        [Fact(DisplayName = nameof(TypeAn_void_function))]
+        public void TypeAn_void_function()
+        {
+            fs.Dir("foo")
+                .File("test.py",
+@"def foo(s):
+    print(s)
+");
+
+            an.Analyze(@"\foo");
+            an.Finish();
+            var sExp =
+@"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
+@"(binding:kind=FUNCTION:node=foo:type=? -> None:qname=.foo.test.foo:refs=[])" + nl +
+@"(binding:kind=PARAMETER:node=s:type=?:qname=.foo.test.foo.s:refs=[s])" + nl;
+            ExpectBindings(sExp);
+        }
     }
+
 }

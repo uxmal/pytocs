@@ -29,11 +29,12 @@ namespace Pytocs.Core.Translate
     public class ConstructorGenerator : MethodGenerator
     {
         public ConstructorGenerator(
+            ClassDef classDef,
             FunctionDef f,
             List<Syntax.Parameter> args, 
             TypeReferenceTranslator types,
             CodeGenerator gen)
-            : base(f, "", args, false, false, types, gen)
+            : base(classDef, f, "", args, false, false, types, gen)
         {
         }
 

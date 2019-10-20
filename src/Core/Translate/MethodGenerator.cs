@@ -31,11 +31,12 @@ namespace Pytocs.Core.Translate
     /// </summary>
     public class MethodGenerator
     {
-        protected FunctionDef f;
-        protected string fnName;
-        protected List<Parameter> args;
-        private bool isStatic;
-        private bool isAsync;
+        private readonly ClassDef classDef;
+        protected readonly FunctionDef f;
+        protected readonly string fnName;
+        protected readonly List<Parameter> args;
+        private readonly bool isStatic;
+        private readonly bool isAsync;
         protected ExpTranslator xlat;
         protected StatementTranslator stmtXlat;
         protected CodeGenerator gen;
@@ -45,6 +46,7 @@ namespace Pytocs.Core.Translate
         protected HashSet<string> globals;
 
         public MethodGenerator(
+            ClassDef classDef,
             FunctionDef f, 
             string fnName,
             List<Parameter> args,
@@ -53,6 +55,7 @@ namespace Pytocs.Core.Translate
             TypeReferenceTranslator types,
             CodeGenerator gen)
         {
+            this.classDef = classDef;
             this.f = f;
             this.fnName = fnName;
             this.args = args;
@@ -60,10 +63,10 @@ namespace Pytocs.Core.Translate
             this.isAsync = isAsync;
             this.gen = gen;
             this.gensym = new SymbolGenerator();
-            this.types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
-            this.xlat = new ExpTranslator(this.types, gen, gensym);
+            this.types = types;
+            this.xlat = new ExpTranslator(classDef, this.types, gen, gensym);
             this.globals = new HashSet<string>();
-            this.stmtXlat = new StatementTranslator(types, gen, gensym, globals);
+            this.stmtXlat = new StatementTranslator(classDef, types, gen, gensym, globals);
         }
 
         public CodeMemberMethod Generate()
@@ -120,6 +123,7 @@ namespace Pytocs.Core.Translate
 
         private CodeTypeReference CreateReturnType()
         {
+            DataType dtRet = this.types.TypeOf(f.name);
             Type tyRet;
             if (isAsync)
                 tyRet = typeof(Task<object>);
