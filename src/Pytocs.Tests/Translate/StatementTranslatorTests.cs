@@ -140,6 +140,15 @@ namespace Pytocs.UnitTests.Translate
             return writer.ToString();
         }
 
+        private void AssertEqual(string sExp, string sActual)
+        {
+            if (sExp != sActual)
+            {
+                Debug.WriteLine(sActual);
+                Assert.Equal(sExp, sActual);
+            }
+        }
+
         [Fact]
         public void Stmt_Assign()
         {

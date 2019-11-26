@@ -355,13 +355,17 @@ namespace Pytocs.Core.Translate
         /// <returns></returns>
         private CodeExpression Translate_super(Application appl, CodeExpression [] args)
         {
-            if (expTranslator.classDef.args.Count <= 1)
+            if (expTranslator.classDef != null && expTranslator.classDef.args.Count <= 1)
             {
                 return m.Base();
             }
             else
             {
-                if (args[0] is CodeVariableReferenceExpression id)
+                if (args.Length == 0)
+                {
+                    return m.Base();
+                }
+                else if (args[0] is CodeVariableReferenceExpression id)
                 {
                     var cast = m.Cast(new CodeTypeReference(id.Name), m.This());
                     return cast;
@@ -370,7 +374,6 @@ namespace Pytocs.Core.Translate
                 {
                     var cast = m.Cast(new CodeTypeReference(args[0].ToString()), m.This());
                     return cast;
-
                 }
             }
         }

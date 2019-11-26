@@ -481,6 +481,35 @@ class TestClass:
 ";
             Assert.Equal(sExp, XlatModule(pySrc));
         }
+
+        [Fact]
+        public void Stmt_super_outside_class()
+        {
+            var pySrc =
+@"def __ELFSymbolTypeArchParser(cls, value):
+    if isinstance(value, int):
+        return super(ELFSymbolType, cls).__new__(cls, (value, None))
+    else:
+        return super(ELFSymbolType, cls).__new__(cls, value)
+";
+
+            var sExp =
+@"namespace test {
+    
+    public static class module {
+        
+        public static object @__ELFSymbolTypeArchParser(object cls, object value) {
+            if (value is int) {
+                return ((ELFSymbolType) this).@__new__(cls, (value, null));
+            } else {
+                return ((ELFSymbolType) this).@__new__(cls, value);
+            }
+        }
+    }
+}
+";
+            Assert.Equal(sExp, XlatModule(pySrc));
+        }
     }
 }
 #endif
