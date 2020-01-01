@@ -67,7 +67,7 @@ namespace Pytocs.Core.Types
             TupleType ret = new TupleType();    //$ no regs
             for (int i = 0; i < n; i++)
             {
-                ret.add(eltType);
+                ret.Add(eltType);
             }
             return ret;
         }

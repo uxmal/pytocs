@@ -22,23 +22,11 @@ namespace Pytocs.Core.TypeInference
 {
     public class TypeStack
     {
-        class Pair
-        {
-            public DataType first;
-            public DataType second;
-
-            public Pair(DataType first, DataType second)
-            {
-                this.first = first;
-                this.second = second;
-            }
-        }
-
-        private List<Pair> stack = new List<Pair>();
+        private readonly List<(DataType, DataType)> stack = new List<(DataType,DataType)>();
 
         public void Push(DataType first, DataType second)
         {
-            stack.Add(new Pair(first, second));
+            stack.Add((first, second));
         }
 
         public void Pop(object first, object second)
@@ -48,7 +36,7 @@ namespace Pytocs.Core.TypeInference
 
         public bool Contains(DataType first, DataType second)
         {
-            foreach (Pair p in stack)
+            foreach ((DataType first, DataType second) p in stack)
             {
                 if (object.ReferenceEquals(p.first, first) && 
                     object.ReferenceEquals(p.second, second) ||

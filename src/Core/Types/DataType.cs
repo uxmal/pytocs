@@ -47,24 +47,24 @@ namespace Pytocs.Core.Types
 
         public static bool operator ==(DataType a, DataType b)
         {
-            if (object.ReferenceEquals(a ,null))
-                return object.ReferenceEquals(b , null);
+            if (a is null)
+                return b is null;
             return a.Equals(b);
         }
 
         public static bool operator !=(DataType a, DataType b)
         {
-            if (object.ReferenceEquals(a, null))
-                return !object.ReferenceEquals(b, null);
+            if (a is null)
+                return !(b is null);
             return !a.Equals(b);
         }
     
-        public bool isNumType()
+        public bool IsNumType()
         {
             return this is IntType || this is FloatType;
         }
 
-        public bool isUnknownType()
+        public bool IsUnknownType()
         {
             return this == DataType.Unknown;
         }

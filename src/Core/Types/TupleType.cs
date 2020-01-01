@@ -55,12 +55,12 @@ namespace Pytocs.Core.Types
             return visitor.VisitTuple(this);
         }
 
-        public void add(DataType elt)
+        public void Add(DataType elt)
         {
             eltTypes.Add(elt);
         }
 
-        public DataType get(int i)
+        public DataType Get(int i)
         {
             return eltTypes[i];
         }

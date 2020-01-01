@@ -476,10 +476,11 @@ namespace Pytocs.Core.TypeInference
                     }
                     else
                     {
-                        if (star != null && star is TupleType tup &&
-                                j < tup.eltTypes.Count)
+                        if (star != null &&
+                            star is TupleType tup &&
+                            j < tup.eltTypes.Count)
                         {
-                            aType = tup.get(j);
+                            aType = tup.Get(j);
                             ++j;
                         }
                         else
@@ -494,7 +495,7 @@ namespace Pytocs.Core.TypeInference
                     }
                 }
                 funcTable.Bind(analyzer, param.Id, aType, BindingKind.PARAMETER);
-                fromType.add(aType);
+                fromType.Add(aType);
             }
 
             if (restKw != null)
@@ -1338,7 +1339,7 @@ namespace Pytocs.Core.TypeInference
 
         public DataType GetSubscript(ArrayRef s, DataType vt, DataType st)
         {
-            if (vt.isUnknownType())
+            if (vt.IsUnknownType())
             {
                 return DataType.Unknown;
             }
@@ -1354,7 +1355,7 @@ namespace Pytocs.Core.TypeInference
                 }
                 return dt.ValueType;
             case StrType _:
-                if (st != null && (st is ListType || st.isNumType()))
+                if (st != null && (st is ListType || st.IsNumType()))
                 {
                     return vt;
                 }
@@ -1376,7 +1377,7 @@ namespace Pytocs.Core.TypeInference
                 {
                     return vt;
                 }
-                else if (st == null || st.isNumType())
+                else if (st == null || st.IsNumType())
                 {
                     return list.eltType;
                 }
@@ -1442,7 +1443,7 @@ namespace Pytocs.Core.TypeInference
             TupleType tt = analyzer.TypeFactory.CreateTuple();
             foreach (var e in t.values)
             {
-                tt.add(e.Accept(this));
+                tt.Add(e.Accept(this));
             }
             return tt;
         }

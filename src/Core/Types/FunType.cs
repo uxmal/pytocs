@@ -148,7 +148,7 @@ namespace Pytocs.Core.Types
                 return true;
             }
 
-            if (type1.isUnknownType() || type1 == DataType.None || type1.Equals(type2))
+            if (type1.IsUnknownType() || type1 == DataType.None || type1.Equals(type2))
             {
                 return true;
             }
@@ -214,17 +214,17 @@ namespace Pytocs.Core.Types
             {
                 if (Class != null)
                 {
-                    simplified.add(Class.GetInstance());
+                    simplified.Add(Class.GetInstance());
                 }
                 else
                 {
-                    simplified.add(from.get(0));
+                    simplified.Add(from.Get(0));
                 }
             }
 
             for (int i = 1; i < from.eltTypes.Count; i++)
             {
-                simplified.add(from.get(i));
+                simplified.Add(from.Get(i));
             }
             return simplified;
         }

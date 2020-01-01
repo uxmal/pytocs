@@ -24,9 +24,9 @@ namespace Pytocs.Core.Types
 {
     public class TypePrinter : IDataTypeVisitor<string>
     {
-        private CyclicTypeRecorder ctr;
-        private bool multiline;
-        private bool showLiterals;
+        private readonly CyclicTypeRecorder ctr;
+        private readonly bool multiline;
+        private readonly bool showLiterals;
 
         public TypePrinter(bool multiline = false, bool showLiterals = false)
         {
@@ -131,7 +131,7 @@ namespace Pytocs.Core.Types
                     i++;
                 }
 
-                if (ctr.isUsed(f))
+                if (ctr.IsUsed(f))
                 {
                     sb.Append("=#").Append(newNum).Append(": ");
                 }
@@ -229,7 +229,7 @@ namespace Pytocs.Core.Types
                     first = false;
                 }
 
-                if (ctr.isUsed(t))
+                if (ctr.IsUsed(t))
                 {
                     sb.Append("=#").Append(newNum).Append(":");
                 }
@@ -268,7 +268,7 @@ namespace Pytocs.Core.Types
                     first = false;
                 }
 
-                if (ctr.isUsed(u))
+                if (ctr.IsUsed(u))
                 {
                     sb.Append("=#").Append(newNum).Append(":");
                 }
@@ -285,9 +285,9 @@ namespace Pytocs.Core.Types
         /// </summary>
         protected class CyclicTypeRecorder
         {
+            private readonly IDictionary<DataType, int> elements = new Dictionary<DataType, int>();
+            private readonly ISet<DataType> used = new HashSet<DataType>();
             private int count = 0;
-            private IDictionary<DataType, int> elements = new Dictionary<DataType, int>();
-            private ISet<DataType> used = new HashSet<DataType>();
 
             public int Push(DataType t)
             {
@@ -315,7 +315,7 @@ namespace Pytocs.Core.Types
                 }
             }
 
-            public bool isUsed(DataType t)
+            public bool IsUsed(DataType t)
             {
                 return used.Contains(t);
             }

@@ -44,12 +44,6 @@ namespace Pytocs.Core.Types
             return visitor.VisitUnion(this);
         }
 
-        public bool isEmpty()
-        {
-            return types.Count == 0;
-        }
-
-
         /**
          * Returns true if t1 == t2 or t1 is a union type that contains t2.
          */
@@ -57,7 +51,7 @@ namespace Pytocs.Core.Types
         {
             if (t1 is UnionType)
             {
-                return ((UnionType) t1).contains(t2);
+                return ((UnionType) t1).Contains(t2);
             }
             else
             {
@@ -111,7 +105,7 @@ namespace Pytocs.Core.Types
             }
         }
 
-        public bool contains(DataType t)
+        public bool Contains(DataType t)
         {
             return types.Contains(t);
         }
@@ -166,7 +160,7 @@ namespace Pytocs.Core.Types
         public DataType FirstUseful()
         {
             return types
-                .Where(type => (!type.isUnknownType() && type != DataType.None))
+                .Where(type => (!type.IsUnknownType() && type != DataType.None))
                 .FirstOrDefault();
         }
 

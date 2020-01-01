@@ -555,7 +555,7 @@ namespace Pytocs.Core.TypeInference
                 Bind(analyzer, xs, dict.ToTupleType(xs.Count), kind);
                 break;
             default:
-                if (rvalue.isUnknownType())
+                if (rvalue.IsUnknownType())
                 {
                     foreach (Exp x in xs)
                     {
@@ -612,7 +612,7 @@ namespace Pytocs.Core.TypeInference
                     {
                         if (ent == null || !(ent.type is FunType))
                         {
-                            if (!iterType.isUnknownType())
+                            if (!iterType.IsUnknownType())
                             {
                                 analyzer.AddProblem(iter, "not an iterable type: " + iterType);
                             }
@@ -649,7 +649,7 @@ namespace Pytocs.Core.TypeInference
 
         private static void setAttrType(Analyzer analyzer, AttributeAccess attr, DataType targetType, DataType attrType)
         {
-            if (targetType.isUnknownType())
+            if (targetType.IsUnknownType())
             {
                 analyzer.AddProblem(attr, "Can't set attribute for UnknownType");
                 return;

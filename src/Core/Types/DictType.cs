@@ -23,10 +23,10 @@ namespace Pytocs.Core.Types
         public DataType KeyType;
         public DataType ValueType;
 
-        public DictType(DataType key0, DataType val0)
+        public DictType(DataType key, DataType val)
         {
-            KeyType = key0;
-            ValueType = val0;
+            KeyType = key;
+            ValueType = val;
         }
 
         public override T Accept<T>(IDataTypeVisitor<T> visitor)
@@ -45,7 +45,7 @@ namespace Pytocs.Core.Types
             TupleType ret = new TupleType();        //$ NO registation. Badness?
             for (int i = 0; i < n; i++)
             {
-                ret.add(KeyType);
+                ret.Add(KeyType);
             }
             return ret;
         }

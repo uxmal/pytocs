@@ -72,7 +72,7 @@ namespace Pytocs.Core.TypeInference
         private readonly Dictionary<string, List<Diagnostic>> parseErrors = new Dictionary<string, List<Diagnostic>>();
         private readonly List<string> path = new List<string>();
         private readonly HashSet<FunType> uncalled = new HashSet<FunType>();
-        private readonly HashSet<object> callStack = new HashSet<object>();
+        private readonly HashSet<Exp> callStack = new HashSet<Exp>();
         private readonly HashSet<object> importStack = new HashSet<object>();
         private readonly ILogger logger;
         private readonly IFileSystem FileSystem;
@@ -80,12 +80,12 @@ namespace Pytocs.Core.TypeInference
         private readonly HashSet<string> failedToParse = new HashSet<string>();
         private readonly string suffix;
         private readonly DateTime startTime;
+        private readonly Dictionary<string, object> options;
 
         private IProgress loadingProgress;
         private string cacheDir;
         private string cwd = null;
         private string projectDir;
-        private Dictionary<string, object> options;
 
         public AnalyzerImpl(ILogger logger)
             : this(new FileSystem(), logger, new Dictionary<string, object>(), DateTime.Now)
@@ -410,7 +410,7 @@ namespace Pytocs.Core.TypeInference
 
             PushImportStack(path);
             loadingProgress.Tick();
-            Debug.Print($"*** Path {path}");
+
             var ast = GetAstForFile(path);
             DataType type = null;
             if (ast == null)
