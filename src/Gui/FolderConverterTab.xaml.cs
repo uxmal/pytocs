@@ -56,7 +56,7 @@ namespace Pytocs.Gui
         private async void BrowseSource_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new OpenFolderDialog();
-            var result = await dialog.ShowAsync();
+            var result = await dialog.ShowAsync(null);
 
             if (!string.IsNullOrWhiteSpace(result))
             {
@@ -67,7 +67,7 @@ namespace Pytocs.Gui
         private async void BrowseTarget_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new OpenFolderDialog();
-            var result = await dialog.ShowAsync();
+            var result = await dialog.ShowAsync((Window) this.Parent);
 
             if (!string.IsNullOrWhiteSpace(result))
             {

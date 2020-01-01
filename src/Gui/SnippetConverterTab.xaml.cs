@@ -65,7 +65,7 @@ namespace Pytocs.Gui
         {
             var dialog = new OpenFileDialog();
 
-            var fileName = (await dialog.ShowAsync()).FirstOrDefault();
+            var fileName = (await dialog.ShowAsync(null)).FirstOrDefault();
 
             if (fileName != null)
             {

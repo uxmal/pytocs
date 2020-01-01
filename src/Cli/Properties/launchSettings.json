@@ -2,8 +2,8 @@
   "profiles": {
     "Cli": {
       "commandName": "Project",
-      "commandLineArgs": "-r",
-      "workingDirectory": "D:\\dev\\uxmal\\pytocs\\zoo\\django\\django"
+      "commandLineArgs": "-r .",
+      "workingDirectory": "D:\\dev\\uxmal\\rev\\angr\\cle"
     }
   }
 }
