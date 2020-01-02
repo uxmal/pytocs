@@ -28,7 +28,7 @@ namespace Pytocs.Core.Translate
 {
     public class ModuleTranslator : StatementTranslator
     {
-        private CodeGenerator gen;
+        private readonly CodeGenerator gen;
 
         public ModuleTranslator(TypeReferenceTranslator types, CodeGenerator gen) : base(null, types, gen, new SymbolGenerator(), new HashSet<string>())
         {
@@ -54,7 +54,9 @@ namespace Pytocs.Core.Translate
 
         public void GenerateDocComment(string text, List<CodeCommentStatement> comments)
         {
-            var lines = text.Replace("\r\n", "\n").Split('\r', '\n').Select(line => new CodeCommentStatement(" " + line));
+            var lines = text.Replace("\r\n", "\n")
+                .Split('\r', '\n')
+                .Select(line => new CodeCommentStatement(" " + line));
             comments.AddRange(lines);
         }
 
@@ -64,8 +66,7 @@ namespace Pytocs.Core.Translate
             var strStmt = s as ExpStatement;
             if (strStmt == null)
             {
-                var suite = s as SuiteStatement;
-                if (suite == null)
+                if (!(s is SuiteStatement suite))
                     return false;
                 strStmt = suite.stmts[0] as ExpStatement;
                 if (strStmt == null)

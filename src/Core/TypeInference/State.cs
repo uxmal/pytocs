@@ -54,7 +54,7 @@ namespace Pytocs.Core.TypeInference
 
             if (type == StateType.CLASS)
             {
-                this.Forwarding = parent == null ? null : parent.getForwarding();
+                this.Forwarding = parent?.getForwarding();
             }
             else
             {
@@ -182,11 +182,11 @@ namespace Pytocs.Core.TypeInference
             Binding b = analyzer.CreateBinding(id, node, type, kind);
             if (type is ModuleType mt)
             {
-                b.qname = mt.qname;
+                b.QName = mt.qname;
             }
             else
             {
-                b.qname = analyzer.ExtendPath(this.Path, id);
+                b.QName = analyzer.ExtendPath(this.Path, id);
             }
             Update(id, b);
             return b;
@@ -197,11 +197,11 @@ namespace Pytocs.Core.TypeInference
             Binding b = analyzer.CreateBinding(id, node, type, kind);
             if (type is ModuleType mt)
             {
-                b.qname = mt.qname;
+                b.QName = mt.qname;
             }
             else
             {
-                b.qname = ExtendPath(analyzer, id);
+                b.QName = ExtendPath(analyzer, id);
             }
             Update(id, b);
             return b;
@@ -365,7 +365,7 @@ namespace Pytocs.Core.TypeInference
             DataType t = DataType.Unknown;
             foreach (Binding b in bs)
             {
-                t = UnionType.Union(t, b.type);
+                t = UnionType.Union(t, b.Type);
             }
             return t;
         }
@@ -610,7 +610,7 @@ namespace Pytocs.Core.TypeInference
                 {
                     foreach (Binding ent in ents)
                     {
-                        if (ent == null || !(ent.type is FunType))
+                        if (ent == null || !(ent.Type is FunType))
                         {
                             if (!iterType.IsUnknownType())
                             {
@@ -620,7 +620,7 @@ namespace Pytocs.Core.TypeInference
                         }
                         else
                         {
-                            this.Bind(analyzer, target, ((FunType) ent.type).GetReturnType(), kind);
+                            this.Bind(analyzer, target, ((FunType) ent.Type).GetReturnType(), kind);
                         }
                     }
                 }

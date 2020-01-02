@@ -55,6 +55,8 @@ namespace Pytocs.UnitTests.Translate
                 new SuiteStatement(stm, filename, 0, 0),
                 filename, 0, 0);
             ana.LoadModule(mod);
+            ana.ApplyUncalled();
+            
             var types = new TypeReferenceTranslator(ana.BuildTypeDictionary());
             var xlt = new ModuleTranslator(types, gen);
             xlt.Translate(stm);
@@ -301,7 +303,7 @@ pt = Point(3.5, -0.4)
             
             public object y;
             
-            public Point(object x, object y) {
+            public Point(double x, double y) {
                 this.x = x;
                 this.y = y;
             }
@@ -504,6 +506,28 @@ class TestClass:
             } else {
                 return ((ELFSymbolType) this).@__new__(cls, value);
             }
+        }
+    }
+}
+";
+            Assert.Equal(sExp, XlatModule(pySrc));
+        }
+
+        [Fact]
+        public void Func_Default_Args()
+        {
+            var pySrc =
+@"def foo(i=0,s='empty',f=True):
+    return (i, s, f)
+";
+
+            var sExp =
+@"namespace test {
+    
+    public static class module {
+        
+        public static object foo(int i = 0, string s = ""empty"", bool f = true) {
+            return (i, s, f);
         }
     }
 }

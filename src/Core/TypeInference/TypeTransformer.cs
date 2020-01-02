@@ -450,7 +450,7 @@ namespace Pytocs.Core.TypeInference
             int dSize = dTypes == null ? 0 : dTypes.Count;
             int nPos = pSize - dSize;
 
-            if (star != null && star is ListType list)
+            if (star is ListType list)
             {
                 star = list.ToTupleType();
             }
@@ -655,7 +655,6 @@ namespace Pytocs.Core.TypeInference
         {
             var it = f.variable.Accept(this);
             scope.BindIterator(analyzer, f.variable, f.collection, it, BindingKind.SCOPE);
-            //f.visit(node.ifs, s);
             return f.variable.Accept(this);
         }
 
@@ -822,6 +821,27 @@ namespace Pytocs.Core.TypeInference
             }
             analyzer.AddUncalled(fun);
 
+            BindingKind funkind = DetermineFunctionKind(f);
+
+            var ct = scope.DataType as ClassType;
+            if (ct != null)
+            {
+                fun.Class = ct;
+            }
+
+            scope.Bind(analyzer, f.name, fun, funkind);
+            var firstArgType = FirstArgumentType(f, fun, ct);
+            if (firstArgType != null)
+            {
+                fun.Table.Bind(analyzer, f.parameters[0].Id, firstArgType, BindingKind.PARAMETER);
+            }
+
+            f.body.Accept(new TypeTransformer(fun.Table, this.analyzer));
+            return DataType.Cont;
+        }
+
+        private BindingKind DetermineFunctionKind(FunctionDef f)
+        {
             BindingKind funkind;
             if (scope.stateType == State.StateType.CLASS)
             {
@@ -839,21 +859,7 @@ namespace Pytocs.Core.TypeInference
                 funkind = BindingKind.FUNCTION;
             }
 
-            var ct = scope.DataType as ClassType;
-            if (ct != null)
-            {
-                fun.Class = ct;
-            }
-
-            scope.Bind(analyzer, f.name, fun, funkind);
-            var firstArgType = FirstArgumentType(f, fun, ct);
-            if (firstArgType != null)
-            {
-                fun.Table.Bind(analyzer, f.parameters[0].Id, firstArgType, BindingKind.PARAMETER);
-            }
-
-            f.body.Accept(new TypeTransformer(fun.Table, this.analyzer));
-            return DataType.Cont;
+            return funkind;
         }
 
         public DataType VisitGlobal(GlobalStatement g)

@@ -264,7 +264,7 @@ namespace Pytocs.Core.TypeInference
         {
             return ModuleTable.table.Values
                 .SelectMany(g =>g)
-                .Where(g => g.kind == BindingKind.MODULE && 
+                .Where(g => g.Kind == BindingKind.MODULE && 
                             !g.IsBuiltin && !g.IsSynthetic);
         }
 
@@ -646,17 +646,17 @@ namespace Pytocs.Core.TypeInference
             var types = new Dictionary<Node, DataType>();
             foreach (var b in GetAllBindings())
             {
-                var dt = b.type;
-                if (types.TryGetValue(b.node, out var dtOld))
+                var dt = b.Type;
+                if (types.TryGetValue(b.Node, out var dtOld))
                 {
                     dt = UnionType.CreateUnion(new[] { dt, dtOld });
                 }
-                types[b.node] = dt;
+                types[b.Node] = dt;
             }
 
             foreach (var b in GetAllBindings())
             {
-                var dt = types[b.node];
+                var dt = types[b.Node];
                 foreach (var r in b.References)
                 {
                     if (types.TryGetValue(r, out var dtOld))
@@ -680,12 +680,12 @@ namespace Pytocs.Core.TypeInference
             // mark unused variables
             foreach (Binding b in allBindings)
             {
-                if (!(b.type is ClassType) &&
-                    !(b.type is FunType) &&
-                    !(b.type is ModuleType)
+                if (!(b.Type is ClassType) &&
+                    !(b.Type is FunType) &&
+                    !(b.Type is ModuleType)
                     && b.References.Count == 0)
                 {
-                    AddProblem(b.node, string.Format(Resources.UnusedVariable, b.name));
+                    AddProblem(b.Node, string.Format(Resources.UnusedVariable, b.Name));
                 }
             }
             msg(GetAnalysisSummary());
@@ -869,10 +869,10 @@ namespace Pytocs.Core.TypeInference
             foreach (Binding b in bs)
             {
                 putRef(attr, b);
-                if (attr.Parent != null && attr.Parent is Application &&
-                        b.type is FunType && targetType is InstanceType)
+                if (attr.Parent is Application &&
+                        b.Type is FunType && targetType is InstanceType)
                 {  // method call 
-                    ((FunType) b.type).SelfType = targetType;
+                    ((FunType) b.Type).SelfType = targetType;
                 }
             }
         }

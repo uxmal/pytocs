@@ -415,7 +415,6 @@ namespace Pytocs.Core.Syntax
 
     public class DictInitializer : Exp
     {
-        public List<KeyValuePair<Exp, Exp>> KeyValues;
 
         public DictInitializer(List<KeyValuePair<Exp, Exp>> keyValues, string filename, int start, int end)
             : base(filename, start, end)
@@ -423,6 +422,7 @@ namespace Pytocs.Core.Syntax
             this.KeyValues = keyValues;
         }
 
+        public List<KeyValuePair<Exp, Exp>> KeyValues { get; }
 
         public override T Accept<T>(IExpVisitor<T> v)
         {
@@ -838,10 +838,10 @@ namespace Pytocs.Core.Syntax
     {
         public Exp variable;
         public Exp collection;
-        public bool Async { get; set; }
 
         public CompFor(string filename, int start, int end) : base(filename, start, end) { }
 
+        public bool Async { get; set; }
 
         public override T Accept<T>(IExpVisitor<T> v)
         {

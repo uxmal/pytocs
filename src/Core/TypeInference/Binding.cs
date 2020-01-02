@@ -28,31 +28,13 @@ namespace Pytocs.Core.TypeInference
     /// </summary>
     public class Binding : IComparable<Binding>
     {
-        public string name { get; private set; }             // unqualified name
-        public readonly Node node;               // entity that has the type.
-        public string qname;            // qualified name
-        public DataType type;           // inferred type
-        public BindingKind kind;        // name usage context
-
-        /// <summary>
-        /// The places where this binding is referenced.
-        /// </summary>
-        public ISet<Node> References { get; }
-
-        // fields from Def
-        public int start = -1;
-        public int end = -1;
-        public int bodyStart = -1;
-        public int bodyEnd = -1;
-        public string fileOrUrl;
-
         public Binding(string id, Node node, DataType type, BindingKind kind)
         {
-            this.name = id;
-            this.qname = type.Table.Path;
-            this.type = type;
-            this.kind = kind;
-            this.node = node;
+            this.Name = id;
+            this.QName = type.Table.Path;
+            this.Type = type;
+            this.Kind = kind;
+            this.Node = node;
             this.References = new HashSet<Node>();
 
             if (node is Url u)
@@ -71,64 +53,28 @@ namespace Pytocs.Core.TypeInference
             {
                 fileOrUrl = node.Filename;
                 if (node is Identifier idNode)
-                    name = node.Name;
+                    Name = idNode.Name;
             }
-            SetLocationInfo(node);
+            Name = SetLocationInfo(node);
         }
 
-        private void SetLocationInfo(Node node)
-        {
-            this.start = node.Start;
-            this.end = node.End;
+        public readonly string Name;            // unqualified name
+        public readonly Node Node;              // entity that has the type.
+        public readonly BindingKind Kind;       // name usage context
+        public string QName;                    // qualified name
+        public DataType Type;                   // inferred type
 
-            Node parent = node.Parent;
-            if ((parent is FunctionDef def && def.name == node) ||
-                    (parent is ClassDef cldef && cldef.name == node))
-            {
-                this.bodyStart = parent.Start;
-                this.bodyEnd = parent.End;
-                return;
-            }
-            if (node is Module modNode)
-            {
-                name = modNode.Name;
-                this.start = 0;
-                this.end = 0;
-                this.bodyStart = node.Start;
-                this.bodyEnd = node.End;
-            }
-            else
-            {
-                this.bodyStart = node.Start;
-                this.bodyEnd = node.End;
-            }
-        }
+        /// <summary>
+        /// The places where this binding is referenced.
+        /// </summary>
+        public ISet<Node> References { get; }
 
-        public Str GetDocString()
-        {
-            Node parent = node.Parent;
-            if (parent is Pytocs.Core.Syntax.FunctionDef funcDef && funcDef.name == node)
-                return parent.GetDocString();
-            else
-                return node.GetDocString();
-        }
-
-        public void AddReference(Node node)
-        {
-            References.Add(node);
-        }
-
-        // merge one more type into the type
-        // used by stateful assignments which we can't track down the control flow
-        public void AddType(DataType t)
-        {
-            type = UnionType.Union(type, t);
-        }
-
-        public void SetType(DataType type)
-        {
-            this.type = type;
-        }
+        // fields from Def
+        public int start = -1;
+        public int end = -1;
+        public int bodyStart = -1;
+        public int bodyEnd = -1;
+        public string fileOrUrl;
 
         // True if this is a static attribute or method.
         public bool IsStatic { get; set; }
@@ -140,57 +86,87 @@ namespace Pytocs.Core.TypeInference
         /// True if not from a source file.
         /// </summary>
         public bool IsBuiltin { get; set; }
+        public string File => IsURL ? null : fileOrUrl;
 
-        public string getFirstFile()
+        public string URL => IsURL ? fileOrUrl : null;
+
+        public bool IsURL => fileOrUrl != null && fileOrUrl.StartsWith("http://");
+
+
+        private string SetLocationInfo(Node node)
         {
-            string file;
-            DataType bt = type;
-            if (bt is ModuleType mt)
+            this.start = node.Start;
+            this.end = node.End;
+
+            Node parent = node.Parent;
+            if ((parent is FunctionDef def && def.name == node) ||
+                    (parent is ClassDef cldef && cldef.name == node))
             {
-                file = mt.file;
-                return file ?? "<built-in module>";
+                this.bodyStart = parent.Start;
+                this.bodyEnd = parent.End;
+                return Name;
             }
-
-            file = getFile();
-            if (file != null)
+            if (node is Module modNode)
             {
-                return file;
+                this.start = 0;
+                this.end = 0;
+                this.bodyStart = node.Start;
+                this.bodyEnd = node.End;
+                return modNode.Name;
+
             }
-            return "<built-in binding>";
+            else
+            {
+                this.bodyStart = node.Start;
+                this.bodyEnd = node.End;
+                return Name;
+            }
         }
 
-        public string getFile()
+        public Str GetDocString()
         {
-            return isURL() ? null : fileOrUrl;
+            Node parent = Node.Parent;
+            if (parent is Pytocs.Core.Syntax.FunctionDef funcDef && funcDef.name == Node)
+                return parent.GetDocString();
+            else
+                return Node.GetDocString();
         }
 
-        public string getURL()
+        public void AddReference(Node node)
         {
-            return isURL() ? fileOrUrl : null;
+            References.Add(node);
         }
 
-        public bool isURL()
+        // merge one more type into the type
+        // used by stateful assignments which we can't track down the control flow
+        public void AddType(DataType t)
         {
-            return fileOrUrl != null && fileOrUrl.StartsWith("http://");
+            Type = UnionType.Union(Type, t);
         }
+
+        public void SetType(DataType type)
+        {
+            this.Type = type;
+        }
+
 
 
         /// <summary>
         /// Bindings can be sorted by their location for outlining purposes.
         /// </summary>
-        public int CompareTo(Binding o)
+        public int CompareTo(Binding that)
         {
-            return start - o.start;
+            return start - that.start;
         }
 
         public override string ToString()
         {
             StringBuilder sb = new StringBuilder();
             sb.Append("(binding");
-            sb.Append(":kind=").Append(kind);
-            sb.Append(":node=").Append(node);
-            sb.Append(":type=").Append(type);
-            sb.Append(":qname=").Append(qname);
+            sb.Append(":kind=").Append(Kind);
+            sb.Append(":node=").Append(Node);
+            sb.Append(":type=").Append(Type);
+            sb.Append(":qname=").Append(QName);
             sb.Append(":refs=");
             sb.Append("[");
             if (References.Count > 10)
@@ -218,13 +194,13 @@ namespace Pytocs.Core.TypeInference
             if (!(obj is Binding b))
                 return false;
 
-            return (Object.ReferenceEquals(node, b.node) &&
+            return (Object.ReferenceEquals(Node, b.Node) &&
                     Object.Equals(fileOrUrl, b.fileOrUrl));
         }
 
         public override int GetHashCode()
         {
-            return node.GetHashCode();
+            return Node.GetHashCode();
         }
     }
 

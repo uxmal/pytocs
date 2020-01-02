@@ -82,7 +82,7 @@ namespace Pytocs.Core.Translate
             foreach (var field in fields)
             {
                 var b = field.Value.First();
-                var (fieldType, ns) = types.Translate(b.type);
+                var (fieldType, ns) = types.Translate(b.Type);
                 gen.EnsureImports(ns);
                 yield return new CodeMemberField(fieldType, field.Key)
                 {
@@ -95,7 +95,7 @@ namespace Pytocs.Core.Translate
         {
             foreach (var b in value)
             {
-                if (b.kind == BindingKind.ATTRIBUTE
+                if (b.Kind == BindingKind.ATTRIBUTE
                     &&
                    (!b.IsSynthetic || b.References.Count != 0))
                     return true;
