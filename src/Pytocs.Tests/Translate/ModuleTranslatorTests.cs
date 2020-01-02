@@ -195,13 +195,13 @@ class MyClass:
     
     public static class @__init__ {
         
-        public static object static_func() {
+        public static void static_func() {
         }
     }
     
     public class MyClass {
         
-        public virtual object method(object arg) {
+        public virtual void method(object arg) {
             Console.WriteLine(arg);
         }
     }
@@ -366,7 +366,7 @@ class Frob:
             
             public int b;
             
-            public virtual object frob() {
+            public virtual void frob() {
                 this.a = ""Hello"";
                 this.b = 42;
             }
@@ -426,7 +426,7 @@ class TestClass:
         public class Foo
             : Bar {
             
-            public virtual object froz() {
+            public virtual void froz() {
                 base.froz();
             }
         }
@@ -452,7 +452,7 @@ class TestClass:
         public class Foo
             : Bar1, Bar2 {
             
-            public virtual object froz() {
+            public virtual void froz() {
                 ((Bar2) this).froz();
             }
         }
@@ -518,7 +518,7 @@ class TestClass:
         {
             var pySrc =
 @"def foo(i=0,s='empty',f=True):
-    return (i, s, f)
+    return (f, i, s)
 ";
 
             var sExp =
@@ -526,8 +526,8 @@ class TestClass:
     
     public static class module {
         
-        public static object foo(int i = 0, string s = ""empty"", bool f = true) {
-            return (i, s, f);
+        public static Tuple<bool, int, string> foo(int i = 0, string s = ""empty"", bool f = true) {
+            return (f, i, s);
         }
     }
 }

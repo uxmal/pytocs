@@ -535,6 +535,11 @@ namespace Pytocs.Core.CodeModel
                 genericArgs.Select(ga => new CodeTypeReference(ga)).ToArray());
         }
 
+        public CodeTypeReference TypeRef(string typeName, params CodeTypeReference[] genericArgs)
+        {
+            return new CodeTypeReference(typeName, genericArgs);
+        }
+
         public CodeAttributeDeclaration CustomAttr(CodeTypeReference typeRef, params CodeAttributeArgument [] args)
         {
             return new CodeAttributeDeclaration

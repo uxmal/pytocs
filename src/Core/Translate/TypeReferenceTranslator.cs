@@ -31,8 +31,9 @@ namespace Pytocs.Core.Translate
     /// </summary>
     public class TypeReferenceTranslator
     {
-        private const string SystemNamespace = "System";
-        private const string GenericCollectionNamespace = "System.Collections.Generic";
+        public const string SystemNamespace = "System";
+        public const string GenericCollectionNamespace = "System.Collections.Generic";
+        public const string TasksNamespace = "System.Threading.Tasks";
 
         private readonly Dictionary<Node, DataType> types;
         private readonly Stack<DataType> stackq;
@@ -105,7 +106,7 @@ namespace Pytocs.Core.Translate
                 return (
                     new CodeTypeReference("Set", dtSetElem),
                     Join(nmSetElem, GenericCollectionNamespace));
-            case UnionType u:
+            case UnionType _:
                 return (
                     new CodeTypeReference(typeof(object)),
                     null);
@@ -174,7 +175,6 @@ namespace Pytocs.Core.Translate
                 // Pick an arrow at random.
                 var arrow = fun.arrows.First();
                 var (args, nms) = Translate(arrow.Key);
-                var s = arrow.Value.GetType().Name;
                 if (arrow.Value is InstanceType i && i.classType is ClassType c && c.name == "None")
                 {
                     return (
@@ -207,7 +207,7 @@ namespace Pytocs.Core.Translate
             var tt = new CodeTypeReference(
                 "Tuple",
                 elementTypes.ToArray());
-            return (tt, Join(namespaces, SystemNamespace));
+            return (tt, Join(nms, SystemNamespace));
         }
 
         private (List<CodeTypeReference>, ISet<string>) TranslateTypes(IEnumerable<DataType> types, ISet<string> namespaces)
@@ -261,8 +261,9 @@ namespace Pytocs.Core.Translate
             }
         }
 
-        private static Dictionary<string, (string, string)> DefaultClassTranslations = new Dictionary<string, (string, string)>
+        private static readonly Dictionary<string, (string, string)> DefaultClassTranslations = new Dictionary<string, (string, string)>
         {
+            { "None", ("void", null) },
             { "NotImplementedError", (nameof(NotImplementedException), SystemNamespace) }
         };
     }

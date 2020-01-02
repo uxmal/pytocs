@@ -1532,9 +1532,10 @@ public static object func(object cfg_node) {
     await frobber
 ";
             var sExp =
-@"public static class testModule {
+@"using System.Threading.Tasks;
+public static class testModule {
     
-    public async static System.Threading.Tasks.Task<object> frobAsync() {
+    public async static Task<object> frobAsync() {
         await frobber;
     }
 }

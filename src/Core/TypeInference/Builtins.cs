@@ -53,8 +53,6 @@ namespace Pytocs.Core.TypeInference
             return new Url(REFERENCE_URL + path);
         }
 
-
-
         public static Url newDataModelUrl(string path)
         {
             return new Url(DATAMODEL_URL + path);

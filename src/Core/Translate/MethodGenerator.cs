@@ -69,9 +69,14 @@ namespace Pytocs.Core.Translate
             this.stmtXlat = new StatementTranslator(classDef, types, gen, gensym, globals);
         }
 
+        /// <summary>
+        /// Generate a C# method implementation from the Python function definition.
+        /// </summary>
         public CodeMemberMethod Generate()
         {
-            return Generate(CreateReturnType(), CreateFunctionParameters(args)); // () => bodyGenerator(f.body));
+            var parameters = CreateFunctionParameters(args);
+            var returnType = CreateReturnType();
+            return Generate(returnType, parameters);
         }
 
         protected virtual CodeMemberMethod Generate(CodeTypeReference retType, CodeParameterDeclarationExpression[] parms)
@@ -123,13 +128,23 @@ namespace Pytocs.Core.Translate
 
         private CodeTypeReference CreateReturnType()
         {
-            DataType dtRet = this.types.TypeOf(f.name);
-            Type tyRet;
-            if (isAsync)
-                tyRet = typeof(Task<object>);
+            var pyType = this.types.TypeOf(f.name);
+            CodeTypeReference dtRet;
+            if (pyType is FunType fnType)
+            {
+                pyType = fnType.GetReturnType();
+                (dtRet, _) = this.types.Translate(pyType);
+            }
             else
-                tyRet = typeof(object);
-            return new CodeTypeReference(tyRet);
+            {
+                dtRet = new CodeTypeReference(typeof(object));
+            }
+            if (isAsync)
+            {
+                gen.EnsureImport(TypeReferenceTranslator.TasksNamespace);
+                dtRet = gen.TypeRef("Task", dtRet);
+            }
+            return dtRet;
         }
 
         private CodeParameterDeclarationExpression[] CreateFunctionParameters(IEnumerable<Parameter> parameters)
@@ -162,7 +177,8 @@ namespace Pytocs.Core.Translate
             }
             else
             {
-                parameterType = new CodeTypeReference(typeof(object));
+                var (dtParam, _)= types.TranslateTypeOf(ta.Id);
+                parameterType = dtParam;
             }
             return new CodeParameterDeclarationExpression
             {
