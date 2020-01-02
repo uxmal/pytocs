@@ -26,12 +26,18 @@ namespace Pytocs.Core.TypeInference
 
         public void Push(DataType first, DataType second)
         {
-            stack.Add((first, second));
+            lock (stack)
+            {
+                stack.Add((first, second));
+            }
         }
 
         public void Pop(object first, object second)
         {
-            stack.RemoveAt(stack.Count - 1);
+            lock (stack)
+            {
+                stack.RemoveAt(stack.Count - 1);
+            }
         }
 
         public bool Contains(DataType first, DataType second)
