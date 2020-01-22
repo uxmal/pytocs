@@ -20,21 +20,21 @@ namespace Pytocs.Core.CodeModel
 {
     public class CSharpTypeWriter : ICodeMemberVisitor<int>
     {
+        private readonly CSharpExpressionWriter expWriter;
         private CodeTypeDeclaration type;
-        private IndentingTextWriter writer;
-        private CSharpExpressionWriter expWriter;
+        private readonly IndentingTextWriter writer;
 
         public CSharpTypeWriter(CodeTypeDeclaration type, IndentingTextWriter writer)
         {
             this.type = type;
             this.writer = writer;
-            this.expWriter = new CSharpExpressionWriter(writer);
+            expWriter = new CSharpExpressionWriter(writer);
         }
 
         public int VisitField(CodeMemberField field)
         {
             RenderMemberFieldAttributes(field.Attributes);
-            var expWriter = new CSharpExpressionWriter(writer);
+            CSharpExpressionWriter expWriter = new CSharpExpressionWriter(writer);
             expWriter.VisitTypeReference(field.FieldType);
             writer.Write(" ");
             writer.WriteName(field.FieldName);
@@ -43,6 +43,7 @@ namespace Pytocs.Core.CodeModel
                 writer.Write(" = ");
                 field.InitExpression.Accept(expWriter);
             }
+
             writer.Write(";");
             writer.WriteLine();
             return 0;
@@ -50,14 +51,15 @@ namespace Pytocs.Core.CodeModel
 
         public int VisitProperty(CodeMemberProperty property)
         {
-            foreach (var comment in property.Comments)
+            foreach (CodeCommentStatement comment in property.Comments)
             {
                 writer.Write("//");
                 writer.WriteLine(comment.Comment);
             }
+
             RenderCustomAttributes(property);
             RenderMemberFieldAttributes(property.Attributes);
-            var expWriter = new CSharpExpressionWriter(writer);
+            CSharpExpressionWriter expWriter = new CSharpExpressionWriter(writer);
             expWriter.VisitTypeReference(property.PropertyType);
             writer.Write(" ");
             writer.WriteName(property.Name);
@@ -67,7 +69,7 @@ namespace Pytocs.Core.CodeModel
             ++writer.IndentLevel;
             writer.Write("get");
 
-            var stmWriter = new CSharpStatementWriter(writer);
+            CSharpStatementWriter stmWriter = new CSharpStatementWriter(writer);
             stmWriter.WriteStatements(property.GetStatements);
             writer.WriteLine();
 
@@ -87,22 +89,128 @@ namespace Pytocs.Core.CodeModel
 
         public int VisitMethod(CodeMemberMethod method)
         {
-            foreach (var comment in method.Comments)
+            foreach (CodeCommentStatement comment in method.Comments)
             {
                 writer.Write("//");
                 writer.WriteLine(comment.Comment);
             }
+
             RenderCustomAttributes(method);
             RenderMethodAttributes(method);
-            var expWriter = new CSharpExpressionWriter(writer);
+            CSharpExpressionWriter expWriter = new CSharpExpressionWriter(writer);
             expWriter.VisitTypeReference(method.ReturnType);
             writer.Write(" ");
             writer.WriteName(method.Name);
             WriteMethodParameters(method);
 
-            var stmWriter = new CSharpStatementWriter(writer);
+            CSharpStatementWriter stmWriter = new CSharpStatementWriter(writer);
             stmWriter.WriteStatements(method.Statements);
             writer.WriteLine();
+            return 0;
+        }
+
+        public int VisitConstructor(CodeConstructor cons)
+        {
+            RenderCustomAttributes(cons);
+            RenderMethodAttributes(cons);
+            writer.WriteName(type.Name);
+            WriteMethodParameters(cons);
+            if (cons.BaseConstructorArgs.Count > 0)
+            {
+                writer.WriteLine();
+                ++writer.IndentLevel;
+                writer.Write(": ");
+                writer.Write("base");
+                writer.Write("(");
+                string sep = "";
+                foreach (CodeExpression e in cons.BaseConstructorArgs)
+                {
+                    writer.Write(sep);
+                    sep = ", ";
+                    e.Accept(expWriter);
+                }
+
+                writer.Write(")");
+                --writer.IndentLevel;
+            }
+
+            if (cons.ChainedConstructorArgs.Count > 0)
+            {
+                writer.WriteLine();
+                ++writer.IndentLevel;
+                writer.Write(": ");
+                writer.Write("this");
+                writer.Write("(");
+                string sep = "";
+                foreach (CodeExpression e in cons.ChainedConstructorArgs)
+                {
+                    writer.Write(sep);
+                    sep = ", ";
+                    e.Accept(expWriter);
+                }
+
+                writer.Write(")");
+                --writer.IndentLevel;
+            }
+
+            CSharpStatementWriter stmWriter = new CSharpStatementWriter(writer);
+            stmWriter.WriteStatements(cons.Statements);
+            writer.WriteLine();
+            return 0;
+        }
+
+        public int VisitTypeDefinition(CodeTypeDeclaration type)
+        {
+            CodeTypeDeclaration oldType = this.type;
+            this.type = type;
+            CSharpExpressionWriter expWriter = new CSharpExpressionWriter(writer);
+            foreach (CodeCommentStatement stm in type.Comments)
+            {
+                writer.Write("//");
+                writer.WriteLine(stm.Comment);
+            }
+
+            RenderTypeMemberAttributes(type.Attributes);
+            writer.Write("class");
+            writer.Write(" ");
+            writer.WriteName(type.Name);
+
+            if (type.BaseTypes.Count > 0)
+            {
+                writer.WriteLine();
+                ++writer.IndentLevel;
+                writer.Write(": ");
+                string sepStr = "";
+                foreach (CodeTypeReference bt in type.BaseTypes)
+                {
+                    writer.Write(sepStr);
+                    sepStr = ", ";
+                    expWriter.VisitTypeReference(bt);
+                }
+
+                --writer.IndentLevel;
+            }
+
+            writer.Write(" ");
+            writer.Write("{");
+            writer.WriteLine();
+            ++writer.IndentLevel;
+            bool sep = true;
+            foreach (CodeMember m in type.Members)
+            {
+                if (sep)
+                {
+                    writer.WriteLine();
+                }
+
+                sep = true;
+                m.Accept(this);
+            }
+
+            --writer.IndentLevel;
+            writer.Write("}");
+            writer.WriteLine();
+            this.type = oldType;
             return 0;
         }
 
@@ -122,71 +230,26 @@ namespace Pytocs.Core.CodeModel
                         writer.WriteLine(",");
                     }
                 }
+
                 --writer.IndentLevel;
             }
             else
             {
-                var sep = "";
-                foreach (var param in method.Parameters)
+                string sep = "";
+                foreach (CodeParameterDeclarationExpression param in method.Parameters)
                 {
                     writer.Write(sep);
                     sep = ", ";
                     WriteParameter(param);
                 }
             }
+
             writer.WriteName(")");
-        }
-
-        public int VisitConstructor(CodeConstructor cons)
-        {
-            RenderCustomAttributes(cons);
-            RenderMethodAttributes(cons);
-            writer.WriteName(type.Name);
-            WriteMethodParameters(cons);
-            if (cons.BaseConstructorArgs.Count > 0)
-            {
-                writer.WriteLine();
-                ++writer.IndentLevel;
-                writer.Write(": ");
-                writer.Write("base");
-                writer.Write("(");
-                var sep = "";
-                foreach (var e in cons.BaseConstructorArgs)
-                {
-                    writer.Write(sep);
-                    sep = ", ";
-                    e.Accept(expWriter);
-                }
-                writer.Write(")");
-                --writer.IndentLevel;
-            }
-            if (cons.ChainedConstructorArgs.Count > 0)
-            {
-                writer.WriteLine();
-                ++writer.IndentLevel;
-                writer.Write(": ");
-                writer.Write("this");
-                writer.Write("(");
-                var sep = "";
-                foreach (var e in cons.ChainedConstructorArgs)
-                {
-                    writer.Write(sep);
-                    sep = ", ";
-                    e.Accept(expWriter);
-                }
-                writer.Write(")");
-                --writer.IndentLevel;
-            }
-
-            var stmWriter = new CSharpStatementWriter(writer);
-            stmWriter.WriteStatements(cons.Statements);
-            writer.WriteLine();
-            return 0;
         }
 
         private void WriteParameter(CodeParameterDeclarationExpression param)
         {
-            var expType = new CSharpExpressionWriter(writer);
+            CSharpExpressionWriter expType = new CSharpExpressionWriter(writer);
             if (param.IsVarargs)
             {
                 writer.Write("params");
@@ -208,53 +271,6 @@ namespace Pytocs.Core.CodeModel
             }
         }
 
-        public int VisitTypeDefinition(CodeTypeDeclaration type)
-        {
-            var oldType = this.type;
-            this.type = type;
-            var expWriter = new CSharpExpressionWriter(writer);
-            foreach (var stm in type.Comments)
-            {
-                writer.Write("//");
-                writer.WriteLine(stm.Comment);
-            }
-            RenderTypeMemberAttributes(type.Attributes);
-            writer.Write("class");
-            writer.Write(" ");
-            writer.WriteName(type.Name);
-
-            if (type.BaseTypes.Count > 0)
-            {
-                writer.WriteLine();
-                ++writer.IndentLevel;
-                writer.Write(": ");
-                var sepStr = "";
-                foreach (var bt in type.BaseTypes)
-                {
-                    writer.Write(sepStr);
-                    sepStr = ", ";
-                    expWriter.VisitTypeReference(bt);
-                }
-                --writer.IndentLevel;
-            }
-            writer.Write(" ");
-            writer.Write("{");
-            writer.WriteLine();
-            ++writer.IndentLevel;
-            bool sep = true;
-            foreach (var m in type.Members)
-            {
-                if (sep) writer.WriteLine();
-                sep = true;
-                m.Accept(this);
-            }
-            --writer.IndentLevel;
-            writer.Write("}");
-            writer.WriteLine();
-            this.type = oldType;
-            return 0;
-        }
-
         private void RenderMethodAttributes(CodeMemberMethod method)
         {
             RenderAccessAttributes(method.Attributes);
@@ -263,35 +279,57 @@ namespace Pytocs.Core.CodeModel
                 writer.Write("async");
                 writer.Write(" ");
             }
+
             switch (method.Attributes & MemberAttributes.ScopeMask)
             {
-                case 0: writer.Write("virtual"); writer.Write(" "); break;
-                case MemberAttributes.Abstract: writer.Write("abstract"); writer.Write(" "); break;
+                case 0:
+                    writer.Write("virtual");
+                    writer.Write(" ");
+                    break;
+
+                case MemberAttributes.Abstract:
+                    writer.Write("abstract");
+                    writer.Write(" ");
+                    break;
+
                 case MemberAttributes.Final: break;
-                case MemberAttributes.Static: writer.Write("static"); writer.Write(" "); break;
-                case MemberAttributes.Override: writer.Write("override"); writer.Write(" "); break;
-                case MemberAttributes.Const: writer.Write("const"); writer.Write(" "); break;
+                case MemberAttributes.Static:
+                    writer.Write("static");
+                    writer.Write(" ");
+                    break;
+
+                case MemberAttributes.Override:
+                    writer.Write("override");
+                    writer.Write(" ");
+                    break;
+
+                case MemberAttributes.Const:
+                    writer.Write("const");
+                    writer.Write(" ");
+                    break;
             }
         }
 
         private void RenderCustomAttributes(CodeMember member)
         {
-            foreach (var attr in member.CustomAttributes)
+            foreach (CodeAttributeDeclaration attr in member.CustomAttributes)
             {
                 writer.Write("[");
                 writer.Write(attr.AttributeType.TypeName);
                 if (attr.Arguments.Count > 0)
                 {
                     writer.Write("(");
-                    var sep = "";
-                    foreach (var arg in attr.Arguments)
+                    string sep = "";
+                    foreach (CodeAttributeArgument arg in attr.Arguments)
                     {
                         writer.Write(sep);
                         sep = ",";
                         WriteAttrArgument(arg);
                     }
+
                     writer.Write(")");
                 }
+
                 writer.WriteLine("]");
             }
         }
@@ -303,6 +341,7 @@ namespace Pytocs.Core.CodeModel
                 writer.Write(arg.Name);
                 writer.Write("=");
             }
+
             arg.Value.Accept(expWriter);
         }
 
@@ -312,8 +351,15 @@ namespace Pytocs.Core.CodeModel
             switch (attrs & MemberAttributes.ScopeMask)
             {
                 case MemberAttributes.Final: break;
-                case MemberAttributes.Static: writer.Write("static"); writer.Write(" "); break;
-                case MemberAttributes.Const: writer.Write("const"); writer.Write(" "); break;
+                case MemberAttributes.Static:
+                    writer.Write("static");
+                    writer.Write(" ");
+                    break;
+
+                case MemberAttributes.Const:
+                    writer.Write("const");
+                    writer.Write(" ");
+                    break;
             }
         }
 
@@ -321,12 +367,25 @@ namespace Pytocs.Core.CodeModel
         {
             switch (attrs & MemberAttributes.AccessMask)
             {
-                case MemberAttributes.Private: writer.Write("private"); break;
-                case MemberAttributes.Family: writer.Write("protected"); break;
-                case MemberAttributes.Assembly: writer.Write("internal"); break;
-                case MemberAttributes.Public: writer.Write("public"); break;
+                case MemberAttributes.Private:
+                    writer.Write("private");
+                    break;
+
+                case MemberAttributes.Family:
+                    writer.Write("protected");
+                    break;
+
+                case MemberAttributes.Assembly:
+                    writer.Write("internal");
+                    break;
+
+                case MemberAttributes.Public:
+                    writer.Write("public");
+                    break;
+
                 default: return;
             }
+
             writer.Write(" ");
         }
 
@@ -336,7 +395,10 @@ namespace Pytocs.Core.CodeModel
             switch (attrs & MemberAttributes.ScopeMask)
             {
                 case MemberAttributes.Final: break;
-                case MemberAttributes.Static: writer.Write("static"); writer.Write(" "); break;
+                case MemberAttributes.Static:
+                    writer.Write("static");
+                    writer.Write(" ");
+                    break;
             }
         }
     }

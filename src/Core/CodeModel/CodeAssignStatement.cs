@@ -22,8 +22,8 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeAssignStatement(CodeExpression lhs, CodeExpression rhs)
         {
-            this.Destination = lhs;
-            this.Source = rhs;
+            Destination = lhs;
+            Source = rhs;
         }
 
         public CodeExpression Destination { get; set; }

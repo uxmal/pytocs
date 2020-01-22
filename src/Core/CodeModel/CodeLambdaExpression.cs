@@ -24,14 +24,14 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeLambdaExpression(CodeExpression[] args, CodeExpression expr)
         {
-            this.Arguments = args;
-            this.Body = expr;
+            Arguments = args;
+            Body = expr;
         }
 
         public CodeLambdaExpression(CodeExpression[] args, List<CodeStatement> stmts)
         {
-            this.Arguments = args;
-            this.Statements = stmts;
+            Arguments = args;
+            Statements = stmts;
         }
 
         public CodeExpression[] Arguments { get; set; }

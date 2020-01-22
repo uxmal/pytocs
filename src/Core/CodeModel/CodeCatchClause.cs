@@ -38,7 +38,8 @@ namespace Pytocs.Core.CodeModel
             CatchExceptionType = catchExceptionType;
         }
 
-        public CodeCatchClause(string localName, CodeTypeReference catchExceptionType, params CodeStatement[] statements) : this()
+        public CodeCatchClause(string localName, CodeTypeReference catchExceptionType,
+            params CodeStatement[] statements) : this()
         {
             LocalName = localName;
             CatchExceptionType = catchExceptionType;
@@ -47,6 +48,6 @@ namespace Pytocs.Core.CodeModel
 
         public CodeTypeReference CatchExceptionType { get; set; }
         public string LocalName { get; set; }
-        public List<CodeStatement> Statements { get; private set; }
+        public List<CodeStatement> Statements { get; }
     }
 }

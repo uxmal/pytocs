@@ -22,20 +22,20 @@ namespace Pytocs.Core.CodeModel
 {
     public class CodeApplicationExpression : CodeExpression
     {
-        public CodeExpression Method { get; private set; }
-
         private CodeApplicationExpression()
         {
-            this.Arguments = new List<CodeExpression>();
+            Arguments = new List<CodeExpression>();
         }
 
         public CodeApplicationExpression(CodeExpression fn, IEnumerable<CodeExpression> args) : this()
         {
-            this.Method = fn;
-            this.Arguments.AddRange(args);
+            Method = fn;
+            Arguments.AddRange(args);
         }
 
-        public List<CodeExpression> Arguments { get; private set; }
+        public CodeExpression Method { get; }
+
+        public List<CodeExpression> Arguments { get; }
 
         public override void Accept(ICodeExpressionVisitor visitor)
         {

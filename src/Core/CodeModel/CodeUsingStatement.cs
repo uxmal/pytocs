@@ -35,12 +35,12 @@ namespace Pytocs.Core.CodeModel
             Initializers.Add(new CodeAssignStatement(name, value));
         }
 
+        public List<CodeStatement> Initializers { get; }
+        public List<CodeStatement> Statements { get; }
+
         public override T Accept<T>(ICodeStatementVisitor<T> visitor)
         {
             return visitor.VisitUsing(this);
         }
-
-        public List<CodeStatement> Initializers { get; private set; }
-        public List<CodeStatement> Statements { get; private set; }
     }
 }

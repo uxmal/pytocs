@@ -22,16 +22,16 @@ namespace Pytocs.Core.CodeModel
 {
     public class CodeTryCatchFinallyStatement : CodeStatement
     {
-        public List<CodeStatement> TryStatements { get; private set; }
-        public List<CodeCatchClause> CatchClauses { get; private set; }
-        public List<CodeStatement> FinallyStatements { get; private set; }
-
         public CodeTryCatchFinallyStatement()
         {
             TryStatements = new List<CodeStatement>();
             CatchClauses = new List<CodeCatchClause>();
             FinallyStatements = new List<CodeStatement>();
         }
+
+        public List<CodeStatement> TryStatements { get; }
+        public List<CodeCatchClause> CatchClauses { get; }
+        public List<CodeStatement> FinallyStatements { get; }
 
         public override T Accept<T>(ICodeStatementVisitor<T> visitor)
         {

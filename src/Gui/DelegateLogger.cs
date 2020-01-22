@@ -16,7 +16,6 @@
 
 #endregion License
 
-using Pytocs.Core;
 using System;
 using System.Diagnostics;
 using System.Text;
@@ -42,7 +41,7 @@ namespace Pytocs.Gui
 
         public void Error(Exception ex, string format, params object[] args)
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
             sb.AppendFormat(format, args);
             while (ex != null)
             {
@@ -50,6 +49,7 @@ namespace Pytocs.Gui
                 sb.Append(ex.Message);
                 ex = ex.InnerException;
             }
+
             Write(TraceLevel.Error, sb.ToString());
         }
 

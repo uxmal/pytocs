@@ -24,7 +24,7 @@ namespace Pytocs.Core.CodeModel
 
         public CodeNumericLiteral(string sLiteral)
         {
-            this.Literal = sLiteral;
+            Literal = sLiteral;
         }
 
         public override T Accept<T>(ICodeExpressionVisitor<T> visitor)

@@ -28,19 +28,20 @@ namespace Pytocs.Core.CodeModel
 
         public CodeParameterDeclarationExpression(CodeTypeReference type, string name)
         {
-            this.ParameterType = type;
-            this.ParameterName = name;
+            ParameterType = type;
+            ParameterName = name;
         }
 
         public CodeParameterDeclarationExpression(Type type, string name)
         {
-            this.ParameterType = new CodeTypeReference(type);
-            this.ParameterName = name;
+            ParameterType = new CodeTypeReference(type);
+            ParameterName = name;
         }
 
-        public CodeParameterDeclarationExpression(Type type, string name, CodeExpression defaultValue) : this(type, name)
+        public CodeParameterDeclarationExpression(Type type, string name, CodeExpression defaultValue) : this(type,
+            name)
         {
-            this.DefaultValue = defaultValue;
+            DefaultValue = defaultValue;
         }
 
         public CodeTypeReference ParameterType { get; set; }

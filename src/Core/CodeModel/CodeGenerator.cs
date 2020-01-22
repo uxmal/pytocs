@@ -24,18 +24,18 @@ namespace Pytocs.Core.CodeModel
 {
     public class CodeGenerator
     {
-        private CSharpCodeProvider provider;
-        private CodeCompileUnit unt;
         private bool isInit;
+        private readonly CSharpCodeProvider provider;
+        private readonly CodeCompileUnit unt;
 
         public CodeGenerator(CodeCompileUnit unt, string modulePath, string moduleName)
         {
             this.unt = unt;
-            this.isInit = moduleName == "__init__";
-            this.provider = new CSharpCodeProvider();
-            this.Scope = new List<CodeStatement>();  // dummy scope.
-            this.CurrentNamespace = new CodeNamespace(modulePath);
-            this.CurrentType = new CodeTypeDeclaration(moduleName)
+            isInit = moduleName == "__init__";
+            provider = new CSharpCodeProvider();
+            Scope = new List<CodeStatement>(); // dummy scope.
+            CurrentNamespace = new CodeNamespace(modulePath);
+            CurrentType = new CodeTypeDeclaration(moduleName)
             {
                 IsClass = true,
                 Attributes = MemberAttributes.Static | MemberAttributes.Public
@@ -63,8 +63,8 @@ namespace Pytocs.Core.CodeModel
 
         public CodeCatchClause CatchClause(string localName, CodeTypeReference type, Action generateClauseBody)
         {
-            var clause = new CodeCatchClause(localName, type);
-            var oldScope = Scope;
+            CodeCatchClause clause = new CodeCatchClause(localName, type);
+            List<CodeStatement> oldScope = Scope;
             Scope = clause.Statements;
             generateClauseBody();
             Scope = oldScope;
@@ -77,17 +77,17 @@ namespace Pytocs.Core.CodeModel
             Func<IEnumerable<CodeMemberField>> fieldGenerator,
             Action bodyGenerator)
         {
-            var oldScope = Scope;
+            List<CodeStatement> oldScope = Scope;
             Scope = new List<CodeStatement>();
 
-            var c = new CodeTypeDeclaration
+            CodeTypeDeclaration c = new CodeTypeDeclaration
             {
                 IsClass = true,
-                Name = name,
+                Name = name
             };
 
             // classes in __init__ files go directly into the namespace.
-            if (this.isInit)
+            if (isInit)
             {
                 CurrentNamespace.Types.Add(c);
             }
@@ -95,12 +95,13 @@ namespace Pytocs.Core.CodeModel
             {
                 AddMemberWithComments(c);
             }
+
             c.BaseTypes.AddRange(baseClasses.Select(b => new CodeTypeReference(b)).ToArray());
-            var old = CurrentType;
-            var oldMethod = CurrentMember;
-            var oldStmts = CurrentMemberStatements;
-            var oldComments = CurrentMemberComments;
-            var oldIsInit = isInit;
+            CodeTypeDeclaration old = CurrentType;
+            CodeMember oldMethod = CurrentMember;
+            List<CodeStatement> oldStmts = CurrentMemberStatements;
+            List<CodeCommentStatement> oldComments = CurrentMemberComments;
+            bool oldIsInit = isInit;
             CurrentType = c;
             CurrentMember = null;
             CurrentMemberStatements = null;
@@ -127,19 +128,19 @@ namespace Pytocs.Core.CodeModel
 
         public CodeAssignStatement Assign(CodeExpression lhs, CodeExpression rhs)
         {
-            var ass = new CodeAssignStatement(lhs, rhs);
+            CodeAssignStatement ass = new CodeAssignStatement(lhs, rhs);
             Scope.Add(ass);
             return ass;
         }
 
         public CodeConditionStatement If(CodeExpression test, Action xlatThen, Action xlatElse)
         {
-            var i = new CodeConditionStatement
+            CodeConditionStatement i = new CodeConditionStatement
             {
                 Condition = test
             };
             Scope.Add(i);
-            var old = Scope;
+            List<CodeStatement> old = Scope;
             Scope = i.TrueStatements;
             xlatThen();
             Scope = i.FalseStatements;
@@ -150,9 +151,9 @@ namespace Pytocs.Core.CodeModel
 
         public CodeStatement Foreach(CodeExpression exp, CodeExpression list, Action xlatLoopBody)
         {
-            var c = new CodeForeachStatement(exp, list);
+            CodeForeachStatement c = new CodeForeachStatement(exp, list);
             Scope.Add(c);
-            var old = Scope;
+            List<CodeStatement> old = Scope;
             Scope = c.Statements;
             xlatLoopBody();
             Scope = old;
@@ -187,36 +188,36 @@ namespace Pytocs.Core.CodeModel
         public CodeExpression ApplyMethod(CodeExpression obj, string method, params CodeExpression[] args)
         {
             return new CodeApplicationExpression(
-                this.MethodRef(obj, method),
+                MethodRef(obj, method),
                 args);
         }
 
         public void SetCurrentMethod(CodeMemberMethod method)
         {
-            this.CurrentMember = method;
-            this.CurrentMemberStatements = method.Statements;
-            this.CurrentMemberComments = method.Comments;
+            CurrentMember = method;
+            CurrentMemberStatements = method.Statements;
+            CurrentMemberComments = method.Comments;
         }
 
         public void SetCurrentPropertyAccessor(
             CodeMemberProperty property,
             List<CodeStatement> stmts)
         {
-            this.CurrentMember = property;
-            this.CurrentMemberStatements = stmts;
-            this.CurrentMemberComments = property.Comments;
+            CurrentMember = property;
+            CurrentMemberStatements = stmts;
+            CurrentMemberComments = property.Comments;
         }
 
         public CodeStatement SideEffect(CodeExpression exp)
         {
-            var sideeffect = new CodeExpressionStatement(exp);
+            CodeExpressionStatement sideeffect = new CodeExpressionStatement(exp);
             Scope.Add(sideeffect);
             return sideeffect;
         }
 
         public CodeConstructor Constructor(IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
         {
-            var cons = new CodeConstructor
+            CodeConstructor cons = new CodeConstructor
             {
                 Attributes = MemberAttributes.Public | MemberAttributes.Final
             };
@@ -227,9 +228,10 @@ namespace Pytocs.Core.CodeModel
             return cons;
         }
 
-        public CodeMemberMethod Method(string name, CodeTypeReference retValue, IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
+        public CodeMemberMethod Method(string name, CodeTypeReference retValue,
+            IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
         {
-            var method = new CodeMemberMethod
+            CodeMemberMethod method = new CodeMemberMethod
             {
                 Name = name,
                 Attributes = MemberAttributes.Public,
@@ -242,9 +244,10 @@ namespace Pytocs.Core.CodeModel
             return method;
         }
 
-        public CodeMemberMethod StaticMethod(string name, CodeTypeReference retType, IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
+        public CodeMemberMethod StaticMethod(string name, CodeTypeReference retType,
+            IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
         {
-            var method = new CodeMemberMethod
+            CodeMemberMethod method = new CodeMemberMethod
             {
                 Name = name,
                 Attributes = MemberAttributes.Public | MemberAttributes.Static,
@@ -259,7 +262,7 @@ namespace Pytocs.Core.CodeModel
 
         public CodeMemberMethod LambdaMethod(IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
         {
-            var method = new CodeMemberMethod();
+            CodeMemberMethod method = new CodeMemberMethod();
             method.Parameters.AddRange(parms.ToArray());
             GenerateMethodBody(method, body);
             return method;
@@ -267,10 +270,10 @@ namespace Pytocs.Core.CodeModel
 
         private void GenerateMethodBody(CodeMemberMethod method, Action body)
         {
-            var old = Scope;
-            var oldMethod = CurrentMember;
-            var oldStatements = CurrentMemberStatements;
-            var oldComments = CurrentMemberComments;
+            List<CodeStatement> old = Scope;
+            CodeMember oldMethod = CurrentMember;
+            List<CodeStatement> oldStatements = CurrentMemberStatements;
+            List<CodeCommentStatement> oldComments = CurrentMemberComments;
             SetCurrentMethod(method);
             Scope = method.Statements;
             body();
@@ -319,9 +322,9 @@ namespace Pytocs.Core.CodeModel
             CodeTypeReference fieldType,
             string fieldName)
         {
-            var field = new CodeMemberField(fieldType, fieldName)
+            CodeMemberField field = new CodeMemberField(fieldType, fieldName)
             {
-                Attributes = MemberAttributes.Public,
+                Attributes = MemberAttributes.Public
             };
             AddMemberWithComments(field);
             return field;
@@ -329,10 +332,10 @@ namespace Pytocs.Core.CodeModel
 
         public CodeMemberField Field(string fieldName, CodeExpression initializer)
         {
-            var field = new CodeMemberField(typeof(object), fieldName)
+            CodeMemberField field = new CodeMemberField(typeof(object), fieldName)
             {
                 Attributes = MemberAttributes.Public,
-                InitExpression = initializer,
+                InitExpression = initializer
             };
             AddMemberWithComments(field);
             return field;
@@ -350,14 +353,14 @@ namespace Pytocs.Core.CodeModel
 
         public CodeThrowExceptionStatement Throw(CodeExpression codeExpression)
         {
-            var t = new CodeThrowExceptionStatement(codeExpression);
+            CodeThrowExceptionStatement t = new CodeThrowExceptionStatement(codeExpression);
             Scope.Add(t);
             return t;
         }
 
         public CodeThrowExceptionStatement Throw()
         {
-            var t = new CodeThrowExceptionStatement();
+            CodeThrowExceptionStatement t = new CodeThrowExceptionStatement();
             Scope.Add(t);
             return t;
         }
@@ -375,7 +378,7 @@ namespace Pytocs.Core.CodeModel
         public CodeExpression ListInitializer(CodeTypeReference elemType, IEnumerable<CodeExpression> exprs)
         {
             EnsureImport("System.Collections.Generic");
-            var list = new CodeObjectCreateExpression
+            CodeObjectCreateExpression list = new CodeObjectCreateExpression
             {
                 Type = new CodeTypeReference("List", elemType)
             };
@@ -391,7 +394,10 @@ namespace Pytocs.Core.CodeModel
         public void EnsureImport(string nmespace)
         {
             if (CurrentNamespace.Imports.Where(i => i.Namespace == nmespace).Any())
+            {
                 return;
+            }
+
             CurrentNamespace.Imports.Add(new CodeNamespaceImport(nmespace));
         }
 
@@ -403,8 +409,11 @@ namespace Pytocs.Core.CodeModel
         public void EnsureImports(IEnumerable<string> nmespaces)
         {
             if (nmespaces == null)
+            {
                 return;
-            foreach (var nmspace in nmespaces)
+            }
+
+            foreach (string nmspace in nmespaces)
             {
                 EnsureImport(nmspace);
             }
@@ -415,8 +424,8 @@ namespace Pytocs.Core.CodeModel
             IEnumerable<CodeCatchClause> catchClauses,
             Action genFinallyStatements)
         {
-            var t = new CodeTryCatchFinallyStatement();
-            var oldScope = Scope;
+            CodeTryCatchFinallyStatement t = new CodeTryCatchFinallyStatement();
+            List<CodeStatement> oldScope = Scope;
             Scope = t.TryStatements;
             genTryStatements();
             t.CatchClauses.AddRange(catchClauses);
@@ -441,11 +450,11 @@ namespace Pytocs.Core.CodeModel
             CodeExpression exp,
             Action generateBody)
         {
-            var w = new CodePreTestLoopStatement
+            CodePreTestLoopStatement w = new CodePreTestLoopStatement
             {
-                Test = exp,
+                Test = exp
             };
-            var oldScope = Scope;
+            List<CodeStatement> oldScope = Scope;
             Scope = w.Body;
             generateBody();
             Scope = oldScope;
@@ -457,12 +466,12 @@ namespace Pytocs.Core.CodeModel
             Action generateBody,
             CodeExpression exp)
         {
-            var dw = new CodePostTestLoopStatement
+            CodePostTestLoopStatement dw = new CodePostTestLoopStatement
             {
-                Test = exp,
+                Test = exp
             };
             Scope.Add(dw);
-            var oldScope = Scope;
+            List<CodeStatement> oldScope = Scope;
             Scope = dw.Body;
             generateBody();
             Scope = oldScope;
@@ -471,7 +480,7 @@ namespace Pytocs.Core.CodeModel
 
         public CodeYieldStatement Yield(CodeExpression exp)
         {
-            var y = new CodeYieldStatement(exp);
+            CodeYieldStatement y = new CodeYieldStatement(exp);
             Scope.Add(y);
             return y;
         }
@@ -483,7 +492,7 @@ namespace Pytocs.Core.CodeModel
 
         public CodeObjectCreateExpression New(CodeTypeReference type, params CodeExpression[] args)
         {
-            var exp = new CodeObjectCreateExpression
+            CodeObjectCreateExpression exp = new CodeObjectCreateExpression
             {
                 Type = type
             };
@@ -493,7 +502,7 @@ namespace Pytocs.Core.CodeModel
 
         public CodeArrayCreateExpression NewArray(CodeTypeReference type, params CodeExpression[] items)
         {
-            var exp = new CodeArrayCreateExpression(type, items);
+            CodeArrayCreateExpression exp = new CodeArrayCreateExpression(type, items);
             return exp;
         }
 
@@ -511,6 +520,7 @@ namespace Pytocs.Core.CodeModel
                     o = (int)l;
                 }
             }
+
             return new CodePrimitiveExpression(o);
         }
 
@@ -541,14 +551,14 @@ namespace Pytocs.Core.CodeModel
             return new CodeAttributeDeclaration
             {
                 AttributeType = typeRef,
-                Arguments = args.ToList(),
+                Arguments = args.ToList()
             };
             throw new NotImplementedException();
         }
 
         public CodeCommentStatement Comment(string comment)
         {
-            var c = new CodeCommentStatement(comment);
+            CodeCommentStatement c = new CodeCommentStatement(comment);
             Scope.Add(c);
             return c;
         }
@@ -562,10 +572,10 @@ namespace Pytocs.Core.CodeModel
             IEnumerable<CodeStatement> initializers,
             Action xlatUsingBody)
         {
-            var u = new CodeUsingStatement();
+            CodeUsingStatement u = new CodeUsingStatement();
             Scope.Add(u);
             u.Initializers.AddRange(initializers);
-            var old = Scope;
+            List<CodeStatement> old = Scope;
             Scope = u.Statements;
             xlatUsingBody();
             Scope = old;
@@ -579,32 +589,33 @@ namespace Pytocs.Core.CodeModel
 
         public CodeMemberProperty PropertyDef(string name, Action generatePropertyGetter, Action generatePropertySetter)
         {
-            var prop = new CodeMemberProperty
+            CodeMemberProperty prop = new CodeMemberProperty
             {
                 Name = name,
                 Attributes = MemberAttributes.Public,
                 PropertyType = new CodeTypeReference(typeof(object))
             };
-            var mem = new CodeMemberProperty();
-            var old = Scope;
-            var oldMethod = CurrentMember;
-            var oldStatements = CurrentMemberStatements;
-            var oldComments = CurrentMemberComments;
+            CodeMemberProperty mem = new CodeMemberProperty();
+            List<CodeStatement> old = Scope;
+            CodeMember oldMethod = CurrentMember;
+            List<CodeStatement> oldStatements = CurrentMemberStatements;
+            List<CodeCommentStatement> oldComments = CurrentMemberComments;
 
             SetCurrentPropertyAccessor(prop, prop.GetStatements);
-            this.Scope = prop.GetStatements;
+            Scope = prop.GetStatements;
             generatePropertyGetter();
             if (generatePropertySetter != null)
             {
                 SetCurrentPropertyAccessor(prop, prop.SetStatements);
-                this.Scope = prop.SetStatements;
+                Scope = prop.SetStatements;
                 generatePropertySetter();
             }
+
             AddMemberWithComments(prop);
-            this.Scope = old;
-            this.CurrentMember = oldMethod;
-            this.CurrentMemberStatements = oldStatements;
-            this.CurrentMemberComments = oldComments;
+            Scope = old;
+            CurrentMember = oldMethod;
+            CurrentMemberStatements = oldStatements;
+            CurrentMemberComments = oldComments;
 
             return prop;
         }

@@ -16,7 +16,7 @@
 
 #endregion License
 
-using State = Pytocs.Core.TypeInference.State;
+using Pytocs.Core.TypeInference;
 
 namespace Pytocs.Core.Types
 {
@@ -40,8 +40,9 @@ namespace Pytocs.Core.Types
         {
             if (other is InstanceType that)
             {
-                return this.classType.Equals(that.classType);
+                return classType.Equals(that.classType);
             }
+
             return false;
         }
 

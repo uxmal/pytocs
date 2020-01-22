@@ -3,15 +3,15 @@
              x:Class="Pytocs.Gui.SnippetConverterTab">
     <Grid>
         <Grid.RowDefinitions>
-            <RowDefinition Height="*"></RowDefinition>
-            <RowDefinition Height="50"></RowDefinition>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="50" />
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="1*"></ColumnDefinition>
-            <ColumnDefinition Width="1*"></ColumnDefinition>
+            <ColumnDefinition Width="1*" />
+            <ColumnDefinition Width="1*" />
         </Grid.ColumnDefinitions>
-        <TextBox Grid.Row="0" Grid.Column="0" x:Name="PythonEditor" AcceptsReturn="True"></TextBox>
-        <TextBox Grid.Row="0" Grid.Column="1" x:Name="CSharpEditor" AcceptsReturn="True"></TextBox>
+        <TextBox Grid.Row="0" Grid.Column="0" x:Name="PythonEditor" AcceptsReturn="True" />
+        <TextBox Grid.Row="0" Grid.Column="1" x:Name="CSharpEditor" AcceptsReturn="True" />
         <StackPanel Grid.Row="1" Grid.Column="0" Orientation="Horizontal">
             <Button Margin="10 10 5 10" Click="Convert_Click">Convert</Button>
             <Button Margin="5 10" Click="InsertFile_Click">Insert File...</Button>
@@ -22,7 +22,7 @@
                 <Button Margin="5 10" Click="SelectAndCopyAll_Click">Select &amp; Copy All</Button>
                 <Button Margin="5 10 10 10" Click="Save_Click">Save...</Button>
             </StackPanel>
-            <Separator></Separator>
+            <Separator />
         </DockPanel>
     </Grid>
 </UserControl>

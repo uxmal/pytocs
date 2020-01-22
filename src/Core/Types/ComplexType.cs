@@ -19,7 +19,7 @@
 namespace Pytocs.Core.Types
 {
     /// <summary>
-    /// Represents a complex number (a + bi)
+    ///     Represents a complex number (a + bi)
     /// </summary>
     public class ComplexType : DataType
     {

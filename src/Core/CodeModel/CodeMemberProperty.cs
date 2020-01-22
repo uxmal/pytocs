@@ -24,8 +24,8 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeMemberProperty()
         {
-            this.GetStatements = new List<CodeStatement>();
-            this.SetStatements = new List<CodeStatement>();
+            GetStatements = new List<CodeStatement>();
+            SetStatements = new List<CodeStatement>();
         }
 
         public CodeTypeReference PropertyType { get; set; }

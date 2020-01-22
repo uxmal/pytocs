@@ -21,20 +21,20 @@ using System.Collections.Generic;
 namespace Pytocs.Core.CodeModel
 {
     /// <summary>
-    /// Models a C# LinQ query expression.
+    ///     Models a C# LinQ query expression.
     /// </summary>
     public class CodeQueryExpression : CodeExpression
     {
-        public List<CodeQueryClause> Clauses { get; } = new List<CodeQueryClause>();
-
         public CodeQueryExpression()
         {
         }
 
         public CodeQueryExpression(params CodeQueryClause[] clauses)
         {
-            this.Clauses.AddRange(clauses);
+            Clauses.AddRange(clauses);
         }
+
+        public List<CodeQueryClause> Clauses { get; } = new List<CodeQueryClause>();
 
         public override T Accept<T>(ICodeExpressionVisitor<T> visitor)
         {

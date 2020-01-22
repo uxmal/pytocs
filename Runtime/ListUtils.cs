@@ -25,7 +25,7 @@ namespace pytocs.runtime
     {
         public static List<T> Unpack<T>(params object[] items)
         {
-            var flat = items.Cast<IEnumerable<T>>()
+            IEnumerable<T> flat = items.Cast<IEnumerable<T>>()
                 .SelectMany(it => it);
             return new List<T>(flat);
         }

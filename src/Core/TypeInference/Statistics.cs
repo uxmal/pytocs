@@ -23,7 +23,7 @@ namespace Pytocs.Core.TypeInference
 {
     public class Statistics
     {
-        private IDictionary<string, long> contents = new Dictionary<string, long>();
+        private readonly IDictionary<string, long> contents = new Dictionary<string, long>();
 
         public void putInt(string key, long value)
         {
@@ -43,20 +43,23 @@ namespace Pytocs.Core.TypeInference
 
         public long getInt(string key)
         {
-            long ret;
-            if (!contents.TryGetValue(key, out ret))
+            if (!contents.TryGetValue(key, out long ret))
+            {
                 return 0;
+            }
+
             return ret;
         }
 
         public string print()
         {
             StringBuilder sb = new StringBuilder();
-            foreach (var e in contents)
+            foreach (KeyValuePair<string, long> e in contents)
             {
                 sb.AppendLine();
                 sb.AppendFormat("- {0}: {1}", e.Key, e.Value);
             }
+
             return sb.ToString();
         }
     }

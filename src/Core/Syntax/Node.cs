@@ -22,18 +22,18 @@ namespace Pytocs.Core.Syntax
 {
     public abstract class Node
     {
-        public /*readonly*/ string Filename;
-        public /*readonly*/ int Start;
         public /*readonly*/ int End;
+        public /*readonly*/ string Filename;
+        public string Name;
 
         public Node Parent;
-        public string Name;
+        public /*readonly*/ int Start;
 
         public Node(string filename, int start, int end)
         {
-            this.Filename = filename;
-            this.Start = start;
-            this.End = end;
+            Filename = filename;
+            Start = start;
+            End = end;
         }
 
         public virtual Str GetDocString()

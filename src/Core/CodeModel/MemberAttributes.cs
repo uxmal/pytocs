@@ -40,6 +40,6 @@ namespace Pytocs.Core.CodeModel
 
         Private = 20480,
         Public = 24576,
-        AccessMask = 61440,
+        AccessMask = 61440
     }
 }

@@ -37,7 +37,7 @@ namespace Pytocs.Core.CodeModel
 
     public class MemberDeclarator
     {
-        public string Name;
         public CodeExpression Expression;
+        public string Name;
     }
 }

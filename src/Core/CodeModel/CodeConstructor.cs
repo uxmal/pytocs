@@ -24,12 +24,12 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeConstructor()
         {
-            this.BaseConstructorArgs = new List<CodeExpression>();
-            this.ChainedConstructorArgs = new List<CodeExpression>();
+            BaseConstructorArgs = new List<CodeExpression>();
+            ChainedConstructorArgs = new List<CodeExpression>();
         }
 
-        public List<CodeExpression> BaseConstructorArgs { get; private set; }
-        public List<CodeExpression> ChainedConstructorArgs { get; private set; }
+        public List<CodeExpression> BaseConstructorArgs { get; }
+        public List<CodeExpression> ChainedConstructorArgs { get; }
 
         public override T Accept<T>(ICodeMemberVisitor<T> visitor)
         {

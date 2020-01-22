@@ -26,7 +26,7 @@ namespace Pytocs.Core.Types
         public List<DataType> positional = new List<DataType>();
         public List<object> values = new List<object>();
 
-        public ListType() : this(DataType.Unknown)
+        public ListType() : this(Unknown)
         {
         }
 
@@ -63,11 +63,12 @@ namespace Pytocs.Core.Types
 
         public TupleType toTupleType(int n)
         {
-            TupleType ret = new TupleType();    //$ no regs
+            TupleType ret = new TupleType(); //$ no regs
             for (int i = 0; i < n; i++)
             {
                 ret.Add(eltType);
             }
+
             return ret;
         }
 
@@ -78,24 +79,26 @@ namespace Pytocs.Core.Types
 
         public override bool Equals(object other)
         {
-            var dtOther = other as DataType;
+            DataType dtOther = other as DataType;
             if (dtOther == null)
+            {
                 return false;
+            }
+
             if (typeStack.Contains(this, dtOther))
             {
                 return true;
             }
-            else if (other is ListType that)
+
+            if (other is ListType that)
             {
                 typeStack.Push(this, that);
                 bool ret = that.eltType.Equals(eltType);
                 typeStack.Pop(this, other);
                 return ret;
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         public override int GetHashCode()

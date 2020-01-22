@@ -29,13 +29,15 @@ namespace Pytocs.Core.Syntax
         {
         }
 
+        public string Comment { get; set; }
+
         public abstract T Accept<T>(IExpVisitor<T> v);
 
         public abstract void Accept(IExpVisitor v);
 
         public sealed override string ToString()
         {
-            var sw = new StringWriter();
+            StringWriter sw = new StringWriter();
             Write(sw);
             return sw.ToString();
         }
@@ -96,8 +98,6 @@ namespace Pytocs.Core.Syntax
         {
             yield return this;
         }
-
-        public string Comment { get; set; }
     }
 
     public class NoneExp : Exp
@@ -155,7 +155,7 @@ namespace Pytocs.Core.Syntax
         public Bytes(string str, string filename, int start, int end)
             : base(filename, start, end)
         {
-            this.s = str;
+            s = str;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -172,7 +172,10 @@ namespace Pytocs.Core.Syntax
         {
             writer.Write("b");
             if (Raw)
+            {
                 writer.Write("r");
+            }
+
             writer.Write('\"');
             writer.Write(s);
             writer.Write('\"');
@@ -185,14 +188,14 @@ namespace Pytocs.Core.Syntax
     public class Str : Exp
     {
         public readonly string s;
+        public bool Format; // true if this is a format string.
+        public bool Long;
         public bool Raw;
         public bool Unicode;
-        public bool Long;
-        public bool Format; // true if this is a format string.
 
         public Str(string str, string filename, int start, int end) : base(filename, start, end)
         {
-            this.s = str;
+            s = str;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -208,7 +211,10 @@ namespace Pytocs.Core.Syntax
         public override void Write(TextWriter writer)
         {
             if (Raw)
+            {
                 writer.Write("r");
+            }
+
             writer.Write('\"');
             writer.Write(s);
             writer.Write('\"');
@@ -217,13 +223,13 @@ namespace Pytocs.Core.Syntax
 
     public class IntLiteral : Exp
     {
-        public readonly string Value;
         public readonly long NumericValue;
+        public readonly string Value;
 
         public IntLiteral(string value, long p, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Value = value;
-            this.NumericValue = p;
+            Value = value;
+            NumericValue = p;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -244,13 +250,13 @@ namespace Pytocs.Core.Syntax
 
     public class LongLiteral : Exp
     {
-        public readonly string Value;
         public readonly long NumericValue;
+        public readonly string Value;
 
         public LongLiteral(string value, long p, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Value = value;
-            this.NumericValue = p;
+            Value = value;
+            NumericValue = p;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -271,14 +277,14 @@ namespace Pytocs.Core.Syntax
 
     public class BigLiteral : Exp
     {
-        public string Value { get; }
-        public BigInteger NumericValue { get; }
-
         public BigLiteral(string value, BigInteger p, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Value = value;
-            this.NumericValue = p;
+            Value = value;
+            NumericValue = p;
         }
+
+        public string Value { get; }
+        public BigInteger NumericValue { get; }
 
         public override T Accept<T>(IExpVisitor<T> v)
         {
@@ -298,14 +304,15 @@ namespace Pytocs.Core.Syntax
 
     public class RealLiteral : Exp
     {
-        public RealLiteral(string value, double p, string filename, int start, int end) : base(filename, start, end)
-        {
-            this.Value = value;
-            this.NumericValue = p;
-        }
+        public readonly double NumericValue;
 
         public readonly string Value;
-        public readonly double NumericValue;
+
+        public RealLiteral(string value, double p, string filename, int start, int end) : base(filename, start, end)
+        {
+            Value = value;
+            NumericValue = p;
+        }
 
         public override void Accept(IExpVisitor v)
         {
@@ -320,9 +327,13 @@ namespace Pytocs.Core.Syntax
         public override void Write(TextWriter writer)
         {
             if (NumericValue == double.PositiveInfinity)
+            {
                 writer.Write("float('+inf')");
+            }
             else if (NumericValue == double.NegativeInfinity)
+            {
                 writer.Write("float('-inf')");
+            }
             else
             {
                 writer.Write(Value);
@@ -334,8 +345,8 @@ namespace Pytocs.Core.Syntax
     {
         public ImaginaryLiteral(string value, double im, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Value = value;
-            this.NumericValue = im;
+            Value = value;
+            NumericValue = im;
         }
 
         public string Value { get; }
@@ -360,8 +371,8 @@ namespace Pytocs.Core.Syntax
 
     public class BinExp : Exp
     {
-        public Op op;
         public Exp l;
+        public Op op;
         public Exp r;
 
         public BinExp(Op op, Exp l, Exp r, string filename, int start, int end) : base(filename, start, end)
@@ -383,7 +394,7 @@ namespace Pytocs.Core.Syntax
         {
             writer.Write("(");
             l.Write(writer);
-            writer.Write(" {0} ", base.OpToString(op));
+            writer.Write(" {0} ", OpToString(op));
             r.Write(writer);
             writer.Write(")");
         }
@@ -392,14 +403,14 @@ namespace Pytocs.Core.Syntax
     public class DictComprehension : Exp
     {
         public Exp key;
-        public Exp value;
         public CompFor source;
+        public Exp value;
 
         public DictComprehension(Exp key, Exp value, CompFor collection, string filename, int start, int end) : base(filename, start, end)
         {
             this.key = key;
             this.value = value;
-            this.source = collection;
+            source = collection;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -418,7 +429,7 @@ namespace Pytocs.Core.Syntax
         public DictInitializer(List<KeyValuePair<Exp, Exp>> keyValues, string filename, int start, int end)
             : base(filename, start, end)
         {
-            this.KeyValues = keyValues;
+            KeyValues = keyValues;
         }
 
         public List<KeyValuePair<Exp, Exp>> KeyValues { get; }
@@ -437,7 +448,7 @@ namespace Pytocs.Core.Syntax
         {
             writer.Write("{");
             writer.Write(" ");
-            foreach (var kv in KeyValues)
+            foreach (KeyValuePair<Exp, Exp> kv in KeyValues)
             {
                 if (kv.Key != null)
                 {
@@ -463,7 +474,7 @@ namespace Pytocs.Core.Syntax
 
         public IterableUnpacker(Exp iterable, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Iterable = iterable;
+            Iterable = iterable;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -479,7 +490,7 @@ namespace Pytocs.Core.Syntax
         public override void Write(TextWriter w)
         {
             w.Write("*");
-            this.Iterable.Write(w);
+            Iterable.Write(w);
         }
     }
 
@@ -502,13 +513,13 @@ namespace Pytocs.Core.Syntax
 
     public class UnaryExp : Exp
     {
-        public Op op;
         public Exp e;       //$TODO: rename to Expression.
+        public Op op;
 
         public UnaryExp(Op op, Exp exp, string filename, int start, int end) : base(filename, start, end)
         {
             this.op = op;
-            this.e = exp;
+            e = exp;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -530,9 +541,9 @@ namespace Pytocs.Core.Syntax
 
     public class TestExp : Exp
     {
-        public Exp Consequent;
-        public Exp Condition;
         public Exp Alternative;
+        public Exp Condition;
+        public Exp Consequent;
 
         public TestExp(string filename, int start, int end)
             : base(filename, start, end)
@@ -551,7 +562,7 @@ namespace Pytocs.Core.Syntax
 
         public override void Write(TextWriter writer)
         {
-            this.Consequent.Write(writer);
+            Consequent.Write(writer);
             writer.Write(" ");
             writer.Write("if");
             writer.Write(" ");
@@ -567,7 +578,7 @@ namespace Pytocs.Core.Syntax
     {
         public Identifier(string name, string filename, int start, int end) : base(filename, start, end)
         {
-            base.Name = name;
+            Name = name;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -588,11 +599,11 @@ namespace Pytocs.Core.Syntax
 
     public class Application : Exp
     {
-        public readonly Exp fn;
         public readonly List<Argument> args;
+        public readonly Exp fn;
         public readonly List<Argument> keywords;
-        public readonly Exp stargs;
         public readonly Exp kwargs;
+        public readonly Exp stargs;
 
         public Application(Exp fn, List<Argument> args, List<Argument> keywords, Exp stargs, Exp kwargs,
             string filename, int start, int end) : base(filename, start, end)
@@ -618,14 +629,14 @@ namespace Pytocs.Core.Syntax
         {
             fn.Write(writer);
             writer.Write("(");
-            var sep = "";
-            foreach (var arg in args)
+            string sep = "";
+            foreach (Argument arg in args)
             {
                 writer.Write(sep);
                 arg.Write(writer);
                 sep = ",";
             }
-            foreach (var arg in keywords)
+            foreach (Argument arg in keywords)
             {
                 writer.Write(sep);
                 arg.Write(writer);
@@ -673,10 +684,11 @@ namespace Pytocs.Core.Syntax
         {
             array.Write(writer);
             writer.Write("[");
-            foreach (var slice in subs)
+            foreach (Slice slice in subs)
             {
                 slice.Write(writer);
             }
+
             writer.Write("]");
         }
     }
@@ -689,9 +701,9 @@ namespace Pytocs.Core.Syntax
 
         public Slice(Exp start, Exp end, Exp slice, string filename, int s, int e) : base(filename, s, e)
         {
-            this.lower = start;
-            this.step = end;
-            this.upper = slice;
+            lower = start;
+            step = end;
+            upper = slice;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -779,7 +791,7 @@ namespace Pytocs.Core.Syntax
         {
             writer.Write("await");
             writer.Write(" ");
-            this.exp.Write(writer);
+            exp.Write(writer);
         }
     }
 
@@ -814,7 +826,7 @@ namespace Pytocs.Core.Syntax
 
         public YieldFromExp(Exp exp, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Expression = exp;
+            Expression = exp;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -846,8 +858,8 @@ namespace Pytocs.Core.Syntax
 
     public class CompFor : CompIter
     {
-        public Exp variable;
         public Exp collection;
+        public Exp variable;
 
         public CompFor(string filename, int start, int end) : base(filename, start, end)
         {
@@ -874,10 +886,10 @@ namespace Pytocs.Core.Syntax
             writer.Write("in");
             writer.Write(" ");
             collection.Write(writer);
-            if (this.next != null)
+            if (next != null)
             {
                 writer.Write(" ");
-                this.next.Write(writer);
+                next.Write(writer);
             }
         }
     }
@@ -936,8 +948,8 @@ namespace Pytocs.Core.Syntax
         public override void Write(TextWriter writer)
         {
             writer.Write("{ ");
-            var sep = "";
-            foreach (var item in exps)
+            string sep = "";
+            foreach (Exp item in exps)
             {
                 writer.Write(sep);
                 sep = ", ";
@@ -968,7 +980,7 @@ namespace Pytocs.Core.Syntax
         public override void Write(TextWriter writer)
         {
             writer.Write("*");
-            this.e.Write(writer);
+            e.Write(writer);
         }
     }
 
@@ -978,7 +990,7 @@ namespace Pytocs.Core.Syntax
 
         public ExpList(List<Exp> exps, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Expressions = exps;
+            Expressions = exps;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -998,8 +1010,8 @@ namespace Pytocs.Core.Syntax
 
         public override void Write(TextWriter writer)
         {
-            var sep = "";
-            foreach (var exp in Expressions)
+            string sep = "";
+            foreach (Exp exp in Expressions)
             {
                 writer.Write(sep);
                 sep = ",";
@@ -1031,8 +1043,8 @@ namespace Pytocs.Core.Syntax
         public override void Write(TextWriter writer)
         {
             writer.Write("[");
-            var sep = "";
-            foreach (var exp in elts)
+            string sep = "";
+            foreach (Exp exp in elts)
             {
                 writer.Write(sep);
                 sep = ",";
@@ -1044,13 +1056,13 @@ namespace Pytocs.Core.Syntax
 
     public class GeneratorExp : Exp
     {
-        public Exp Projection;
         public Exp Collection;
+        public Exp Projection;
 
         public GeneratorExp(Exp proj, Exp coll, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Projection = proj;
-            this.Collection = coll;
+            Projection = proj;
+            Collection = coll;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -1066,13 +1078,13 @@ namespace Pytocs.Core.Syntax
 
     public class ListComprehension : Exp
     {
-        public Exp Projection;
         public Exp Collection;
+        public Exp Projection;
 
         public ListComprehension(Exp proj, Exp coll, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Projection = proj;
-            this.Collection = coll;
+            Projection = proj;
+            Collection = coll;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -1097,13 +1109,13 @@ namespace Pytocs.Core.Syntax
 
     public class SetComprehension : Exp
     {
-        public Exp Projection;
         public Exp Collection;
+        public Exp Projection;
 
         public SetComprehension(Exp proj, Exp coll, string filename, int start, int end) : base(filename, start, end)
         {
-            this.Projection = proj;
-            this.Collection = coll;
+            Projection = proj;
+            Collection = coll;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -1128,27 +1140,27 @@ namespace Pytocs.Core.Syntax
 
     public class AssignExp : Exp
     {
+        public readonly Exp Annotation;
         public readonly Exp Dst;
         public readonly Op op;
         public readonly Exp Src;
-        public readonly Exp Annotation;
 
         public AssignExp(Exp lhs, Op op, Exp rhs, string filename, int start, int end)
             : base(filename, start, end)
         {
-            this.Dst = lhs;
+            Dst = lhs;
             this.op = op;
-            this.Src = rhs;
-            this.Annotation = null;
+            Src = rhs;
+            Annotation = null;
         }
 
         public AssignExp(Exp lhs, Exp annotation, Op op, Exp rhs, string filename, int start, int end)
         : base(filename, start, end)
         {
-            this.Dst = lhs;
+            Dst = lhs;
             this.op = op;
-            this.Src = rhs;
-            this.Annotation = annotation;
+            Src = rhs;
+            Annotation = annotation;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -1167,22 +1179,22 @@ namespace Pytocs.Core.Syntax
             if (Annotation != null)
             {
                 writer.Write(": ");
-                this.Annotation.Write(writer);
+                Annotation.Write(writer);
             }
-            writer.Write(base.OpToString(op));
+            writer.Write(OpToString(op));
             Src.Write(writer);
         }
     }
 
     public class PyTuple : Exp
     {
+        public List<Exp> values;
+
         public PyTuple(List<Exp> values, string filename, int start, int end)
             : base(filename, start, end)
         {
             this.values = values;
         }
-
-        public List<Exp> values;
 
         public override T Accept<T>(IExpVisitor<T> v)
         {
@@ -1197,8 +1209,8 @@ namespace Pytocs.Core.Syntax
         public override void Write(TextWriter writer)
         {
             writer.Write("(");
-            var sep = "";
-            foreach (var e in values)
+            string sep = "";
+            foreach (Exp e in values)
             {
                 writer.Write(sep);
                 sep = ",";

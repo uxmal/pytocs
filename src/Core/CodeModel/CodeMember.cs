@@ -24,14 +24,14 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeMember()
         {
-            this.CustomAttributes = new List<CodeAttributeDeclaration>();
-            this.Comments = new List<CodeCommentStatement>();
+            CustomAttributes = new List<CodeAttributeDeclaration>();
+            Comments = new List<CodeCommentStatement>();
         }
 
         public string Name { get; set; }
-        public List<CodeAttributeDeclaration> CustomAttributes { get; private set; }
+        public List<CodeAttributeDeclaration> CustomAttributes { get; }
         public MemberAttributes Attributes { get; set; }
-        public List<CodeCommentStatement> Comments { get; private set; }
+        public List<CodeCommentStatement> Comments { get; }
 
         public abstract T Accept<T>(ICodeMemberVisitor<T> visitor);
     }

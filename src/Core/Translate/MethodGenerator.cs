@@ -25,23 +25,23 @@ using System.Linq;
 namespace Pytocs.Core.Translate
 {
     /// <summary>
-    /// Generates code for a Python function definition.
+    ///     Generates code for a Python function definition.
     /// </summary>
     public class MethodGenerator
     {
+        protected readonly List<Parameter> args;
         private readonly ClassDef classDef;
         protected readonly FunctionDef f;
         protected readonly string fnName;
-        protected readonly List<Parameter> args;
-        private readonly bool isStatic;
         private readonly bool isAsync;
-        protected ExpTranslator xlat;
-        protected StatementTranslator stmtXlat;
+        private readonly bool isStatic;
         protected CodeGenerator gen;
-        private Dictionary<Parameter, CodeParameterDeclarationExpression> mpPyParamToCs;
-        private SymbolGenerator gensym;
-        private TypeReferenceTranslator types;
+        private readonly SymbolGenerator gensym;
         protected HashSet<string> globals;
+        private Dictionary<Parameter, CodeParameterDeclarationExpression> mpPyParamToCs;
+        protected StatementTranslator stmtXlat;
+        private readonly TypeReferenceTranslator types;
+        protected ExpTranslator xlat;
 
         public MethodGenerator(
             ClassDef classDef,
@@ -60,24 +60,25 @@ namespace Pytocs.Core.Translate
             this.isStatic = isStatic;
             this.isAsync = isAsync;
             this.gen = gen;
-            this.gensym = new SymbolGenerator();
+            gensym = new SymbolGenerator();
             this.types = types;
-            this.xlat = new ExpTranslator(classDef, this.types, gen, gensym);
-            this.globals = new HashSet<string>();
-            this.stmtXlat = new StatementTranslator(classDef, types, gen, gensym, globals);
+            xlat = new ExpTranslator(classDef, this.types, gen, gensym);
+            globals = new HashSet<string>();
+            stmtXlat = new StatementTranslator(classDef, types, gen, gensym, globals);
         }
 
         /// <summary>
-        /// Generate a C# method implementation from the Python function definition.
+        ///     Generate a C# method implementation from the Python function definition.
         /// </summary>
         public CodeMemberMethod Generate()
         {
-            var parameters = CreateFunctionParameters(args);
-            var returnType = CreateReturnType();
+            CodeParameterDeclarationExpression[] parameters = CreateFunctionParameters(args);
+            CodeTypeReference returnType = CreateReturnType();
             return Generate(returnType, parameters);
         }
 
-        protected virtual CodeMemberMethod Generate(CodeTypeReference retType, CodeParameterDeclarationExpression[] parms)
+        protected virtual CodeMemberMethod Generate(CodeTypeReference retType,
+            CodeParameterDeclarationExpression[] parms)
         {
             CodeMemberMethod method;
             if (isStatic)
@@ -88,6 +89,7 @@ namespace Pytocs.Core.Translate
             {
                 method = gen.Method(fnName, retType, parms, () => Xlat(f.body));
             }
+
             method.IsAsync = isAsync;
             GenerateTupleParameterUnpackers(method);
             LocalVariableGenerator.Generate(method, globals);
@@ -96,10 +98,11 @@ namespace Pytocs.Core.Translate
 
         protected void GenerateTupleParameterUnpackers(CodeMemberMethod method)
         {
-            foreach (var parameter in args.Where(p => p.tuple != null))
+            foreach (Parameter parameter in args.Where(p => p.tuple != null))
             {
-                var csTupleParam = mpPyParamToCs[parameter];
-                var tuplePath = new CodeVariableReferenceExpression(csTupleParam.ParameterName);
+                CodeParameterDeclarationExpression csTupleParam = mpPyParamToCs[parameter];
+                CodeVariableReferenceExpression tuplePath =
+                    new CodeVariableReferenceExpression(csTupleParam.ParameterName);
                 foreach (var component in parameter.tuple.Select((p, i) => new { p, i = i + 1 }))
                 {
                     GenerateTupleParameterUnpacker(component.p, component.i, tuplePath, method);
@@ -107,10 +110,14 @@ namespace Pytocs.Core.Translate
             }
         }
 
-        private void GenerateTupleParameterUnpacker(Parameter p, int i, CodeExpression tuplePath, CodeMemberMethod method)
+        private void GenerateTupleParameterUnpacker(Parameter p, int i, CodeExpression tuplePath,
+            CodeMemberMethod method)
         {
             if (p.Id.Name == "_")
+            {
                 return;
+            }
+
             method.Statements.Insert(0, new CodeVariableDeclarationStatement("object", p.Id.Name)
             {
                 InitExpression = gen.Access(tuplePath, "Item" + i)
@@ -119,39 +126,41 @@ namespace Pytocs.Core.Translate
 
         public void Xlat(SuiteStatement suite)
         {
-            var comments = StatementTranslator.ConvertFirstStringToComments(suite.stmts);
+            IEnumerable<CodeCommentStatement> comments = StatementTranslator.ConvertFirstStringToComments(suite.stmts);
             stmtXlat.Xlat(suite);
             gen.CurrentMemberComments.AddRange(comments);
         }
 
         private CodeTypeReference CreateReturnType()
         {
-            var pyType = this.types.TypeOf(f.name);
+            DataType pyType = types.TypeOf(f.name);
             CodeTypeReference dtRet;
             if (pyType is FunType fnType)
             {
                 pyType = fnType.GetReturnType();
-                (dtRet, _) = this.types.Translate(pyType);
+                (dtRet, _) = types.Translate(pyType);
             }
             else
             {
                 dtRet = new CodeTypeReference(typeof(object));
             }
+
             if (isAsync)
             {
                 gen.EnsureImport(TypeReferenceTranslator.TasksNamespace);
                 dtRet = gen.TypeRef("Task", dtRet);
             }
+
             return dtRet;
         }
 
         private CodeParameterDeclarationExpression[] CreateFunctionParameters(IEnumerable<Parameter> parameters)
         {
-            var convs = parameters
+            (Parameter ta, CodeParameterDeclarationExpression)[] convs = parameters
                 .OrderBy(ta => ta.vararg)
                 .Where(ta => !ta.vararg || ta.Id != null)
                 .Select(ta => (ta, GenerateFunctionParameter(ta))).ToArray();
-            this.mpPyParamToCs = convs.ToDictionary(k => k.Item1, v => v.Item2);
+            mpPyParamToCs = convs.ToDictionary(k => k.Item1, v => v.Item2);
             return convs.Select(c => c.Item2).ToArray();
         }
 
@@ -165,31 +174,33 @@ namespace Pytocs.Core.Translate
                 {
                     ParameterType = parameterType,
                     ParameterName = stmtXlat.GenSymParameter("_tup_", parameterType).Name,
-                    IsVarargs = false,
+                    IsVarargs = false
                 };
             }
-            else if (ta.keyarg)
+
+            if (ta.keyarg)
             {
                 parameterType = new CodeTypeReference("Hashtable");
                 gen.EnsureImport("System.Collections");
             }
             else
             {
-                var (dtParam, _) = types.TranslateTypeOf(ta.Id);
+                (CodeTypeReference dtParam, _) = types.TranslateTypeOf(ta.Id);
                 parameterType = dtParam;
             }
+
             return new CodeParameterDeclarationExpression
             {
                 ParameterType = parameterType,
                 ParameterName = ta.Id?.Name,
                 IsVarargs = ta.vararg,
-                DefaultValue = ta.test?.Accept(this.xlat)
+                DefaultValue = ta.test?.Accept(xlat)
             };
         }
 
         private CodeTypeReference GenerateTupleParameterType(List<Parameter> list)
         {
-            var types = list.Select(p => p.tuple != null
+            IEnumerable<CodeTypeReference> types = list.Select(p => p.tuple != null
                 ? GenerateTupleParameterType(p.tuple)
                 : new CodeTypeReference(typeof(object)));
             return new CodeTypeReference("Tuple", types.ToArray());

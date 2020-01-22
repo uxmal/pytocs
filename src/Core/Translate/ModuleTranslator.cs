@@ -27,7 +27,8 @@ namespace Pytocs.Core.Translate
     {
         private readonly CodeGenerator gen;
 
-        public ModuleTranslator(TypeReferenceTranslator types, CodeGenerator gen) : base(null, types, gen, new SymbolGenerator(), new HashSet<string>())
+        public ModuleTranslator(TypeReferenceTranslator types, CodeGenerator gen) : base(null, types, gen,
+            new SymbolGenerator(), new HashSet<string>())
         {
             this.gen = gen;
         }
@@ -35,7 +36,7 @@ namespace Pytocs.Core.Translate
         public void Translate(IEnumerable<Statement> statements)
         {
             int c = 0;
-            foreach (var s in statements)
+            foreach (Statement s in statements)
             {
                 if (c == 0 && IsStringStatement(s, out Str lit))
                 {
@@ -45,13 +46,14 @@ namespace Pytocs.Core.Translate
                 {
                     s.Accept(this);
                 }
+
                 ++c;
             }
         }
 
         public void GenerateDocComment(string text, List<CodeCommentStatement> comments)
         {
-            var lines = text.Replace("\r\n", "\n")
+            IEnumerable<CodeCommentStatement> lines = text.Replace("\r\n", "\n")
                 .Split('\r', '\n')
                 .Select(line => new CodeCommentStatement(" " + line));
             comments.AddRange(lines);
@@ -60,22 +62,28 @@ namespace Pytocs.Core.Translate
         public bool IsStringStatement(Statement s, out Str lit)
         {
             lit = null;
-            var strStmt = s as ExpStatement;
+            ExpStatement strStmt = s as ExpStatement;
             if (strStmt == null)
             {
                 if (!(s is SuiteStatement suite))
+                {
                     return false;
+                }
+
                 strStmt = suite.stmts[0] as ExpStatement;
                 if (strStmt == null)
+                {
                     return false;
+                }
             }
+
             lit = strStmt.Expression as Str;
             return lit != null;
         }
 
         protected override CodeMemberField GenerateField(string name, CodeTypeReference fieldType, CodeExpression value)
         {
-            var field = base.GenerateField(name, fieldType, value);
+            CodeMemberField field = base.GenerateField(name, fieldType, value);
             field.Attributes |= MemberAttributes.Static;
             return field;
         }

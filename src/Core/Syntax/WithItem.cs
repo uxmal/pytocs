@@ -20,8 +20,8 @@ namespace Pytocs.Core.Syntax
 {
     public class WithItem : Node
     {
-        public Exp t;
         public Exp e;
+        public Exp t;
 
         public WithItem(Exp t, Exp e, string filename, int start, int end) : base(filename, start, end)
         {

@@ -27,7 +27,7 @@ namespace Pytocs.Core.Types
 
         public UnionType()
         {
-            this.types = new HashSet<DataType>();
+            types = new HashSet<DataType>();
         }
 
         public UnionType(params DataType[] initialTypes) :
@@ -48,16 +48,14 @@ namespace Pytocs.Core.Types
          * Returns true if t1 == t2 or t1 is a union type that contains t2.
          */
 
-        static public bool Contains(DataType t1, DataType t2)
+        public static bool Contains(DataType t1, DataType t2)
         {
             if (t1 is UnionType)
             {
                 return ((UnionType)t1).Contains(t2);
             }
-            else
-            {
-                return t1.Equals(t2);
-            }
+
+            return t1.Equals(t2);
         }
 
         public static DataType Remove(DataType t1, DataType t2)
@@ -66,25 +64,25 @@ namespace Pytocs.Core.Types
             {
                 ISet<DataType> types = new HashSet<DataType>(u.types);
                 types.Remove(t2);
-                return UnionType.CreateUnion(types);
+                return CreateUnion(types);
             }
-            else if (t1 != DataType.Cont && t1 == t2)
+
+            if (t1 != Cont && t1 == t2)
             {
-                return DataType.Unknown;
+                return Unknown;
             }
-            else
-            {
-                return t1;
-            }
+
+            return t1;
         }
 
-        static public DataType CreateUnion(IEnumerable<DataType> types)
+        public static DataType CreateUnion(IEnumerable<DataType> types)
         {
-            DataType t = DataType.Unknown;
+            DataType t = Unknown;
             foreach (DataType nt in types)
             {
                 t = Union(t, nt);
             }
+
             return t;
         }
 
@@ -111,8 +109,8 @@ namespace Pytocs.Core.Types
         }
 
         /// <summary>
-        /// Make the a union of two types
-        /// with preference: other > None > Cont > unknown
+        ///     Make the a union of two types
+        ///     with preference: other > None > Cont > unknown
         /// </summary>
         public static DataType Union(DataType u, DataType v)
         {
@@ -120,59 +118,66 @@ namespace Pytocs.Core.Types
             {
                 return u;
             }
-            else if (u != DataType.Unknown && v == DataType.Unknown)
+
+            if (u != Unknown && v == Unknown)
             {
                 return u;
             }
-            else if (v != DataType.Unknown && u == DataType.Unknown)
+
+            if (v != Unknown && u == Unknown)
             {
                 return v;
             }
-            else if (u != DataType.None && v == DataType.None)
+
+            if (u != None && v == None)
             {
                 return u;
             }
-            else if (v != DataType.None && v == DataType.None)
+
+            if (v != None && v == None)
             {
                 return v;
             }
-            else if (u is IntType && v is FloatType)
+
+            if (u is IntType && v is FloatType)
             {
                 return v;
             }
-            else if (u is FloatType && v is IntType)
+
+            if (u is FloatType && v is IntType)
             {
                 return u;
             }
-            else
-            {
-                return new UnionType(u, v);
-            }
+
+            return new UnionType(u, v);
         }
 
         /// <summary>
-        /// Returns the first alternate whose type is not unknown and
-        /// is not None.
-        ///
-        /// @return the first non-unknown, non-{@code None} alternate, or {@code null} if none found
+        ///     Returns the first alternate whose type is not unknown and
+        ///     is not None.
+        ///     @return the first non-unknown, non-{@code None} alternate, or {@code null} if none found
         /// </summary>
         public DataType FirstUseful()
         {
             return types
-                .Where(type => (!type.IsUnknownType() && type != DataType.None))
+                .Where(type => !type.IsUnknownType() && type != None)
                 .FirstOrDefault();
         }
 
         public override bool Equals(object other)
         {
-            var dtOther = other as DataType;
+            DataType dtOther = other as DataType;
             if (dtOther == null)
+            {
                 return false;
+            }
+
             if (typeStack.Contains(this, dtOther))
             {
                 return true;
             }
-            else if (other is UnionType)
+
+            if (other is UnionType)
             {
                 ISet<DataType> types1 = types;
                 ISet<DataType> types2 = ((UnionType)other).types;
@@ -180,33 +185,31 @@ namespace Pytocs.Core.Types
                 {
                     return false;
                 }
-                else
+
+                typeStack.Push(this, dtOther);
+                foreach (DataType t in types2)
                 {
-                    typeStack.Push(this, dtOther);
-                    foreach (DataType t in types2)
+                    if (!types1.Contains(t))
                     {
-                        if (!types1.Contains(t))
-                        {
-                            typeStack.Pop(this, other);
-                            return false;
-                        }
+                        typeStack.Pop(this, other);
+                        return false;
                     }
-                    foreach (DataType t in types1)
-                    {
-                        if (!types2.Contains(t))
-                        {
-                            typeStack.Pop(this, other);
-                            return false;
-                        }
-                    }
-                    typeStack.Pop(this, other);
-                    return true;
                 }
+
+                foreach (DataType t in types1)
+                {
+                    if (!types2.Contains(t))
+                    {
+                        typeStack.Pop(this, other);
+                        return false;
+                    }
+                }
+
+                typeStack.Pop(this, other);
+                return true;
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         public override int GetHashCode()

@@ -1,18 +1,20 @@
 ﻿#region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
+
+#endregion License
 
 #if DEBUG
 using Pytocs.Core;
@@ -56,7 +58,7 @@ namespace Pytocs.UnitTests.Translate
                 filename, 0, 0);
             ana.LoadModule(mod);
             ana.ApplyUncalled();
-            
+
             var types = new TypeReferenceTranslator(ana.BuildTypeDictionary());
             var xlt = new ModuleTranslator(types, gen);
             xlt.Translate(stm);
@@ -75,11 +77,9 @@ namespace Pytocs.UnitTests.Translate
 ";
             var sExp =
 @"namespace test {
-    
     using System.Collections.Generic;
-    
+
     public static class module {
-        
         public static List<string> st = new List<string> {
             ""a""
         };
@@ -97,9 +97,7 @@ namespace Pytocs.UnitTests.Translate
 ";
             var sExp =
 @"namespace test {
-    
     public static class module {
-        
         static module() {
             ax.ay = ""AAZZ"";
         }
@@ -117,9 +115,7 @@ namespace Pytocs.UnitTests.Translate
 ";
             var sExp =
 @"namespace test {
-    
     public static class module {
-        
         static module() {
             parse.foo();
         }
@@ -140,9 +136,8 @@ two lines
             var sExp =
 @"// Doc comment in
 // two lines
-// 
+//
 namespace test {
-    
     public static class module {
     }
 }
@@ -162,13 +157,11 @@ namespace test {
 ";
             var sExp =
 @"namespace test {
-    
     using System;
-    
+
     using System.Collections.Generic;
-    
+
     public static class module {
-        
         public static object _tokenizer = antlrre.Tokenizer(tokens: new List<Tuple<object, string>> {
             (foo.a, ""sss"")
         });
@@ -192,15 +185,12 @@ class MyClass:
 ";
             string sExp =
 @"namespace test {
-    
     public static class @__init__ {
-        
         public static void static_func() {
         }
     }
-    
+
     public class MyClass {
-        
         public virtual void method(object arg) {
             Console.WriteLine(arg);
         }
@@ -223,12 +213,10 @@ class OuterClass:
 ";
             string sExp =
 @"namespace test {
-    
     public static class @__init__ {
     }
-    
+
     public class OuterClass {
-        
         public class InnerClass {
         }
     }
@@ -246,9 +234,8 @@ import vivisect.const as viv_const
 ";
             var sExp =
 @"namespace test {
-    
     using viv_const = vivisect.@const;
-    
+
     public static class module {
     }
 }
@@ -266,11 +253,9 @@ d = {}
 ";
             var sExp =
 @"namespace test {
-    
     using System.Collections.Generic;
-    
+
     public static class module {
-        
         public static Dictionary<object, object> d = new Dictionary<object, object> {
         };
     }
@@ -294,21 +279,18 @@ pt = Point(3.5, -0.4)
 ";
             var sExp =
 @"namespace test {
-    
     public static class module {
-        
         public class Point {
-            
             public object x;
-            
+
             public object y;
-            
+
             public Point(double x, double y) {
                 this.x = x;
                 this.y = y;
             }
         }
-        
+
         public static Point pt = new Point(3.5, -0.4);
     }
 }
@@ -327,13 +309,10 @@ class Point:
 ";
             var sExp =
 @"namespace test {
-    
     public static class module {
-        
         public class Point {
-            
             public object x;
-            
+
             public object y;
         }
     }
@@ -357,15 +336,12 @@ class Frob:
 ";
             var sExp =
 @"namespace test {
-    
     public static class module {
-        
         public class Frob {
-            
             public string a;
-            
+
             public int b;
-            
+
             public virtual void frob() {
                 this.a = ""Hello"";
                 this.b = 42;
@@ -392,13 +368,10 @@ class TestClass:
 ";
             var sExp =
 @"namespace test {
-    
     using pytocs.runtime;
-    
+
     public static class module {
-        
         public class TestClass {
-            
             public virtual object TestFunction() {
                 return TestValue(DictionaryUtils.Unpack<string, object>(something));
             }
@@ -420,12 +393,9 @@ class TestClass:
 ";
             var sExp =
 @"namespace test {
-    
     public static class module {
-        
         public class Foo
             : Bar {
-            
             public virtual void froz() {
                 base.froz();
             }
@@ -446,12 +416,9 @@ class TestClass:
 ";
             var sExp =
 @"namespace test {
-    
     public static class module {
-        
         public class Foo
             : Bar1, Bar2 {
-            
             public virtual void froz() {
                 ((Bar2) this).froz();
             }
@@ -462,7 +429,6 @@ class TestClass:
             Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-
         [Fact(Skip = "Not ready yet")]
         public void Module_void_function()
         {
@@ -470,11 +436,9 @@ class TestClass:
 @"def test(s):
     print(s)
 ";
-            var sExp = 
+            var sExp =
 @"namespace test {
-    
     public static class module {
-        
         public static void test(object s) {
             Console.Write(s);
         }
@@ -497,9 +461,7 @@ class TestClass:
 
             var sExp =
 @"namespace test {
-    
     public static class module {
-        
         public static object @__ELFSymbolTypeArchParser(object cls, object value) {
             if (value is int) {
                 return ((ELFSymbolType) this).@__new__(cls, (value, null));
@@ -523,9 +485,7 @@ class TestClass:
 
             var sExp =
 @"namespace test {
-    
     public static class module {
-        
         public static Tuple<bool, int, string> foo(int i = 0, string s = ""empty"", bool f = true) {
             return (f, i, s);
         }

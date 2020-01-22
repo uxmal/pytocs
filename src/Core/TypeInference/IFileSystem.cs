@@ -77,7 +77,7 @@ namespace Pytocs.Core.TypeInference
 
     public class FileSystem : IFileSystem
     {
-        public string DirectorySeparatorChar { get { return new string(Path.DirectorySeparatorChar, 1); } }
+        public string DirectorySeparatorChar => new string(Path.DirectorySeparatorChar, 1);
 
         public void CreateDirectory(string directory)
         {
@@ -108,6 +108,7 @@ namespace Pytocs.Core.TypeInference
                         }
                     }
                 }
+
                 Directory.Delete(directory);
             }
         }
@@ -135,11 +136,12 @@ namespace Pytocs.Core.TypeInference
         public string getSystemTempDir()
         {
             string tmp = Environment.GetEnvironmentVariable("TEMP");
-            var sep = DirectorySeparatorChar;
+            string sep = DirectorySeparatorChar;
             if (tmp.EndsWith(sep + ""))
             {
                 return tmp;
             }
+
             return tmp + sep;
         }
 
@@ -182,18 +184,6 @@ namespace Pytocs.Core.TypeInference
         {
             byte[] bytes = ReadFileBytes(path);
             return getContentHash(Encoding.UTF8.GetBytes(path)) + "." + getContentHash(bytes);
-        }
-
-        public static string getContentHash(byte[] fileContents)
-        {
-            HashAlgorithm algorithm = new SHA1Managed();
-            byte[] messageDigest = algorithm.ComputeHash(fileContents);
-            StringBuilder sb = new StringBuilder();
-            foreach (byte aMessageDigest in messageDigest)
-            {
-                sb.Append(string.Format("{0:X2}", 0xFF & aMessageDigest));
-            }
-            return sb.ToString();
         }
 
         public string ReadFile(string path)
@@ -250,10 +240,8 @@ namespace Pytocs.Core.TypeInference
             {
                 return null;
             }
-            else
-            {
-                return res;
-            }
+
+            return res;
         }
 
         public Stream CreateFileStream(string filename, FileMode mode, FileAccess access)
@@ -278,6 +266,19 @@ namespace Pytocs.Core.TypeInference
                 output.Write(contents);
                 output.Flush();
             }
+        }
+
+        public static string getContentHash(byte[] fileContents)
+        {
+            HashAlgorithm algorithm = new SHA1Managed();
+            byte[] messageDigest = algorithm.ComputeHash(fileContents);
+            StringBuilder sb = new StringBuilder();
+            foreach (byte aMessageDigest in messageDigest)
+            {
+                sb.Append(string.Format("{0:X2}", 0xFF & aMessageDigest));
+            }
+
+            return sb.ToString();
         }
     }
 }

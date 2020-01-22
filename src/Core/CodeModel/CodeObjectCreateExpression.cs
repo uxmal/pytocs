@@ -24,13 +24,13 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeObjectCreateExpression()
         {
-            this.Arguments = new List<CodeExpression>();
-            this.Initializers = new List<CodeExpression>();
+            Arguments = new List<CodeExpression>();
+            Initializers = new List<CodeExpression>();
         }
 
         public CodeTypeReference Type { get; set; }
         public CodeInitializer Initializer { get; set; }
-        public List<CodeExpression> Arguments { get; private set; }
+        public List<CodeExpression> Arguments { get; }
         public List<CodeExpression> Initializers { get; set; }
 
         public override void Accept(ICodeExpressionVisitor visitor)

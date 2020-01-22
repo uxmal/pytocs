@@ -22,7 +22,7 @@ using System.Collections.Generic;
 namespace Pytocs.Core.Types
 {
     /// <summary>
-    /// Represents a Python tuple.
+    ///     Represents a Python tuple.
     /// </summary>
     public class TupleType : DataType
     {
@@ -30,7 +30,7 @@ namespace Pytocs.Core.Types
 
         public TupleType()
         {
-            this.eltTypes = new List<DataType>();
+            eltTypes = new List<DataType>();
         }
 
         public TupleType(List<DataType> eltTypes)
@@ -41,13 +41,13 @@ namespace Pytocs.Core.Types
         public TupleType(DataType elt0)
             : this()
         {
-            this.eltTypes.Add(elt0);
+            eltTypes.Add(elt0);
         }
 
         public TupleType(params DataType[] types)
             : this()
         {
-            this.eltTypes.AddRange(types);
+            eltTypes.AddRange(types);
         }
 
         public override T Accept<T>(IDataTypeVisitor<T> visitor)
@@ -67,29 +67,37 @@ namespace Pytocs.Core.Types
 
         public ListType ToListType()
         {
-            ListType t = new ListType();        //$ no call to factory.
+            ListType t = new ListType(); //$ no call to factory.
             foreach (DataType e in eltTypes)
             {
                 t.Add(e);
             }
+
             return t;
         }
 
         public override bool Equals(object other)
         {
             if (!(other is DataType dtOther))
+            {
                 return false;
+            }
+
             if (typeStack.Contains(this, dtOther))
             {
                 return true;
             }
-            else if (other is TupleType that)
+
+            if (other is TupleType that)
             {
                 List<DataType> types1 = eltTypes;
                 List<DataType> types2 = that.eltTypes;
 
                 if (types1.Count != types2.Count)
+                {
                     return false;
+                }
+
                 typeStack.Push(this, dtOther);
                 for (int i = 0; i < types1.Count; i++)
                 {
@@ -99,13 +107,12 @@ namespace Pytocs.Core.Types
                         return false;
                     }
                 }
+
                 typeStack.Pop(this, other);
                 return true;
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         public override int GetHashCode()

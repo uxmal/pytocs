@@ -21,6 +21,7 @@ using Pytocs.Core.Types;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using Name = Pytocs.Core.Syntax.Identifier;
@@ -71,9 +72,9 @@ namespace Pytocs.Core.TypeInference
     }
 
     /// <summary>
-    /// Analyzes a directory of Python files, collecting
-    /// and inferring type information as it parses all
-    /// the files.
+    ///     Analyzes a directory of Python files, collecting
+    ///     and inferring type information as it parses all
+    ///     the files.
     /// </summary>
     public class AnalyzerImpl : Analyzer
     {
@@ -82,7 +83,10 @@ namespace Pytocs.Core.TypeInference
 
         private readonly List<Binding> allBindings = new List<Binding>();
         private readonly Dictionary<Node, DataType> expTypes = new Dictionary<Node, DataType>();
-        private readonly Dictionary<string, List<Diagnostic>> semanticErrors = new Dictionary<string, List<Diagnostic>>();
+
+        private readonly Dictionary<string, List<Diagnostic>> semanticErrors =
+            new Dictionary<string, List<Diagnostic>>();
+
         private readonly Dictionary<string, List<Diagnostic>> parseErrors = new Dictionary<string, List<Diagnostic>>();
         private readonly List<string> path = new List<string>();
         private readonly HashSet<FunType> uncalled = new HashSet<FunType>();
@@ -98,7 +102,7 @@ namespace Pytocs.Core.TypeInference
 
         private IProgress loadingProgress;
         private string cacheDir;
-        private string cwd = null;
+        private string cwd;
         private string projectDir;
 
         public AnalyzerImpl(ILogger logger)
@@ -108,19 +112,19 @@ namespace Pytocs.Core.TypeInference
 
         public AnalyzerImpl(IFileSystem fs, ILogger logger, Dictionary<string, object> options, DateTime startTime)
         {
-            this.FileSystem = fs;
+            FileSystem = fs;
             this.logger = logger;
-            this.TypeFactory = new DataTypeFactory(this);
-            this.GlobalTable = new State(null, State.StateType.GLOBAL);
-            this.Resolved = new HashSet<Name>();
-            this.Unresolved = new HashSet<Name>();
-            this.References = new Dictionary<Node, List<Binding>>();
+            TypeFactory = new DataTypeFactory(this);
+            GlobalTable = new State(null, State.StateType.GLOBAL);
+            Resolved = new HashSet<Name>();
+            Unresolved = new HashSet<Name>();
+            References = new Dictionary<Node, List<Binding>>();
 
             this.options = options ?? new Dictionary<string, object>();
             this.startTime = startTime;
-            this.suffix = ".py";
-            this.Builtins = new Builtins(this);
-            this.Builtins.Initialize();
+            suffix = ".py";
+            Builtins = new Builtins(this);
+            Builtins.Initialize();
             AddPythonPath();
             CopyModels();
             CreateCacheDirectory();
@@ -130,23 +134,23 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-        public DataTypeFactory TypeFactory { get; private set; }
+        public DataTypeFactory TypeFactory { get; }
         public int CalledFunctions { get; set; }
-        public State GlobalTable { get; private set; }
-        public HashSet<Name> Resolved { get; private set; }
-        public HashSet<Name> Unresolved { get; private set; }
-        public Builtins Builtins { get; private set; }
-        public Dictionary<Node, List<Binding>> References { get; private set; }
+        public State GlobalTable { get; }
+        public HashSet<Name> Resolved { get; }
+        public HashSet<Name> Unresolved { get; }
+        public Builtins Builtins { get; }
+        public Dictionary<Node, List<Binding>> References { get; }
 
         public State ModuleTable = new State(null, State.StateType.GLOBAL);
 
         /// <summary>
-        /// Main entry to the analyzer
+        ///     Main entry to the analyzer
         /// </summary>
         public void Analyze(string path)
         {
             string upath = FileSystem.GetFullPath(path);
-            this.projectDir = FileSystem.DirectoryExists(upath) ? upath : FileSystem.GetDirectoryName(upath);
+            projectDir = FileSystem.DirectoryExists(upath) ? upath : FileSystem.GetDirectoryName(upath);
             LoadFileRecursive(upath);
             msg(Resources.FinishedLoadingFiles, CalledFunctions);
             msg(Resources.AnalyzingUncalledFunctions);
@@ -156,9 +160,11 @@ namespace Pytocs.Core.TypeInference
         public bool HasOption(string option)
         {
             if (options.TryGetValue(option, out object op) && (bool)op)
+            {
                 return true;
-            else
-                return false;
+            }
+
+            return false;
         }
 
         public void setCWD(string cd)
@@ -195,9 +201,11 @@ namespace Pytocs.Core.TypeInference
             string path = Environment.GetEnvironmentVariable("PYTHONPATH");
             if (path != null)
             {
-                var pathseparator = ':';
-                if (Array.IndexOf(System.IO.Path.GetInvalidPathChars(), ':') >= 0)
+                char pathseparator = ':';
+                if (Array.IndexOf(Path.GetInvalidPathChars(), ':') >= 0)
+                {
                     pathseparator = ';';
+                }
 
                 string[] segments = path.Split(pathseparator);
                 foreach (string p in segments)
@@ -226,15 +234,17 @@ namespace Pytocs.Core.TypeInference
 
         public List<string> getLoadPath()
         {
-            var loadPath = new List<string>();
+            List<string> loadPath = new List<string>();
             if (cwd != null)
             {
                 loadPath.Add(cwd);
             }
+
             if (projectDir != null && FileSystem.DirectoryExists(projectDir))
             {
                 loadPath.Add(projectDir);
             }
+
             loadPath.AddRange(path);
             return loadPath;
         }
@@ -289,7 +299,8 @@ namespace Pytocs.Core.TypeInference
             {
                 return null;
             }
-            else if (t is UnionType ut)
+
+            if (t is UnionType ut)
             {
                 foreach (DataType tt in ut.types)
                 {
@@ -298,16 +309,16 @@ namespace Pytocs.Core.TypeInference
                         return mt;
                     }
                 }
+
                 return null;
             }
-            else if (t is ModuleType mt)
+
+            if (t is ModuleType mt)
             {
                 return mt;
             }
-            else
-            {
-                return null;
-            }
+
+            return null;
         }
 
         public string GetModuleQname(string file)
@@ -320,15 +331,17 @@ namespace Pytocs.Core.TypeInference
             {
                 file = file.Substring(0, file.Length - suffix.Length);
             }
+
             return file.Replace(".", "%20").Replace('/', '.').Replace('\\', '.');
         }
 
         public List<Diagnostic> GetDiagnosticsForFile(string file)
         {
-            if (semanticErrors.TryGetValue(file, out var errs))
+            if (semanticErrors.TryGetValue(file, out List<Diagnostic> errs))
             {
                 return errs;
             }
+
             return new List<Diagnostic>();
         }
 
@@ -336,17 +349,19 @@ namespace Pytocs.Core.TypeInference
         {
             if (!(node is Url))
             {
-                if (!References.TryGetValue(node, out var bindings))
+                if (!References.TryGetValue(node, out List<Binding> bindings))
                 {
                     bindings = new List<Binding>(1);
                     References[node] = bindings;
                 }
+
                 foreach (Binding b in bs)
                 {
                     if (!bindings.Contains(b))
                     {
                         bindings.Add(b);
                     }
+
                     b.AddReference(node);
                 }
             }
@@ -354,14 +369,14 @@ namespace Pytocs.Core.TypeInference
 
         public void putRef(Node node, Binding b)
         {
-            var bs = new List<Binding> { b };
+            List<Binding> bs = new List<Binding> { b };
             putRef(node, bs);
         }
 
         public void AddExpType(Exp exp, DataType dt)
         {
             //$REVIEW: unify with previous type?
-            this.expTypes[exp] = dt;
+            expTypes[exp] = dt;
         }
 
         public void AddProblem(Node loc, string msg)
@@ -384,17 +399,18 @@ namespace Pytocs.Core.TypeInference
 
         private void AddFileError(string file, int begin, int end, string msg)
         {
-            var d = new Diagnostic(file, Diagnostic.Category.ERROR, begin, end, msg);
+            Diagnostic d = new Diagnostic(file, Diagnostic.Category.ERROR, begin, end, msg);
             GetFileErrors(file, semanticErrors).Add(d);
         }
 
         private List<Diagnostic> GetFileErrors(string file, Dictionary<string, List<Diagnostic>> map)
         {
-            if (!map.TryGetValue(file, out var msgs))
+            if (!map.TryGetValue(file, out List<Diagnostic> msgs))
             {
                 msgs = new List<Diagnostic>();
                 map[file] = msgs;
             }
+
             return msgs;
         }
 
@@ -425,7 +441,7 @@ namespace Pytocs.Core.TypeInference
             PushImportStack(path);
             loadingProgress.Tick();
 
-            var ast = GetAstForFile(path);
+            Module ast = GetAstForFile(path);
             DataType type = null;
             if (ast == null)
             {
@@ -436,6 +452,7 @@ namespace Pytocs.Core.TypeInference
                 loadedFiles.Add(path);
                 type = LoadModule(ast);
             }
+
             PopImportStack(path);
 
             // restore old CWD
@@ -450,7 +467,7 @@ namespace Pytocs.Core.TypeInference
 
         private void CreateCacheDirectory()
         {
-            var p = FileSystem.CombinePath(FileSystem.getSystemTempDir(), "pytocs");
+            string p = FileSystem.CombinePath(FileSystem.getSystemTempDir(), "pytocs");
             cacheDir = FileSystem.CombinePath(p, "ast_cache");
             string f = cacheDir;
             msg(Resources.AstCacheIsAt, cacheDir);
@@ -471,7 +488,7 @@ namespace Pytocs.Core.TypeInference
         }
 
         /// <summary>
-        /// Returns the syntax tree for {@code file}. <p>
+        ///     Returns the syntax tree for {@code file}. <p>
         /// </summary>
         public Module GetAstForFile(string file)
         {
@@ -489,11 +506,12 @@ namespace Pytocs.Core.TypeInference
             {
                 return "";
             }
+
             return string.Join(".", names.Select(n => n.Name));
         }
 
         /// <summary>
-        /// Find the path that contains modname. Used to find the starting point of locating a qname.
+        ///     Find the path that contains modname. Used to find the starting point of locating a qname.
         /// </summary>
         /// <param name="headName">first module name segment</param>
         public string LocateModule(string headName)
@@ -515,6 +533,7 @@ namespace Pytocs.Core.TypeInference
                     return p;
                 }
             }
+
             return null;
         }
 
@@ -580,6 +599,7 @@ namespace Pytocs.Core.TypeInference
                         {
                             return null;
                         }
+
                         if (prev != null)
                         {
                             prev.Table.Insert(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
@@ -588,6 +608,7 @@ namespace Pytocs.Core.TypeInference
                         {
                             state.Insert(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
                         }
+
                         prev = mod;
                     }
                     else
@@ -596,20 +617,21 @@ namespace Pytocs.Core.TypeInference
                     }
                 }
             }
+
             return prev;
         }
 
         /// <summary>
-        /// Load all Python source files recursively if the given fullname is a
-        /// directory; otherwise just load a file.  Looks at file extension to
-        /// determine whether to load a given file.
+        ///     Load all Python source files recursively if the given fullname is a
+        ///     directory; otherwise just load a file.  Looks at file extension to
+        ///     determine whether to load a given file.
         /// </summary>
         public void LoadFileRecursive(string fullname)
         {
             int count = CountFileRecursive(fullname);
             if (loadingProgress == null)
             {
-                loadingProgress = new Progress(s => { this.msg_(s); }, count, 50, this.HasOption("quiet"));
+                loadingProgress = new Progress(s => { msg_(s); }, count, 50, HasOption("quiet"));
             }
 
             string file_or_dir = fullname;
@@ -628,7 +650,7 @@ namespace Pytocs.Core.TypeInference
         }
 
         /// <summary>
-        /// Count number of .py files
+        ///     Count number of .py files
         /// </summary>
         /// <param name="fullname"></param>
         /// <returns></returns>
@@ -651,36 +673,39 @@ namespace Pytocs.Core.TypeInference
                     ++sum;
                 }
             }
+
             return sum;
         }
 
         public Dictionary<Node, DataType> BuildTypeDictionary()
         {
-            var types = new Dictionary<Node, DataType>();
-            foreach (var b in GetAllBindings())
+            Dictionary<Node, DataType> types = new Dictionary<Node, DataType>();
+            foreach (Binding b in GetAllBindings())
             {
-                var dt = b.Type;
-                if (types.TryGetValue(b.Node, out var dtOld))
+                DataType dt = b.Type;
+                if (types.TryGetValue(b.Node, out DataType dtOld))
                 {
                     dt = UnionType.CreateUnion(new[] { dt, dtOld });
                 }
+
                 types[b.Node] = dt;
             }
 
-            foreach (var b in GetAllBindings())
+            foreach (Binding b in GetAllBindings())
             {
-                var dt = types[b.Node];
-                foreach (var r in b.References)
+                DataType dt = types[b.Node];
+                foreach (Node r in b.References)
                 {
-                    if (types.TryGetValue(r, out var dtOld))
+                    if (types.TryGetValue(r, out DataType dtOld))
                     {
                         dt = UnionType.CreateUnion(new[] { dt, dtOld });
                     }
+
                     types[r] = dt;
                 }
             }
 
-            foreach (var de in this.expTypes)
+            foreach (KeyValuePair<Node, DataType> de in expTypes)
             {
                 types[de.Key] = de.Value;
             }
@@ -701,6 +726,7 @@ namespace Pytocs.Core.TypeInference
                     AddProblem(b.Node, string.Format(Resources.UnusedVariable, b.Name));
                 }
             }
+
             msg(GetAnalysisSummary());
         }
 
@@ -722,7 +748,7 @@ namespace Pytocs.Core.TypeInference
         {
             if (!HasOption("quiet"))
             {
-                Console.Write(string.Format(m, args));
+                Console.Write(m, args);
             }
         }
 
@@ -741,10 +767,10 @@ namespace Pytocs.Core.TypeInference
 
         public void ApplyUncalled()
         {
-            IProgress progress = new Progress(s => this.msg_(s), uncalled.Count, 50, this.HasOption("quiet"));
+            IProgress progress = new Progress(s => msg_(s), uncalled.Count, 50, HasOption("quiet"));
             while (uncalled.Count != 0)
             {
-                var uncalledDup = uncalled.ToList();
+                List<FunType> uncalledDup = uncalled.ToList();
                 foreach (FunType cl in uncalledDup)
                 {
                     progress.Tick();
@@ -760,11 +786,11 @@ namespace Pytocs.Core.TypeInference
 
         public string GetAnalysisSummary()
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
             sb.AppendLine();
             sb.AppendLine(Banner(Resources.AnalysisSummary));
 
-            string duration = FormatTime(DateTime.Now - this.startTime);
+            string duration = FormatTime(DateTime.Now - startTime);
             sb.AppendFormat(Resources.AnalysisTotalTime, duration);
             sb.AppendLine();
             sb.AppendFormat(Resources.AnalysisModulesLoaded, loadedFiles.Count);
@@ -789,8 +815,8 @@ namespace Pytocs.Core.TypeInference
             sb.AppendFormat(Resources.AnalysisNumberReferences, References.Count);
             sb.AppendLine();
 
-            long resolved = this.Resolved.Count;
-            long unresolved = this.Unresolved.Count;
+            long resolved = Resolved.Count;
+            long unresolved = Unresolved.Count;
             sb.AppendFormat(Resources.AnalysisNumberResolvedNames, resolved);
             sb.AppendLine();
             sb.AppendFormat(Resources.AnalysisNumberUnresolvedNames, unresolved);
@@ -816,6 +842,7 @@ namespace Pytocs.Core.TypeInference
                     files.Add(file);
                 }
             }
+
             return files;
         }
 
@@ -827,17 +854,17 @@ namespace Pytocs.Core.TypeInference
         public override string ToString()
         {
             return "(analyzer:" +
-                    "[" + allBindings.Count + " bindings] " +
-                    "[" + References.Count + " refs] " +
-                    "[" + loadedFiles.Count + " files] " +
-                    ")";
+                   "[" + allBindings.Count + " bindings] " +
+                   "[" + References.Count + " refs] " +
+                   "[" + loadedFiles.Count + " files] " +
+                   ")";
         }
 
         /// <summary>
-        /// Given an absolute <paramref name="path"/> to a file (not a directory),
-        /// returns the module name for the file.  If the file is an __init__.py,
-        /// returns the last component of the file's parent directory, else
-        /// returns the filename without path or extension.
+        ///     Given an absolute <paramref name="path" /> to a file (not a directory),
+        ///     returns the module name for the file.  If the file is an __init__.py,
+        ///     returns the last component of the file's parent directory, else
+        ///     returns the filename without path or extension.
         /// </summary>
         public string ModuleName(string path)
         {
@@ -847,19 +874,18 @@ namespace Pytocs.Core.TypeInference
             {
                 return FileSystem.GetDirectoryName(f);
             }
-            else if (name.EndsWith(suffix))
+
+            if (name.EndsWith(suffix))
             {
                 return name.Substring(0, name.Length - suffix.Length);
             }
-            else
-            {
-                return name;
-            }
+
+            return name;
         }
 
         public Binding CreateBinding(string id, Node node, DataType type, BindingKind kind)
         {
-            var b = new Binding(id, node, type, kind);
+            Binding b = new Binding(id, node, type, kind);
             RegisterBinding(b);
             return b;
         }
@@ -870,11 +896,9 @@ namespace Pytocs.Core.TypeInference
             {
                 return "100%";
             }
-            else
-            {
-                int pct = (int)(num * 100 / total);
-                return string.Format("{0,3}%", pct);
-            }
+
+            int pct = (int)(num * 100 / total);
+            return string.Format("{0,3}%", pct);
         }
 
         public void addRef(AttributeAccess attr, DataType targetType, ISet<Binding> bs)
@@ -883,8 +907,9 @@ namespace Pytocs.Core.TypeInference
             {
                 putRef(attr, b);
                 if (attr.Parent is Application &&
-                        b.Type is FunType && targetType is InstanceType)
-                {  // method call
+                    b.Type is FunType && targetType is InstanceType)
+                {
+                    // method call
                     ((FunType)b.Type).SelfType = targetType;
                 }
             }
@@ -897,6 +922,7 @@ namespace Pytocs.Core.TypeInference
             {
                 return name;
             }
+
             return path + "." + name;
         }
     }

@@ -6,7 +6,7 @@
 
         public IterableType(DataType elemType)
         {
-            this.ElementType = elemType;
+            ElementType = elemType;
         }
 
         public override T Accept<T>(IDataTypeVisitor<T> visitor)

@@ -26,7 +26,7 @@ namespace Pytocs.Core.CodeModel
 
         public CodeThrowExceptionStatement(CodeExpression e)
         {
-            this.Expression = e;
+            Expression = e;
         }
 
         public CodeExpression Expression { get; set; }

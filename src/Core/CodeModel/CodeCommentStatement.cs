@@ -22,7 +22,7 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeCommentStatement(string comment)
         {
-            this.Comment = comment;
+            Comment = comment;
         }
 
         public string Comment { get; set; }

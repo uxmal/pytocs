@@ -16,7 +16,7 @@
 
 #endregion License
 
-using Pytocs.Core;
+using Pytocs.Core.Syntax;
 using Pytocs.Core.Translate;
 using Pytocs.Core.TypeInference;
 using System;
@@ -33,29 +33,29 @@ namespace Pytocs.Gui
         {
             try
             {
-                var fs = new FileSystem();
-                var options = new Dictionary<string, object>();
-                var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
+                FileSystem fs = new FileSystem();
+                Dictionary<string, object> options = new Dictionary<string, object>();
+                AnalyzerImpl typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
                 typeAnalysis.Analyze(sourcePath);
                 typeAnalysis.Finish();
-                var types = new TypeReferenceTranslator(typeAnalysis.BuildTypeDictionary());
+                TypeReferenceTranslator types = new TypeReferenceTranslator(typeAnalysis.BuildTypeDictionary());
 
                 var walker = new DirectoryWalker(fs, sourcePath, "*.py");
                 await walker.EnumerateAsync(state =>
                 {
-                    foreach (var file in fs.GetFiles(state.DirectoryName, "*.py", SearchOption.TopDirectoryOnly))
+                    foreach (string file in fs.GetFiles(state.DirectoryName, "*.py", SearchOption.TopDirectoryOnly))
                     {
-                        var path = fs.GetFullPath(file);
+                        string path = fs.GetFullPath(file);
                         var xlator = new Translator(
                             state.Namespace,
                             fs.GetFileNameWithoutExtension(file),
                             fs,
                             logger);
-                        var module = typeAnalysis.GetAstForFile(path);
+                        Module module = typeAnalysis.GetAstForFile(path);
 
-                        var relativePath = MakeRelative(sourcePath, path);
-                        var targetFilePath = Path.ChangeExtension(MakeAbsolute(targetPath, relativePath), ".py.cs");
-                        var targetFileDirectory = Path.GetDirectoryName(targetFilePath);
+                        string relativePath = MakeRelative(sourcePath, path);
+                        string? targetFilePath = Path.ChangeExtension(MakeAbsolute(targetPath, relativePath), ".py.cs");
+                        string? targetFileDirectory = Path.GetDirectoryName(targetFilePath);
 
                         if (!Directory.Exists(targetFileDirectory))
                         {

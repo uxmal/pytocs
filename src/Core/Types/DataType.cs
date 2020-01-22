@@ -16,27 +16,34 @@
 
 #endregion License
 
-using State = Pytocs.Core.TypeInference.State;
-using TypeStack = Pytocs.Core.TypeInference.TypeStack;
+using Pytocs.Core.TypeInference;
 
 namespace Pytocs.Core.Types
 {
     public abstract class DataType
     {
-        public string file = null;
-
         protected static TypeStack typeStack = new TypeStack();
+
+        public static readonly InstanceType Unknown = new InstanceType(new ClassType("?", null, null));
+        public static readonly InstanceType Cont = new InstanceType(new ClassType("None", null, null));
+        public static readonly InstanceType None = new InstanceType(new ClassType("None", null, null));
+        public static readonly StrType Str = new StrType(null);
+        public static readonly IntType Int = new IntType();
+        public static readonly FloatType Float = new FloatType();
+        public static readonly ComplexType Complex = new ComplexType();
+        public static readonly BoolType Bool = new BoolType(BoolType.Value.Undecided);
+        public string file = null;
 
         protected DataType(State.StateType scopeType = State.StateType.SCOPE)
         {
-            this.Table = new State(null, scopeType);
+            Table = new State(null, scopeType);
         }
 
         public State Table { get; set; }
 
         public override bool Equals(object obj)
         {
-            return object.ReferenceEquals(this, obj);
+            return ReferenceEquals(this, obj);
         }
 
         public override int GetHashCode()
@@ -47,14 +54,20 @@ namespace Pytocs.Core.Types
         public static bool operator ==(DataType a, DataType b)
         {
             if (a is null)
+            {
                 return b is null;
+            }
+
             return a.Equals(b);
         }
 
         public static bool operator !=(DataType a, DataType b)
         {
             if (a is null)
+            {
                 return !(b is null);
+            }
+
             return !a.Equals(b);
         }
 
@@ -65,23 +78,14 @@ namespace Pytocs.Core.Types
 
         public bool IsUnknownType()
         {
-            return this == DataType.Unknown;
+            return this == Unknown;
         }
 
         public abstract T Accept<T>(IDataTypeVisitor<T> visitor);
 
         public override string ToString()
         {
-            return this.Accept(new TypePrinter());
+            return Accept(new TypePrinter());
         }
-
-        public static readonly InstanceType Unknown = new InstanceType(new ClassType("?", null, null));
-        public static readonly InstanceType Cont = new InstanceType(new ClassType("None", null, null));
-        public static readonly InstanceType None = new InstanceType(new ClassType("None", null, null));
-        public static readonly StrType Str = new StrType(null);
-        public static readonly IntType Int = new IntType();
-        public static readonly FloatType Float = new FloatType();
-        public static readonly ComplexType Complex = new ComplexType();
-        public static readonly BoolType Bool = new BoolType(BoolType.Value.Undecided);
     }
 }

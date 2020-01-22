@@ -36,12 +36,10 @@ namespace Pytocs.Core.Types
         {
             if (other is SymbolType that)
             {
-                return this.name.Equals(that.name);
+                return name.Equals(that.name);
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         public override int GetHashCode()

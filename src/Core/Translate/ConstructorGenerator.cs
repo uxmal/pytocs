@@ -28,16 +28,17 @@ namespace Pytocs.Core.Translate
         public ConstructorGenerator(
             ClassDef classDef,
             FunctionDef f,
-            List<Syntax.Parameter> args,
+            List<Parameter> args,
             TypeReferenceTranslator types,
             CodeGenerator gen)
             : base(classDef, f, "", args, false, false, types, gen)
         {
         }
 
-        protected override CodeMemberMethod Generate(CodeTypeReference ignore, CodeParameterDeclarationExpression[] parms)
+        protected override CodeMemberMethod Generate(CodeTypeReference ignore,
+            CodeParameterDeclarationExpression[] parms)
         {
-            var cons = gen.Constructor(parms, () => XlatConstructor(f.body));
+            CodeConstructor cons = gen.Constructor(parms, () => XlatConstructor(f.body));
             GenerateTupleParameterUnpackers(cons);
             LocalVariableGenerator.Generate(cons, globals);
             return cons;
@@ -46,23 +47,37 @@ namespace Pytocs.Core.Translate
         private void XlatConstructor(SuiteStatement stmt)
         {
             if (stmt == null)
+            {
                 return;
+            }
 
-            var comments = StatementTranslator.ConvertFirstStringToComments(stmt.stmts);
-            stmt.Accept(this.stmtXlat);
+            IEnumerable<CodeCommentStatement> comments = StatementTranslator.ConvertFirstStringToComments(stmt.stmts);
+            stmt.Accept(stmtXlat);
             if (gen.Scope.Count == 0)
+            {
                 return;
+            }
+
             gen.Scope[0].ToString();
-            var expStm = gen.Scope[0] as CodeExpressionStatement;
+            CodeExpressionStatement expStm = gen.Scope[0] as CodeExpressionStatement;
             if (expStm == null)
+            {
                 return;
-            var appl = expStm.Expression as CodeApplicationExpression;
+            }
+
+            CodeApplicationExpression appl = expStm.Expression as CodeApplicationExpression;
             if (appl == null)
+            {
                 return;
-            var method = appl.Method as CodeFieldReferenceExpression;
+            }
+
+            CodeFieldReferenceExpression method = appl.Method as CodeFieldReferenceExpression;
             if (method == null || method.FieldName != "__init__")
+            {
                 return;
-            var ctor = (CodeConstructor)gen.CurrentMember;
+            }
+
+            CodeConstructor ctor = (CodeConstructor)gen.CurrentMember;
             ctor.Comments.AddRange(comments);
             ctor.BaseConstructorArgs.AddRange(appl.Arguments.Skip(1));
             gen.Scope.RemoveAt(0);

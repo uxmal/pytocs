@@ -12,10 +12,10 @@
         </Menu>
         <TabControl>
             <TabItem Header="Folder Converter">
-                <local:FolderConverterTab></local:FolderConverterTab>
+                <local:FolderConverterTab />
             </TabItem>
             <TabItem Header="File &amp; Snippet Converter">
-                <local:SnippetConverterTab></local:SnippetConverterTab>
+                <local:SnippetConverterTab />
             </TabItem>
         </TabControl>
     </DockPanel>

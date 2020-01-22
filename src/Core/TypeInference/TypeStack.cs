@@ -45,14 +45,15 @@ namespace Pytocs.Core.TypeInference
         {
             foreach ((DataType first, DataType second) p in stack)
             {
-                if (object.ReferenceEquals(p.first, first) &&
-                    object.ReferenceEquals(p.second, second) ||
-                    object.ReferenceEquals(p.first, second) &&
-                    object.ReferenceEquals(p.second, first))
+                if (ReferenceEquals(p.first, first) &&
+                    ReferenceEquals(p.second, second) ||
+                    ReferenceEquals(p.first, second) &&
+                    ReferenceEquals(p.second, first))
                 {
                     return true;
                 }
             }
+
             return false;
         }
     }

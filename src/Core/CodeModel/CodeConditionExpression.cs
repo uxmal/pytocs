@@ -20,15 +20,15 @@ namespace Pytocs.Core.CodeModel
 {
     public class CodeConditionExpression : CodeExpression
     {
+        public CodeExpression Alternative;
         public CodeExpression Condition;
         public CodeExpression Consequent;
-        public CodeExpression Alternative;
 
         public CodeConditionExpression(CodeExpression cond, CodeExpression cons, CodeExpression alt)
         {
-            this.Condition = cond;
-            this.Consequent = cons;
-            this.Alternative = alt;
+            Condition = cond;
+            Consequent = cons;
+            Alternative = alt;
         }
 
         public override T Accept<T>(ICodeExpressionVisitor<T> visitor)

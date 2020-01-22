@@ -25,8 +25,10 @@ namespace Pytocs.Gui
     {
         // This method is needed for IDE previewer infrastructure
         public static AppBuilder BuildAvaloniaApp()
-          => AppBuilder.Configure<App>().UsePlatformDetect()
+        {
+            return AppBuilder.Configure<App>().UsePlatformDetect()
                 .LogToDebug();
+        }
 
         // The entry point. Things aren't ready yet, so at this point
         // you shouldn't use any Avalonia types or anything that expects

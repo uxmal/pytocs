@@ -19,13 +19,13 @@
 namespace Pytocs.Core.Types
 {
     /// <summary>
-    /// Model a Python awaitable type.
+    ///     Model a Python awaitable type.
     /// </summary>
     public class AwaitableType : DataType
     {
         public AwaitableType(DataType resultType)
         {
-            this.ResultType = resultType;
+            ResultType = resultType;
         }
 
         public DataType ResultType { get; }

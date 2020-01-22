@@ -22,8 +22,8 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeCastExpression(CodeTypeReference type, CodeExpression exp)
         {
-            this.TargetType = type;
-            this.Expression = exp;
+            TargetType = type;
+            Expression = exp;
         }
 
         public CodeTypeReference TargetType { get; }

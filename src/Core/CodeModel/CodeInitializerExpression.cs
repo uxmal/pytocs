@@ -26,7 +26,7 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeCollectionInitializer(params CodeExpression[] values)
         {
-            this.Values = values;
+            Values = values;
         }
 
         public CodeExpression[] Values { get; set; }

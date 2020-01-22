@@ -20,13 +20,13 @@ namespace Pytocs.Core.CodeModel
 {
     public class CodeFromClause : CodeQueryClause
     {
-        public CodeExpression Identifier;
         public CodeExpression Collection;
+        public CodeExpression Identifier;
 
         public CodeFromClause(CodeExpression id, CodeExpression collection)
         {
-            this.Identifier = id;
-            this.Collection = collection;
+            Identifier = id;
+            Collection = collection;
         }
     }
 }

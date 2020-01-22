@@ -34,7 +34,7 @@ namespace Pytocs.Core.Types
 
         public override bool Equals(object other)
         {
-            return (other is StrType);
+            return other is StrType;
         }
 
         public override int GetHashCode()

@@ -20,12 +20,12 @@ namespace Pytocs.Core.CodeModel
 {
     public class CodeAwaitExpression : CodeExpression
     {
-        public CodeExpression Expression { get; set; }
-
         public CodeAwaitExpression(CodeExpression exp)
         {
-            this.Expression = exp;
+            Expression = exp;
         }
+
+        public CodeExpression Expression { get; set; }
 
         public override T Accept<T>(ICodeExpressionVisitor<T> visitor)
         {

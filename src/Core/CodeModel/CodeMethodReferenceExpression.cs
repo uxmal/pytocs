@@ -24,9 +24,9 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeMethodReferenceExpression(CodeExpression r, string p)
         {
-            this.TargetObject = r;
-            this.MethodName = p;
-            this.TypeReferences = new List<CodeTypeReference>();
+            TargetObject = r;
+            MethodName = p;
+            TypeReferences = new List<CodeTypeReference>();
         }
 
         public CodeExpression TargetObject { get; set; }

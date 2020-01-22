@@ -24,39 +24,40 @@ using System.Linq;
 namespace Pytocs.Core.Syntax
 {
     /// <summary>
-    /// Lexer post processor that deals with comments.
+    ///     Lexer post processor that deals with comments.
     /// </summary>
     /// <remarks>
-    /// Python's significant whitespace causes headaches when dealing
-    /// with comments. Is an indented comment supposed to cause an indented code
-    /// block?
+    ///     Python's significant whitespace causes headaches when dealing
+    ///     with comments. Is an indented comment supposed to cause an indented code
+    ///     block?
     /// </remarks>
     public class CommentFilter : ILexer
     {
-        private ILexer lexer;
-        private Token token;
-        private List<Token> queue;
         private int iHead;
+        private readonly ILexer lexer;
         private TokenType prevTokenType;
+        private readonly List<Token> queue;
+        private Token token;
 
         public CommentFilter(ILexer lexer)
         {
             this.lexer = lexer;
-            this.queue = new List<Token>();
-            this.iHead = 0;
-            this.prevTokenType = TokenType.NONE;
+            queue = new List<Token>();
+            iHead = 0;
+            prevTokenType = TokenType.NONE;
         }
 
-        public int LineNumber => this.lexer.LineNumber;
+        public int LineNumber => lexer.LineNumber;
 
         public Token Get()
         {
             if (token.Type != TokenType.NONE)
             {
-                var t = token;
-                this.token = new Token();
+                Token t = token;
+                token = new Token();
                 return t;
             }
+
             return GetToken();
         }
 
@@ -66,7 +67,8 @@ namespace Pytocs.Core.Syntax
             {
                 return token;
             }
-            this.token = GetToken();
+
+            token = GetToken();
             return token;
         }
 
@@ -74,25 +76,25 @@ namespace Pytocs.Core.Syntax
         {
             if (iHead < queue.Count)
             {
-                this.prevTokenType = queue[iHead].Type;
+                prevTokenType = queue[iHead].Type;
                 return queue[iHead++];
             }
 
             iHead = 0;
             queue.Clear();
 
-            var tok = lexer.Get();
+            Token tok = lexer.Get();
             if (tok.Type != TokenType.COMMENT ||
-                (prevTokenType != TokenType.NEWLINE &&
-                 prevTokenType != TokenType.INDENT &&
-                 prevTokenType != TokenType.DEDENT))
+                prevTokenType != TokenType.NEWLINE &&
+                prevTokenType != TokenType.INDENT &&
+                prevTokenType != TokenType.DEDENT)
             {
-                this.prevTokenType = tok.Type;
+                prevTokenType = tok.Type;
                 return tok;
             }
 
             // Start reading comment lines.
-            var lines = new List<Line>();
+            List<Line> lines = new List<Line>();
             Line line = ReadLine(tok);
             lines.Add(line);
             Debug.Assert(line.IsComment());
@@ -107,11 +109,12 @@ namespace Pytocs.Core.Syntax
                 queue.AddRange(lines[0].Tokens);
                 return queue[iHead++];
             }
+
             // We have a bundle of > 1 lines that ends with a non-comment line.
             // The first one was indented or dedented. If the last, non-comment, line
             // is indented or dedented, all previous lines must also be in- or
             // dedented. If the last line is not dedented.
-            var lastLine = lines.Last();
+            Line lastLine = lines.Last();
             switch (lastLine.Tokens[0].Type)
             {
                 case TokenType.INDENT:
@@ -123,9 +126,10 @@ namespace Pytocs.Core.Syntax
                     {
                         // IF the preceding comment's indentation was the same
                         // as that of the dedent, we want to move the dedent.
-                        var dedent = lastLine.RemoveFirst(TokenType.DEDENT);
+                        List<Token> dedent = lastLine.RemoveFirst(TokenType.DEDENT);
                         lines[0].Tokens.InsertRange(0, dedent);
                     }
+
                     queue.AddRange(lines.SelectMany(l => l.Tokens));
                     break;
 
@@ -133,38 +137,40 @@ namespace Pytocs.Core.Syntax
                     queue.AddRange(lines.SelectMany(l => l.Tokens));
                     break;
             }
+
             prevTokenType = queue[iHead].Type;
             return queue[iHead++];
         }
 
         private Line ReadLine(Token tok)
         {
-            var list = new List<Token> { tok };
+            List<Token> list = new List<Token> { tok };
             do
             {
                 tok = lexer.Get();
                 list.Add(tok);
             } while (tok.Type != TokenType.EOF && tok.Type != TokenType.NEWLINE);
+
             return new Line { Tokens = list };
         }
 
         private Line ReadLine()
         {
-            var list = new List<Token>();
+            List<Token> list = new List<Token>();
             Token tok;
             do
             {
                 tok = lexer.Get();
                 list.Add(tok);
             } while (tok.Type != TokenType.EOF && tok.Type != TokenType.NEWLINE);
+
             return new Line { Tokens = list };
         }
 
         private class Line
         {
-            public TokenType Type { get { return Tokens[0].Type; } }
-
             public List<Token> Tokens;
+            public TokenType Type => Tokens[0].Type;
 
             internal bool IsComment()
             {
@@ -174,6 +180,7 @@ namespace Pytocs.Core.Syntax
                 {
                     ++i;
                 }
+
                 return
                     Tokens[i].Type == TokenType.COMMENT ||
                     Tokens[i].Type == TokenType.NEWLINE;
@@ -183,26 +190,32 @@ namespace Pytocs.Core.Syntax
 
             public List<Token> RemoveFirst(TokenType type)
             {
-                var iStart = this.Tokens.FindIndex(t => t.Type == type);
+                int iStart = Tokens.FindIndex(t => t.Type == type);
                 if (iStart < 0)
+                {
                     return new List<Token>();
-                var iEnd = this.Tokens.FindIndex(iStart, t => t.Type != type);
+                }
+
+                int iEnd = Tokens.FindIndex(iStart, t => t.Type != type);
                 if (iEnd < 0)
-                    iEnd = this.Tokens.Count;
-                var range = this.Tokens.GetRange(iStart, iEnd - iStart);
-                this.Tokens.RemoveRange(iStart, iEnd - iStart);
+                {
+                    iEnd = Tokens.Count;
+                }
+
+                List<Token> range = Tokens.GetRange(iStart, iEnd - iStart);
+                Tokens.RemoveRange(iStart, iEnd - iStart);
                 Debug.Assert(range.All(t => t.Type == type));
                 return range;
             }
 
             public void ReplaceEof()
             {
-                for (int i = 0; i < this.Tokens.Count; ++i)
+                for (int i = 0; i < Tokens.Count; ++i)
                 {
-                    var t = this.Tokens[i];
+                    Token t = Tokens[i];
                     if (t.Type == TokenType.EOF)
                     {
-                        this.Tokens[i] = new Token(
+                        Tokens[i] = new Token(
                             t.LineNumber, t.Indent,
                             TokenType.NEWLINE, null, null,
                             t.Start, t.End);

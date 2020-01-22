@@ -20,16 +20,16 @@ namespace Pytocs.Core.CodeModel
 {
     public class CodeBinaryOperatorExpression : CodeExpression
     {
+        public CodeBinaryOperatorExpression(CodeExpression l, CodeOperatorType op, CodeExpression r)
+        {
+            Left = l;
+            Operator = op;
+            Right = r;
+        }
+
         public CodeExpression Left { get; set; }
         public CodeOperatorType Operator { get; set; }
         public CodeExpression Right { get; set; }
-
-        public CodeBinaryOperatorExpression(CodeExpression l, CodeOperatorType op, CodeExpression r)
-        {
-            this.Left = l;
-            this.Operator = op;
-            this.Right = r;
-        }
 
         public override void Accept(ICodeExpressionVisitor visitor)
         {

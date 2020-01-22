@@ -25,16 +25,16 @@ using System.Linq;
 namespace Pytocs.Core.TypeInference
 {
     /// <summary>
-    /// Provides a factory for python source ASTs.  Maintains configurable on-disk and
-    /// in-memory caches to avoid re-parsing files during analysis.
+    ///     Provides a factory for python source ASTs.  Maintains configurable on-disk and
+    ///     in-memory caches to avoid re-parsing files during analysis.
     /// </summary>
     public class AstCache
     {
-        private IDictionary<string, Module> cache;
-        private Analyzer analyzer;
-        private IFileSystem fs;
-        private string cacheDir;
-        private ILogger logger;
+        private readonly Analyzer analyzer;
+        private readonly IDictionary<string, Module> cache;
+        private readonly string cacheDir;
+        private readonly IFileSystem fs;
+        private readonly ILogger logger;
 
         public AstCache(Analyzer analyzer, IFileSystem fs, ILogger logger, string cacheDir)
         {
@@ -42,11 +42,11 @@ namespace Pytocs.Core.TypeInference
             this.fs = fs;
             this.logger = logger;
             this.cacheDir = cacheDir;
-            this.cache = new Dictionary<string, Module>();
+            cache = new Dictionary<string, Module>();
         }
 
         /// <summary>
-        /// Clears the memory cache.
+        ///     Clears the memory cache.
         /// </summary>
         public void Clear()
         {
@@ -54,10 +54,10 @@ namespace Pytocs.Core.TypeInference
         }
 
         /// <summary>
-        /// Removes all serialized ASTs from the on-disk cache.
+        ///     Removes all serialized ASTs from the on-disk cache.
         /// </summary>
         /// <returns>
-        /// true if all cached AST files were removed
+        ///     true if all cached AST files were removed
         /// </returns>
         public bool ClearDiskCache()
         {
@@ -79,16 +79,15 @@ namespace Pytocs.Core.TypeInference
         }
 
         /// <summary>
-        /// Returns the syntax tree for <paramref name="path" />. May find and/or create a
-        /// cached copy in the mem cache or the disk cache.
-        ///
-        /// <param name="path">Absolute path to a source file.</param>
-        /// <returns>The AST, or <code>null</code> if the parse failed for any reason</returns>
+        ///     Returns the syntax tree for <paramref name="path" />. May find and/or create a
+        ///     cached copy in the mem cache or the disk cache.
+        ///     <param name="path">Absolute path to a source file.</param>
+        ///     <returns>The AST, or <code>null</code> if the parse failed for any reason</returns>
         /// </summary>
         public Module getAST(string path)
         {
             // Cache stores null value if the parse failed.
-            if (cache.TryGetValue(path, out var module))
+            if (cache.TryGetValue(path, out Module module))
             {
                 return module;
             }
@@ -106,10 +105,10 @@ namespace Pytocs.Core.TypeInference
             try
             {
                 logger.Verbose("parsing " + path);
-                var lexer = new Lexer(path, fs.CreateStreamReader(path));
-                var filter = new CommentFilter(lexer);
-                var parser = new Parser(path, filter, true, logger);
-                var moduleStmts = parser.Parse().ToList();
+                Lexer lexer = new Lexer(path, fs.CreateStreamReader(path));
+                CommentFilter filter = new CommentFilter(lexer);
+                Parser parser = new Parser(path, filter, true, logger);
+                List<Statement> moduleStmts = parser.Parse().ToList();
                 int posStart = 0;
                 int posEnd = 0;
                 if (moduleStmts.Count > 0)
@@ -117,6 +116,7 @@ namespace Pytocs.Core.TypeInference
                     posStart = moduleStmts[0].Start;
                     posEnd = moduleStmts.Last().End;
                 }
+
                 module = new Module(
                     analyzer.ModuleName(path),
                     new SuiteStatement(moduleStmts, path, posStart, posEnd),
@@ -124,15 +124,16 @@ namespace Pytocs.Core.TypeInference
             }
             finally
             {
-                cache[path] = module;  // may be null
+                cache[path] = module; // may be null
             }
+
             return module;
         }
 
         /// <summary>
-        /// Each source file's AST is saved in an object file named for the MD5
-        /// checksum of the source file.  All that is needed is the MD5, but the
-        /// file's base name is included for ease of debugging.
+        ///     Each source file's AST is saved in an object file named for the MD5
+        ///     checksum of the source file.  All that is needed is the MD5, but the
+        ///     file's base name is included for ease of debugging.
         /// </summary>
         public string GetCachePath(string sourcePath)
         {
@@ -146,11 +147,13 @@ namespace Pytocs.Core.TypeInference
             {
                 return null;
             }
-            var cached = GetCachePath(sourcePath);
+
+            string cached = GetCachePath(sourcePath);
             if (!File.Exists(cached))
             {
                 return null;
             }
+
             return Deserialize(sourcePath);
         }
 

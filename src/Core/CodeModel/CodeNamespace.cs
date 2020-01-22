@@ -24,24 +24,24 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeNamespace()
         {
-            this.Types = new List<CodeTypeDeclaration>();
-            this.Imports = new List<CodeNamespaceImport>();
-            this.Comments = new List<CodeCommentStatement>();
+            Types = new List<CodeTypeDeclaration>();
+            Imports = new List<CodeNamespaceImport>();
+            Comments = new List<CodeCommentStatement>();
         }
 
         public CodeNamespace(string @namespace) : this()
         {
-            this.Name = @namespace;
+            Name = @namespace;
         }
+
+        public string Name { get; set; }
+        public List<CodeTypeDeclaration> Types { get; }
+        public List<CodeNamespaceImport> Imports { get; }
+        public List<CodeCommentStatement> Comments { get; }
 
         public T Accept<T>(ICodeElementVisitor<T> visitor)
         {
             return visitor.VisitNamespace(this);
         }
-
-        public string Name { get; set; }
-        public List<CodeTypeDeclaration> Types { get; private set; }
-        public List<CodeNamespaceImport> Imports { get; private set; }
-        public List<CodeCommentStatement> Comments { get; private set; }
     }
 }

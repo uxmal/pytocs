@@ -1,18 +1,20 @@
 ﻿#region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
+
+#endregion License
 
 #if DEBUG
 using Pytocs.Core.CodeModel;
@@ -77,7 +79,6 @@ import refactoring
 
 from ui import inputter
 
-
 class RefactorMenu(gtk.Menu):
 
 	refactoring_factory = refactoring.Factory()
@@ -132,10 +133,8 @@ class RefactorMenu(gtk.Menu):
 		self.refactoring_factory.load()
 		self.populate()
 
-
 import termview
 import dotview
-
 
 class ViewMenu(gtk.Menu):
 
@@ -164,15 +163,14 @@ class ViewMenu(gtk.Menu):
 	def on_menuitem_activate(self, menuitem, viewfactory):
 		viewfactory.create(self.model)
 
-
 def PopupMenu(model):
 
 	menu = gtk.Menu()
 
 " +
-"	#menuitem = gtk.MenuItem()" + nl + 
-"	#menuitem.show()" + nl + 
-"	#menu.prepend(menuitem)" + nl + 
+"	#menuitem = gtk.MenuItem()" + nl +
+"	#menuitem.show()" + nl +
+"	#menu.prepend(menuitem)" + nl +
 @"
 	menuitem = gtk.MenuItem(""View"")
 	viewmenu = ViewMenu(model)
@@ -186,31 +184,28 @@ def PopupMenu(model):
             var sExp =
 @"// Refactor and view menus.
 namespace test {
-    
     using gtk;
-    
+
     using refactoring;
-    
+
     using inputter = ui.inputter;
-    
+
     using termview;
-    
+
     using dotview;
-    
+
     using System.Collections.Generic;
-    
+
     public static class testModule {
-        
         public class RefactorMenu
             : gtk.Menu {
-            
             public object refactoring_factory = refactoring.Factory();
-            
+
             public RefactorMenu(object model) {
                 this.model = model;
                 this.populate();
             }
-            
+
             public virtual object populate() {
                 object menuitem;
                 var names = this.refactoring_factory.refactorings.keys();
@@ -231,7 +226,7 @@ namespace test {
                 menuitem.show();
                 this.append(menuitem);
             }
-            
+
             public virtual object on_menuitem_realize(object menuitem, object refactoring) {
                 var term = this.model.get_term();
                 var selection = this.model.get_selection();
@@ -241,13 +236,13 @@ namespace test {
                     menuitem.set_state(gtk.STATE_INSENSITIVE);
                 }
             }
-            
+
             public virtual object on_menuitem_activate(object menuitem, object refactoring) {
                 // Ask user input
                 var args = refactoring.input(this.model.get_term(), this.model.get_selection());
                 this.model.apply_refactoring(refactoring, args);
             }
-            
+
             public virtual object on_reload_activate(object dummy) {
                 Console.WriteLine(""Reloading all refactorings..."");
                 foreach (var menuitem in this.get_children()) {
@@ -257,15 +252,14 @@ namespace test {
                 this.populate();
             }
         }
-        
+
         public class ViewMenu
             : gtk.Menu {
-            
             public object viewfactories = new List<object> {
                 termview.TermViewFactory(),
                 dotview.CfgViewFactory()
             };
-            
+
             public ViewMenu(object model) {
                 this.model = model;
                 foreach (var viewfactory in this.viewfactories) {
@@ -276,7 +270,7 @@ namespace test {
                     this.append(menuitem);
                 }
             }
-            
+
             public virtual object on_menuitem_realize(object menuitem, object viewfactory) {
                 if (viewfactory.can_create(this.model)) {
                     menuitem.set_state(gtk.STATE_NORMAL);
@@ -284,12 +278,12 @@ namespace test {
                     menuitem.set_state(gtk.STATE_INSENSITIVE);
                 }
             }
-            
+
             public virtual object on_menuitem_activate(object menuitem, object viewfactory) {
                 viewfactory.create(this.model);
             }
         }
-        
+
         public static object PopupMenu(object model) {
             var menu = gtk.Menu();
             //menuitem = gtk.MenuItem()
@@ -334,30 +328,29 @@ class foo:
 
 ");
             var sExp =
-            #region Expected
+
+#region Expected
+
 @"namespace test {
-    
     using System.Linq;
-    
+
     using System.Collections.Generic;
-    
+
     public static class testModule {
-        
         public class foo {
-            
             public virtual object widen(object others) {
                 return this._combine(others);
                 //## HEAP MANAGEMENT
             }
-            
-            // 
+
+            //
             //         Find a sinkhole which is large enough to support `length` bytes.
-            // 
+            //
             //         This uses first - fit.The first sinkhole(ordered in descending order by their address)
             //         which can hold `length` bytes is chosen.If there are more than `length` bytes in the
             //         sinkhole, a new sinkhole is created representing the remaining bytes while the old
             //         sinkhole is removed.
-            //         
+            //
             public virtual object get_max_sinkhole(object length) {
                 var ordered_sinks = this.sinkholes.ToList().OrderByDescending(@operator.itemgetter(0)).ToList();
             }
@@ -365,7 +358,8 @@ class foo:
     }
 }
 ";
-            #endregion
+
+#endregion Expected
 
             Assert.Equal(sExp, s);
         }

@@ -22,14 +22,17 @@ namespace Pytocs.Core.TypeInference
     {
         public enum Category
         {
-            INFO, WARNING, ERROR
+            INFO,
+            WARNING,
+            ERROR
         }
 
-        public string file;
         public Category category;
-        public int start;
         public int end;
+
+        public string file;
         public string msg;
+        public int start;
 
         public Diagnostic(string file, Category category, int start, int end, string msg)
         {

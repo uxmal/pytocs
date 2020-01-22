@@ -19,9 +19,10 @@ namespace Pytocs.Core.Translate
         {
         }
 
-        protected override CodeMemberMethod Generate(CodeTypeReference retType, CodeParameterDeclarationExpression[] parms)
+        protected override CodeMemberMethod Generate(CodeTypeReference retType,
+            CodeParameterDeclarationExpression[] parms)
         {
-            var method = gen.LambdaMethod(parms, () => Xlat(f.body));
+            CodeMemberMethod method = gen.LambdaMethod(parms, () => Xlat(f.body));
             GenerateTupleParameterUnpackers(method);
             LocalVariableGenerator.Generate(method, globals);
             return method;
@@ -29,7 +30,7 @@ namespace Pytocs.Core.Translate
 
         internal CodeVariableDeclarationStatement GenerateLambdaVariable(FunctionDef f)
         {
-            var type = this.gen.TypeRef("Func", Enumerable.Range(0, f.parameters.Count + 1)
+            CodeTypeReference type = gen.TypeRef("Func", Enumerable.Range(0, f.parameters.Count + 1)
                 .Select(x => "object")
                 .ToArray());
             return new CodeVariableDeclarationStatement(type, f.name.Name);

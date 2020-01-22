@@ -28,38 +28,50 @@ namespace Pytocs.Core.Translate
 {
     public class StatementTranslator : IStatementVisitor
     {
-        private ClassDef classDef;
-        private TypeReferenceTranslator types;
-        private CodeGenerator gen;
-        private ExpTranslator xlat;
-        private SymbolGenerator gensym;
-        private IEnumerable<CodeAttributeDeclaration> customAttrs;
-        private Dictionary<Statement, PropertyDefinition> properties;
-        private HashSet<string> globals;
-        private CodeConstructor classConstructor;
-        private bool async;
+        private static readonly Dictionary<Op, CsAssignOp> assignOps = new Dictionary<Op, CsAssignOp>
+        {
+            {Op.Eq, CsAssignOp.Assign},
+            {Op.AugAdd, CsAssignOp.AugAdd}
+        };
 
-        public StatementTranslator(ClassDef classDef, TypeReferenceTranslator types, CodeGenerator gen, SymbolGenerator gensym, HashSet<string> globals)
+        private bool async;
+        private CodeConstructor classConstructor;
+        private readonly ClassDef classDef;
+        private IEnumerable<CodeAttributeDeclaration> customAttrs;
+        private readonly CodeGenerator gen;
+        private readonly SymbolGenerator gensym;
+        private readonly HashSet<string> globals;
+        private Dictionary<Statement, PropertyDefinition> properties;
+        private readonly TypeReferenceTranslator types;
+        private readonly ExpTranslator xlat;
+
+        public StatementTranslator(ClassDef classDef, TypeReferenceTranslator types, CodeGenerator gen,
+            SymbolGenerator gensym, HashSet<string> globals)
         {
             this.classDef = classDef;
             this.types = types;
             this.gen = gen;
             this.gensym = gensym;
-            this.xlat = new ExpTranslator(classDef, types, gen, gensym);
-            this.properties = new Dictionary<Statement, PropertyDefinition>();
+            xlat = new ExpTranslator(classDef, types, gen, gensym);
+            properties = new Dictionary<Statement, PropertyDefinition>();
             this.globals = globals;
         }
 
         public void VisitClass(ClassDef c)
         {
             if (VisitDecorators(c))
+            {
                 return;
-            var baseClasses = c.args.Select(a => GenerateBaseClassName(a.defval)).ToList();
-            var comments = ConvertFirstStringToComments(c.body.stmts);
-            var gensym = new SymbolGenerator();
-            var stmtXlt = new StatementTranslator(c, types, gen, gensym, new HashSet<string>());
-            stmtXlt.properties = FindProperties(c.body.stmts);
-            var csClass = gen.Class(
+            }
+
+            List<string> baseClasses = c.args.Select(a => GenerateBaseClassName(a.defval)).ToList();
+            IEnumerable<CodeCommentStatement> comments = ConvertFirstStringToComments(c.body.stmts);
+            SymbolGenerator gensym = new SymbolGenerator();
+            StatementTranslator stmtXlt = new StatementTranslator(c, types, gen, gensym, new HashSet<string>())
+            {
+                properties = FindProperties(c.body.stmts)
+            };
+            CodeTypeDeclaration csClass = gen.Class(
                 c.name.Name,
                 baseClasses,
                 () => GenerateFields(c),
@@ -72,116 +84,6 @@ namespace Pytocs.Core.Translate
             }
         }
 
-        private IEnumerable<CodeMemberField> GenerateFields(ClassDef c)
-        {
-            var ct = types.TypeOf(c.name);
-            var fields = ct.Table.table.Where(m => IsField(m.Value))
-                .OrderBy(f => f.Key);
-            foreach (var field in fields)
-            {
-                var b = field.Value.First();
-                var (fieldType, ns) = types.Translate(b.Type);
-                gen.EnsureImports(ns);
-                yield return new CodeMemberField(fieldType, field.Key)
-                {
-                    Attributes = MemberAttributes.Public
-                };
-            }
-        }
-
-        private bool IsField(ISet<Binding> value)
-        {
-            foreach (var b in value)
-            {
-                if (b.Kind == BindingKind.ATTRIBUTE
-                    &&
-                   (!b.IsSynthetic || b.References.Count != 0))
-                    return true;
-            }
-            return false;
-        }
-
-        public Dictionary<Statement, PropertyDefinition> FindProperties(List<Statement> stmts)
-        {
-            var propdefs = new Dictionary<string, PropertyDefinition>();
-            var result = new Dictionary<Statement, PropertyDefinition>();
-            foreach (var stmt in stmts)
-            {
-                if (stmt.decorators == null)
-                    continue;
-                foreach (var decorator in stmt.decorators)
-                {
-                    if (IsGetterDecorator(decorator))
-                    {
-                        var def = (FunctionDef)stmt;
-                        var propdef = EnsurePropertyDefinition(propdefs, def);
-                        result[stmt] = propdef;
-                        propdef.Getter = stmt;
-                        propdef.GetterDecoration = decorator;
-                    }
-                    if (IsSetterDecorator(decorator))
-                    {
-                        var def = (FunctionDef)stmt;
-                        var propdef = EnsurePropertyDefinition(propdefs, def);
-                        result[stmt] = propdef;
-                        propdef.Setter = stmt;
-                        propdef.SetterDecoration = decorator;
-                    }
-                }
-            }
-            return result;
-        }
-
-        private static PropertyDefinition EnsurePropertyDefinition(Dictionary<string, PropertyDefinition> propdefs, FunctionDef def)
-        {
-            if (!propdefs.TryGetValue(def.name.Name, out var propdef))
-            {
-                propdef = new PropertyDefinition(def.name.Name);
-                propdefs.Add(def.name.Name, propdef);
-            }
-            return propdef;
-        }
-
-        private static bool IsGetterDecorator(Decorator decoration)
-        {
-            return decoration.className.segs.Count == 1 &&
-                                    decoration.className.segs[0].Name == "property";
-        }
-
-        private static bool IsSetterDecorator(Decorator decorator)
-        {
-            if (decorator.className.segs.Count != 2)
-                return false;
-            return decorator.className.segs[1].Name == "setter";
-        }
-
-        public static IEnumerable<CodeCommentStatement> ConvertFirstStringToComments(List<Statement> statements)
-        {
-            var nothing = new CodeCommentStatement[0];
-            int i = 0;
-            for (; i < statements.Count; ++i)
-            {
-                if (statements[i] is SuiteStatement ste)
-                {
-                    if (!(ste.stmts[0] is CommentStatement))
-                        break;
-                }
-            }
-            if (i >= statements.Count)
-                return nothing;
-            var suiteStmt = statements[i] as SuiteStatement;
-            if (suiteStmt == null)
-                return nothing;
-            var expStm = suiteStmt.stmts[0] as ExpStatement;
-            if (expStm == null)
-                return nothing;
-            var str = expStm.Expression as Str;
-            if (str == null)
-                return nothing;
-            statements.RemoveAt(i);
-            return str.s.Replace("\r\n", "\n").Split('\r', '\n').Select(line => new CodeCommentStatement(" " + line));
-        }
-
         public void VisitComment(CommentStatement c)
         {
             gen.Comment(c.comment);
@@ -189,49 +91,24 @@ namespace Pytocs.Core.Translate
 
         public void VisitTry(TryStatement t)
         {
-            var tryStmt = gen.Try(
+            CodeTryCatchFinallyStatement tryStmt = gen.Try(
                 () => t.body.Accept(this),
                 t.exHandlers.Select(eh => GenerateClause(eh)),
                 () =>
                 {
                     if (t.finallyHandler != null)
+                    {
                         t.finallyHandler.Accept(this);
+                    }
                 });
         }
 
-        private CodeCatchClause GenerateClause(ExceptHandler eh)
-        {
-            if (eh.type is Identifier ex)
-            {
-                return gen.CatchClause(
-                    null,
-                    new CodeTypeReference(ex.Name),
-                    () => eh.body.Accept(this));
-            }
-            else
-            {
-                return gen.CatchClause(
-                    null,
-                    null,
-                    () => eh.body.Accept(this));
-            }
-        }
-
-        private string GenerateBaseClassName(Exp exp)
-        {
-            return exp.ToString();
-        }
-
-        private static Dictionary<Op, CsAssignOp> assignOps = new Dictionary<Op, CsAssignOp>()
-        {
-            { Op.Eq, CsAssignOp.Assign },
-            { Op.AugAdd, CsAssignOp.AugAdd },
-        };
-
         public void VisitExec(ExecStatement e)
         {
-            var args = new List<CodeExpression>();
-            args.Add(e.code.Accept(xlat));
+            List<CodeExpression> args = new List<CodeExpression>
+            {
+                e.code.Accept(xlat)
+            };
             if (e.globals != null)
             {
                 args.Add(e.globals.Accept(xlat));
@@ -240,6 +117,7 @@ namespace Pytocs.Core.Translate
                     args.Add(e.locals.Accept(xlat));
                 }
             }
+
             gen.SideEffect(
                 gen.Appl(
                     new CodeVariableReferenceExpression("Python_Exec"),
@@ -253,7 +131,7 @@ namespace Pytocs.Core.Translate
                 if (ass.Dst is Identifier idDst &&
                     idDst.Name != "__slots__")
                 {
-                    var (dt, nmspcs) = types.TranslateTypeOf(idDst);
+                    (CodeTypeReference dt, ISet<string> nmspcs) = types.TranslateTypeOf(idDst);
                     gen.EnsureImports(nmspcs);
                     gensym.EnsureLocalVariable(idDst.Name, dt, false);
                 }
@@ -266,13 +144,15 @@ namespace Pytocs.Core.Translate
                     }
                     else
                     {
-                        var rhsTuple = ass.Src.Accept(xlat);
+                        CodeExpression rhsTuple = ass.Src.Accept(xlat);
                         EmitTupleAssignment(dstTuple.Expressions, rhsTuple);
                     }
+
                     return;
                 }
-                var rhs = ass.Src.Accept(xlat);
-                var lhs = ass.Dst.Accept(xlat);
+
+                CodeExpression rhs = ass.Src.Accept(xlat);
+                CodeExpression lhs = ass.Dst.Accept(xlat);
                 if (gen.CurrentMember != null)
                 {
                     if (ass.op == Op.Assign)
@@ -296,158 +176,21 @@ namespace Pytocs.Core.Translate
                             new CodeAssignStatement(lhs, rhs));
                     }
                 }
+
                 return;
             }
+
             if (gen.CurrentMember != null)
             {
-                var ex = e.Expression.Accept(xlat);
+                CodeExpression ex = e.Expression.Accept(xlat);
                 gen.SideEffect(ex);
             }
             else
             {
-                var ex = e.Expression.Accept(xlat);
+                CodeExpression ex = e.Expression.Accept(xlat);
                 EnsureClassConstructor().Statements.Add(
                     new CodeExpressionStatement(e.Expression.Accept(xlat)));
             }
-        }
-
-        private void EmitTupleAssignment(List<Exp> lhs, CodeExpression rhs)
-        {
-            if (lhs.Any(e => e is StarExp))
-            {
-                EmitStarredTupleAssignments(lhs, rhs);
-            }
-            else
-            {
-                var tup = GenSymLocalTuple();
-                gen.Assign(tup, rhs);
-                EmitTupleFieldAssignments(lhs, tup);
-            }
-        }
-
-        /// <summary>
-        /// Translate a starred target by first emitting assignments for
-        /// all non-starred targets, then collecting the remainder in
-        /// the starred target.
-        /// </summary>
-        private void EmitStarredTupleAssignments(List<Exp> lhs, CodeExpression rhs)
-        {
-            //$TODO: we don't handle (a, *b, c, d) = ... yet. Who writes code like that?
-            gen.EnsureImport("System.Linq");
-
-            var tmp = GenSymLocalIterator();
-            gen.Scope.Add(new CodeVariableDeclarationStatement("var", tmp.Name)
-            {
-                InitExpression = rhs
-            });
-            for (int index = 0; index < lhs.Count; ++index)
-            {
-                var target = lhs[index];
-                if (target is StarExp sTarget)
-                {
-                    var lvalue = sTarget.e.Accept(xlat);
-                    var rvalue = gen.ApplyMethod(tmp, "Skip", gen.Prim(index));
-                    rvalue = gen.ApplyMethod(rvalue, "ToList");
-                    gen.Assign(lvalue, rvalue);
-                    return;
-                }
-                else if (target != null && target.Name != "_")
-                {
-                    var lvalue = target.Accept(xlat);
-                    var rvalue = gen.ApplyMethod(tmp, "Element", gen.Prim(index));
-                    gen.Assign(lvalue, rvalue);
-                }
-            }
-        }
-
-        private void EmitTupleToTupleAssignment(List<Exp> dstTuple, List<Exp> srcTuple)
-        {
-            //$TODO cycle detection
-            foreach (var pyAss in dstTuple.Zip(srcTuple, (a, b) => new { Dst = a, Src = b }))
-            {
-                if (pyAss.Dst is Identifier id)
-                {
-                    gensym.EnsureLocalVariable(id.Name, gen.TypeRef("object"), false);
-                }
-                gen.Assign(pyAss.Dst.Accept(xlat), pyAss.Src.Accept(xlat));
-            }
-        }
-
-        private void EmitTupleFieldAssignments(List<Exp> lhs, CodeVariableReferenceExpression tup)
-        {
-            int i = 0;
-            foreach (Exp value in lhs)
-            {
-                ++i;
-                if (value == null || value.Name == "_")
-                    continue;
-                var tupleField = gen.Access(tup, "Item" + i);
-                if (value is Identifier id)
-                {
-                    gensym.EnsureLocalVariable(id.Name, new CodeTypeReference(typeof(object)), false);
-                    gen.Assign(new CodeVariableReferenceExpression(id.Name), tupleField);
-                }
-                else
-                {
-                    var dst = value.Accept(xlat);
-                    gen.Assign(dst, tupleField);
-                }
-            }
-        }
-
-        private CodeVariableReferenceExpression GenSymLocalTuple()
-        {
-            return gensym.GenSymLocal("_tup_", new CodeTypeReference(typeof(object)));
-        }
-
-        private CodeVariableReferenceExpression GenSymLocalIterator()
-        {
-            return gensym.GenSymLocal("_it_", new CodeTypeReference(typeof(object)));
-        }
-
-        public CodeVariableReferenceExpression GenSymParameter(string prefix, CodeTypeReference type)
-        {
-            return gensym.GenSymAutomatic(prefix, type, true);
-        }
-
-        private CodeConstructor EnsureClassConstructor()
-        {
-            if (this.classConstructor == null)
-            {
-                this.classConstructor = new CodeConstructor
-                {
-                    Attributes = MemberAttributes.Static,
-                };
-                gen.CurrentType.Members.Add(classConstructor);
-            }
-            return this.classConstructor;
-        }
-
-        private void ClassTranslator_GenerateField(Identifier id, ExpTranslator xlat, AssignExp ass)
-        {
-            if (id.Name == "__slots__")
-            {
-                // We should already have analyzed the slots in
-                // the type inference phase, so we ignore __slots__.
-                return;
-            }
-            else
-            {
-                var (fieldType, nmspcs) = types.TranslateTypeOf(id);
-                gen.EnsureImports(nmspcs);
-
-                GenerateField(id.Name, fieldType, ass.Src.Accept(xlat));
-            }
-        }
-
-        protected virtual CodeMemberField GenerateField(string name, CodeTypeReference type, CodeExpression value)
-        {
-            var field = gen.Field(type, name);
-            if (value != null)
-            {
-                field.InitExpression = value;
-            }
-            return field;
         }
 
         public void VisitFor(ForStatement f)
@@ -455,8 +198,8 @@ namespace Pytocs.Core.Translate
             switch (f.exprs)
             {
                 case Identifier id:
-                    var exp = id.Accept(xlat);
-                    var v = f.tests.Accept(xlat);
+                    CodeExpression exp = id.Accept(xlat);
+                    CodeExpression v = f.tests.Accept(xlat);
                     gen.Foreach(exp, v, () => f.Body.Accept(this));
                     return;
 
@@ -472,64 +215,46 @@ namespace Pytocs.Core.Translate
                     GenerateForAttributeAccess(f, attributeAccess.Expression);
                     return;
             }
+
             throw new NotImplementedException();
-        }
-
-        private void GenerateForAttributeAccess(ForStatement f, Exp id)
-        {
-            var localVar = gensym.GenSymLocal("_tmp_", gen.TypeRef("object"));
-            var exp = f.exprs.Accept(xlat);
-            var v = f.tests.Accept(xlat);
-            gen.Foreach(localVar, v, () =>
-            {
-                gen.Assign(exp, localVar);
-                f.Body.Accept(this);
-            });
-        }
-
-        private void GenerateForTuple(ForStatement f, List<Exp> ids)
-        {
-            var localVar = GenSymLocalTuple();
-            var v = f.tests.Accept(xlat);
-            gen.Foreach(localVar, v, () =>
-            {
-                EmitTupleFieldAssignments(ids, localVar);
-                f.Body.Accept(this);
-            });
         }
 
         public void VisitFuncdef(FunctionDef f)
         {
             if (VisitDecorators(f))
+            {
                 return;
+            }
+
             MethodGenerator mgen;
             MemberAttributes attrs = 0;
 
-            if (this.gen.CurrentMember != null)
+            if (gen.CurrentMember != null)
             {
                 //$TODO: C# 7 supports local functions.
-                var lgen = new LambdaBodyGenerator(classDef, f, f.parameters, true, async, types, gen);
-                var def = lgen.GenerateLambdaVariable(f);
-                var meth = lgen.Generate();
+                LambdaBodyGenerator lgen = new LambdaBodyGenerator(classDef, f, f.parameters, true, async, types, gen);
+                CodeVariableDeclarationStatement def = lgen.GenerateLambdaVariable(f);
+                CodeMemberMethod meth = lgen.Generate();
                 def.InitExpression = gen.Lambda(
                     meth.Parameters.Select(p => new CodeVariableReferenceExpression(p.ParameterName)).ToArray(),
                     meth.Statements);
                 gen.CurrentMemberStatements.Add(def);
                 return;
             }
-            if (this.classDef != null)
+
+            if (classDef != null)
             {
                 // Inside a class; is this a instance method?
                 bool hasSelf = f.parameters.Any(p => p.Id != null && p.Id.Name == "self");
                 if (hasSelf)
                 {
                     // Presence of 'self' says it _is_ an instance method.
-                    var adjustedPs = f.parameters.Where(p => p.Id == null || p.Id.Name != "self").ToList();
-                    var fnName = f.name.Name;
+                    List<Parameter> adjustedPs = f.parameters.Where(p => p.Id == null || p.Id.Name != "self").ToList();
+                    string fnName = f.name.Name;
                     if (fnName == "__init__")
                     {
                         // Magic function __init__ is a ctor.
-                        mgen = new ConstructorGenerator(this.classDef, f, adjustedPs, types, gen);
+                        mgen = new ConstructorGenerator(classDef, f, adjustedPs, types, gen);
                     }
                     else
                     {
@@ -538,39 +263,41 @@ namespace Pytocs.Core.Translate
                             attrs = MemberAttributes.Override;
                             fnName = "ToString";
                         }
-                        mgen = new MethodGenerator(this.classDef, f, fnName, adjustedPs, false, async, types, gen);
+
+                        mgen = new MethodGenerator(classDef, f, fnName, adjustedPs, false, async, types, gen);
                     }
                 }
                 else
                 {
-                    mgen = new MethodGenerator(this.classDef, f, f.name.Name, f.parameters, true, async, types, gen);
+                    mgen = new MethodGenerator(classDef, f, f.name.Name, f.parameters, true, async, types, gen);
                 }
             }
             else
             {
-                mgen = new MethodGenerator(this.classDef, f, f.name.Name, f.parameters, true, async, types, gen);
+                mgen = new MethodGenerator(classDef, f, f.name.Name, f.parameters, true, async, types, gen);
             }
+
             CodeMemberMethod m = mgen.Generate();
             m.Attributes |= attrs;
             if (customAttrs != null)
             {
-                m.CustomAttributes.AddRange(this.customAttrs);
+                m.CustomAttributes.AddRange(customAttrs);
                 customAttrs = null;
             }
         }
 
         public void VisitIf(IfStatement i)
         {
-            var ifStmt = gen.If(i.Test.Accept(xlat), () => Xlat(i.Then), () => Xlat(i.Else));
+            CodeConditionStatement ifStmt = gen.If(i.Test.Accept(xlat), () => Xlat(i.Then), () => Xlat(i.Else));
         }
 
         public void VisitFrom(FromStatement f)
         {
-            foreach (var alias in f.AliasedNames)
+            foreach (AliasedName alias in f.AliasedNames)
             {
                 if (f.DottedName != null)
                 {
-                    var total = f.DottedName.segs.Concat(alias.orig.segs)
+                    IEnumerable<string> total = f.DottedName.segs.Concat(alias.orig.segs)
                         .Select(s => gen.EscapeKeywordName(s.Name));
                     string aliasName;
                     if (alias.alias == null)
@@ -581,6 +308,7 @@ namespace Pytocs.Core.Translate
                     {
                         aliasName = alias.alias.Name;
                     }
+
                     gen.Using(aliasName, string.Join(".", total));
                 }
             }
@@ -588,7 +316,7 @@ namespace Pytocs.Core.Translate
 
         public void VisitImport(ImportStatement i)
         {
-            foreach (var name in i.names)
+            foreach (AliasedName name in i.names)
             {
                 if (name.alias == null)
                 {
@@ -602,14 +330,6 @@ namespace Pytocs.Core.Translate
                             ".",
                             name.orig.segs.Select(s => gen.EscapeKeywordName(s.Name))));
                 }
-            }
-        }
-
-        public void Xlat(Statement stmt)
-        {
-            if (stmt != null)
-            {
-                stmt.Accept(this);
             }
         }
 
@@ -628,6 +348,7 @@ namespace Pytocs.Core.Translate
             {
                 e = gen.TypeRefExpr("Console");
             }
+
             e = gen.MethodRef(
                 e, p.trailingComma ? "Write" : "WriteLine");
             gen.SideEffect(
@@ -639,22 +360,26 @@ namespace Pytocs.Core.Translate
         public void VisitReturn(ReturnStatement r)
         {
             if (r.Expression != null)
+            {
                 gen.Return(r.Expression.Accept(xlat));
+            }
             else
+            {
                 gen.Return();
+            }
         }
 
         public void VisitRaise(RaiseStatement r)
         {
             if (r.exToRaise != null)
             {
-                var dt = types.TypeOf(r.exToRaise);
+                DataType dt = types.TypeOf(r.exToRaise);
                 if (dt is ClassType)
                 {
                     // Python allows expressions like
                     //   raise FooError
 
-                    var (exceptionType, namespaces) = types.Translate(dt);
+                    (CodeTypeReference exceptionType, ISet<string> namespaces) = types.Translate(dt);
                     gen.EnsureImports(namespaces);
                     gen.Throw(gen.New(exceptionType));
                 }
@@ -677,7 +402,7 @@ namespace Pytocs.Core.Translate
             }
             else
             {
-                foreach (var stmt in s.stmts)
+                foreach (Statement stmt in s.stmts)
                 {
                     stmt.Accept(this);
                 }
@@ -686,29 +411,18 @@ namespace Pytocs.Core.Translate
 
         public void VisitAsync(AsyncStatement a)
         {
-            var oldAsync = this.async;
-            this.async = true;
+            bool oldAsync = async;
+            async = true;
             a.Statement.Accept(this);
-            this.async = oldAsync;
+            async = oldAsync;
         }
 
         public void VisitAssert(AssertStatement a)
         {
-            foreach (var test in a.Tests)
+            foreach (Exp test in a.Tests)
             {
                 GenerateAssert(test);
             }
-        }
-
-        private void GenerateAssert(Exp test)
-        {
-            gen.SideEffect(
-                gen.Appl(
-                    gen.MethodRef(
-                        gen.TypeRefExpr("Debug"),
-                        "Assert"),
-                    test.Accept(xlat)));
-            gen.EnsureImport("System.Diagnostics");
         }
 
         public void VisitBreak(BreakStatement b)
@@ -721,79 +435,9 @@ namespace Pytocs.Core.Translate
             gen.Continue();
         }
 
-        /// <summary>
-        /// Processes the decorators of <paramref name="stmt"/>.
-        /// </summary>
-        /// <param name="stmt"></param>
-        /// <returns>If true, the body of the statement has been
-        /// translated, so don't do it again.</returns>
-        public bool VisitDecorators(Statement stmt)
-        {
-            if (stmt.decorators == null)
-                return false;
-            var decorators = stmt.decorators;
-            if (this.properties.TryGetValue(stmt, out var propdef))
-            {
-                if (propdef.IsTranslated)
-                    return true;
-                decorators.Remove(propdef.GetterDecoration);
-                decorators.Remove(propdef.SetterDecoration);
-                this.customAttrs = decorators.Select(dd => VisitDecorator(dd));
-                var prop = gen.PropertyDef(
-                    propdef.Name,
-                    () => GeneratePropertyGetter(propdef.Getter),
-                    () => GeneratePropertySetter(propdef.Setter));
-                LocalVariableGenerator.Generate(null, prop.GetStatements, globals);
-                LocalVariableGenerator.Generate(
-                    new List<CodeParameterDeclarationExpression> {
-                        new CodeParameterDeclarationExpression(prop.PropertyType, "value"),
-                    },
-                    prop.SetStatements,
-                    globals);
-                propdef.IsTranslated = true;
-                return true;
-            }
-            else
-            {
-                this.customAttrs = stmt.decorators.Select(dd => VisitDecorator(dd));
-                return false;
-            }
-        }
-
-        private void GeneratePropertyGetter(Statement getter)
-        {
-            var def = (FunctionDef)getter;
-            var mgen = new MethodGenerator(this.classDef, def, null, def.parameters, false, async, types, gen);
-            var comments = ConvertFirstStringToComments(def.body.stmts);
-            gen.CurrentMemberComments.AddRange(comments);
-            mgen.Xlat(def.body);
-        }
-
-        private void GeneratePropertySetter(Statement setter)
-        {
-            if (setter == null)
-                return;
-            var def = (FunctionDef)setter;
-            var mgen = new MethodGenerator(this.classDef, def, null, def.parameters, false, async, types, gen);
-            var comments = ConvertFirstStringToComments(def.body.stmts);
-            gen.CurrentMemberComments.AddRange(comments);
-            mgen.Xlat(def.body);
-        }
-
-        public CodeAttributeDeclaration VisitDecorator(Decorator d)
-        {
-            return gen.CustomAttr(
-                gen.TypeRef(d.className.ToString()),
-                d.arguments.Select(a => new CodeAttributeArgument
-                {
-                    Name = a.name?.ToString(),
-                    Value = a.defval?.Accept(xlat),
-                }).ToArray());
-        }
-
         public void VisitDel(DelStatement d)
         {
-            var exprList = d.Expressions.AsList()
+            List<CodeExpression> exprList = d.Expressions.AsList()
                 .Select(e => e.Accept(xlat))
                 .ToList();
             if (exprList.Count == 1 &&
@@ -810,8 +454,9 @@ namespace Pytocs.Core.Translate
                         aref.Indices[0]));
                 return;
             }
-            var fn = new CodeVariableReferenceExpression("WONKO_del");
-            foreach (var exp in exprList)
+
+            CodeVariableReferenceExpression fn = new CodeVariableReferenceExpression("WONKO_del");
+            foreach (CodeExpression exp in exprList)
             {
                 gen.SideEffect(gen.Appl(fn, exp));
             }
@@ -819,7 +464,7 @@ namespace Pytocs.Core.Translate
 
         public void VisitGlobal(GlobalStatement g)
         {
-            foreach (var name in g.names)
+            foreach (Identifier name in g.names)
             {
                 globals.Add(name.Name);
             }
@@ -856,34 +501,462 @@ namespace Pytocs.Core.Translate
                 () => w.body.Accept(this));
         }
 
+        public void VisitYield(YieldStatement y)
+        {
+            gen.Yield(y.Expression.Accept(xlat));
+        }
+
+        private IEnumerable<CodeMemberField> GenerateFields(ClassDef c)
+        {
+            DataType ct = types.TypeOf(c.name);
+            IOrderedEnumerable<KeyValuePair<string, ISet<Binding>>> fields = ct.Table.table.Where(m => IsField(m.Value))
+                .OrderBy(f => f.Key);
+            foreach (KeyValuePair<string, ISet<Binding>> field in fields)
+            {
+                Binding b = field.Value.First();
+                (CodeTypeReference fieldType, ISet<string> ns) = types.Translate(b.Type);
+                gen.EnsureImports(ns);
+                yield return new CodeMemberField(fieldType, field.Key)
+                {
+                    Attributes = MemberAttributes.Public
+                };
+            }
+        }
+
+        private bool IsField(ISet<Binding> value)
+        {
+            foreach (Binding b in value)
+            {
+                if (b.Kind == BindingKind.ATTRIBUTE
+                    &&
+                    (!b.IsSynthetic || b.References.Count != 0))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public Dictionary<Statement, PropertyDefinition> FindProperties(List<Statement> stmts)
+        {
+            Dictionary<string, PropertyDefinition> propdefs = new Dictionary<string, PropertyDefinition>();
+            Dictionary<Statement, PropertyDefinition> result = new Dictionary<Statement, PropertyDefinition>();
+            foreach (Statement stmt in stmts)
+            {
+                if (stmt.decorators == null)
+                {
+                    continue;
+                }
+
+                foreach (Decorator decorator in stmt.decorators)
+                {
+                    if (IsGetterDecorator(decorator))
+                    {
+                        FunctionDef def = (FunctionDef)stmt;
+                        PropertyDefinition propdef = EnsurePropertyDefinition(propdefs, def);
+                        result[stmt] = propdef;
+                        propdef.Getter = stmt;
+                        propdef.GetterDecoration = decorator;
+                    }
+
+                    if (IsSetterDecorator(decorator))
+                    {
+                        FunctionDef def = (FunctionDef)stmt;
+                        PropertyDefinition propdef = EnsurePropertyDefinition(propdefs, def);
+                        result[stmt] = propdef;
+                        propdef.Setter = stmt;
+                        propdef.SetterDecoration = decorator;
+                    }
+                }
+            }
+
+            return result;
+        }
+
+        private static PropertyDefinition EnsurePropertyDefinition(Dictionary<string, PropertyDefinition> propdefs,
+            FunctionDef def)
+        {
+            if (!propdefs.TryGetValue(def.name.Name, out PropertyDefinition propdef))
+            {
+                propdef = new PropertyDefinition(def.name.Name);
+                propdefs.Add(def.name.Name, propdef);
+            }
+
+            return propdef;
+        }
+
+        private static bool IsGetterDecorator(Decorator decoration)
+        {
+            return decoration.className.segs.Count == 1 &&
+                   decoration.className.segs[0].Name == "property";
+        }
+
+        private static bool IsSetterDecorator(Decorator decorator)
+        {
+            if (decorator.className.segs.Count != 2)
+            {
+                return false;
+            }
+
+            return decorator.className.segs[1].Name == "setter";
+        }
+
+        public static IEnumerable<CodeCommentStatement> ConvertFirstStringToComments(List<Statement> statements)
+        {
+            CodeCommentStatement[] nothing = new CodeCommentStatement[0];
+            int i = 0;
+            for (; i < statements.Count; ++i)
+            {
+                if (statements[i] is SuiteStatement ste)
+                {
+                    if (!(ste.stmts[0] is CommentStatement))
+                    {
+                        break;
+                    }
+                }
+            }
+
+            if (i >= statements.Count)
+            {
+                return nothing;
+            }
+
+            SuiteStatement suiteStmt = statements[i] as SuiteStatement;
+            if (suiteStmt == null)
+            {
+                return nothing;
+            }
+
+            ExpStatement expStm = suiteStmt.stmts[0] as ExpStatement;
+            if (expStm == null)
+            {
+                return nothing;
+            }
+
+            Str str = expStm.Expression as Str;
+            if (str == null)
+            {
+                return nothing;
+            }
+
+            statements.RemoveAt(i);
+            return str.s.Replace("\r\n", "\n").Split('\r', '\n').Select(line => new CodeCommentStatement(" " + line));
+        }
+
+        private CodeCatchClause GenerateClause(ExceptHandler eh)
+        {
+            if (eh.type is Identifier ex)
+            {
+                return gen.CatchClause(
+                    null,
+                    new CodeTypeReference(ex.Name),
+                    () => eh.body.Accept(this));
+            }
+
+            return gen.CatchClause(
+                null,
+                null,
+                () => eh.body.Accept(this));
+        }
+
+        private string GenerateBaseClassName(Exp exp)
+        {
+            return exp.ToString();
+        }
+
+        private void EmitTupleAssignment(List<Exp> lhs, CodeExpression rhs)
+        {
+            if (lhs.Any(e => e is StarExp))
+            {
+                EmitStarredTupleAssignments(lhs, rhs);
+            }
+            else
+            {
+                CodeVariableReferenceExpression tup = GenSymLocalTuple();
+                gen.Assign(tup, rhs);
+                EmitTupleFieldAssignments(lhs, tup);
+            }
+        }
+
+        /// <summary>
+        ///     Translate a starred target by first emitting assignments for
+        ///     all non-starred targets, then collecting the remainder in
+        ///     the starred target.
+        /// </summary>
+        private void EmitStarredTupleAssignments(List<Exp> lhs, CodeExpression rhs)
+        {
+            //$TODO: we don't handle (a, *b, c, d) = ... yet. Who writes code like that?
+            gen.EnsureImport("System.Linq");
+
+            CodeVariableReferenceExpression tmp = GenSymLocalIterator();
+            gen.Scope.Add(new CodeVariableDeclarationStatement("var", tmp.Name)
+            {
+                InitExpression = rhs
+            });
+            for (int index = 0; index < lhs.Count; ++index)
+            {
+                Exp target = lhs[index];
+                if (target is StarExp sTarget)
+                {
+                    CodeExpression lvalue = sTarget.e.Accept(xlat);
+                    CodeExpression rvalue = gen.ApplyMethod(tmp, "Skip", gen.Prim(index));
+                    rvalue = gen.ApplyMethod(rvalue, "ToList");
+                    gen.Assign(lvalue, rvalue);
+                    return;
+                }
+
+                if (target != null && target.Name != "_")
+                {
+                    CodeExpression lvalue = target.Accept(xlat);
+                    CodeExpression rvalue = gen.ApplyMethod(tmp, "Element", gen.Prim(index));
+                    gen.Assign(lvalue, rvalue);
+                }
+            }
+        }
+
+        private void EmitTupleToTupleAssignment(List<Exp> dstTuple, List<Exp> srcTuple)
+        {
+            //$TODO cycle detection
+            foreach (var pyAss in dstTuple.Zip(srcTuple, (a, b) => new { Dst = a, Src = b }))
+            {
+                if (pyAss.Dst is Identifier id)
+                {
+                    gensym.EnsureLocalVariable(id.Name, gen.TypeRef("object"), false);
+                }
+
+                gen.Assign(pyAss.Dst.Accept(xlat), pyAss.Src.Accept(xlat));
+            }
+        }
+
+        private void EmitTupleFieldAssignments(List<Exp> lhs, CodeVariableReferenceExpression tup)
+        {
+            int i = 0;
+            foreach (Exp value in lhs)
+            {
+                ++i;
+                if (value == null || value.Name == "_")
+                {
+                    continue;
+                }
+
+                CodeExpression tupleField = gen.Access(tup, "Item" + i);
+                if (value is Identifier id)
+                {
+                    gensym.EnsureLocalVariable(id.Name, new CodeTypeReference(typeof(object)), false);
+                    gen.Assign(new CodeVariableReferenceExpression(id.Name), tupleField);
+                }
+                else
+                {
+                    CodeExpression dst = value.Accept(xlat);
+                    gen.Assign(dst, tupleField);
+                }
+            }
+        }
+
+        private CodeVariableReferenceExpression GenSymLocalTuple()
+        {
+            return gensym.GenSymLocal("_tup_", new CodeTypeReference(typeof(object)));
+        }
+
+        private CodeVariableReferenceExpression GenSymLocalIterator()
+        {
+            return gensym.GenSymLocal("_it_", new CodeTypeReference(typeof(object)));
+        }
+
+        public CodeVariableReferenceExpression GenSymParameter(string prefix, CodeTypeReference type)
+        {
+            return gensym.GenSymAutomatic(prefix, type, true);
+        }
+
+        private CodeConstructor EnsureClassConstructor()
+        {
+            if (classConstructor == null)
+            {
+                classConstructor = new CodeConstructor
+                {
+                    Attributes = MemberAttributes.Static
+                };
+                gen.CurrentType.Members.Add(classConstructor);
+            }
+
+            return classConstructor;
+        }
+
+        private void ClassTranslator_GenerateField(Identifier id, ExpTranslator xlat, AssignExp ass)
+        {
+            if (id.Name == "__slots__")
+            {
+                // We should already have analyzed the slots in
+                // the type inference phase, so we ignore __slots__.
+            }
+            else
+            {
+                (CodeTypeReference fieldType, ISet<string> nmspcs) = types.TranslateTypeOf(id);
+                gen.EnsureImports(nmspcs);
+
+                GenerateField(id.Name, fieldType, ass.Src.Accept(xlat));
+            }
+        }
+
+        protected virtual CodeMemberField GenerateField(string name, CodeTypeReference type, CodeExpression value)
+        {
+            CodeMemberField field = gen.Field(type, name);
+            if (value != null)
+            {
+                field.InitExpression = value;
+            }
+
+            return field;
+        }
+
+        private void GenerateForAttributeAccess(ForStatement f, Exp id)
+        {
+            CodeVariableReferenceExpression localVar = gensym.GenSymLocal("_tmp_", gen.TypeRef("object"));
+            CodeExpression exp = f.exprs.Accept(xlat);
+            CodeExpression v = f.tests.Accept(xlat);
+            gen.Foreach(localVar, v, () =>
+            {
+                gen.Assign(exp, localVar);
+                f.Body.Accept(this);
+            });
+        }
+
+        private void GenerateForTuple(ForStatement f, List<Exp> ids)
+        {
+            CodeVariableReferenceExpression localVar = GenSymLocalTuple();
+            CodeExpression v = f.tests.Accept(xlat);
+            gen.Foreach(localVar, v, () =>
+            {
+                EmitTupleFieldAssignments(ids, localVar);
+                f.Body.Accept(this);
+            });
+        }
+
+        public void Xlat(Statement stmt)
+        {
+            if (stmt != null)
+            {
+                stmt.Accept(this);
+            }
+        }
+
+        private void GenerateAssert(Exp test)
+        {
+            gen.SideEffect(
+                gen.Appl(
+                    gen.MethodRef(
+                        gen.TypeRefExpr("Debug"),
+                        "Assert"),
+                    test.Accept(xlat)));
+            gen.EnsureImport("System.Diagnostics");
+        }
+
+        /// <summary>
+        ///     Processes the decorators of <paramref name="stmt" />.
+        /// </summary>
+        /// <param name="stmt"></param>
+        /// <returns>
+        ///     If true, the body of the statement has been
+        ///     translated, so don't do it again.
+        /// </returns>
+        public bool VisitDecorators(Statement stmt)
+        {
+            if (stmt.decorators == null)
+            {
+                return false;
+            }
+
+            List<Decorator> decorators = stmt.decorators;
+            if (properties.TryGetValue(stmt, out PropertyDefinition propdef))
+            {
+                if (propdef.IsTranslated)
+                {
+                    return true;
+                }
+
+                decorators.Remove(propdef.GetterDecoration);
+                decorators.Remove(propdef.SetterDecoration);
+                customAttrs = decorators.Select(dd => VisitDecorator(dd));
+                CodeMemberProperty prop = gen.PropertyDef(
+                    propdef.Name,
+                    () => GeneratePropertyGetter(propdef.Getter),
+                    () => GeneratePropertySetter(propdef.Setter));
+                LocalVariableGenerator.Generate(null, prop.GetStatements, globals);
+                LocalVariableGenerator.Generate(
+                    new List<CodeParameterDeclarationExpression>
+                    {
+                        new CodeParameterDeclarationExpression(prop.PropertyType, "value")
+                    },
+                    prop.SetStatements,
+                    globals);
+                propdef.IsTranslated = true;
+                return true;
+            }
+
+            customAttrs = stmt.decorators.Select(dd => VisitDecorator(dd));
+            return false;
+        }
+
+        private void GeneratePropertyGetter(Statement getter)
+        {
+            FunctionDef def = (FunctionDef)getter;
+            MethodGenerator mgen = new MethodGenerator(classDef, def, null, def.parameters, false, async, types, gen);
+            IEnumerable<CodeCommentStatement> comments = ConvertFirstStringToComments(def.body.stmts);
+            gen.CurrentMemberComments.AddRange(comments);
+            mgen.Xlat(def.body);
+        }
+
+        private void GeneratePropertySetter(Statement setter)
+        {
+            if (setter == null)
+            {
+                return;
+            }
+
+            FunctionDef def = (FunctionDef)setter;
+            MethodGenerator mgen = new MethodGenerator(classDef, def, null, def.parameters, false, async, types, gen);
+            IEnumerable<CodeCommentStatement> comments = ConvertFirstStringToComments(def.body.stmts);
+            gen.CurrentMemberComments.AddRange(comments);
+            mgen.Xlat(def.body);
+        }
+
+        public CodeAttributeDeclaration VisitDecorator(Decorator d)
+        {
+            return gen.CustomAttr(
+                gen.TypeRef(d.className.ToString()),
+                d.arguments.Select(a => new CodeAttributeArgument
+                {
+                    Name = a.name?.ToString(),
+                    Value = a.defval?.Accept(xlat)
+                }).ToArray());
+        }
+
         private CodeStatement Translate(WithItem wi)
         {
             CodeExpression e1 = wi.t.Accept(xlat);
             CodeExpression e2 = wi.e?.Accept(xlat);
             if (e2 != null)
+            {
                 return new CodeAssignStatement(e2, e1);
-            else
-                return new CodeExpressionStatement(e1);
-        }
+            }
 
-        public void VisitYield(YieldStatement y)
-        {
-            gen.Yield(y.Expression.Accept(xlat));
+            return new CodeExpressionStatement(e1);
         }
     }
 
     public class PropertyDefinition
     {
-        public string Name;
         public Statement Getter;
-        public Statement Setter;
         public Decorator GetterDecoration;
-        public Decorator SetterDecoration;
         public bool IsTranslated;
+        public string Name;
+        public Statement Setter;
+        public Decorator SetterDecoration;
 
         public PropertyDefinition(string name)
         {
-            this.Name = name;
+            Name = name;
         }
     }
 }

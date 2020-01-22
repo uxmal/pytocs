@@ -22,14 +22,14 @@ namespace Pytocs.Core.Syntax
 {
     public class Argument : Node
     {
-        public readonly Exp name;
         public readonly Exp defval;
+        public readonly Exp name;
 
         public Argument(Exp name, string filename, int start, int end)
             : base(filename, start, end)
         {
             this.name = name;
-            this.defval = null;
+            defval = null;
         }
 
         public Argument(Exp name, Exp defval, string filename, int start, int end) : base(filename, start, end)
@@ -40,7 +40,7 @@ namespace Pytocs.Core.Syntax
 
         public override string ToString()
         {
-            var sw = new StringWriter();
+            StringWriter sw = new StringWriter();
             Write(sw);
             return sw.ToString();
         }
@@ -50,15 +50,17 @@ namespace Pytocs.Core.Syntax
             if (name != null)
             {
                 name.Write(writer);
-                var compFor = defval as CompFor;
+                CompFor compFor = defval as CompFor;
                 if (compFor != null)
                 {
                     writer.Write(" ");
                     compFor.Write(writer);
                     return;
                 }
+
                 writer.Write("=");
             }
+
             if (defval != null)
             {
                 defval.Write(writer);

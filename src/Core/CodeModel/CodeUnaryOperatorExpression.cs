@@ -22,8 +22,8 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeUnaryOperatorExpression(CodeOperatorType codeOperatorType, CodeExpression e)
         {
-            this.Operator = codeOperatorType;
-            this.Expression = e;
+            Operator = codeOperatorType;
+            Expression = e;
         }
 
         public CodeOperatorType Operator { get; set; }

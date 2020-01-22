@@ -30,22 +30,23 @@ namespace Pytocs.Core.Syntax
 
         public Token(int lineNumber, int indent, TokenType type, object value, object numericValue, int start, int end)
         {
-            this.LineNumber = lineNumber;
-            this.Indent = indent;
-            this.Type = type;
-            this.Value = value;
-            this.NumericValue = numericValue;
-            this.Start = start;
-            this.End = end;
+            LineNumber = lineNumber;
+            Indent = indent;
+            Type = type;
+            Value = value;
+            NumericValue = numericValue;
+            Start = start;
+            End = end;
         }
 
         public override bool Equals(object obj)
         {
             if (obj != null && obj is Token)
             {
-                var oToken = (Token)obj;
+                Token oToken = (Token)obj;
                 return this == oToken;
             }
+
             return false;
         }
 
@@ -53,13 +54,16 @@ namespace Pytocs.Core.Syntax
         {
             int h = Type.GetHashCode();
             if (Value == null)
+            {
                 return h;
-            return h * 17 | Value.GetHashCode();
+            }
+
+            return (h * 17) | Value.GetHashCode();
         }
 
         public static bool operator ==(Token a, Token b)
         {
-            return a.Type == b.Type && object.Equals(a.Value, b.Value);
+            return a.Type == b.Type && Equals(a.Value, b.Value);
         }
 
         public static bool operator !=(Token a, Token b)
@@ -189,6 +193,6 @@ namespace Pytocs.Core.Syntax
         COMMENT,
         Async,
 
-        Await,
+        Await
     }
 }

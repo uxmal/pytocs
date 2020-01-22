@@ -24,14 +24,14 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeMemberMethod()
         {
-            this.Parameters = new List<CodeParameterDeclarationExpression>();
-            this.Statements = new List<CodeStatement>();
+            Parameters = new List<CodeParameterDeclarationExpression>();
+            Statements = new List<CodeStatement>();
         }
 
-        public List<CodeParameterDeclarationExpression> Parameters { get; private set; }
+        public List<CodeParameterDeclarationExpression> Parameters { get; }
         public CodeTypeReference ReturnType { get; set; }
 
-        public List<CodeStatement> Statements { get; private set; }
+        public List<CodeStatement> Statements { get; }
 
         public bool IsAsync { get; set; }
 

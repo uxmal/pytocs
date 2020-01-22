@@ -23,21 +23,21 @@ using System.Linq;
 namespace Pytocs.Core.Translate
 {
     /// <summary>
-    /// Generates symbols unique for a given scope to avoid colissions.
+    ///     Generates symbols unique for a given scope to avoid colissions.
     /// </summary>
     public class SymbolGenerator
     {
-        private Dictionary<string, LocalSymbol> autos;
-        private List<Dictionary<string, CodeExpression>> stack;
+        private readonly Dictionary<string, LocalSymbol> autos;
+        private readonly List<Dictionary<string, CodeExpression>> stack;
 
         public SymbolGenerator()
         {
-            this.autos = new Dictionary<string, LocalSymbol>();
-            this.stack = new List<Dictionary<string, CodeExpression>>();
+            autos = new Dictionary<string, LocalSymbol>();
+            stack = new List<Dictionary<string, CodeExpression>>();
         }
 
         /// <summary>
-        /// Generate a parameter to the current method with a unique name.
+        ///     Generate a parameter to the current method with a unique name.
         /// </summary>
         /// <param name="prefix">Prefix to use for the parameter</param>
         /// <param name="type">C# type of the parameter</param>
@@ -48,7 +48,7 @@ namespace Pytocs.Core.Translate
         }
 
         /// <summary>
-        /// Generate a local variable in the current method with a unique name.
+        ///     Generate a local variable in the current method with a unique name.
         /// </summary>
         /// <param name="prefix">Prefix to use for the local variable</param>
         /// <param name="type">C# type of the parameter</param>
@@ -59,7 +59,7 @@ namespace Pytocs.Core.Translate
         }
 
         /// <summary>
-        /// Generates a uniquely named parameter or local variable.
+        ///     Generates a uniquely named parameter or local variable.
         /// </summary>
         /// <param name="prefix"></param>
         /// <param name="type"></param>
@@ -69,8 +69,11 @@ namespace Pytocs.Core.Translate
         {
             int i = 1;
             while (autos.Select(l => l.Key).Contains(prefix + i))
+            {
                 ++i;
-            var name = prefix + i;
+            }
+
+            string name = prefix + i;
             EnsureLocalVariable(name, type, parameter);
             return new CodeVariableReferenceExpression(name);
         }
@@ -82,6 +85,7 @@ namespace Pytocs.Core.Translate
                 local = new LocalSymbol(name, type, parameter);
                 autos.Add(name, local);
             }
+
             return local;
         }
 
@@ -89,9 +93,12 @@ namespace Pytocs.Core.Translate
         {
             for (int i = stack.Count - 1; i >= 0; --i)
             {
-                if (stack[i].TryGetValue(id, out var exp))
+                if (stack[i].TryGetValue(id, out CodeExpression exp))
+                {
                     return exp;
+                }
             }
+
             return new CodeVariableReferenceExpression(id);
         }
 

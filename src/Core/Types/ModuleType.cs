@@ -16,7 +16,7 @@
 
 #endregion License
 
-using State = Pytocs.Core.TypeInference.State;
+using Pytocs.Core.TypeInference;
 
 namespace Pytocs.Core.Types
 {
@@ -28,11 +28,13 @@ namespace Pytocs.Core.Types
         public ModuleType(string name, string file, string qName, State parent)
         {
             this.name = name;
-            this.file = file;  // null for builtin modules
-            this.qname = qName;
-            this.Table = new State(parent, State.StateType.MODULE);
-            Table.Path = qname;
-            Table.DataType = this;
+            this.file = file; // null for builtin modules
+            qname = qName;
+            Table = new State(parent, State.StateType.MODULE)
+            {
+                Path = qname,
+                DataType = this
+            };
         }
 
         public override T Accept<T>(IDataTypeVisitor<T> visitor)
@@ -59,7 +61,8 @@ namespace Pytocs.Core.Types
                     return file.Equals(co.file);
                 }
             }
-            return object.ReferenceEquals(this, other);
+
+            return ReferenceEquals(this, other);
         }
     }
 }

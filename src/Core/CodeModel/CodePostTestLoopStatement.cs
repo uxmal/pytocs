@@ -27,7 +27,7 @@ namespace Pytocs.Core.CodeModel
             Body = new List<CodeStatement>();
         }
 
-        public List<CodeStatement> Body { get; private set; }
+        public List<CodeStatement> Body { get; }
         public CodeExpression Test { get; set; }
 
         public override T Accept<T>(ICodeStatementVisitor<T> visitor)

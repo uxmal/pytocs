@@ -41,7 +41,7 @@ namespace Pytocs.Core.Types
 
         public override bool Equals(object other)
         {
-            return (other is BoolType);
+            return other is BoolType;
         }
 
         public override int GetHashCode()

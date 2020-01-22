@@ -20,12 +20,12 @@ namespace Pytocs.Core.CodeModel
 {
     public class CodeVariableReferenceExpression : CodeExpression
     {
-        public string Name { get; set; }
-
         public CodeVariableReferenceExpression(string name)
         {
-            this.Name = name;
+            Name = name;
         }
+
+        public string Name { get; set; }
 
         public override void Accept(ICodeExpressionVisitor visitor)
         {

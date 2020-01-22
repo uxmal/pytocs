@@ -22,21 +22,22 @@ namespace Pytocs.Core.CodeModel
 {
     public class CodeMemberField : CodeMember
     {
-        public CodeTypeReference FieldType { get; set; }
-        public string FieldName { get; set; }
         public CodeExpression InitExpression;
 
         public CodeMemberField(Type type, string fieldName)
         {
-            this.FieldType = new CodeTypeReference(type);
-            this.FieldName = fieldName;
+            FieldType = new CodeTypeReference(type);
+            FieldName = fieldName;
         }
 
         public CodeMemberField(CodeTypeReference type, string fieldName)
         {
-            this.FieldType = type;
-            this.FieldName = fieldName;
+            FieldType = type;
+            FieldName = fieldName;
         }
+
+        public CodeTypeReference FieldType { get; set; }
+        public string FieldName { get; set; }
 
         public override T Accept<T>(ICodeMemberVisitor<T> visitor)
         {

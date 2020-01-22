@@ -24,19 +24,20 @@ namespace Pytocs.Core.CodeModel
 
         public CSharpUnitWriter(IndentingTextWriter indentingTextWriter)
         {
-            this.writer = indentingTextWriter;
+            writer = indentingTextWriter;
         }
 
         public void Write(CodeCompileUnit unit)
         {
-            foreach (var n in unit.Namespaces)
+            foreach (CodeNamespace n in unit.Namespaces)
             {
-                foreach (var comment in n.Comments)
+                foreach (CodeCommentStatement comment in n.Comments)
                 {
                     writer.Write("//");
                     writer.Write(comment.Comment);
                     writer.WriteLine();
                 }
+
                 if (!string.IsNullOrEmpty(n.Name))
                 {
                     writer.Write("namespace");
@@ -45,7 +46,8 @@ namespace Pytocs.Core.CodeModel
                     writer.WriteLine(" {");
                     ++writer.IndentLevel;
                 }
-                foreach (var imp in n.Imports)
+
+                foreach (CodeNamespaceImport imp in n.Imports)
                 {
                     writer.WriteLine();
                     writer.Write("using");
@@ -53,12 +55,14 @@ namespace Pytocs.Core.CodeModel
                     writer.WriteDottedName(imp.Namespace);
                     writer.WriteLine(";");
                 }
-                foreach (var type in n.Types)
+
+                foreach (CodeTypeDeclaration type in n.Types)
                 {
                     writer.WriteLine();
-                    var tw = new CSharpTypeWriter(type, writer);
+                    CSharpTypeWriter tw = new CSharpTypeWriter(type, writer);
                     type.Accept(tw);
                 }
+
                 if (!string.IsNullOrEmpty(n.Name))
                 {
                     --writer.IndentLevel;

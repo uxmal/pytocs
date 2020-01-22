@@ -20,11 +20,12 @@ namespace Pytocs.Core.Syntax
 {
     public class ExceptHandler : Node
     {
-        public Exp type;
-        public Identifier name;
         public SuiteStatement body;
+        public Identifier name;
+        public Exp type;
 
-        public ExceptHandler(Exp type, Identifier name, SuiteStatement body, string filename, int start, int end) : base(filename, start, end)
+        public ExceptHandler(Exp type, Identifier name, SuiteStatement body, string filename, int start, int end) :
+            base(filename, start, end)
         {
             this.type = type;
             this.name = name;

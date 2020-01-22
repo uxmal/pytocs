@@ -19,7 +19,7 @@
 namespace Pytocs.Core.CodeModel
 {
     /// <summary>
-    /// Models the "select" clause of a C# LinQ expression.
+    ///     Models the "select" clause of a C# LinQ expression.
     /// </summary>
     public class CodeSelectClause : CodeQueryClause
     {
@@ -27,7 +27,7 @@ namespace Pytocs.Core.CodeModel
 
         public CodeSelectClause(CodeExpression projection)
         {
-            this.Projection = projection;
+            Projection = projection;
         }
     }
 }

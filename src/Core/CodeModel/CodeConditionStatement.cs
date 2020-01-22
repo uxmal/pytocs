@@ -29,8 +29,8 @@ namespace Pytocs.Core.CodeModel
         }
 
         public CodeExpression Condition { get; set; }
-        public List<CodeStatement> TrueStatements { get; private set; }
-        public List<CodeStatement> FalseStatements { get; private set; }
+        public List<CodeStatement> TrueStatements { get; }
+        public List<CodeStatement> FalseStatements { get; }
 
         public override T Accept<T>(ICodeStatementVisitor<T> visitor)
         {

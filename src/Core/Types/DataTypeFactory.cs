@@ -22,7 +22,7 @@ namespace Pytocs.Core.Types
 {
     public class DataTypeFactory
     {
-        private AnalyzerImpl analyzer;
+        private readonly AnalyzerImpl analyzer;
 
         public DataTypeFactory(AnalyzerImpl analyzer)
         {
@@ -61,6 +61,7 @@ namespace Pytocs.Core.Types
             {
                 module.Table.AddSuper(analyzer.Builtins.BaseModule.Table);
             }
+
             return module;
         }
 

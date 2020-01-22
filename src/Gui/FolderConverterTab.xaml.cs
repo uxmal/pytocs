@@ -28,6 +28,17 @@ namespace Pytocs.Gui
 {
     public class FolderConverterTab : UserControl
     {
+        public FolderConverterTab()
+        {
+            InitializeComponent();
+            SourceFolderBox = this.FindControl<TextBox>(nameof(SourceFolderBox));
+            TargetFolderBox = this.FindControl<TextBox>(nameof(TargetFolderBox));
+            ConversionLogBox = this.FindControl<TextBox>(nameof(ConversionLogBox));
+            ConvertButton = this.FindControl<Button>(nameof(ConvertButton));
+
+            AppendLog = x => Dispatcher.UIThread.InvokeAsync(() => ConversionLogBox.Text += x);
+        }
+
         private TextBox TargetFolderBox { get; }
 
         private TextBox SourceFolderBox { get; }
@@ -38,17 +49,6 @@ namespace Pytocs.Gui
 
         private Func<string, Task> AppendLog { get; }
 
-        public FolderConverterTab()
-        {
-            this.InitializeComponent();
-            SourceFolderBox = this.FindControl<TextBox>(nameof(SourceFolderBox));
-            TargetFolderBox = this.FindControl<TextBox>(nameof(TargetFolderBox));
-            ConversionLogBox = this.FindControl<TextBox>(nameof(ConversionLogBox));
-            ConvertButton = this.FindControl<Button>(nameof(ConvertButton));
-
-            AppendLog = x => Dispatcher.UIThread.InvokeAsync(() => ConversionLogBox.Text += x);
-        }
-
         private void InitializeComponent()
         {
             AvaloniaXamlLoader.Load(this);
@@ -56,8 +56,8 @@ namespace Pytocs.Gui
 
         private async void BrowseSource_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFolderDialog();
-            var result = await dialog.ShowAsync(null);
+            OpenFolderDialog dialog = new OpenFolderDialog();
+            string result = await dialog.ShowAsync(null);
 
             if (!string.IsNullOrWhiteSpace(result))
             {
@@ -67,8 +67,8 @@ namespace Pytocs.Gui
 
         private async void BrowseTarget_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFolderDialog();
-            var result = await dialog.ShowAsync((Window)this.Parent);
+            OpenFolderDialog dialog = new OpenFolderDialog();
+            string result = await dialog.ShowAsync((Window)Parent);
 
             if (!string.IsNullOrWhiteSpace(result))
             {
@@ -80,7 +80,7 @@ namespace Pytocs.Gui
         {
             ConvertButton.IsEnabled = false;
 
-            var (sourceFolder, targetFolder) = GetValidConversionFolders();
+            (string sourceFolder, string targetFolder) = GetValidConversionFolders();
 
             if (sourceFolder == null)
             {
@@ -109,8 +109,8 @@ namespace Pytocs.Gui
                 return (null, null);
             }
 
-            var sourceFolder = Path.GetFullPath(SourceFolderBox.Text);
-            var targetFolder = Path.GetFullPath(TargetFolderBox.Text);
+            string sourceFolder = Path.GetFullPath(SourceFolderBox.Text);
+            string targetFolder = Path.GetFullPath(TargetFolderBox.Text);
 
             SourceFolderBox.Text = sourceFolder;
             TargetFolderBox.Text = targetFolder;

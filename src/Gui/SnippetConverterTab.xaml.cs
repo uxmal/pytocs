@@ -19,27 +19,27 @@
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
-using Pytocs.Core;
 using System;
 using System.IO;
 using System.Linq;
+using TextCopy;
 
 namespace Pytocs.Gui
 {
     public class SnippetConverterTab : UserControl
     {
-        private TextBox PythonEditor { get; }
-        private TextBox CSharpEditor { get; }
-
         public SnippetConverterTab()
         {
-            this.InitializeComponent();
+            InitializeComponent();
 
             PythonEditor = this.FindControl<TextBox>(nameof(PythonEditor));
             CSharpEditor = this.FindControl<TextBox>(nameof(CSharpEditor));
             PythonEditor.Text = string.Empty;
             CSharpEditor.Text = string.Empty;
         }
+
+        private TextBox PythonEditor { get; }
+        private TextBox CSharpEditor { get; }
 
         private void InitializeComponent()
         {
@@ -64,9 +64,9 @@ namespace Pytocs.Gui
 
         private async void InsertFile_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new OpenFileDialog();
+            OpenFileDialog dialog = new OpenFileDialog();
 
-            var fileName = (await dialog.ShowAsync(null)).FirstOrDefault();
+            string fileName = (await dialog.ShowAsync(null)).FirstOrDefault();
 
             if (fileName != null)
             {
@@ -81,14 +81,14 @@ namespace Pytocs.Gui
 
         private void SelectAndCopyAll_Click(object sender, RoutedEventArgs e)
         {
-            TextCopy.Clipboard.SetText(CSharpEditor.Text);
+            Clipboard.SetText(CSharpEditor.Text);
         }
 
         private async void Save_Click(object sender, RoutedEventArgs e)
         {
-            var dialog = new SaveFileDialog();
+            SaveFileDialog dialog = new SaveFileDialog();
 
-            var fileName = await dialog.ShowAsync(null);
+            string fileName = await dialog.ShowAsync(null);
 
             if (fileName != null)
             {

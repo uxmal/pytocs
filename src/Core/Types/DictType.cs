@@ -42,34 +42,37 @@ namespace Pytocs.Core.Types
 
         public TupleType ToTupleType(int n)
         {
-            TupleType ret = new TupleType();        //$ NO registation. Badness?
+            TupleType ret = new TupleType(); //$ NO registation. Badness?
             for (int i = 0; i < n; i++)
             {
                 ret.Add(KeyType);
             }
+
             return ret;
         }
 
         public override bool Equals(object other)
         {
             if (!(other is DataType dtOther))
+            {
                 return false;
+            }
+
             if (typeStack.Contains(this, dtOther))
             {
                 return true;
             }
-            else if (other is DictType co)
+
+            if (other is DictType co)
             {
                 typeStack.Push(this, dtOther);
-                bool ret = (co.KeyType.Equals(KeyType) &&
-                            co.ValueType.Equals(ValueType));
+                bool ret = co.KeyType.Equals(KeyType) &&
+                           co.ValueType.Equals(ValueType);
                 typeStack.Pop(this, other);
                 return ret;
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         public override int GetHashCode()

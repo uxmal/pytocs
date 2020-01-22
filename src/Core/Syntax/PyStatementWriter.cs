@@ -16,6 +16,7 @@
 
 #endregion License
 
+using Pytocs.Core.CodeModel;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -25,13 +26,13 @@ namespace Pytocs.Core.Syntax
 {
     internal class PyStatementWriter : IStatementVisitor
     {
-        private TextWriter writer;
-        private Pytocs.Core.CodeModel.IndentingTextWriter w;
+        private readonly IndentingTextWriter w;
+        private readonly TextWriter writer;
 
         public PyStatementWriter(TextWriter textWriter)
         {
-            this.writer = textWriter;
-            this.w = new CodeModel.IndentingTextWriter(textWriter);
+            writer = textWriter;
+            w = new IndentingTextWriter(textWriter);
         }
 
         public void VisitAssert(AssertStatement a)
@@ -63,6 +64,7 @@ namespace Pytocs.Core.Syntax
                 w.Write(string.Join(",", c.args.Select(e => e.ToString())));
                 w.Write(")");
             }
+
             w.WriteLine(":");
             ++w.IndentLevel;
             c.body.Accept(this);
@@ -77,27 +79,6 @@ namespace Pytocs.Core.Syntax
         public void VisitContinue(ContinueStatement c)
         {
             throw new NotImplementedException();
-        }
-
-        public void VisitDecorators(List<Decorator> decorators)
-        {
-            if (decorators == null)
-                return;
-            foreach (var dec in decorators)
-            {
-                w.Write("@");
-                w.Write(dec.className.ToString());
-                w.Write("(");
-                var sep = "";
-                foreach (var arg in dec.arguments)
-                {
-                    w.Write(sep);
-                    sep = ", ";
-                    arg.Write(writer);
-                }
-                w.Write(")");
-                w.WriteLine();
-            }
         }
 
         public void VisitDel(DelStatement d)
@@ -138,18 +119,19 @@ namespace Pytocs.Core.Syntax
             if (f.AliasedNames != null && f.AliasedNames.Count > 0)
             {
                 w.Write(" (");
-                var listSep = "";
-                foreach (var aliasedName in f.AliasedNames)
+                string listSep = "";
+                foreach (AliasedName aliasedName in f.AliasedNames)
                 {
                     w.Write(listSep);
                     listSep = ", ";
-                    var segSep = "";
-                    foreach (var seg in aliasedName.orig.segs)
+                    string segSep = "";
+                    foreach (Identifier seg in aliasedName.orig.segs)
                     {
                         w.Write(segSep);
                         segSep = ".";
                         w.Write(seg.Name);
                     }
+
                     if (aliasedName.alias != null)
                     {
                         w.Write(" ");
@@ -158,6 +140,7 @@ namespace Pytocs.Core.Syntax
                         w.Write(aliasedName.alias.Name);
                     }
                 }
+
                 w.Write(")");
             }
         }
@@ -169,13 +152,14 @@ namespace Pytocs.Core.Syntax
             w.Write(" ");
             w.WriteName(f.name.Name);
             w.Write("(");
-            var sep = "";
-            foreach (var p in f.parameters)
+            string sep = "";
+            foreach (Parameter p in f.parameters)
             {
                 w.Write(sep);
                 sep = ",";
                 w.Write(p.ToString());
             }
+
             w.WriteLine("):");
             ++w.IndentLevel;
             f.body.Accept(this);
@@ -198,7 +182,7 @@ namespace Pytocs.Core.Syntax
             --w.IndentLevel;
             while (i.Else != null)
             {
-                var elif = GetElif(i.Else);
+                IfStatement elif = GetElif(i.Else);
                 if (elif != null)
                 {
                     w.Write("elif");
@@ -222,13 +206,6 @@ namespace Pytocs.Core.Syntax
             }
         }
 
-        private IfStatement GetElif(SuiteStatement s)
-        {
-            if (s.stmts.Count != 1)
-                return null;
-            return s.stmts[0] as IfStatement;
-        }
-
         public void VisitImport(ImportStatement i)
         {
             throw new NotImplementedException();
@@ -247,21 +224,25 @@ namespace Pytocs.Core.Syntax
         public void VisitPrint(PrintStatement p)
         {
             w.Write("print");
-            var sep = " ";
+            string sep = " ";
             if (p.outputStream != null)
             {
                 w.Write(" >> ");
                 p.outputStream.Write(writer);
                 sep = ", ";
             }
-            foreach (var a in p.args)
+
+            foreach (Argument a in p.args)
             {
                 w.Write(sep);
                 sep = ", ";
                 a.Write(writer);
             }
+
             if (p.trailingComma)
+            {
                 w.Write(",");
+            }
         }
 
         public void VisitRaise(RaiseStatement r)
@@ -288,7 +269,7 @@ namespace Pytocs.Core.Syntax
 
         public void VisitSuite(SuiteStatement s)
         {
-            foreach (var stm in s.stmts)
+            foreach (Statement stm in s.stmts)
             {
                 stm.Accept(this);
                 if (!(stm is SuiteStatement))
@@ -305,7 +286,7 @@ namespace Pytocs.Core.Syntax
             ++w.IndentLevel;
             t.body.Accept(this);
             --w.IndentLevel;
-            foreach (var h in t.exHandlers)
+            foreach (ExceptHandler h in t.exHandlers)
             {
                 w.Write("except");
                 w.Write(" ");
@@ -317,6 +298,7 @@ namespace Pytocs.Core.Syntax
                     w.Write(" ");
                     w.Write(h.name.Name);
                 }
+
                 w.WriteLine(":");
                 ++w.IndentLevel;
                 h.body.Accept(this);
@@ -333,8 +315,8 @@ namespace Pytocs.Core.Syntax
         {
             this.w.Write("with");
             this.w.Write(" ");
-            var sep = "";
-            foreach (var ws in w.items)
+            string sep = "";
+            foreach (WithItem ws in w.items)
             {
                 this.w.Write(sep);
                 sep = ", ";
@@ -347,6 +329,7 @@ namespace Pytocs.Core.Syntax
                     ws.e.Write(writer);
                 }
             }
+
             this.w.Write(":");
             this.w.WriteLine();
             ++this.w.IndentLevel;
@@ -356,8 +339,8 @@ namespace Pytocs.Core.Syntax
 
         public void VisitYield(YieldStatement y)
         {
-            this.w.Write("yield");
-            this.w.Write(" ");
+            w.Write("yield");
+            w.Write(" ");
             y.Expression.Write(writer);
         }
 
@@ -378,6 +361,41 @@ namespace Pytocs.Core.Syntax
                     exec.locals.Write(writer);
                 }
             }
+        }
+
+        public void VisitDecorators(List<Decorator> decorators)
+        {
+            if (decorators == null)
+            {
+                return;
+            }
+
+            foreach (Decorator dec in decorators)
+            {
+                w.Write("@");
+                w.Write(dec.className.ToString());
+                w.Write("(");
+                string sep = "";
+                foreach (Argument arg in dec.arguments)
+                {
+                    w.Write(sep);
+                    sep = ", ";
+                    arg.Write(writer);
+                }
+
+                w.Write(")");
+                w.WriteLine();
+            }
+        }
+
+        private IfStatement GetElif(SuiteStatement s)
+        {
+            if (s.stmts.Count != 1)
+            {
+                return null;
+            }
+
+            return s.stmts[0] as IfStatement;
         }
     }
 }

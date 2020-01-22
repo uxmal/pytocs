@@ -24,21 +24,21 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeTypeDeclaration(string name) : this()
         {
-            this.Name = name;
+            Name = name;
         }
 
         public CodeTypeDeclaration()
         {
-            this.Members = new List<CodeMember>();
-            this.BaseTypes = new List<CodeTypeReference>();
+            Members = new List<CodeMember>();
+            BaseTypes = new List<CodeTypeReference>();
             Attributes = MemberAttributes.Public;
         }
 
         public bool IsClass { get; set; }
 
-        public List<CodeMember> Members { get; private set; }
+        public List<CodeMember> Members { get; }
 
-        public List<CodeTypeReference> BaseTypes { get; private set; }
+        public List<CodeTypeReference> BaseTypes { get; }
 
         public override T Accept<T>(ICodeMemberVisitor<T> visitor)
         {

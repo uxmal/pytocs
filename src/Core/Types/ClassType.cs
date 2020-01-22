@@ -17,21 +17,21 @@
 #endregion License
 
 using Pytocs.Core.Syntax;
+using Pytocs.Core.TypeInference;
 using System;
 using System.Collections.Generic;
-using State = Pytocs.Core.TypeInference.State;
 
 namespace Pytocs.Core.Types
 {
     public class ClassType : DataType
     {
-        public string name;
         public InstanceType instance;
+        public string name;
 
         public ClassType(string name, State parent, string path)
         {
             this.name = name;
-            this.Table = new State(parent, State.StateType.CLASS) { DataType = this };
+            Table = new State(parent, State.StateType.CLASS) { DataType = this };
             if (parent != null)
             {
                 Table.Path = path;
@@ -67,6 +67,7 @@ namespace Pytocs.Core.Types
             {
                 instance = new InstanceType(this);
             }
+
             return instance;
         }
 
@@ -77,12 +78,13 @@ namespace Pytocs.Core.Types
                 IList<DataType> initArgs = args ?? new List<DataType>();
                 throw new NotImplementedException(" instance = new InstanceType(this, initArgs, inferencer, call);");
             }
+
             return instance;
         }
 
         public override bool Equals(object other)
         {
-            return object.ReferenceEquals(this, other);
+            return ReferenceEquals(this, other);
         }
 
         public override int GetHashCode()

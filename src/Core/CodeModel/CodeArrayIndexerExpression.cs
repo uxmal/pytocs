@@ -22,8 +22,8 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeArrayIndexerExpression(CodeExpression exp, CodeExpression[] indices)
         {
-            this.TargetObject = exp;
-            this.Indices = indices;
+            TargetObject = exp;
+            Indices = indices;
         }
 
         public CodeExpression TargetObject { get; set; }

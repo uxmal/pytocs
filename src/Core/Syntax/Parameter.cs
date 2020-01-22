@@ -24,24 +24,26 @@ namespace Pytocs.Core.Syntax
     public class Parameter
     {
         /// <summary>
-        /// Parameter name
+        ///     Parameter name
         /// </summary>
         public Identifier Id;
 
+        public bool keyarg;
+
         /// <summary>
-        /// Default value
+        ///     Default value
         /// </summary>
         public Exp test;
 
-        public bool vararg;
-        public bool keyarg;
         public List<Parameter> tuple;
+
+        public bool vararg;
 
         public string Comment { get; internal set; }
 
         public override string ToString()
         {
-            var sb = new StringBuilder();
+            StringBuilder sb = new StringBuilder();
             if (tuple != null)
             {
                 sb.Append("(");
@@ -64,6 +66,7 @@ namespace Pytocs.Core.Syntax
                     sb.AppendFormat("={0}", test);
                 }
             }
+
             return sb.ToString();
         }
     }

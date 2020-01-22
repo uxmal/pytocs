@@ -23,7 +23,7 @@ namespace Pytocs.Core.Translate
 {
     public class ExpNameDiscovery : IExpVisitor
     {
-        private SymbolTable syms;
+        private readonly SymbolTable syms;
 
         public ExpNameDiscovery(SymbolTable syms)
         {

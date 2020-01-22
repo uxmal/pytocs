@@ -22,7 +22,7 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeValueTupleExpression(params CodeExpression[] exprs)
         {
-            this.Expressions = exprs;
+            Expressions = exprs;
         }
 
         public CodeExpression[] Expressions { get; }

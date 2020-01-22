@@ -20,10 +20,10 @@ namespace Pytocs.Core.Syntax
 {
     public class VarArg
     {
-        public Exp name;    // could be tuple
-        public Exp test;
-        public bool IsKeyword;
         public bool IsIndexed;
+        public bool IsKeyword;
+        public Exp name; // could be tuple
+        public Exp test;
 
         public static VarArg Keyword(Identifier name)
         {

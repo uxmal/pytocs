@@ -22,29 +22,9 @@ namespace Pytocs.Core.CodeModel
 {
     public class CSharpCodeProvider : ICodeElementVisitor<int>
     {
-        private IndentingTextWriter writer;
         private CSharpStatementWriter stmWriter;
         private CSharpTypeWriter typeWriter;
-
-        public void GenerateCodeFromExpression(CodeExpression csExp, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
-        {
-            this.writer = new IndentingTextWriter(writer);
-            csExp.Accept(new CSharpExpressionWriter(this.writer));
-        }
-
-        public void GenerateCodeFromType(CodeTypeDeclaration type, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
-        {
-            this.writer = new IndentingTextWriter(writer);
-            this.typeWriter = new CSharpTypeWriter(type, this.writer);
-            type.Accept(typeWriter);
-        }
-
-        public void GenerateCodeFromStatement(CodeStatement csStmt, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
-        {
-            this.writer = new IndentingTextWriter(writer);
-            stmWriter = new CSharpStatementWriter(this.writer);
-            csStmt.Accept(stmWriter);
-        }
+        private IndentingTextWriter writer;
 
         public int VisitNamespace(CodeNamespace n)
         {
@@ -56,17 +36,42 @@ namespace Pytocs.Core.CodeModel
             return 0;
         }
 
-        public void GenerateCodeFromMember(CodeMember member, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
+        public void GenerateCodeFromExpression(CodeExpression csExp, TextWriter writer,
+            CodeGeneratorOptions codeGeneratorOptions)
         {
             this.writer = new IndentingTextWriter(writer);
-            var memberWriter = new CSharpTypeWriter(null, this.writer);
+            csExp.Accept(new CSharpExpressionWriter(this.writer));
+        }
+
+        public void GenerateCodeFromType(CodeTypeDeclaration type, TextWriter writer,
+            CodeGeneratorOptions codeGeneratorOptions)
+        {
+            this.writer = new IndentingTextWriter(writer);
+            typeWriter = new CSharpTypeWriter(type, this.writer);
+            type.Accept(typeWriter);
+        }
+
+        public void GenerateCodeFromStatement(CodeStatement csStmt, TextWriter writer,
+            CodeGeneratorOptions codeGeneratorOptions)
+        {
+            this.writer = new IndentingTextWriter(writer);
+            stmWriter = new CSharpStatementWriter(this.writer);
+            csStmt.Accept(stmWriter);
+        }
+
+        public void GenerateCodeFromMember(CodeMember member, TextWriter writer,
+            CodeGeneratorOptions codeGeneratorOptions)
+        {
+            this.writer = new IndentingTextWriter(writer);
+            CSharpTypeWriter memberWriter = new CSharpTypeWriter(null, this.writer);
             member.Accept(memberWriter);
         }
 
-        public void GenerateCodeFromCompileUnit(CodeCompileUnit compileUnit, TextWriter writer, CodeGeneratorOptions codeGeneratorOptions)
+        public void GenerateCodeFromCompileUnit(CodeCompileUnit compileUnit, TextWriter writer,
+            CodeGeneratorOptions codeGeneratorOptions)
         {
             this.writer = new IndentingTextWriter(writer);
-            var unitWriter = new CSharpUnitWriter(this.writer);
+            CSharpUnitWriter unitWriter = new CSharpUnitWriter(this.writer);
             unitWriter.Write(compileUnit);
         }
     }

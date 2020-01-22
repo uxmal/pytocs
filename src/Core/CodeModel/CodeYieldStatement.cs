@@ -22,7 +22,7 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeYieldStatement(CodeExpression exp)
         {
-            this.Expression = exp;
+            Expression = exp;
         }
 
         public CodeExpression Expression { get; set; }

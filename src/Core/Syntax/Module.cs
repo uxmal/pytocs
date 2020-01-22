@@ -22,9 +22,10 @@ namespace Pytocs.Core.Syntax
     {
         public SuiteStatement body;
 
-        public Module(string moduleName, SuiteStatement body, string filename, int begin, int end) : base(filename, begin, end)
+        public Module(string moduleName, SuiteStatement body, string filename, int begin, int end) : base(filename,
+            begin, end)
         {
-            this.Name = moduleName;
+            Name = moduleName;
             this.body = body;
         }
 

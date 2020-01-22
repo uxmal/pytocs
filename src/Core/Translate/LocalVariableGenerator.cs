@@ -25,27 +25,12 @@ namespace Pytocs.Core.Translate
 {
     public class LocalVariableGenerator : ICodeStatementVisitor<int>
     {
-        private Dictionary<CodeStatement, List<CodeStatement>> parentOf;
+        private readonly HashSet<string> globals;
+        private readonly List<CodeParameterDeclarationExpression> parameters;
+        private readonly Dictionary<CodeStatement, List<CodeStatement>> parentOf;
         private List<CodeStatement> path;
-        private Dictionary<CodeVariableReferenceExpression, List<List<CodeStatement>>> paths;
-        private List<CodeParameterDeclarationExpression> parameters;
-        private List<CodeStatement> statements;
-        private HashSet<string> globals;
-
-        public static void Generate(CodeMemberMethod method, HashSet<string> globals)
-        {
-            var gen = new LocalVariableGenerator(method.Parameters, method.Statements, globals);
-            gen.Analyze(new List<CodeStatement>(), method.Statements);
-            gen.Generate();
-        }
-
-        public static void Generate(List<CodeParameterDeclarationExpression> parameters, List<CodeStatement> statements, HashSet<string> globals)
-        {
-            parameters = parameters ?? new List<CodeParameterDeclarationExpression>();
-            var gen = new LocalVariableGenerator(parameters, statements, globals);
-            gen.Analyze(new List<CodeStatement>(), statements);
-            gen.Generate();
-        }
+        private readonly Dictionary<CodeVariableReferenceExpression, List<List<CodeStatement>>> paths;
+        private readonly List<CodeStatement> statements;
 
         private LocalVariableGenerator(
             List<CodeParameterDeclarationExpression> parameters,
@@ -55,113 +40,24 @@ namespace Pytocs.Core.Translate
             this.parameters = parameters;
             this.statements = statements;
             this.globals = globals;
-            this.parentOf = new Dictionary<CodeStatement, List<CodeStatement>>();
-            this.paths = new Dictionary<CodeVariableReferenceExpression, List<List<CodeStatement>>>(
+            parentOf = new Dictionary<CodeStatement, List<CodeStatement>>();
+            paths = new Dictionary<CodeVariableReferenceExpression, List<List<CodeStatement>>>(
                 new IdCmp());
-        }
-
-        private void Analyze(List<CodeStatement> basePath, List<CodeStatement> statements)
-        {
-            foreach (var stm in statements)
-            {
-                var opath = this.path;
-                this.path = basePath.Concat(new[] { stm }).ToList();
-                stm.Accept(this);
-                parentOf[stm] = statements;
-                this.path = opath;
-            }
-        }
-
-        private void Generate()
-        {
-            var paramNames = new HashSet<string>(
-                parameters
-                .Select(p => p.ParameterName));
-            foreach (var de in paths.Where(
-                d => !paramNames.Contains(d.Key.Name)))
-            {
-                var id = de.Key;
-                var defs = de.Value;
-                if (defs.Count == 1)
-                {
-                    ReplaceWithDeclaration(id, defs[0], defs[0].Count - 1);
-                }
-                else
-                {
-                    var first = defs[0];
-                    int iCommon = first.Count - 1;
-                    foreach (var path in defs.Skip(1))
-                    {
-                        iCommon = FindCommon(first, path, iCommon);
-                    }
-                    ReplaceWithDeclaration(id, first, iCommon);
-                }
-            }
-        }
-
-        private int FindCommon(List<CodeStatement> a, List<CodeStatement> b, int iCommon)
-        {
-            iCommon = Math.Min(iCommon, a.Count - 1);
-            iCommon = Math.Min(iCommon, b.Count - 1);
-            int i;
-            for (i = 0; i <= iCommon; ++i)
-            {
-                if (parentOf[a[i]] != parentOf[b[i]])
-                    return i - 1;
-                if (a[i] != b[i])
-                    return i;
-            }
-            return i;
-        }
-
-        private void ReplaceWithDeclaration(CodeVariableReferenceExpression id, List<CodeStatement> path, int iCommon)
-        {
-            if (iCommon >= 0)
-            {
-                var codeStatement = path[iCommon];
-                var stms = this.parentOf[codeStatement];
-                var i = stms.IndexOf(codeStatement);
-                if (i >= 0)
-                {
-                    if (codeStatement is CodeAssignStatement ass)
-                    {
-                        // An assignment of type 'name = <exp>'. If the value
-                        // assigned is null, use object type 'object', otherwise
-                        // use 'var'.
-                        var prim = ass.Source as CodePrimitiveExpression;
-                        var dstType = prim != null && prim.Value == null
-                            ? "object"
-                            : "var";
-                        stms[i] = new CodeVariableDeclarationStatement(dstType, id.Name)
-                        {
-                            InitExpression = ass.Source
-                        };
-                        return;
-                    }
-                }
-            }
-            statements.Insert(
-                0,
-                new CodeVariableDeclarationStatement("object", id.Name));
-        }
-
-        private void EnsurePath(CodeVariableReferenceExpression id)
-        {
-            if (!this.paths.TryGetValue(id, out var paths))
-            {
-                paths = new List<List<CodeStatement>>();
-                this.paths.Add(id, paths);
-            }
-            paths.Add(this.path);
         }
 
         public int VisitAssignment(CodeAssignStatement ass)
         {
-            var id = ass.Destination as CodeVariableReferenceExpression;
+            CodeVariableReferenceExpression id = ass.Destination as CodeVariableReferenceExpression;
             if (id == null)
+            {
                 return 0;
-            if (this.globals.Contains(id.Name))
+            }
+
+            if (globals.Contains(id.Name))
+            {
                 return 0;
+            }
+
             EnsurePath(id);
             return 0;
         }
@@ -183,26 +79,26 @@ namespace Pytocs.Core.Translate
 
         public int VisitForeach(CodeForeachStatement f)
         {
-            Analyze(this.path, f.Statements);
+            Analyze(path, f.Statements);
             return 0;
         }
 
         public int VisitIf(CodeConditionStatement cond)
         {
-            Analyze(this.path, cond.TrueStatements);
-            Analyze(this.path, cond.FalseStatements);
+            Analyze(path, cond.TrueStatements);
+            Analyze(path, cond.FalseStatements);
             return 0;
         }
 
         public int VisitPostTestLoop(CodePostTestLoopStatement l)
         {
-            Analyze(this.path, l.Body);
+            Analyze(path, l.Body);
             return 0;
         }
 
         public int VisitPreTestLoop(CodePreTestLoopStatement l)
         {
-            Analyze(this.path, l.Body);
+            Analyze(path, l.Body);
             return 0;
         }
 
@@ -223,12 +119,13 @@ namespace Pytocs.Core.Translate
 
         public int VisitTry(CodeTryCatchFinallyStatement t)
         {
-            Analyze(this.path, t.TryStatements);
-            foreach (var c in t.CatchClauses)
+            Analyze(path, t.TryStatements);
+            foreach (CodeCatchClause c in t.CatchClauses)
             {
-                Analyze(this.path, c.Statements);
+                Analyze(path, c.Statements);
             }
-            Analyze(this.path, t.FinallyStatements);
+
+            Analyze(path, t.FinallyStatements);
             return 0;
         }
 
@@ -245,6 +142,126 @@ namespace Pytocs.Core.Translate
         public int VisitYield(CodeYieldStatement y)
         {
             return 0;
+        }
+
+        public static void Generate(CodeMemberMethod method, HashSet<string> globals)
+        {
+            LocalVariableGenerator gen = new LocalVariableGenerator(method.Parameters, method.Statements, globals);
+            gen.Analyze(new List<CodeStatement>(), method.Statements);
+            gen.Generate();
+        }
+
+        public static void Generate(List<CodeParameterDeclarationExpression> parameters, List<CodeStatement> statements,
+            HashSet<string> globals)
+        {
+            parameters = parameters ?? new List<CodeParameterDeclarationExpression>();
+            LocalVariableGenerator gen = new LocalVariableGenerator(parameters, statements, globals);
+            gen.Analyze(new List<CodeStatement>(), statements);
+            gen.Generate();
+        }
+
+        private void Analyze(List<CodeStatement> basePath, List<CodeStatement> statements)
+        {
+            foreach (CodeStatement stm in statements)
+            {
+                List<CodeStatement> opath = path;
+                path = basePath.Concat(new[] { stm }).ToList();
+                stm.Accept(this);
+                parentOf[stm] = statements;
+                path = opath;
+            }
+        }
+
+        private void Generate()
+        {
+            HashSet<string> paramNames = new HashSet<string>(
+                parameters
+                    .Select(p => p.ParameterName));
+            foreach (KeyValuePair<CodeVariableReferenceExpression, List<List<CodeStatement>>> de in paths.Where(
+                d => !paramNames.Contains(d.Key.Name)))
+            {
+                CodeVariableReferenceExpression id = de.Key;
+                List<List<CodeStatement>> defs = de.Value;
+                if (defs.Count == 1)
+                {
+                    ReplaceWithDeclaration(id, defs[0], defs[0].Count - 1);
+                }
+                else
+                {
+                    List<CodeStatement> first = defs[0];
+                    int iCommon = first.Count - 1;
+                    foreach (List<CodeStatement> path in defs.Skip(1))
+                    {
+                        iCommon = FindCommon(first, path, iCommon);
+                    }
+
+                    ReplaceWithDeclaration(id, first, iCommon);
+                }
+            }
+        }
+
+        private int FindCommon(List<CodeStatement> a, List<CodeStatement> b, int iCommon)
+        {
+            iCommon = Math.Min(iCommon, a.Count - 1);
+            iCommon = Math.Min(iCommon, b.Count - 1);
+            int i;
+            for (i = 0; i <= iCommon; ++i)
+            {
+                if (parentOf[a[i]] != parentOf[b[i]])
+                {
+                    return i - 1;
+                }
+
+                if (a[i] != b[i])
+                {
+                    return i;
+                }
+            }
+
+            return i;
+        }
+
+        private void ReplaceWithDeclaration(CodeVariableReferenceExpression id, List<CodeStatement> path, int iCommon)
+        {
+            if (iCommon >= 0)
+            {
+                CodeStatement codeStatement = path[iCommon];
+                List<CodeStatement> stms = parentOf[codeStatement];
+                int i = stms.IndexOf(codeStatement);
+                if (i >= 0)
+                {
+                    if (codeStatement is CodeAssignStatement ass)
+                    {
+                        // An assignment of type 'name = <exp>'. If the value
+                        // assigned is null, use object type 'object', otherwise
+                        // use 'var'.
+                        CodePrimitiveExpression prim = ass.Source as CodePrimitiveExpression;
+                        string dstType = prim != null && prim.Value == null
+                            ? "object"
+                            : "var";
+                        stms[i] = new CodeVariableDeclarationStatement(dstType, id.Name)
+                        {
+                            InitExpression = ass.Source
+                        };
+                        return;
+                    }
+                }
+            }
+
+            statements.Insert(
+                0,
+                new CodeVariableDeclarationStatement("object", id.Name));
+        }
+
+        private void EnsurePath(CodeVariableReferenceExpression id)
+        {
+            if (!this.paths.TryGetValue(id, out List<List<CodeStatement>> paths))
+            {
+                paths = new List<List<CodeStatement>>();
+                this.paths.Add(id, paths);
+            }
+
+            paths.Add(path);
         }
 
         internal class IdCmp : IEqualityComparer<CodeVariableReferenceExpression>

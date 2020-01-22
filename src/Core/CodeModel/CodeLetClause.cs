@@ -25,8 +25,8 @@ namespace Pytocs.Core.CodeModel
 
         public CodeLetClause(CodeExpression id, CodeExpression value)
         {
-            this.Identifier = id;
-            this.Value = value;
+            Identifier = id;
+            Value = value;
         }
     }
 }

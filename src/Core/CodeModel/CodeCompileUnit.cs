@@ -24,9 +24,9 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeCompileUnit()
         {
-            this.Namespaces = new List<CodeNamespace>();
+            Namespaces = new List<CodeNamespace>();
         }
 
-        public List<CodeNamespace> Namespaces { get; private set; }
+        public List<CodeNamespace> Namespaces { get; }
     }
 }

@@ -22,14 +22,14 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeVariableDeclarationStatement(string typeName, string name)
         {
-            this.Type = new CodeTypeReference(typeName);
-            this.Name = name;
+            Type = new CodeTypeReference(typeName);
+            Name = name;
         }
 
         public CodeVariableDeclarationStatement(CodeTypeReference type, string name)
         {
-            this.Type = type;
-            this.Name = name;
+            Type = type;
+            Name = name;
         }
 
         public CodeTypeReference Type { get; set; }

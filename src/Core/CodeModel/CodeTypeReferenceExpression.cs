@@ -22,7 +22,7 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeTypeReferenceExpression(string typeName)
         {
-            this.TypeName = typeName;
+            TypeName = typeName;
         }
 
         public string TypeName { get; set; }

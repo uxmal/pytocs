@@ -22,14 +22,15 @@ namespace Pytocs.Core.Syntax
 {
     public class ClassDef : Statement
     {
-        public readonly Identifier name;
-        public readonly List<Argument> args;    //$REVIEW: could these be dotted names?
+        public readonly List<Argument> args; //$REVIEW: could these be dotted names?
         public readonly SuiteStatement body;
+        public readonly Identifier name;
 
-        public ClassDef(Identifier name, List<Argument> baseClasses, SuiteStatement body, string filename, int start, int end) : base(filename, start, end)
+        public ClassDef(Identifier name, List<Argument> baseClasses, SuiteStatement body, string filename, int start,
+            int end) : base(filename, start, end)
         {
             this.name = name;
-            this.args = baseClasses;
+            args = baseClasses;
             this.body = body;
         }
 

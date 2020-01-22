@@ -22,7 +22,7 @@ namespace Pytocs.Core.CodeModel
     {
         public CodePrimitiveExpression(object o)
         {
-            this.Value = o;
+            Value = o;
         }
 
         public object Value { get; set; }

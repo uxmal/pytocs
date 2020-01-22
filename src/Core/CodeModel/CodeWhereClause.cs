@@ -24,7 +24,7 @@ namespace Pytocs.Core.CodeModel
 
         public CodeWhereClause(CodeExpression e)
         {
-            this.Condition = e;
+            Condition = e;
         }
     }
 }

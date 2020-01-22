@@ -31,33 +31,52 @@ namespace Pytocs.Core.Translate.Special
             {
                 return TranslateUnpack(args);
             }
+
             return null;
         }
 
         public CodeExpression TranslateUnpack(CodeExpression[] args)
         {
             if (args == null || args.Length < 2)
+            {
                 return null;
-            var e = CreateFormatEnumerator(args[0]);
+            }
+
+            IEnumerable<char> e = CreateFormatEnumerator(args[0]);
             if (e == null)
+            {
                 return null;
-            var littleEndian = BitConverter.IsLittleEndian;
+            }
+
+            bool littleEndian = BitConverter.IsLittleEndian;
             int count = 0;
-            foreach (var ch in e)
+            foreach (char ch in e)
             {
                 switch (ch)
                 {
-                    case '<': count = 0; littleEndian = true; break;
-                    case '>': count = 0; littleEndian = false; break;
-                    case 'x': count = 0; break;// discard padding
+                    case '<':
+                        count = 0;
+                        littleEndian = true;
+                        break;
+
+                    case '>':
+                        count = 0;
+                        littleEndian = false;
+                        break;
+
+                    case 'x':
+                        count = 0;
+                        break; // discard padding
                     default:
                         if (char.IsDigit(ch))
                         {
                             count = count * 10 + (ch - '0');
                         }
+
                         break;
                 }
             }
+
             return null;
         }
 
@@ -68,6 +87,7 @@ namespace Pytocs.Core.Translate.Special
             {
                 return s.s;
             }
+
             return null;
         }
     }

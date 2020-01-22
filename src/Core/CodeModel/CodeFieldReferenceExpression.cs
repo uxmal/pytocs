@@ -22,8 +22,8 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeFieldReferenceExpression(CodeExpression exp, string fieldName)
         {
-            this.Expression = exp;
-            this.FieldName = fieldName;
+            Expression = exp;
+            FieldName = fieldName;
         }
 
         public CodeExpression Expression { get; set; }

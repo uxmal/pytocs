@@ -1,11 +1,5 @@
-﻿using Pytocs.Core;
-using Pytocs.Core.TypeInference;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pytocs.UnitTests
 {

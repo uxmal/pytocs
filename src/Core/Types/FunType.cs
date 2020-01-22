@@ -25,28 +25,28 @@ namespace Pytocs.Core.Types
 {
     public class FunType : DataType
     {
-        public IDictionary<DataType, DataType> arrows = new Dictionary<DataType, DataType>();
         public readonly FunctionDef Definition;
-        public Lambda lambda;
-        public ClassType Class = null;
         public readonly State scope;
-        public List<DataType> defaultTypes;       // types for default parameters (evaluated at def time)
+        public IDictionary<DataType, DataType> arrows = new Dictionary<DataType, DataType>();
+        public ClassType Class;
+        public List<DataType> defaultTypes; // types for default parameters (evaluated at def time)
+        public Lambda lambda;
 
         public FunType()
         {
-            this.Class = null;
+            Class = null;
         }
 
         public FunType(FunctionDef func, State env)
         {
-            this.Definition = func;
-            this.scope = env;
+            Definition = func;
+            scope = env;
         }
 
         public FunType(Lambda lambda, State env)
         {
             this.lambda = lambda;
-            this.scope = env;
+            scope = env;
         }
 
         public FunType(DataType from, DataType to)
@@ -54,7 +54,7 @@ namespace Pytocs.Core.Types
             AddMapping(from, to);
         }
 
-        public DataType SelfType { get; set; }                 // self's type for calls
+        public DataType SelfType { get; set; } // self's type for calls
 
         public override T Accept<T>(IDataTypeVisitor<T> visitor)
         {
@@ -71,19 +71,19 @@ namespace Pytocs.Core.Types
             if (arrows.Count < 5)
             {
                 arrows[from] = to;
-                var oldArrows = this.arrows;
-                this.arrows = CompressArrows(arrows);
+                IDictionary<DataType, DataType> oldArrows = arrows;
+                arrows = CompressArrows(arrows);
 
                 if (arrows.Count > 10)
                 {
-                    this.arrows = oldArrows;
+                    arrows = oldArrows;
                 }
             }
         }
 
         public DataType GetMapping(DataType from)
         {
-            return arrows.TryGetValue(from, out var to)
+            return arrows.TryGetValue(from, out DataType to)
                 ? to
                 : null;
         }
@@ -94,10 +94,8 @@ namespace Pytocs.Core.Types
             {
                 return arrows.Values.First();
             }
-            else
-            {
-                return DataType.Unknown;
-            }
+
+            return Unknown;
         }
 
         public void SetDefaultTypes(List<DataType> defaultTypes)
@@ -109,12 +107,10 @@ namespace Pytocs.Core.Types
         {
             if (other is FunType fo)
             {
-                return fo.Table.Path.Equals(Table.Path) || object.ReferenceEquals(this, other);
+                return fo.Table.Path.Equals(Table.Path) || ReferenceEquals(this, other);
             }
-            else
-            {
-                return false;
-            }
+
+            return false;
         }
 
         public override int GetHashCode()
@@ -123,16 +119,16 @@ namespace Pytocs.Core.Types
         }
 
         /// <summary>
-        /// Create a new FunType which is an awaitable version of this FunType.
+        ///     Create a new FunType which is an awaitable version of this FunType.
         /// </summary>
         public FunType MakeAwaitable()
         {
-            var fnAwaitable = new FunType(this.Definition, this.scope)
+            FunType fnAwaitable = new FunType(Definition, scope)
             {
-                arrows = this.arrows.ToDictionary(k => k.Key, v => (DataType)new AwaitableType(v.Value)),
-                lambda = this.lambda,
-                Class = this.Class,
-                defaultTypes = this.defaultTypes
+                arrows = arrows.ToDictionary(k => k.Key, v => (DataType)new AwaitableType(v.Value)),
+                lambda = lambda,
+                Class = Class,
+                defaultTypes = defaultTypes
             };
             return fnAwaitable;
         }
@@ -149,7 +145,7 @@ namespace Pytocs.Core.Types
                 return true;
             }
 
-            if (type1.IsUnknownType() || type1 == DataType.None || type1.Equals(type2))
+            if (type1.IsUnknownType() || type1 == None || type1.Equals(type2))
             {
                 return true;
             }
@@ -171,6 +167,7 @@ namespace Pytocs.Core.Types
                         }
                     }
                 }
+
                 return true;
             }
 
@@ -178,16 +175,17 @@ namespace Pytocs.Core.Types
             {
                 return SubsumedInner(list1.ToTupleType(), list2.ToTupleType(), typeStack);
             }
+
             return false;
         }
 
         private IDictionary<DataType, DataType> CompressArrows(IDictionary<DataType, DataType> arrows)
         {
             IDictionary<DataType, DataType> ret = new Dictionary<DataType, DataType>();
-            foreach (var e1 in arrows)
+            foreach (KeyValuePair<DataType, DataType> e1 in arrows)
             {
                 bool fSubsumed = false;
-                foreach (var e2 in arrows)
+                foreach (KeyValuePair<DataType, DataType> e2 in arrows)
                 {
                     if (e1.Key != e2.Key && Subsumed(e1.Key, e2.Key))
                     {
@@ -195,22 +193,24 @@ namespace Pytocs.Core.Types
                         break;
                     }
                 }
+
                 if (!fSubsumed)
                 {
                     ret[e1.Key] = e1.Value;
                 }
             }
+
             return ret;
         }
 
         /// <summary>
-        /// If the self type is set, use the self type in the display
-        /// This is for display purpose only, it may not be logically
-        /// correct wrt some pathological programs
+        ///     If the self type is set, use the self type in the display
+        ///     This is for display purpose only, it may not be logically
+        ///     correct wrt some pathological programs
         /// </summary>
         private TupleType SimplifySelf(TupleType from)
         {
-            TupleType simplified = new TupleType();     //$NO regs
+            TupleType simplified = new TupleType(); //$NO regs
             if (from.eltTypes.Count > 0)
             {
                 if (Class != null)
@@ -227,6 +227,7 @@ namespace Pytocs.Core.Types
             {
                 simplified.Add(from.Get(i));
             }
+
             return simplified;
         }
     }

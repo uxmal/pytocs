@@ -26,7 +26,7 @@ namespace Pytocs.Gui
     {
         public MainWindow()
         {
-            this.InitializeComponent();
+            InitializeComponent();
 #if DEBUG
             this.AttachDevTools();
 #endif

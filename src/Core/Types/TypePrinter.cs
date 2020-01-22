@@ -31,7 +31,7 @@ namespace Pytocs.Core.Types
         {
             this.multiline = multiline;
             this.showLiterals = showLiterals;
-            this.ctr = new CyclicTypeRecorder();
+            ctr = new CyclicTypeRecorder();
         }
 
         public string VisitAwaitable(AwaitableType awaitable)
@@ -42,9 +42,11 @@ namespace Pytocs.Core.Types
         public string VisitBool(BoolType b)
         {
             if (showLiterals)
+            {
                 return "bool(" + b.value + ")";
-            else
-                return "bool";
+            }
+
+            return "bool";
         }
 
         public string VisitClass(ClassType c)
@@ -106,7 +108,7 @@ namespace Pytocs.Core.Types
                 int i = 0;
                 ISet<string> seen = new HashSet<string>();
 
-                foreach (var e in f.arrows)
+                foreach (KeyValuePair<DataType, DataType> e in f.arrows)
                 {
                     DataType from = e.Key;
                     string sArrow = $"{from.Accept(this)} -> {e.Value.Accept(this)}";
@@ -114,7 +116,7 @@ namespace Pytocs.Core.Types
                     {
                         if (i != 0)
                         {
-                            if (this.multiline)
+                            if (multiline)
                             {
                                 sb.Append("\n| ");
                             }
@@ -127,6 +129,7 @@ namespace Pytocs.Core.Types
                         sb.Append(sArrow);
                         seen.Add(sArrow);
                     }
+
                     i++;
                 }
 
@@ -134,8 +137,10 @@ namespace Pytocs.Core.Types
                 {
                     sb.Append("=#").Append(newNum).Append(": ");
                 }
+
                 ctr.Pop(f);
             }
+
             return sb.ToString();
         }
 
@@ -171,6 +176,7 @@ namespace Pytocs.Core.Types
                 sb.Append("]");
                 ctr.Pop(l);
             }
+
             return sb.ToString();
         }
 
@@ -186,14 +192,12 @@ namespace Pytocs.Core.Types
 
         public string VisitStr(StrType s)
         {
-            if (this.showLiterals)
+            if (showLiterals)
             {
                 return "str(" + s.value + ")";
             }
-            else
-            {
-                return "str";
-            }
+
+            return "str";
         }
 
         public string VisitSymbol(SymbolType s)
@@ -225,6 +229,7 @@ namespace Pytocs.Core.Types
                     {
                         sb.Append(", ");
                     }
+
                     sb.Append(tt.Accept(this));
                     first = false;
                 }
@@ -238,8 +243,10 @@ namespace Pytocs.Core.Types
                 {
                     sb.Append(")");
                 }
+
                 ctr.Pop(t);
             }
+
             return sb.ToString();
         }
 
@@ -264,6 +271,7 @@ namespace Pytocs.Core.Types
                     {
                         sb.Append(" | ");
                     }
+
                     sb.Append(t.Accept(this));
                     first = false;
                 }
@@ -281,13 +289,13 @@ namespace Pytocs.Core.Types
         }
 
         /// <summary>
-        /// Internal class to support printing in the presence of type-graph cycles.
+        ///     Internal class to support printing in the presence of type-graph cycles.
         /// </summary>
         protected class CyclicTypeRecorder
         {
             private readonly IDictionary<DataType, int> elements = new Dictionary<DataType, int>();
             private readonly ISet<DataType> used = new HashSet<DataType>();
-            private int count = 0;
+            private int count;
 
             public int Push(DataType t)
             {
@@ -309,10 +317,8 @@ namespace Pytocs.Core.Types
                     used.Add(t);
                     return i;
                 }
-                else
-                {
-                    return null;
-                }
+
+                return null;
             }
 
             public bool IsUsed(DataType t)

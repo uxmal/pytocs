@@ -4,10 +4,10 @@
     {
         public SetType(DataType elementType)
         {
-            this.ElementType = elementType;
+            ElementType = elementType;
         }
 
-        public DataType ElementType { get; private set; }
+        public DataType ElementType { get; }
 
         public override T Accept<T>(IDataTypeVisitor<T> visitor)
         {

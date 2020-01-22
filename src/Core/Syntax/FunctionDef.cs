@@ -23,13 +23,13 @@ namespace Pytocs.Core.Syntax
 {
     public class FunctionDef : Statement
     {
-        public readonly Identifier name;
-        public readonly List<Parameter> parameters;
         public readonly Exp annotation;
         public readonly SuiteStatement body;
-        public bool called = false;         //$ move to big state
-        public readonly Identifier vararg;
         public readonly Identifier kwarg;
+        public readonly Identifier name;
+        public readonly List<Parameter> parameters;
+        public readonly Identifier vararg;
+        public bool called = false; //$ move to big state
 
         public FunctionDef(
             Identifier name,
@@ -61,28 +61,36 @@ namespace Pytocs.Core.Syntax
         public bool IsStaticMethod()
         {
             if (decorators == null)
+            {
                 return false;
-            foreach (var d in decorators)
+            }
+
+            foreach (Decorator d in decorators)
             {
                 if (d.Name == "staticmethod")
                 {
                     return true;
                 }
             }
+
             return false;
         }
 
         public bool IsClassMethod()
         {
             if (decorators == null)
+            {
                 return false;
-            foreach (var d in decorators)
+            }
+
+            foreach (Decorator d in decorators)
             {
                 if (d.Name == "classmethod")
                 {
                     return true;
                 }
             }
+
             return false;
         }
     }
@@ -110,21 +118,29 @@ namespace Pytocs.Core.Syntax
         {
             writer.Write("lambda");
             writer.Write(" ");
-            var sep = "";
-            foreach (var v in args)
+            string sep = "";
+            foreach (VarArg v in args)
             {
                 writer.Write(sep);
                 sep = ",";
                 if (v.IsIndexed)
+                {
                     writer.Write("*");
+                }
                 else if (v.IsKeyword)
+                {
                     writer.Write("**");
+                }
+
                 if (v.name != null)
+                {
                     v.name.Write(writer);
+                }
             }
+
             writer.Write(":");
             writer.Write(" ");
-            this.body.Write(writer);
+            body.Write(writer);
         }
     }
 }

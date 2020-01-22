@@ -54,11 +54,11 @@ namespace Pytocs.Core.CodeModel
         public CodeTypeReference(string typeName, params CodeTypeReference[] typeArgs)
             : this()
         {
-            this.TypeName = typeName;
-            this.TypeArguments.AddRange(typeArgs);
+            TypeName = typeName;
+            TypeArguments.AddRange(typeArgs);
         }
 
         public string TypeName { get; set; }
-        public List<CodeTypeReference> TypeArguments { get; private set; }
+        public List<CodeTypeReference> TypeArguments { get; }
     }
 }

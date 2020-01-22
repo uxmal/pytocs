@@ -23,10 +23,7 @@ namespace Pytocs.Core.CodeModel
 {
     public class IndentingTextWriter
     {
-        private TextWriter writer;
-        private bool atStartOfLine;
-
-        private static HashSet<string> csharpKeywords = new HashSet<string>
+        private static readonly HashSet<string> csharpKeywords = new HashSet<string>
         {
             "base",
             "bool",
@@ -56,13 +53,16 @@ namespace Pytocs.Core.CodeModel
             "struct",
             "switch",
             "this",
-            "true",
+            "true"
         };
+
+        private bool atStartOfLine;
+        private readonly TextWriter writer;
 
         public IndentingTextWriter(TextWriter writer)
         {
             this.writer = writer;
-            this.atStartOfLine = true;
+            atStartOfLine = true;
         }
 
         public int IndentLevel { get; set; }
@@ -70,7 +70,7 @@ namespace Pytocs.Core.CodeModel
         public void Write(string s)
         {
             EnsureIndentation();
-            this.writer.Write(s);
+            writer.Write(s);
         }
 
         internal void WriteLine()
@@ -91,22 +91,30 @@ namespace Pytocs.Core.CodeModel
         {
             EnsureIndentation();
             if (NameNeedsQuoting(name))
+            {
                 writer.Write("@");
+            }
+
             writer.Write(name);
         }
 
         public static string QuoteName(string name)
         {
             if (NameNeedsQuoting(name))
+            {
                 return "@" + name;
-            else
-                return name;
+            }
+
+            return name;
         }
 
         public static bool NameNeedsQuoting(string name)
         {
             if (name.Contains("__"))
+            {
                 return true;
+            }
+
             return csharpKeywords.Contains(name);
         }
 
@@ -127,10 +135,14 @@ namespace Pytocs.Core.CodeModel
 
         public void WriteDottedName(string dottedString)
         {
-            var sep = false;
-            foreach (var name in dottedString.Split('.'))
+            bool sep = false;
+            foreach (string name in dottedString.Split('.'))
             {
-                if (sep) writer.Write('.');
+                if (sep)
+                {
+                    writer.Write('.');
+                }
+
                 sep = true;
                 WriteName(name);
             }

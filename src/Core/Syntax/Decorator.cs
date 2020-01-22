@@ -22,14 +22,14 @@ namespace Pytocs.Core.Syntax
 {
     public class Decorator : Node
     {
-        public DottedName className;
         public List<Argument> arguments;
+        public DottedName className;
 
         public Decorator(DottedName dn, List<Argument> args, string filename, int start, int end)
             : base(filename, start, end)
         {
-            this.className = dn;
-            this.arguments = args;
+            className = dn;
+            arguments = args;
         }
     }
 }

@@ -24,14 +24,14 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeForeachStatement(CodeExpression exp, CodeExpression list)
         {
-            this.Variable = exp;
-            this.Collection = list;
-            this.Statements = new List<CodeStatement>();
+            Variable = exp;
+            Collection = list;
+            Statements = new List<CodeStatement>();
         }
 
         public CodeExpression Variable { get; set; }
         public CodeExpression Collection { get; set; }
-        public List<CodeStatement> Statements { get; private set; }
+        public List<CodeStatement> Statements { get; }
 
         public override T Accept<T>(ICodeStatementVisitor<T> visitor)
         {
