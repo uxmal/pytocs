@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Pytocs.Core.Types
+﻿namespace Pytocs.Core.Types
 {
     public class IterableType : DataType
     {

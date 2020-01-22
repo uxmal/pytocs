@@ -1,28 +1,26 @@
 ﻿#region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
+
+#endregion License
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pytocs.Core.CodeModel
 {
@@ -80,7 +78,7 @@ namespace Pytocs.Core.CodeModel
             { CodeOperatorType.LogAnd, 4 },
 
             { CodeOperatorType.LogOr, 3 },
-             
+
             { CodeOperatorType.Conditional, 2 },
 
             { CodeOperatorType.Assign, 1 },
@@ -228,49 +226,49 @@ namespace Pytocs.Core.CodeModel
         {
             switch (codeOperatorType)
             {
-            default: throw new NotImplementedException("Op: " + codeOperatorType);
-            case CodeOperatorType.Complement: return "~";
+                default: throw new NotImplementedException("Op: " + codeOperatorType);
+                case CodeOperatorType.Complement: return "~";
 
-            case CodeOperatorType.Mod: return "%";
+                case CodeOperatorType.Mod: return "%";
 
-            case CodeOperatorType.Add: return "+";
-            case CodeOperatorType.Sub: return "-";
+                case CodeOperatorType.Add: return "+";
+                case CodeOperatorType.Sub: return "-";
 
-            case CodeOperatorType.Gt: return ">";
-            case CodeOperatorType.Ge: return ">=";
-            case CodeOperatorType.Le: return "<=";
-            case CodeOperatorType.Lt: return "<";
+                case CodeOperatorType.Gt: return ">";
+                case CodeOperatorType.Ge: return ">=";
+                case CodeOperatorType.Le: return "<=";
+                case CodeOperatorType.Lt: return "<";
 
-            case CodeOperatorType.IdentityEquality: return "==";
-            case CodeOperatorType.Equal: return "==";
-            case CodeOperatorType.IdentityInequality: return "!=";
-            case CodeOperatorType.NotEqual: return "!=";
-            case CodeOperatorType.Is: return "is";
+                case CodeOperatorType.IdentityEquality: return "==";
+                case CodeOperatorType.Equal: return "==";
+                case CodeOperatorType.IdentityInequality: return "!=";
+                case CodeOperatorType.NotEqual: return "!=";
+                case CodeOperatorType.Is: return "is";
 
-            case CodeOperatorType.BitAnd: return "&";
-            case CodeOperatorType.BitOr: return "|";
-            case CodeOperatorType.BitXor: return "^";
+                case CodeOperatorType.BitAnd: return "&";
+                case CodeOperatorType.BitOr: return "|";
+                case CodeOperatorType.BitXor: return "^";
 
-            case CodeOperatorType.LogAnd: return "&&";
-            case CodeOperatorType.LogOr: return "||";
+                case CodeOperatorType.LogAnd: return "&&";
+                case CodeOperatorType.LogOr: return "||";
 
-            case CodeOperatorType.Not: return "!";
-            case CodeOperatorType.Assign: return ":=";
-            case CodeOperatorType.Mul: return "*";
-            case CodeOperatorType.Div: return "/";
-            case CodeOperatorType.Shl: return "<<";
-            case CodeOperatorType.Shr: return ">>";
+                case CodeOperatorType.Not: return "!";
+                case CodeOperatorType.Assign: return ":=";
+                case CodeOperatorType.Mul: return "*";
+                case CodeOperatorType.Div: return "/";
+                case CodeOperatorType.Shl: return "<<";
+                case CodeOperatorType.Shr: return ">>";
 
-            case CodeOperatorType.AddEq: return "+=";
-            case CodeOperatorType.SubEq: return "-=";
-            case CodeOperatorType.ModEq: return "%=";
-            case CodeOperatorType.MulEq: return "*=";
-            case CodeOperatorType.DivEq: return "/=";
-            case CodeOperatorType.OrEq: return "|=";
-            case CodeOperatorType.AndEq: return "|=";
-            case CodeOperatorType.ShlEq: return "<<=";
-            case CodeOperatorType.ShrEq: return ">>=";
-            case CodeOperatorType.XorEq: return "^=";
+                case CodeOperatorType.AddEq: return "+=";
+                case CodeOperatorType.SubEq: return "-=";
+                case CodeOperatorType.ModEq: return "%=";
+                case CodeOperatorType.MulEq: return "*=";
+                case CodeOperatorType.DivEq: return "/=";
+                case CodeOperatorType.OrEq: return "|=";
+                case CodeOperatorType.AndEq: return "|=";
+                case CodeOperatorType.ShlEq: return "<<=";
+                case CodeOperatorType.ShrEq: return ">>=";
+                case CodeOperatorType.XorEq: return "^=";
             }
         }
 
@@ -428,32 +426,35 @@ namespace Pytocs.Core.CodeModel
         {
             switch (clause)
             {
-            case CodeFromClause f:
-                writer.Write("from");
-                writer.Write(" ");
-                f.Identifier.Accept(this);
-                writer.Write(" ");
-                writer.Write("in");
-                writer.Write(" ");
-                f.Collection.Accept(this);
-                break;
-            case CodeLetClause l:
-                writer.Write("let");
-                writer.Write(" ");
-                Write(l.Identifier, PrecBase, false);
-                writer.Write(" = ");
-                Write(l.Value, PrecBase, false);
-                break;
-            case CodeWhereClause w:
-                writer.Write("where");
-                writer.Write(" ");
-                Write(w.Condition, PrecBase, false);
-                break;
-            case CodeSelectClause s:
-                writer.Write("select");
-                writer.Write(" ");
-                s.Projection.Accept(this);
-                break;
+                case CodeFromClause f:
+                    writer.Write("from");
+                    writer.Write(" ");
+                    f.Identifier.Accept(this);
+                    writer.Write(" ");
+                    writer.Write("in");
+                    writer.Write(" ");
+                    f.Collection.Accept(this);
+                    break;
+
+                case CodeLetClause l:
+                    writer.Write("let");
+                    writer.Write(" ");
+                    Write(l.Identifier, PrecBase, false);
+                    writer.Write(" = ");
+                    Write(l.Value, PrecBase, false);
+                    break;
+
+                case CodeWhereClause w:
+                    writer.Write("where");
+                    writer.Write(" ");
+                    Write(w.Condition, PrecBase, false);
+                    break;
+
+                case CodeSelectClause s:
+                    writer.Write("select");
+                    writer.Write(" ");
+                    s.Projection.Accept(this);
+                    break;
             }
         }
 
@@ -471,6 +472,7 @@ namespace Pytocs.Core.CodeModel
         {
             writer.Write(literal.Literal);
         }
+
         public void VisitObjectCreation(CodeObjectCreateExpression c)
         {
             writer.Write("new");
@@ -529,37 +531,45 @@ namespace Pytocs.Core.CodeModel
                 writer.Write("null");
             switch (p.Value)
             {
-            case string s:
-                WriteStringLiteral(s);
-                break;
-            case int i:
-                writer.Write(p.Value.ToString());
-                break;
-            case long l:
-                writer.Write("{0}L", l);
-                break;
-            case bool b:
-                writer.Write((bool)p.Value ? "true" : "false");
-                break;
-            case double d:
-                WriteReal(d);
-                break;
-            case BigInteger bigint:
-                writer.Write($"new BigInteger({bigint})");
-                break;
-            case Syntax.Str str:
-                WriteStringLiteral(str);
-                break;
-            case Syntax.Bytes bytes:
-                WriteByteLiteral(bytes);
-                break;
-            case Complex cmp:
-                writer.Write("new Complex(");
-                WriteReal(cmp.Real);
-                writer.Write(", ");
-                WriteReal(cmp.Imaginary);
-                writer.Write(")");
-                break;
+                case string s:
+                    WriteStringLiteral(s);
+                    break;
+
+                case int i:
+                    writer.Write(p.Value.ToString());
+                    break;
+
+                case long l:
+                    writer.Write("{0}L", l);
+                    break;
+
+                case bool b:
+                    writer.Write((bool)p.Value ? "true" : "false");
+                    break;
+
+                case double d:
+                    WriteReal(d);
+                    break;
+
+                case BigInteger bigint:
+                    writer.Write($"new BigInteger({bigint})");
+                    break;
+
+                case Syntax.Str str:
+                    WriteStringLiteral(str);
+                    break;
+
+                case Syntax.Bytes bytes:
+                    WriteByteLiteral(bytes);
+                    break;
+
+                case Complex cmp:
+                    writer.Write("new Complex(");
+                    WriteReal(cmp.Real);
+                    writer.Write(", ");
+                    WriteReal(cmp.Imaginary);
+                    writer.Write(")");
+                    break;
             }
         }
 
@@ -630,7 +640,7 @@ namespace Pytocs.Core.CodeModel
                 }
                 else if (' ' <= s[i] && s[i] <= '~')
                 {
-                   writer.Write("(byte)'{0}'", s[i]);
+                    writer.Write("(byte)'{0}'", s[i]);
                 }
                 else
                 {
@@ -639,6 +649,7 @@ namespace Pytocs.Core.CodeModel
             }
             writer.Write(" }");
         }
+
         private void WriteStringLiteral(Syntax.Str literal)
         {
             if (literal.Long || literal.Raw)
@@ -653,50 +664,55 @@ namespace Pytocs.Core.CodeModel
                 var ch = literal.s[i];
                 switch (ch)
                 {
-                case '\\':
-                    if (literal.Raw)
-                    {
-                        writer.Write(@"\");
-                    }
-                    else if (literal.Long)
-                    {
-                        ch = literal.s[++i];
-                        switch (ch)
+                    case '\\':
+                        if (literal.Raw)
                         {
-                        default:
-                            writer.Write("\" + \"");
-                            writer.Write("\\{0}", ch);
-                            writer.Write("\" +@\"");
-                            break;
-                        case ' ':
-                        case '*':
-                        case 'l':
-                        case '\r':
-                        case '\n':
-                            writer.Write("\\{0}", ch);
-                            break;
-                        case '\"':
-                            writer.Write("\"\"");
-                            break;
-                        case 'u':
-                            throw new NotImplementedException();
+                            writer.Write(@"\");
                         }
-                    }
-                    else
-                    {
-                        ch = literal.s[++i];
-                        writer.Write(@"\{0}", ch);
-                    }
-                    break;
-                case '\"':
-                    if (literal.Long || literal.Raw)
-                        writer.Write("\"\"");
-                    else
-                        writer.Write("\\\"");
-                    break;
-                default:
-                    writer.Write(ch);
-                    break;
+                        else if (literal.Long)
+                        {
+                            ch = literal.s[++i];
+                            switch (ch)
+                            {
+                                default:
+                                    writer.Write("\" + \"");
+                                    writer.Write("\\{0}", ch);
+                                    writer.Write("\" +@\"");
+                                    break;
+
+                                case ' ':
+                                case '*':
+                                case 'l':
+                                case '\r':
+                                case '\n':
+                                    writer.Write("\\{0}", ch);
+                                    break;
+
+                                case '\"':
+                                    writer.Write("\"\"");
+                                    break;
+
+                                case 'u':
+                                    throw new NotImplementedException();
+                            }
+                        }
+                        else
+                        {
+                            ch = literal.s[++i];
+                            writer.Write(@"\{0}", ch);
+                        }
+                        break;
+
+                    case '\"':
+                        if (literal.Long || literal.Raw)
+                            writer.Write("\"\"");
+                        else
+                            writer.Write("\\\"");
+                        break;
+
+                    default:
+                        writer.Write(ch);
+                        break;
                 }
             }
             writer.Write("\"");
@@ -724,7 +740,6 @@ namespace Pytocs.Core.CodeModel
                 writer.Write(">");
             }
         }
-
 
         private static Dictionary<string, string> csharpTypenames = new Dictionary<string, string>
         {
@@ -778,7 +793,6 @@ namespace Pytocs.Core.CodeModel
                     exp.Accept(this);
                 }
                 writer.Write(")");
-
             }
         }
     }

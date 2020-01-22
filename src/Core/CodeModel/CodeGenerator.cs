@@ -1,26 +1,24 @@
 ﻿#region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
 
-using Pytocs.Core.Types;
+#endregion License
+
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pytocs.Core.CodeModel
 {
@@ -46,13 +44,12 @@ namespace Pytocs.Core.CodeModel
             unt.Namespaces.Add(CurrentNamespace);
         }
 
-        public List<CodeStatement> Scope { get;  private set; }
+        public List<CodeStatement> Scope { get; private set; }
         public CodeMember CurrentMember { get; private set; }
         public List<CodeStatement> CurrentMemberStatements { get; private set; }
         public List<CodeCommentStatement> CurrentMemberComments { get; private set; }
         public CodeNamespace CurrentNamespace { get; set; }
         public CodeTypeDeclaration CurrentType { get; set; }
-
 
         public CodeExpression Access(CodeExpression exp, string fieldName)
         {
@@ -75,8 +72,8 @@ namespace Pytocs.Core.CodeModel
         }
 
         public CodeTypeDeclaration Class(
-            string name, 
-            IEnumerable<string> baseClasses, 
+            string name,
+            IEnumerable<string> baseClasses,
             Func<IEnumerable<CodeMemberField>> fieldGenerator,
             Action bodyGenerator)
         {
@@ -162,7 +159,7 @@ namespace Pytocs.Core.CodeModel
             return c;
         }
 
-        public CodeExpression Appl(CodeExpression fn, params CodeExpression [] args)
+        public CodeExpression Appl(CodeExpression fn, params CodeExpression[] args)
         {
             return new CodeApplicationExpression(fn, args);
         }
@@ -351,7 +348,6 @@ namespace Pytocs.Core.CodeModel
             return new CodeAwaitExpression(exp);
         }
 
-
         public CodeThrowExceptionStatement Throw(CodeExpression codeExpression)
         {
             var t = new CodeThrowExceptionStatement(codeExpression);
@@ -376,7 +372,7 @@ namespace Pytocs.Core.CodeModel
             return new CodeLambdaExpression(args, stmts);
         }
 
-        public CodeExpression ListInitializer(CodeTypeReference elemType,  IEnumerable<CodeExpression> exprs)
+        public CodeExpression ListInitializer(CodeTypeReference elemType, IEnumerable<CodeExpression> exprs)
         {
             EnsureImport("System.Collections.Generic");
             var list = new CodeObjectCreateExpression
@@ -540,7 +536,7 @@ namespace Pytocs.Core.CodeModel
             return new CodeTypeReference(typeName, genericArgs);
         }
 
-        public CodeAttributeDeclaration CustomAttr(CodeTypeReference typeRef, params CodeAttributeArgument [] args)
+        public CodeAttributeDeclaration CustomAttr(CodeTypeReference typeRef, params CodeAttributeArgument[] args)
         {
             return new CodeAttributeDeclaration
             {
@@ -576,7 +572,7 @@ namespace Pytocs.Core.CodeModel
             return u;
         }
 
-        public CodeValueTupleExpression ValueTuple(params CodeExpression [] exprs)
+        public CodeValueTupleExpression ValueTuple(params CodeExpression[] exprs)
         {
             return new CodeValueTupleExpression(exprs);
         }

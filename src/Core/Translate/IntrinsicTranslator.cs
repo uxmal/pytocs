@@ -3,8 +3,6 @@ using Pytocs.Core.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pytocs.Core.Translate
 {
@@ -17,7 +15,6 @@ namespace Pytocs.Core.Translate
         private CodeGenerator m;
 
         private readonly Dictionary<string, Func<Application, CodeExpression[], CodeExpression>> translators;
-
 
         public IntrinsicTranslator(ExpTranslator expTranslator)
         {
@@ -56,7 +53,7 @@ namespace Pytocs.Core.Translate
             return func(appl, args);
         }
 
-        CodeExpression Translate_isinstance(Application appl, CodeExpression[] args)
+        private CodeExpression Translate_isinstance(Application appl, CodeExpression[] args)
         {
             if (appl.args.Count != 2)
                 return null;
@@ -79,14 +76,14 @@ namespace Pytocs.Core.Translate
                 .Aggregate((a, b) => m.BinOp(a, CodeOperatorType.LogOr, b));
         }
 
-        CodeExpression Translate_int(Application appl, CodeExpression[] args)
+        private CodeExpression Translate_int(Application appl, CodeExpression[] args)
         {
             m.EnsureImport("System");
             var fn = m.MethodRef(m.TypeRefExpr("Convert"), "ToInt32");
             return m.Appl(fn, args);
         }
 
-        CodeExpression Translate_list(Application appl, CodeExpression[] args)
+        private CodeExpression Translate_list(Application appl, CodeExpression[] args)
         {
             if (args.Length == 0)
             {
@@ -102,7 +99,7 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression Translate_set(Application appl, CodeExpression[] args)
+        private CodeExpression Translate_set(Application appl, CodeExpression[] args)
         {
             if (args.Length == 0 || args.Length == 1)
             {
@@ -114,7 +111,7 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression Translate_dict(Application appl, CodeExpression[] args)
+        private CodeExpression Translate_dict(Application appl, CodeExpression[] args)
         {
             if (args.Length == 0)
             {
@@ -145,7 +142,7 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression Translate_len(Application appl, CodeExpression[] args)
+        private CodeExpression Translate_len(Application appl, CodeExpression[] args)
         {
             if (args.Length == 1)
             {
@@ -157,7 +154,7 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression Translate_sum(Application appl, CodeExpression[] args)
+        private CodeExpression Translate_sum(Application appl, CodeExpression[] args)
         {
             if (args.Length == 1)
             {
@@ -170,7 +167,7 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression Translate_range(Application appl, CodeExpression[] args)
+        private CodeExpression Translate_range(Application appl, CodeExpression[] args)
         {
             var argsCount = args.Length;
 
@@ -187,60 +184,59 @@ namespace Pytocs.Core.Translate
                 switch (argsCount)
                 {
                     case 1:
-                    {
-                        // Enumerable.Range(0, count);
+                        {
+                            // Enumerable.Range(0, count);
 
-                        var startExp = m.Prim(0);
-                        var countExp = args[0];
+                            var startExp = m.Prim(0);
+                            var countExp = args[0];
 
-                        return m.Appl(enumerableRange, startExp, countExp);
-                    }
+                            return m.Appl(enumerableRange, startExp, countExp);
+                        }
                     case 2:
-                    {
-                        // Enumerable.Range(0, count);
+                        {
+                            // Enumerable.Range(0, count);
 
-                        var startExp = args[0];
-                        var stopExp = args[1];
-                        var countExp = m.Sub(stopExp, startExp);
+                            var startExp = args[0];
+                            var stopExp = args[1];
+                            var countExp = m.Sub(stopExp, startExp);
 
-                        return m.Appl(enumerableRange, startExp, countExp);
-                    }
+                            return m.Appl(enumerableRange, startExp, countExp);
+                        }
                     case 3:
-                    {
-                        // Enumerable.Range(0, count).Select(x => start + x * step);
+                        {
+                            // Enumerable.Range(0, count).Select(x => start + x * step);
 
-                        var startExp = args[0];
-                        var stopExp = args[1];
-                        var stepExp = args[2];
+                            var startExp = args[0];
+                            var stopExp = args[1];
+                            var stepExp = args[2];
 
-                        // count = (stop - start) divide_ceiling_by step;
-                        var rawCountExp = m.Sub(stopExp, startExp);
-                        var rawDoubleCountExp = m.Appl(convertToDouble, rawCountExp);
-                        var countDividedExp = m.Div(rawDoubleCountExp, stepExp);
-                        var countCeilingExp = m.Appl(mathCeiling, countDividedExp); 
-                        var countExp = m.Appl(convertToInt32, countCeilingExp);
-                        
-                        // Enumerable.Range(0, count);
-                        var rangeExp = m.Appl(enumerableRange, m.Prim(0), countExp);
+                            // count = (stop - start) divide_ceiling_by step;
+                            var rawCountExp = m.Sub(stopExp, startExp);
+                            var rawDoubleCountExp = m.Appl(convertToDouble, rawCountExp);
+                            var countDividedExp = m.Div(rawDoubleCountExp, stepExp);
+                            var countCeilingExp = m.Appl(mathCeiling, countDividedExp);
+                            var countExp = m.Appl(convertToInt32, countCeilingExp);
 
-                        // x => start + x * step;
-                        var lambdaArgExp = expTranslator.gensym.GenSymLocal("_x_", m.TypeRef("object"));
-                        var offsetExp = m.Mul(lambdaArgExp, stepExp);
-                        var positionExp = m.Add(startExp, offsetExp);
-                        var mapLambdaExp = new CodeLambdaExpression(new CodeExpression[] {lambdaArgExp}, positionExp);
+                            // Enumerable.Range(0, count);
+                            var rangeExp = m.Appl(enumerableRange, m.Prim(0), countExp);
 
-                        
-                        var selectExt = m.Access(rangeExp, "Select");
+                            // x => start + x * step;
+                            var lambdaArgExp = expTranslator.gensym.GenSymLocal("_x_", m.TypeRef("object"));
+                            var offsetExp = m.Mul(lambdaArgExp, stepExp);
+                            var positionExp = m.Add(startExp, offsetExp);
+                            var mapLambdaExp = new CodeLambdaExpression(new CodeExpression[] { lambdaArgExp }, positionExp);
 
-                        return m.Appl(selectExt, mapLambdaExp);
-                    }
+                            var selectExt = m.Access(rangeExp, "Select");
+
+                            return m.Appl(selectExt, mapLambdaExp);
+                        }
                 }
             }
 
             return null;
         }
 
-        CodeExpression Translate_filter(Application appl, CodeExpression[] args)
+        private CodeExpression Translate_filter(Application appl, CodeExpression[] args)
         {
             if (args.Length == 2)
             {
@@ -263,7 +259,7 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression Translate_complex(Application appl, CodeExpression[] args)
+        private CodeExpression Translate_complex(Application appl, CodeExpression[] args)
         {
             if (args.Length == 2)
             {
@@ -273,26 +269,27 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression Translate_float(Application appl, CodeExpression[] args)
+        private CodeExpression Translate_float(Application appl, CodeExpression[] args)
         {
             if (args[0] is CodePrimitiveExpression c && c.Value is Str str)
             {
                 switch (str.s)
                 {
-                case "inf":
-                case "+inf":
-                case "Infinity":
-                case "+Infinity":
-                    return m.Access(m.TypeRefExpr("double"), "PositiveInfinity");
-                case "-inf":
-                case "-Infinity":
-                    return m.Access(m.TypeRefExpr("double"), "NegativeInfinity");
+                    case "inf":
+                    case "+inf":
+                    case "Infinity":
+                    case "+Infinity":
+                        return m.Access(m.TypeRefExpr("double"), "PositiveInfinity");
+
+                    case "-inf":
+                    case "-Infinity":
+                        return m.Access(m.TypeRefExpr("double"), "NegativeInfinity");
                 }
             }
             return null;
         }
 
-        CodeExpression Translate_sorted(Application appl, CodeExpression[] args)
+        private CodeExpression Translate_sorted(Application appl, CodeExpression[] args)
         {
             if (args.Length == 0)
                 return m.Appl(new CodeVariableReferenceExpression("sorted"), args);
@@ -327,23 +324,25 @@ namespace Pytocs.Core.Translate
                 "ToList");
         }
 
-        CodeExpression Translate_str(Application appl, CodeExpression[] args)
+        private CodeExpression Translate_str(Application appl, CodeExpression[] args)
         {
             switch (args.Length)
             {
-            case 1:
-                return m.ApplyMethod(args[0], "ToString");
-            case 2:
-            case 3:
-                //$TODO: careless about the third arg here.
-                m.EnsureImport("System.Text");
-                var getEncoding = m.ApplyMethod(
-                    m.TypeRefExpr("Encoding"),
-                    "GetEncoding",
-                    args[1]);
-                return m.ApplyMethod(getEncoding, "GetString", args[0]);
-            default:
-                throw new NotImplementedException($"str({string.Join<CodeExpression>(",", args)})");
+                case 1:
+                    return m.ApplyMethod(args[0], "ToString");
+
+                case 2:
+                case 3:
+                    //$TODO: careless about the third arg here.
+                    m.EnsureImport("System.Text");
+                    var getEncoding = m.ApplyMethod(
+                        m.TypeRefExpr("Encoding"),
+                        "GetEncoding",
+                        args[1]);
+                    return m.ApplyMethod(getEncoding, "GetString", args[0]);
+
+                default:
+                    throw new NotImplementedException($"str({string.Join<CodeExpression>(",", args)})");
             }
         }
 
@@ -353,7 +352,7 @@ namespace Pytocs.Core.Translate
         /// <param name="appl"></param>
         /// <param name="args"></param>
         /// <returns></returns>
-        private CodeExpression Translate_super(Application appl, CodeExpression [] args)
+        private CodeExpression Translate_super(Application appl, CodeExpression[] args)
         {
             if (expTranslator.classDef != null && expTranslator.classDef.args.Count <= 1)
             {
@@ -378,7 +377,7 @@ namespace Pytocs.Core.Translate
             }
         }
 
-        CodeExpression Translate_enumerate(Application appl, CodeExpression[] args)
+        private CodeExpression Translate_enumerate(Application appl, CodeExpression[] args)
         {
             if (args.Length == 1)
             {

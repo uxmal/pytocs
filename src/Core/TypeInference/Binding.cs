@@ -1,25 +1,27 @@
 #region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
+
+#endregion License
 
 using Pytocs.Core.Syntax;
+using Pytocs.Core.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Pytocs.Core.Types;
 
 namespace Pytocs.Core.TypeInference
 {
@@ -71,6 +73,7 @@ namespace Pytocs.Core.TypeInference
 
         // fields from Def
         public int start = -1;
+
         public int end = -1;
         public int bodyStart = -1;
         public int bodyEnd = -1;
@@ -86,12 +89,12 @@ namespace Pytocs.Core.TypeInference
         /// True if not from a source file.
         /// </summary>
         public bool IsBuiltin { get; set; }
+
         public string File => IsURL ? null : fileOrUrl;
 
         public string URL => IsURL ? fileOrUrl : null;
 
         public bool IsURL => fileOrUrl != null && fileOrUrl.StartsWith("http://");
-
 
         private string SetLocationInfo(Node node)
         {
@@ -113,7 +116,6 @@ namespace Pytocs.Core.TypeInference
                 this.bodyStart = node.Start;
                 this.bodyEnd = node.End;
                 return modNode.Name;
-
             }
             else
             {
@@ -148,8 +150,6 @@ namespace Pytocs.Core.TypeInference
         {
             this.Type = type;
         }
-
-
 
         /// <summary>
         /// Bindings can be sorted by their location for outlining purposes.

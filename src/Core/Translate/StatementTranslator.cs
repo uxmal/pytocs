@@ -1,18 +1,20 @@
 ﻿#region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
+
+#endregion License
 
 using Pytocs.Core.CodeModel;
 using Pytocs.Core.Syntax;
@@ -20,10 +22,7 @@ using Pytocs.Core.TypeInference;
 using Pytocs.Core.Types;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pytocs.Core.Translate
 {
@@ -51,7 +50,6 @@ namespace Pytocs.Core.Translate
             this.globals = globals;
         }
 
-
         public void VisitClass(ClassDef c)
         {
             if (VisitDecorators(c))
@@ -62,8 +60,8 @@ namespace Pytocs.Core.Translate
             var stmtXlt = new StatementTranslator(c, types, gen, gensym, new HashSet<string>());
             stmtXlt.properties = FindProperties(c.body.stmts);
             var csClass = gen.Class(
-                c.name.Name, 
-                baseClasses, 
+                c.name.Name,
+                baseClasses,
                 () => GenerateFields(c),
                 () => c.body.Accept(stmtXlt));
             csClass.Comments.AddRange(comments);
@@ -156,6 +154,7 @@ namespace Pytocs.Core.Translate
                 return false;
             return decorator.className.segs[1].Name == "setter";
         }
+
         public static IEnumerable<CodeCommentStatement> ConvertFirstStringToComments(List<Statement> statements)
         {
             var nothing = new CodeCommentStatement[0];
@@ -324,11 +323,10 @@ namespace Pytocs.Core.Translate
                 gen.Assign(tup, rhs);
                 EmitTupleFieldAssignments(lhs, tup);
             }
-
         }
 
         /// <summary>
-        /// Translate a starred target by first emitting assignments for 
+        /// Translate a starred target by first emitting assignments for
         /// all non-starred targets, then collecting the remainder in
         /// the starred target.
         /// </summary>
@@ -429,7 +427,7 @@ namespace Pytocs.Core.Translate
         {
             if (id.Name == "__slots__")
             {
-                // We should already have analyzed the slots in 
+                // We should already have analyzed the slots in
                 // the type inference phase, so we ignore __slots__.
                 return;
             }
@@ -456,20 +454,23 @@ namespace Pytocs.Core.Translate
         {
             switch (f.exprs)
             {
-            case Identifier id:
-                var exp = id.Accept(xlat);
-                var v = f.tests.Accept(xlat);
-                gen.Foreach(exp, v, () => f.Body.Accept(this));
-                return;
-            case ExpList expList:
-                GenerateForTuple(f, expList.Expressions);
-                return;
-            case PyTuple tuple:
-                GenerateForTuple(f, tuple.values);
-                return;
-            case AttributeAccess attributeAccess:
-                GenerateForAttributeAccess(f, attributeAccess.Expression);
-                return;
+                case Identifier id:
+                    var exp = id.Accept(xlat);
+                    var v = f.tests.Accept(xlat);
+                    gen.Foreach(exp, v, () => f.Body.Accept(this));
+                    return;
+
+                case ExpList expList:
+                    GenerateForTuple(f, expList.Expressions);
+                    return;
+
+                case PyTuple tuple:
+                    GenerateForTuple(f, tuple.values);
+                    return;
+
+                case AttributeAccess attributeAccess:
+                    GenerateForAttributeAccess(f, attributeAccess.Expression);
+                    return;
             }
             throw new NotImplementedException();
         }

@@ -1,18 +1,20 @@
 #region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
+
+#endregion License
 
 using System;
 
@@ -70,7 +72,7 @@ namespace Pytocs.Core.TypeInference
             if (elapsed > 500 || count == total)
             {
                 msg_("\r");
-                int dlen = (int) Math.Ceiling(Math.Log10((double) total));
+                int dlen = (int)Math.Ceiling(Math.Log10((double)total));
                 msg_(AnalyzerImpl.Percent(count, total) + " (" +
                         FormatNumber(count, dlen) +
                         " of " + FormatNumber(total, dlen) + ")");
@@ -78,7 +80,7 @@ namespace Pytocs.Core.TypeInference
                 int rate;
                 if (elapsed > 1)
                 {
-                    rate = (int) ((count - lastCount) / (elapsed / 1000.0));
+                    rate = (int)((count - lastCount) / (elapsed / 1000.0));
                 }
                 else
                 {
@@ -93,7 +95,7 @@ namespace Pytocs.Core.TypeInference
 
                 if (totalElapsed > 1)
                 {
-                    avgRate = (int) (count / (totalElapsed / 1000.0));
+                    avgRate = (int)(count / (totalElapsed / 1000.0));
                 }
                 else
                 {
@@ -107,7 +109,6 @@ namespace Pytocs.Core.TypeInference
                 //long remainTime = remain / avgRate * 1000;
                 //_.msg_("   ETA: " + _.formatTime(remainTime));
 
-
                 msg_("       ");      // overflow area
 
                 lastTickTime = DateTime.Now;
@@ -117,7 +118,7 @@ namespace Pytocs.Core.TypeInference
         }
 
         /// <summary>
-        /// format number with fixed width 
+        /// format number with fixed width
         /// </summary>
         public string FormatNumber(object n, int length)
         {

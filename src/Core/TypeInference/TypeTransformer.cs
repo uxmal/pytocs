@@ -1,12 +1,12 @@
-﻿using System;
+﻿using Pytocs.Core.Syntax;
+using Pytocs.Core.Types;
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using Pytocs.Core.Types;
-using Pytocs.Core.Syntax;
 
 namespace Pytocs.Core.TypeInference
 {
-    public class TypeTransformer : 
+    public class TypeTransformer :
         IStatementVisitor<DataType>,
         IExpVisitor<DataType>
     {
@@ -73,15 +73,17 @@ namespace Pytocs.Core.TypeInference
             IEnumerable<Exp> slotNames = null;
             switch (eSlotNames)
             {
-            case PyList srcList:
-                slotNames = srcList.elts;
-                break;
-            case PyTuple srcTuple:
-                slotNames = srcTuple.values;
-                break;
-            case ExpList expList:
-                slotNames = expList.Expressions;
-                break;
+                case PyList srcList:
+                    slotNames = srcList.elts;
+                    break;
+
+                case PyTuple srcTuple:
+                    slotNames = srcTuple.values;
+                    break;
+
+                case ExpList expList:
+                    slotNames = expList.Expressions;
+                    break;
             }
             if (slotNames == null)
             {
@@ -187,7 +189,7 @@ namespace Pytocs.Core.TypeInference
                 if (!returned)
                 {
                     retType = UnionType.Union(retType, t);
-                     if (!UnionType.Contains(t, DataType.Cont))
+                    if (!UnionType.Contains(t, DataType.Cont))
                     {
                         returned = true;
                         retType = UnionType.Remove(retType, DataType.Cont);
@@ -276,7 +278,6 @@ namespace Pytocs.Core.TypeInference
                 initFunc.SelfType = null;
             }
         }
-
 
         /// <summary>
         /// Called when an application of a function is encountered.
@@ -536,7 +537,7 @@ namespace Pytocs.Core.TypeInference
             return fromType;
         }
 
-        static bool MissingReturn(DataType toType)
+        private static bool MissingReturn(DataType toType)
         {
             bool hasNone = false;
             bool hasOther = false;
@@ -558,7 +559,7 @@ namespace Pytocs.Core.TypeInference
             return hasNone && hasOther;
         }
 
-        static void BindMethodAttrs(Analyzer analyzer, FunType cl)
+        private static void BindMethodAttrs(Analyzer analyzer, FunType cl)
         {
             if (cl.Table.Parent != null)
             {
@@ -573,7 +574,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-        static void AddReadOnlyAttr(
+        private static void AddReadOnlyAttr(
             Analyzer analyzer,
             FunType fun,
             string name,
@@ -605,18 +606,20 @@ namespace Pytocs.Core.TypeInference
                 DataType baseType = @base.defval.Accept(this);
                 switch (baseType)
                 {
-                case ClassType _:
-                    classType.AddSuper(baseType);
-                    break;
-                case UnionType ut:
-                    foreach (DataType parent in ut.types)
-                    {
-                        classType.AddSuper(parent);
-                    }
-                    break;
-                default:
-                    analyzer.AddProblem(@base, @base + " is not a class");
-                    break;
+                    case ClassType _:
+                        classType.AddSuper(baseType);
+                        break;
+
+                    case UnionType ut:
+                        foreach (DataType parent in ut.types)
+                        {
+                            classType.AddSuper(parent);
+                        }
+                        break;
+
+                    default:
+                        analyzer.AddProblem(@base, @base + " is not a class");
+                        break;
                 }
                 baseTypes.Add(baseType);
             }
@@ -695,14 +698,14 @@ namespace Pytocs.Core.TypeInference
             return analyzer.TypeFactory.CreateDict(keyType, valType);
         }
 
-        /// 
+        ///
         /// Python's list comprehension will bind the variables used in generators.
         /// This will erase the original values of the variables even after the
         /// comprehension.
-        /// 
+        ///
         public DataType VisitDictComprehension(DictComprehension d)
         {
-           // ResolveList(d.generator);
+            // ResolveList(d.generator);
             DataType keyType = d.key.Accept(this);
             DataType valueType = d.value.Accept(this);
             return analyzer.TypeFactory.CreateDict(keyType, valueType);
@@ -1060,7 +1063,7 @@ namespace Pytocs.Core.TypeInference
             List<string> names = new List<string>();
             if (allType != null && allType is ListType lt)
             {
-                foreach (var s in lt.values.OfType<string>()) 
+                foreach (var s in lt.values.OfType<string>())
                 {
                     names.Add(s);
                 }
@@ -1107,7 +1110,6 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitBigLiteral(BigLiteral i)
         {
-
             return Register(i, DataType.Int);
         }
 
@@ -1143,10 +1145,10 @@ namespace Pytocs.Core.TypeInference
             return analyzer.TypeFactory.CreateList(l.Projection.Accept(this));
         }
 
-        /// 
+        ///
         /// Python's list comprehension will erase any variable used in generators.
         /// This is wrong, but we "respect" this bug here.
-        /// 
+        ///
         public DataType VisitGeneratorExp(GeneratorExp g)
         {
             g.Collection.Accept(this);
@@ -1333,7 +1335,7 @@ namespace Pytocs.Core.TypeInference
                 DataType retType = DataType.Unknown;
                 foreach (DataType t in ((UnionType)vt).types)
                 {
-                    retType = UnionType.Union( retType, GetSubscript(s, t, st));
+                    retType = UnionType.Union(retType, GetSubscript(s, t, st));
                 }
                 return retType;
             }
@@ -1349,29 +1351,33 @@ namespace Pytocs.Core.TypeInference
             {
                 return DataType.Unknown;
             }
-            switch (vt) {
-            case ListType list:
-                return GetListSubscript(s, list, st);
-            case TupleType tup:
-                return GetListSubscript(s, tup.ToListType(), st);
-            case DictType dt:
-                if (!dt.KeyType.Equals(st))
-                {
-                    AddWarning(s, "Possible KeyError (wrong type for subscript)");
-                }
-                return dt.ValueType;
-            case StrType _:
-                if (st != null && (st is ListType || st.IsNumType()))
-                {
-                    return vt;
-                }
-                else
-                {
-                    AddWarning(s, "Possible KeyError (wrong type for subscript)");
+            switch (vt)
+            {
+                case ListType list:
+                    return GetListSubscript(s, list, st);
+
+                case TupleType tup:
+                    return GetListSubscript(s, tup.ToListType(), st);
+
+                case DictType dt:
+                    if (!dt.KeyType.Equals(st))
+                    {
+                        AddWarning(s, "Possible KeyError (wrong type for subscript)");
+                    }
+                    return dt.ValueType;
+
+                case StrType _:
+                    if (st != null && (st is ListType || st.IsNumType()))
+                    {
+                        return vt;
+                    }
+                    else
+                    {
+                        AddWarning(s, "Possible KeyError (wrong type for subscript)");
+                        return DataType.Unknown;
+                    }
+                default:
                     return DataType.Unknown;
-                }
-            default:
-                return DataType.Unknown;
             }
         }
 

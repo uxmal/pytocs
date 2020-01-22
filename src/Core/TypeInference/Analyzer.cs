@@ -1,29 +1,29 @@
 ﻿#region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+#endregion License
+
 using Pytocs.Core.Syntax;
 using Pytocs.Core.Types;
-using Name = Pytocs.Core.Syntax.Identifier;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using Pytocs.Core;
+using System.Linq;
+using System.Text;
+using Name = Pytocs.Core.Syntax.Identifier;
 
 namespace Pytocs.Core.TypeInference
 {
@@ -36,36 +36,50 @@ namespace Pytocs.Core.TypeInference
         HashSet<Name> Unresolved { get; }
 
         DataType LoadModule(List<Name> name, State state);
+
         Module GetAstForFile(string file);
+
         string GetModuleQname(string file);
 
         Binding CreateBinding(string id, Node node, DataType type, BindingKind kind);
+
         void addRef(AttributeAccess attr, DataType targetType, ISet<Binding> bs);
+
         void putRef(Node node, ICollection<Binding> bs);
+
         void putRef(Node node, Binding bs);
+
         void AddExpType(Exp node, DataType type);
+
         void AddUncalled(FunType f);
+
         void RemoveUncalled(FunType f);
+
         void pushStack(Exp v);
+
         void popStack(Exp v);
+
         bool InStack(Exp v);
 
         string ModuleName(string path);
+
         string ExtendPath(string path, string name);
 
         void AddProblem(Node loc, string msg);
+
         void AddProblem(string filename, int start, int end, string msg);
     }
 
     /// <summary>
-    /// Analyzes a directory of Python files, collecting 
-    /// and inferring type information as it parses all 
+    /// Analyzes a directory of Python files, collecting
+    /// and inferring type information as it parses all
     /// the files.
     /// </summary>
     public class AnalyzerImpl : Analyzer
     {
         //public const string MODEL_LOCATION = "org/yinwang/pysonar/models";
         private readonly List<string> loadedFiles = new List<string>();
+
         private readonly List<Binding> allBindings = new List<Binding>();
         private readonly Dictionary<Node, DataType> expTypes = new Dictionary<Node, DataType>();
         private readonly Dictionary<string, List<Diagnostic>> semanticErrors = new Dictionary<string, List<Diagnostic>>();
@@ -141,7 +155,7 @@ namespace Pytocs.Core.TypeInference
 
         public bool HasOption(string option)
         {
-            if (options.TryGetValue(option, out object op) && (bool) op)
+            if (options.TryGetValue(option, out object op) && (bool)op)
                 return true;
             else
                 return false;
@@ -263,12 +277,12 @@ namespace Pytocs.Core.TypeInference
         public IEnumerable<Binding> GetModuleBindings()
         {
             return ModuleTable.table.Values
-                .SelectMany(g =>g)
-                .Where(g => g.Kind == BindingKind.MODULE && 
+                .SelectMany(g => g)
+                .Where(g => g.Kind == BindingKind.MODULE &&
                             !g.IsBuiltin && !g.IsSynthetic);
         }
 
-        ModuleType GetCachedModule(string file)
+        private ModuleType GetCachedModule(string file)
         {
             DataType t = ModuleTable.LookupType(GetModuleQname(file));
             if (t == null)
@@ -374,7 +388,7 @@ namespace Pytocs.Core.TypeInference
             GetFileErrors(file, semanticErrors).Add(d);
         }
 
-        List<Diagnostic> GetFileErrors(string file, Dictionary<string, List<Diagnostic>> map)
+        private List<Diagnostic> GetFileErrors(string file, Dictionary<string, List<Diagnostic>> map)
         {
             if (!map.TryGetValue(file, out var msgs))
             {
@@ -437,7 +451,7 @@ namespace Pytocs.Core.TypeInference
         private void CreateCacheDirectory()
         {
             var p = FileSystem.CombinePath(FileSystem.getSystemTempDir(), "pytocs");
-            cacheDir =FileSystem.CombinePath(p, "ast_cache");
+            cacheDir = FileSystem.CombinePath(p, "ast_cache");
             string f = cacheDir;
             msg(Resources.AstCacheIsAt, cacheDir);
 
@@ -495,7 +509,7 @@ namespace Pytocs.Core.TypeInference
                     return p;
                 }
 
-                string startFile = FileSystem.CombinePath(startDir , suffix);
+                string startFile = FileSystem.CombinePath(startDir, suffix);
                 if (FileSystem.FileExists(startFile))
                 {
                     return p;
@@ -555,7 +569,6 @@ namespace Pytocs.Core.TypeInference
                     }
 
                     prev = mod;
-
                 }
                 else if (i == name.Count - 1)
                 {
@@ -751,7 +764,7 @@ namespace Pytocs.Core.TypeInference
             sb.AppendLine();
             sb.AppendLine(Banner(Resources.AnalysisSummary));
 
-            string duration = FormatTime(DateTime.Now  - this.startTime);
+            string duration = FormatTime(DateTime.Now - this.startTime);
             sb.AppendFormat(Resources.AnalysisTotalTime, duration);
             sb.AppendLine();
             sb.AppendFormat(Resources.AnalysisModulesLoaded, loadedFiles.Count);
@@ -821,10 +834,10 @@ namespace Pytocs.Core.TypeInference
         }
 
         /// <summary>
-        /// Given an absolute <paramref name="path"/> to a file (not a directory), 
-        /// returns the module name for the file.  If the file is an __init__.py, 
-        /// returns the last component of the file's parent directory, else 
-        /// returns the filename without path or extension. 
+        /// Given an absolute <paramref name="path"/> to a file (not a directory),
+        /// returns the module name for the file.  If the file is an __init__.py,
+        /// returns the last component of the file's parent directory, else
+        /// returns the filename without path or extension.
         /// </summary>
         public string ModuleName(string path)
         {
@@ -859,7 +872,7 @@ namespace Pytocs.Core.TypeInference
             }
             else
             {
-                int pct = (int) (num * 100 / total);
+                int pct = (int)(num * 100 / total);
                 return string.Format("{0,3}%", pct);
             }
         }
@@ -871,8 +884,8 @@ namespace Pytocs.Core.TypeInference
                 putRef(attr, b);
                 if (attr.Parent is Application &&
                         b.Type is FunType && targetType is InstanceType)
-                {  // method call 
-                    ((FunType) b.Type).SelfType = targetType;
+                {  // method call
+                    ((FunType)b.Type).SelfType = targetType;
                 }
             }
         }

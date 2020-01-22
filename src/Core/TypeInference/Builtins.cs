@@ -1,23 +1,25 @@
 #region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
 
+#endregion License
+
+using Pytocs.Core.Types;
 using System;
 using System.Collections.Generic;
 using Url = Pytocs.Core.Syntax.Url;
-using Pytocs.Core.Types;
 
 namespace Pytocs.Core.TypeInference
 {
@@ -67,6 +69,7 @@ namespace Pytocs.Core.TypeInference
 
         // XXX:  need to model "types" module and reconcile with these types
         public ModuleType Builtin;
+
         public ClassType objectType;
         public ClassType BaseType;
         public ClassType BaseList;
@@ -90,8 +93,6 @@ namespace Pytocs.Core.TypeInference
         public ClassType Datetime_tzinfo;
         public InstanceType Time_struct_time;
 
-
-
         public static string[] builtin_exception_types = {
             "ArithmeticError", "AssertionError", "AttributeError",
             "BaseException", "Exception", "DeprecationWarning", "EOFError",
@@ -109,12 +110,12 @@ namespace Pytocs.Core.TypeInference
             "ZeroDivisionError"
         };
 
-        ClassType newClass(string name, State table)
+        private ClassType newClass(string name, State table)
         {
             return newClass(name, table, null);
         }
 
-        ClassType newClass(string name, State table,
+        private ClassType newClass(string name, State table,
                            ClassType superClass, params ClassType[] moreSupers)
         {
             var path = table.ExtendPath(analyzer, name);
@@ -126,22 +127,22 @@ namespace Pytocs.Core.TypeInference
             return t;
         }
 
-        ModuleType newModule(string name)
+        private ModuleType newModule(string name)
         {
             return new ModuleType(name, null, name, analyzer.GlobalTable);
         }
 
-        ClassType newException(string name, State t)
+        private ClassType newException(string name, State t)
         {
             return newClass(name, t, BaseException);
         }
 
-        FunType newFunc()
+        private FunType newFunc()
         {
             return new FunType();
         }
 
-        FunType newFunc(DataType type)
+        private FunType newFunc(DataType type)
         {
             if (type == null)
             {
@@ -153,27 +154,27 @@ namespace Pytocs.Core.TypeInference
             return fun;
         }
 
-        ListType newList()
+        private ListType newList()
         {
             return newList(DataType.Unknown);
         }
 
-        ListType newList(DataType type)
+        private ListType newList(DataType type)
         {
             return analyzer.TypeFactory.CreateList(type);
         }
 
-        DictType newDict(DataType ktype, DataType vtype)
+        private DictType newDict(DataType ktype, DataType vtype)
         {
             return analyzer.TypeFactory.CreateDict(ktype, vtype);
         }
 
-        TupleType newTuple(params DataType[] types)
+        private TupleType newTuple(params DataType[] types)
         {
             return analyzer.TypeFactory.CreateTuple(types);
         }
 
-        UnionType newUnion(params DataType[] types)
+        private UnionType newUnion(params DataType[] types)
         {
             return new UnionType(types);
         }
@@ -217,7 +218,7 @@ namespace Pytocs.Core.TypeInference
                     outer.analyzer.ModuleTable.Insert(outer.analyzer, name, liburl(), module, BindingKind.MODULE).IsBuiltin = true;
                 }
             }
-            
+
             protected void update(string name, Url url, DataType type, BindingKind kind)
             {
                 table.Insert(outer.analyzer, name, url, type, kind).IsBuiltin = true;
@@ -275,7 +276,6 @@ namespace Pytocs.Core.TypeInference
                 table.Insert(outer.analyzer, name, url, type, BindingKind.ATTRIBUTE).IsBuiltin = true;
             }
 
-
             // don't use this unless you're sure it's OK to share the type object
             protected void addAttributes_beCareful(DataType type, params string[] names)
             {
@@ -285,18 +285,15 @@ namespace Pytocs.Core.TypeInference
                 }
             }
 
-
             protected void addNumAttrs(params string[] names)
             {
                 addAttributes_beCareful(DataType.Int, names);
             }
 
-
             protected void addStrAttrs(params string[] names)
             {
                 addAttributes_beCareful(DataType.Str, names);
             }
-
 
             protected void addUnknownAttrs(params string[] names)
             {
@@ -324,7 +321,6 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
         /// <summary>
         /// The set of top-level native modules.
         /// </summary>
@@ -335,7 +331,6 @@ namespace Pytocs.Core.TypeInference
             this.analyzer = analyzer;
             buildTypes();
         }
-
 
         private void buildTypes()
         {
@@ -357,7 +352,6 @@ namespace Pytocs.Core.TypeInference
             BaseFunction = newClass("function", bt, objectType);
             BaseClass = newClass("classobj", bt, objectType);
         }
-
 
         public void Initialize()
         {
@@ -425,7 +419,6 @@ namespace Pytocs.Core.TypeInference
             new ZlibModule(this);
         }
 
-
         /**
          * Loads (if necessary) and returns the specified built-in module.
          */
@@ -451,7 +444,7 @@ namespace Pytocs.Core.TypeInference
                     return null;
                 }
             }
-            return (ModuleType) type;
+            return (ModuleType)type;
         }
 
         private ModuleType getModule(string name)
@@ -462,9 +455,9 @@ namespace Pytocs.Core.TypeInference
                 return wrap.getModule();
         }
 
-        void buildObjectType()
+        private void buildObjectType()
         {
-            string[] obj_methods = 
+            string[] obj_methods =
             {
                 "__delattr__", "__format__", "__getattribute__", "__hash__",
                 "__init__", "__new__", "__reduce__", "__reduce_ex__",
@@ -478,10 +471,10 @@ namespace Pytocs.Core.TypeInference
             objectType.Table.Insert(analyzer, "__class__", newLibUrl("stdtypes"), DataType.Unknown, BindingKind.CLASS).IsBuiltin = true;
         }
 
-        void buildTupleType()
+        private void buildTupleType()
         {
             State bt = BaseTuple.Table;
-            string[] tuple_methods = 
+            string[] tuple_methods =
             {
                 "__add__", "__contains__", "__eq__", "__ge__", "__getnewargs__",
                 "__gt__", "__iter__", "__le__", "__len__", "__lt__", "__mul__",
@@ -496,9 +489,9 @@ namespace Pytocs.Core.TypeInference
             bt.Insert(analyzer, "__iter__", newDataModelUrl("object.__iter__"), newFunc(), BindingKind.METHOD).IsBuiltin = true;
         }
 
-        void buildArrayType()
+        private void buildArrayType()
         {
-            string[] array_methods_none = 
+            string[] array_methods_none =
             {
                 "append", "buffer_info", "byteswap", "extend", "fromfile",
                 "fromlist", "fromstring", "fromunicode", "index", "insert", "pop",
@@ -520,7 +513,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-        void buildListType()
+        private void buildListType()
         {
             BaseList.Table.Insert(analyzer, "__getslice__", newDataModelUrl("object.__getslice__"),
                     newFunc(BaseListInst), BindingKind.METHOD).IsBuiltin = true;
@@ -543,15 +536,12 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-
-        Url numUrl()
+        private Url numUrl()
         {
             return newLibUrl("stdtypes", "typesnumeric");
         }
 
-
-        void buildNumTypes()
+        private void buildNumTypes()
         {
             State bft = DataType.Float.Table;
             string[] float_methods_num = {
@@ -619,8 +609,7 @@ namespace Pytocs.Core.TypeInference
             bct.Insert(analyzer, "real", numUrl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
         }
 
-
-        void buildStrType()
+        private void buildStrType()
         {
             DataType.Str.Table.Insert(analyzer, "__getslice__", newDataModelUrl("object.__getslice__"),
                     newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
@@ -661,8 +650,7 @@ namespace Pytocs.Core.TypeInference
                     newFunc(newTuple(DataType.Str)), BindingKind.METHOD).IsBuiltin = true;
         }
 
-
-        void buildModuleType()
+        private void buildModuleType()
         {
             string[] attrs = { "__doc__", "__file__", "__name__", "__package__" };
             foreach (string m in attrs)
@@ -673,8 +661,7 @@ namespace Pytocs.Core.TypeInference
                     newDict(DataType.Str, DataType.Unknown), BindingKind.ATTRIBUTE).IsBuiltin = true;
         }
 
-
-        void buildDictType()
+        private void buildDictType()
         {
             string url = "datastructures.html#dictionaries";
             State bt = BaseDict.Table;
@@ -689,7 +676,7 @@ namespace Pytocs.Core.TypeInference
             bt.Insert(analyzer, "keys", newTutUrl(url), newFunc(BaseList), BindingKind.METHOD).IsBuiltin = true;
             bt.Insert(analyzer, "values", newTutUrl(url), newFunc(BaseList), BindingKind.METHOD).IsBuiltin = true;
 
-            string[] dict_method_unknown = 
+            string[] dict_method_unknown =
             {
                 "clear", "copy", "fromkeys", "get", "iteritems", "iterkeys",
                 "itervalues", "pop", "popitem", "setdefault", "update"
@@ -706,8 +693,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        void buildFileType()
+        private void buildFileType()
         {
             string url = "stdtypes.html#bltin-file-objects";
             State table = BaseFile.Table;
@@ -749,8 +735,7 @@ namespace Pytocs.Core.TypeInference
             table.Insert(analyzer, "newlines", newLibUrl(url), newUnion(DataType.Str, newTuple(DataType.Str)), BindingKind.ATTRIBUTE).IsBuiltin = true;
         }
 
-
-        void buildFunctionType()
+        private void buildFunctionType()
         {
             State t = BaseFunction.Table;
 
@@ -773,10 +758,9 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
         // XXX:  finish wiring this up.  ClassType needs to inherit from it somehow,
         // so we can remove the per-instance attributes from NClassDef.
-        void buildClassType()
+        private void buildClassType()
         {
             State t = BaseClass.Table;
 
@@ -788,8 +772,7 @@ namespace Pytocs.Core.TypeInference
             t.Insert(analyzer, "__dict__", new Url(DATAMODEL_URL), new DictType(DataType.Str, DataType.Unknown), BindingKind.ATTRIBUTE).IsBuiltin = true;
         }
 
-
-        class BuiltinsModule : NativeModule
+        private class BuiltinsModule : NativeModule
         {
             public BuiltinsModule(Builtins outer) :
                 base(outer, "__builtin__")
@@ -856,7 +839,6 @@ namespace Pytocs.Core.TypeInference
                 addFunction("buffer", newLibUrl("functions", "buffer"), outer.newList(DataType.Unknown));
                 addFunction("zip", newLibUrl("functions", "zip"), outer.newList(outer.newTuple(DataType.Unknown)));
 
-
                 foreach (string f in new[] { "globals", "vars", "locals" })
                 {
                     addFunction(f, newLibUrl("functions.html#" + f), outer.newDict(DataType.Str, DataType.Unknown));
@@ -867,7 +849,7 @@ namespace Pytocs.Core.TypeInference
                     addClass(f, newDataModelUrl("org/yinwang/pysonar/types"),
                             outer.newClass(f, outer.analyzer.GlobalTable, outer.objectType));
                 }
-                outer.BaseException = (ClassType) table.LookupType("BaseException");
+                outer.BaseException = (ClassType)table.LookupType("BaseException");
 
                 foreach (string f in new[] { "True", "False" })
                 {
@@ -883,14 +865,12 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class ArrayModule : NativeModule
+        private class ArrayModule : NativeModule
         {
             public ArrayModule(Builtins outer) :
                 base(outer, "array")
             {
             }
-
 
             public override void initBindings()
             {
@@ -899,14 +879,12 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class AudioopModule : NativeModule
+        private class AudioopModule : NativeModule
         {
             public AudioopModule(Builtins outer) :
                 base(outer, "audioop")
             {
             }
-
 
             public override void initBindings()
             {
@@ -925,14 +903,12 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class BinasciiModule : NativeModule
+        private class BinasciiModule : NativeModule
         {
             public BinasciiModule(Builtins outer) :
                 base(outer, "binascii")
             {
             }
-
 
             public override void initBindings()
             {
@@ -948,10 +924,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class Bz2Module : NativeModule
+        private class Bz2Module : NativeModule
         {
-            public Bz2Module(Builtins outer) : base(outer, "bz2") { }
+            public Bz2Module(Builtins outer) : base(outer, "bz2")
+            {
+            }
 
             public override void initBindings()
             {
@@ -975,8 +952,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class CPickleModule : NativeModule
+        private class CPickleModule : NativeModule
         {
             public CPickleModule(Builtins outer)
                 : base(outer, "cPickle")
@@ -1015,8 +991,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class CStringIOModule : NativeModule
+        private class CStringIOModule : NativeModule
         {
             public CStringIOModule(Builtins outer)
                 : base(outer, "cStringIO")
@@ -1043,8 +1018,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class CMathModule : NativeModule
+        private class CMathModule : NativeModule
         {
             public CMathModule(Builtins outer)
                 : base(outer, "cmath")
@@ -1086,8 +1060,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class CollectionsModule : NativeModule
+        private class CollectionsModule : NativeModule
         {
             public CollectionsModule(Builtins outer) :
                 base(outer, "collections")
@@ -1099,13 +1072,10 @@ namespace Pytocs.Core.TypeInference
                 return liburl("abcs-abstract-base-classes");
             }
 
-
-
             private Url dequeUrl()
             {
                 return liburl("deque-objects");
             }
-
 
             public override void initBindings()
             {
@@ -1203,8 +1173,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class CTypesModule : NativeModule
+        private class CTypesModule : NativeModule
         {
             public CTypesModule(Builtins outer)
                 : base(outer, "ctypes")
@@ -1246,14 +1215,12 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class CryptModule : NativeModule
+        private class CryptModule : NativeModule
         {
             public CryptModule(Builtins outer)
                 : base(outer, "crypt")
             {
             }
-
 
             public override void initBindings()
             {
@@ -1261,8 +1228,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class DatetimeModule : NativeModule
+        private class DatetimeModule : NativeModule
         {
             public DatetimeModule(Builtins outer)
                 : base(outer, "datetime")
@@ -1273,7 +1239,6 @@ namespace Pytocs.Core.TypeInference
             {
                 return liburl("datetime." + anchor);
             }
-
 
             public override void initBindings()
             {
@@ -1385,10 +1350,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class DbmModule : NativeModule
+        private class DbmModule : NativeModule
         {
-            public DbmModule(Builtins outer) : base(outer, "dbm") { }
+            public DbmModule(Builtins outer) : base(outer, "dbm")
+            {
+            }
 
             public override void initBindings()
             {
@@ -1401,8 +1367,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class ErrnoModule : NativeModule
+        private class ErrnoModule : NativeModule
         {
             public ErrnoModule(Builtins outer)
                 : base(outer, "errno")
@@ -1443,14 +1408,12 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class ExceptionsModule : NativeModule
+        private class ExceptionsModule : NativeModule
         {
             public ExceptionsModule(Builtins outer) :
                 base(outer, "exceptions")
             {
             }
-
 
             public override void initBindings()
             {
@@ -1463,8 +1426,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class FcntlModule : NativeModule
+        private class FcntlModule : NativeModule
         {
             public FcntlModule(Builtins outer)
                 : base(outer, "fcntl")
@@ -1497,14 +1459,12 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class FpectlModule : NativeModule
+        private class FpectlModule : NativeModule
         {
             public FpectlModule(Builtins outer)
                 : base(outer, "fpectl")
             {
             }
-
 
             public override void initBindings()
             {
@@ -1513,14 +1473,12 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class GcModule : NativeModule
+        private class GcModule : NativeModule
         {
             public GcModule(Builtins outer)
                 : base(outer, "gc")
             {
             }
-
 
             public override void initBindings()
             {
@@ -1536,14 +1494,12 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class GdbmModule : NativeModule
+        private class GdbmModule : NativeModule
         {
             public GdbmModule(Builtins outer)
                 : base(outer, "gbdm")
             {
             }
-
 
             public override void initBindings()
             {
@@ -1558,18 +1514,15 @@ namespace Pytocs.Core.TypeInference
 
                 addFunction("open", liburl(), gdbm);
             }
-
         }
 
-
-        class GrpModule : NativeModule
+        private class GrpModule : NativeModule
         {
             public GrpModule(Builtins outer)
                 : base(outer, "grp")
             {
                 this.outer = outer;
             }
-
 
             public override void initBindings()
             {
@@ -1590,8 +1543,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class ImpModule : NativeModule
+        private class ImpModule : NativeModule
         {
             public ImpModule(Builtins outer)
                 : base(outer, "imp")
@@ -1626,14 +1578,12 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class ItertoolsModule : NativeModule
+        private class ItertoolsModule : NativeModule
         {
             public ItertoolsModule(Builtins outer)
                 : base(outer, "itertools")
             {
             }
-
 
             public override void initBindings()
             {
@@ -1653,14 +1603,12 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class MarshalModule : NativeModule
+        private class MarshalModule : NativeModule
         {
             public MarshalModule(Builtins outer)
                 : base(outer, "marshal")
             {
             }
-
 
             public override void initBindings()
             {
@@ -1670,14 +1618,12 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class MathModule : NativeModule
+        private class MathModule : NativeModule
         {
             public MathModule(Builtins outer)
                 : base(outer, "math")
             {
             }
-
 
             public override void initBindings()
             {
@@ -1691,14 +1637,12 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class Md5Module : NativeModule
+        private class Md5Module : NativeModule
         {
             public Md5Module(Builtins outer)
                 : base(outer, "md5")
             {
             }
-
 
             public override void initBindings()
             {
@@ -1715,13 +1659,13 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class MmapModule : NativeModule
+        private class MmapModule : NativeModule
         {
             public MmapModule(Builtins outer)
                 : base(outer, "mmap")
             {
             }
+
             public override void initBindings()
             {
                 ClassType mmap = outer.newClass("mmap", table, outer.objectType);
@@ -1755,8 +1699,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class NisModule : NativeModule
+        private class NisModule : NativeModule
         {
             public NisModule(Builtins outer)
                 : base(outer, "nis")
@@ -1771,10 +1714,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class OsModule : NativeModule
+        private class OsModule : NativeModule
         {
-            public OsModule(Builtins outer) : base(outer, "os") { }
+            public OsModule(Builtins outer) : base(outer, "os")
+            {
+            }
 
             public override void initBindings()
             {
@@ -1801,7 +1745,6 @@ namespace Pytocs.Core.TypeInference
                     addFunction(s, liburl(), DataType.Unknown);
                 }
             }
-
 
             private void initProcBindings()
             {
@@ -1831,7 +1774,6 @@ namespace Pytocs.Core.TypeInference
                 addFunction("uname", liburl(a), outer.newTuple(DataType.Str, DataType.Str, DataType.Str,
                         DataType.Str, DataType.Str));
             }
-
 
             private void initProcMgmtBindings()
             {
@@ -1877,7 +1819,6 @@ namespace Pytocs.Core.TypeInference
                     addFunction(s, liburl(a), outer.newTuple(DataType.Int, DataType.Int, DataType.Int));
                 }
             }
-
 
             private void initFileBindings()
             {
@@ -1930,7 +1871,6 @@ namespace Pytocs.Core.TypeInference
                 }
             }
 
-
             private void initFileAndDirBindings()
             {
                 string a = "files-and-directories";
@@ -1975,7 +1915,6 @@ namespace Pytocs.Core.TypeInference
                 addFunction("walk", liburl(a), outer.newList(outer.newTuple(DataType.Str, DataType.Str, DataType.Str)));
             }
 
-
             private void initMiscSystemInfo()
             {
                 string a = "miscellaneous-system-information";
@@ -1996,7 +1935,6 @@ namespace Pytocs.Core.TypeInference
 
                 addFunction("confstr", liburl(a), DataType.Str);
             }
-
 
             private void initOsPathModule()
             {
@@ -2044,7 +1982,7 @@ namespace Pytocs.Core.TypeInference
 
                 ospath.Insert(outer.analyzer, "os", liburl(), this.module, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 ospath.Insert(outer.analyzer, "stat", newLibUrl("stat"),
-                    // moduleTable.lookupLocal("stat").getType(),
+                        // moduleTable.lookupLocal("stat").getType(),
                         outer.newModule("<stat-fixme>"), BindingKind.ATTRIBUTE);
 
                 // XXX:  this is an re object, I think
@@ -2052,14 +1990,12 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class OperatorModule : NativeModule
+        private class OperatorModule : NativeModule
         {
             public OperatorModule(Builtins outer)
                 : base(outer, "operator")
             {
             }
-
 
             public override void initBindings()
             {
@@ -2091,8 +2027,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class ParserModule : NativeModule
+        private class ParserModule : NativeModule
         {
             public ParserModule(Builtins outer)
                 : base(outer, "parser")
@@ -2132,11 +2067,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class PosixModule : NativeModule
+        private class PosixModule : NativeModule
         {
-            public PosixModule(Builtins outer) : base(outer, "posix") { }
-
+            public PosixModule(Builtins outer) : base(outer, "posix")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2144,16 +2079,16 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class PwdModule : NativeModule
+        private class PwdModule : NativeModule
         {
-            public PwdModule(Builtins outer) : base(outer, "pwd") { }
-
+            public PwdModule(Builtins outer) : base(outer, "pwd")
+            {
+            }
 
             public override void initBindings()
             {
                 ClassType struct_pwd = outer.newClass("struct_pwd", table, outer.objectType);
-                foreach (string s in new [] {"pw_nam", "pw_passwd", "pw_uid", "pw_gid",
+                foreach (string s in new[] {"pw_nam", "pw_passwd", "pw_uid", "pw_gid",
                         "pw_gecos", "pw_dir", "pw_shell"})
                 {
                     struct_pwd.Table.Insert(outer.analyzer, s, liburl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
@@ -2166,11 +2101,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class PyexpatModule : NativeModule
+        private class PyexpatModule : NativeModule
         {
-            public PyexpatModule(Builtins outer) : base(outer, "pyexpat") { }
-
+            public PyexpatModule(Builtins outer) : base(outer, "pyexpat")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2178,11 +2113,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class ReadlineModule : NativeModule
+        private class ReadlineModule : NativeModule
         {
-            public ReadlineModule(Builtins outer) : base(outer, "readline") { }
-
+            public ReadlineModule(Builtins outer) : base(outer, "readline")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2206,11 +2141,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class ResourceModule : NativeModule
+        private class ResourceModule : NativeModule
         {
-            public ResourceModule(Builtins outer) : base(outer, "resource") { }
-
+            public ResourceModule(Builtins outer) : base(outer, "resource")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2249,11 +2184,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class SelectModule : NativeModule
+        private class SelectModule : NativeModule
         {
-            public SelectModule(Builtins outer) : base(outer, "select") { }
-
+            public SelectModule(Builtins outer) : base(outer, "select")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2273,7 +2208,7 @@ namespace Pytocs.Core.TypeInference
                 }
                 addClass("epoll", liburl(a), epoll);
 
-                foreach (string s in new [] {"EPOLLERR", "EPOLLET", "EPOLLHUP", "EPOLLIN", "EPOLLMSG",
+                foreach (string s in new[] {"EPOLLERR", "EPOLLET", "EPOLLHUP", "EPOLLIN", "EPOLLMSG",
                         "EPOLLONESHOT", "EPOLLOUT", "EPOLLPRI", "EPOLLRDBAND",
                         "EPOLLRDNORM", "EPOLLWRBAND", "EPOLLWRNORM"})
                 {
@@ -2284,7 +2219,7 @@ namespace Pytocs.Core.TypeInference
 
                 ClassType poll = outer.newClass("poll", table, outer.objectType);
                 poll.Table.Insert(outer.analyzer, "register", newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
-                poll.Table.Insert(outer.analyzer, "modify",    newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
+                poll.Table.Insert(outer.analyzer, "modify", newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 poll.Table.Insert(outer.analyzer, "unregister", newLibUrl("select", a), outer.newFunc(), BindingKind.METHOD).IsBuiltin = true;
                 poll.Table.Insert(outer.analyzer, "poll", newLibUrl("select", a),
                         outer.newFunc(outer.newList(outer.newTuple(DataType.Int, DataType.Int))), BindingKind.METHOD);
@@ -2318,10 +2253,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class SignalModule : NativeModule
+        private class SignalModule : NativeModule
         {
-            public SignalModule(Builtins outer) : base(outer, "signal") { }
+            public SignalModule(Builtins outer) : base(outer, "signal")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2338,11 +2274,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class ShaModule : NativeModule
+        private class ShaModule : NativeModule
         {
-            public ShaModule(Builtins outer) : base(outer, "sha") { }
-
+            public ShaModule(Builtins outer) : base(outer, "sha")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2359,11 +2295,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class SpwdModule : NativeModule
+        private class SpwdModule : NativeModule
         {
-            public SpwdModule(Builtins outer) : base(outer, "spwd") { }
-
+            public SpwdModule(Builtins outer) : base(outer, "spwd")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2381,10 +2317,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class StropModule : NativeModule
+        private class StropModule : NativeModule
         {
-            public StropModule(Builtins outer) : base(outer, "strop") { }
+            public StropModule(Builtins outer) : base(outer, "strop")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2392,10 +2329,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class StructModule : NativeModule
+        private class StructModule : NativeModule
         {
-            public StructModule(Builtins outer) : base(outer, "struct") { }
+            public StructModule(Builtins outer) : base(outer, "struct")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2418,11 +2356,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class SysModule : NativeModule
+        private class SysModule : NativeModule
         {
-            public SysModule(Builtins outer) : base(outer, "sys") { }
-
+            public SysModule(Builtins outer) : base(outer, "sys")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2450,8 +2388,8 @@ namespace Pytocs.Core.TypeInference
 
                 addStrFuncs("getdefaultencoding", "getfilesystemencoding");
 
-                foreach (string s in new [] {"argv", "builtin_module_names", "path",
-                        "meta_path", "subversion"} )
+                foreach (string s in new[] {"argv", "builtin_module_names", "path",
+                        "meta_path", "subversion"})
                 {
                     addAttr(s, liburl(), outer.newList(DataType.Str));
                 }
@@ -2463,11 +2401,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class SyslogModule : NativeModule
+        private class SyslogModule : NativeModule
         {
-            public SyslogModule(Builtins outer) : base(outer, "syslog") { }
-
+            public SyslogModule(Builtins outer) : base(outer, "syslog")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2482,11 +2420,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class TermiosModule : NativeModule
+        private class TermiosModule : NativeModule
         {
-            public TermiosModule(Builtins outer) : base(outer, "termios") { }
-
+            public TermiosModule(Builtins outer) : base(outer, "termios")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2495,10 +2433,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class ThreadModule : NativeModule
+        private class ThreadModule : NativeModule
         {
-            public ThreadModule(Builtins outer) : base(outer, "thread") { }
+            public ThreadModule(Builtins outer) : base(outer, "thread")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2520,9 +2459,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-        class TimeModule : NativeModule
+        private class TimeModule : NativeModule
         {
-            public TimeModule(Builtins outer) : base(outer, "time") { }
+            public TimeModule(Builtins outer) : base(outer, "time")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2551,9 +2492,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-        class UnicodedataModule : NativeModule
+        private class UnicodedataModule : NativeModule
         {
-            public UnicodedataModule(Builtins outer) : base(outer, "unicodedata") { }
+            public UnicodedataModule(Builtins outer) : base(outer, "unicodedata")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2566,9 +2509,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-        class ZipimportModule : NativeModule
+        private class ZipimportModule : NativeModule
         {
-            public ZipimportModule(Builtins outer) : base(outer, "zipimport") { }
+            public ZipimportModule(Builtins outer) : base(outer, "zipimport")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2590,11 +2535,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-
-        class ZlibModule : NativeModule
+        private class ZlibModule : NativeModule
         {
-            public ZlibModule(Builtins outer) : base(outer, "zlib") { }
-
+            public ZlibModule(Builtins outer) : base(outer, "zlib")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2627,9 +2572,11 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-        class MsvcrtModule : NativeModule
+        private class MsvcrtModule : NativeModule
         {
-            public MsvcrtModule(Builtins outer) : base(outer, "msvcrt") { }
+            public MsvcrtModule(Builtins outer) : base(outer, "msvcrt")
+            {
+            }
 
             public override void initBindings()
             {
@@ -2638,5 +2585,6 @@ namespace Pytocs.Core.TypeInference
             }
         }
     }
+
 #pragma warning restore IDE1006 // Naming Styles
 }

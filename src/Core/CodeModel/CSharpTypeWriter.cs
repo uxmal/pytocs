@@ -1,23 +1,20 @@
 ﻿#region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+#endregion License
 
 namespace Pytocs.Core.CodeModel
 {
@@ -104,7 +101,7 @@ namespace Pytocs.Core.CodeModel
             WriteMethodParameters(method);
 
             var stmWriter = new CSharpStatementWriter(writer);
-            stmWriter.WriteStatements(method.Statements); 
+            stmWriter.WriteStatements(method.Statements);
             writer.WriteLine();
             return 0;
         }
@@ -268,12 +265,12 @@ namespace Pytocs.Core.CodeModel
             }
             switch (method.Attributes & MemberAttributes.ScopeMask)
             {
-            case 0: writer.Write("virtual"); writer.Write(" "); break;
-            case MemberAttributes.Abstract: writer.Write("abstract"); writer.Write(" "); break;
-            case MemberAttributes.Final: break;
-            case MemberAttributes.Static: writer.Write("static"); writer.Write(" "); break;
-            case MemberAttributes.Override: writer.Write("override"); writer.Write(" "); break;
-            case MemberAttributes.Const: writer.Write("const"); writer.Write(" "); break;
+                case 0: writer.Write("virtual"); writer.Write(" "); break;
+                case MemberAttributes.Abstract: writer.Write("abstract"); writer.Write(" "); break;
+                case MemberAttributes.Final: break;
+                case MemberAttributes.Static: writer.Write("static"); writer.Write(" "); break;
+                case MemberAttributes.Override: writer.Write("override"); writer.Write(" "); break;
+                case MemberAttributes.Const: writer.Write("const"); writer.Write(" "); break;
             }
         }
 
@@ -314,9 +311,9 @@ namespace Pytocs.Core.CodeModel
             RenderAccessAttributes(attrs);
             switch (attrs & MemberAttributes.ScopeMask)
             {
-            case MemberAttributes.Final: break;
-            case MemberAttributes.Static: writer.Write("static"); writer.Write(" "); break;
-            case MemberAttributes.Const: writer.Write("const"); writer.Write(" "); break;
+                case MemberAttributes.Final: break;
+                case MemberAttributes.Static: writer.Write("static"); writer.Write(" "); break;
+                case MemberAttributes.Const: writer.Write("const"); writer.Write(" "); break;
             }
         }
 
@@ -324,11 +321,11 @@ namespace Pytocs.Core.CodeModel
         {
             switch (attrs & MemberAttributes.AccessMask)
             {
-            case MemberAttributes.Private: writer.Write("private"); break;
-            case MemberAttributes.Family: writer.Write("protected"); break;
-            case MemberAttributes.Assembly: writer.Write("internal"); break;
-            case MemberAttributes.Public: writer.Write("public"); break;
-            default: return;
+                case MemberAttributes.Private: writer.Write("private"); break;
+                case MemberAttributes.Family: writer.Write("protected"); break;
+                case MemberAttributes.Assembly: writer.Write("internal"); break;
+                case MemberAttributes.Public: writer.Write("public"); break;
+                default: return;
             }
             writer.Write(" ");
         }
@@ -338,8 +335,8 @@ namespace Pytocs.Core.CodeModel
             RenderAccessAttributes(attrs);
             switch (attrs & MemberAttributes.ScopeMask)
             {
-            case MemberAttributes.Final: break;
-            case MemberAttributes.Static: writer.Write("static"); writer.Write(" "); break;
+                case MemberAttributes.Final: break;
+                case MemberAttributes.Static: writer.Write("static"); writer.Write(" "); break;
             }
         }
     }

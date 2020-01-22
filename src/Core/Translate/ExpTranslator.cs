@@ -1,28 +1,30 @@
 ﻿#region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
 
-using Pytocs.Core.Syntax;
+#endregion License
+
 using Pytocs.Core.CodeModel;
+using Pytocs.Core.Syntax;
+using Pytocs.Core.Types;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Numerics;
-using Pytocs.Core.Types;
-using System.Globalization;
 
 namespace Pytocs.Core.Translate
 {
@@ -31,7 +33,7 @@ namespace Pytocs.Core.Translate
     /// </summary>
     public class ExpTranslator : IExpVisitor<CodeExpression>
     {
-        private static Dictionary<Op, CodeOperatorType> mppyoptocsop = new Dictionary<Op, CodeOperatorType>() 
+        private static Dictionary<Op, CodeOperatorType> mppyoptocsop = new Dictionary<Op, CodeOperatorType>()
         {
             { Op.Add, CodeOperatorType.Add },
             { Op.Sub, CodeOperatorType.Sub },
@@ -172,7 +174,7 @@ namespace Pytocs.Core.Translate
                     {
                         if (args.Length == 0)
                         {
-                            // iteritems is Python 2.x returning an iterable over 
+                            // iteritems is Python 2.x returning an iterable over
                             // a dictionary's key-value pairs. In C#, just return
                             // the dictionary (assumes that we're dealing with a dictionary!)
                         }
@@ -209,7 +211,7 @@ namespace Pytocs.Core.Translate
             }
             return null;
         }
-        
+
         public CodeExpression VisitArrayRef(ArrayRef aref)
         {
             var target = aref.array.Accept(this);
@@ -290,7 +292,6 @@ namespace Pytocs.Core.Translate
             return m.Prim(r.NumericValue);
         }
 
-
         public CodeExpression VisitDictInitializer(DictInitializer s)
         {
             if (s.KeyValues.All(kv => kv.Key != null))
@@ -312,7 +313,7 @@ namespace Pytocs.Core.Translate
             else
             {
                 m.EnsureImport("pytocs.runtime");
-                // There was a dictionary unpacking present. 
+                // There was a dictionary unpacking present.
                 var items = s.KeyValues.Select(kv =>
                 {
                     var v = kv.Value.Accept(this);
@@ -326,7 +327,7 @@ namespace Pytocs.Core.Translate
                         return v;
                     }
                 });
-                var unpack = m.MethodRef(m.TypeRefExpr("DictionaryUtils"),"Unpack");
+                var unpack = m.MethodRef(m.TypeRefExpr("DictionaryUtils"), "Unpack");
                 unpack.TypeReferences.Add(m.TypeRef(typeof(string)));
                 unpack.TypeReferences.Add(m.TypeRef(typeof(object)));
                 return m.Appl(unpack, items.ToArray());
@@ -370,7 +371,6 @@ namespace Pytocs.Core.Translate
                 var unpack = m.MethodRef(m.TypeRefExpr("SetUtils"), "Unpack");
                 unpack.TypeReferences.Add(m.TypeRef(typeof(object)));
                 return m.Appl(unpack, seq.ToArray());
-
             }
             else
             {
@@ -383,7 +383,7 @@ namespace Pytocs.Core.Translate
         public CodeExpression VisitSetComprehension(SetComprehension sc)
         {
             m.EnsureImport("System.Linq");
-            var compFor = (CompFor) sc.Collection;
+            var compFor = (CompFor)sc.Collection;
             var v = sc.Projection.Accept(this);
             var c = TranslateToLinq(v, compFor);
             return m.Appl(
@@ -419,16 +419,17 @@ namespace Pytocs.Core.Translate
             var r = bin.r.Accept(this);
             switch (bin.op)
             {
-            case Op.Add:
-                var cAdd = CondenseComplexConstant(l, r, 1);
-                if (cAdd != null)
-                    return cAdd;
-                break;
-            case Op.Sub:
-                var cSub = CondenseComplexConstant(l, r, -1);
-                if (cSub != null)
-                    return cSub;
-                break;
+                case Op.Add:
+                    var cAdd = CondenseComplexConstant(l, r, 1);
+                    if (cAdd != null)
+                        return cAdd;
+                    break;
+
+                case Op.Sub:
+                    var cSub = CondenseComplexConstant(l, r, -1);
+                    if (cSub != null)
+                        return cSub;
+                    break;
             }
             if (mppyoptocsop.TryGetValue(bin.op, out var opDst))
             {
@@ -436,38 +437,40 @@ namespace Pytocs.Core.Translate
             }
             switch (bin.op)
             {
-            case Op.Is:
-                if (bin.r is NoneExp)
-                {
-                    return m.BinOp(l, CodeOperatorType.IdentityEquality, r);
-                }
-                else
-                {
-                    return m.Appl(
-                        m.MethodRef(
-                            m.TypeRefExpr("object"),
-                            "ReferenceEquals"),
-                        l,
-                        r);
-                }
-            case Op.IsNot:
-                return m.BinOp(l, CodeOperatorType.IdentityInequality, r);
-            case Op.In:
-                return m.Appl(
-                    m.MethodRef(r, "Contains"),
-                     l);
+                case Op.Is:
+                    if (bin.r is NoneExp)
+                    {
+                        return m.BinOp(l, CodeOperatorType.IdentityEquality, r);
+                    }
+                    else
+                    {
+                        return m.Appl(
+                            m.MethodRef(
+                                m.TypeRefExpr("object"),
+                                "ReferenceEquals"),
+                            l,
+                            r);
+                    }
+                case Op.IsNot:
+                    return m.BinOp(l, CodeOperatorType.IdentityInequality, r);
 
-            case Op.NotIn:
-                return new CodeUnaryOperatorExpression(
-                    CodeOperatorType.Not,
-                    m.Appl(
+                case Op.In:
+                    return m.Appl(
                         m.MethodRef(r, "Contains"),
-                        l));
-            case Op.Exp:
-                m.EnsureImport("System");
-                return m.Appl(
-                    m.MethodRef(m.TypeRefExpr("Math"), "Pow"),
-                    l, r);
+                         l);
+
+                case Op.NotIn:
+                    return new CodeUnaryOperatorExpression(
+                        CodeOperatorType.Not,
+                        m.Appl(
+                            m.MethodRef(r, "Contains"),
+                            l));
+
+                case Op.Exp:
+                    m.EnsureImport("System");
+                    return m.Appl(
+                        m.MethodRef(m.TypeRefExpr("Math"), "Pow"),
+                        l, r);
             }
             return m.BinOp(l, mppyoptocsop[bin.op], r);
         }
@@ -527,7 +530,7 @@ namespace Pytocs.Core.Translate
         public CodeExpression VisitListComprehension(ListComprehension lc)
         {
             m.EnsureImport("System.Linq");
-            var compFor = (CompFor) lc.Collection;
+            var compFor = (CompFor)lc.Collection;
             var v = lc.Projection.Accept(this);
             var c = TranslateToLinq(v, compFor);
             return m.Appl(
@@ -573,51 +576,50 @@ namespace Pytocs.Core.Translate
             return m.Query(queryClauses.ToArray());
         }
 
-
         private void From(Exp variable, CodeExpression collection, List<CodeQueryClause> queryClauses)
         {
             switch (variable)
             {
-            case Identifier id:
-            {
-                var f = m.From(id.Accept(this), collection);
-                queryClauses.Add(f);
-                break;
-            }
-            case ExpList expList:
-            {
-                var vars = expList.Expressions.Select(v => v.Accept(this)).ToArray();
-                var type = MakeTupleType(expList.Expressions);
-                var it = gensym.GenSymAutomatic("_tup_", type, false);
-                var f = m.From(it, m.ApplyMethod(collection, "Chop",
-                    m.Lambda(vars,
-                    MakeTupleCreate(vars))));
-                queryClauses.Add(f);
-                for (int i = 0; i < vars.Length; ++i)
-                {
-                    var l = m.Let(vars[i], m.Access(it, $"Item{i + 1}"));
-                    queryClauses.Add(l);
-                }
-                break;
-            }
-            case PyTuple tuple:
-            {
-                var vars = tuple.values.Select(v => v.Accept(this)).ToArray();
-                var type = MakeTupleType(tuple.values);
-                var it = gensym.GenSymAutomatic("_tup_", type, false);
-                var f = m.From(it, m.ApplyMethod(collection, "Chop",
-                    m.Lambda(vars,
-                    MakeTupleCreate(vars))));
-                queryClauses.Add(f);
-                for (int i = 0; i < vars.Length; ++i)
-                {
-                    var l = m.Let(vars[i], m.Access(it, $"Item{i + 1}"));
-                    queryClauses.Add(l);
-                }
-                break;
-            }
-            default:
-                throw new NotImplementedException(variable.GetType().Name);
+                case Identifier id:
+                    {
+                        var f = m.From(id.Accept(this), collection);
+                        queryClauses.Add(f);
+                        break;
+                    }
+                case ExpList expList:
+                    {
+                        var vars = expList.Expressions.Select(v => v.Accept(this)).ToArray();
+                        var type = MakeTupleType(expList.Expressions);
+                        var it = gensym.GenSymAutomatic("_tup_", type, false);
+                        var f = m.From(it, m.ApplyMethod(collection, "Chop",
+                            m.Lambda(vars,
+                            MakeTupleCreate(vars))));
+                        queryClauses.Add(f);
+                        for (int i = 0; i < vars.Length; ++i)
+                        {
+                            var l = m.Let(vars[i], m.Access(it, $"Item{i + 1}"));
+                            queryClauses.Add(l);
+                        }
+                        break;
+                    }
+                case PyTuple tuple:
+                    {
+                        var vars = tuple.values.Select(v => v.Accept(this)).ToArray();
+                        var type = MakeTupleType(tuple.values);
+                        var it = gensym.GenSymAutomatic("_tup_", type, false);
+                        var f = m.From(it, m.ApplyMethod(collection, "Chop",
+                            m.Lambda(vars,
+                            MakeTupleCreate(vars))));
+                        queryClauses.Add(f);
+                        for (int i = 0; i < vars.Length; ++i)
+                        {
+                            var l = m.Let(vars[i], m.Access(it, $"Item{i + 1}"));
+                            queryClauses.Add(l);
+                        }
+                        break;
+                    }
+                default:
+                    throw new NotImplementedException(variable.GetType().Name);
             }
         }
 
@@ -801,66 +803,65 @@ namespace Pytocs.Core.Translate
             var list = dc.source.collection.Accept(this);
             switch (dc.source.variable)
             {
-            case ExpList varList:
-                {
-                    //if (varList.Expressions.Count != 2)
-                    //    throw new InvalidOperationException("Variable list should contain one or two variables.");
-                    var args = varList.Expressions.Select((e, i) => Tuple.Create(e, string.Format($"Item{i + 1}")))
-                        .ToDictionary(d => d.Item1, d => d.Item2);
-                    var tpl = gensym.GenSymAutomatic("_tup_", null, false);
-
-                    gensym.PushIdMappings(varList.Expressions.ToDictionary(e => e.ToString(), e => m.Access(tpl, args[e])));
-
-                    var kValue = dc.key.Accept(this);
-                    var vValue = dc.value.Accept(this);
-
-                    gensym.PopIdMappings();
-
-                    return m.Appl(
-                        m.MethodRef(list, "ToDictionary"),
-                        m.Lambda(new CodeExpression[] { tpl }, kValue),
-                        m.Lambda(new CodeExpression[] { tpl }, vValue));
-                }
-            case Identifier id:
-                {
-                    var kValue = dc.key.Accept(this);
-                    var vValue = dc.value.Accept(this);
-                    return m.Appl(
-                        m.MethodRef(list, "ToDictionary"),
-                        m.Lambda(new CodeExpression[] { id.Accept(this) }, kValue),
-                        m.Lambda(new CodeExpression[] { id.Accept(this) }, vValue));
-                }
-            case PyTuple tuple:
-                {
-                    if (tuple.values.Count != 2)
+                case ExpList varList:
                     {
-                        //TODO: tuples, especially nested tuples, are hard.
-                        return m.Prim("!!!{" +
-                            dc.key.Accept(this) +
-                            ": " +
-                            dc.value.Accept(this));
-                    }
+                        //if (varList.Expressions.Count != 2)
+                        //    throw new InvalidOperationException("Variable list should contain one or two variables.");
+                        var args = varList.Expressions.Select((e, i) => Tuple.Create(e, string.Format($"Item{i + 1}")))
+                            .ToDictionary(d => d.Item1, d => d.Item2);
+                        var tpl = gensym.GenSymAutomatic("_tup_", null, false);
 
-                    var enumvar = gensym.GenSymAutomatic("_de", null, false);
-                    gensym.PushIdMappings(new Dictionary<string, CodeExpression>
+                        gensym.PushIdMappings(varList.Expressions.ToDictionary(e => e.ToString(), e => m.Access(tpl, args[e])));
+
+                        var kValue = dc.key.Accept(this);
+                        var vValue = dc.value.Accept(this);
+
+                        gensym.PopIdMappings();
+
+                        return m.Appl(
+                            m.MethodRef(list, "ToDictionary"),
+                            m.Lambda(new CodeExpression[] { tpl }, kValue),
+                            m.Lambda(new CodeExpression[] { tpl }, vValue));
+                    }
+                case Identifier id:
+                    {
+                        var kValue = dc.key.Accept(this);
+                        var vValue = dc.value.Accept(this);
+                        return m.Appl(
+                            m.MethodRef(list, "ToDictionary"),
+                            m.Lambda(new CodeExpression[] { id.Accept(this) }, kValue),
+                            m.Lambda(new CodeExpression[] { id.Accept(this) }, vValue));
+                    }
+                case PyTuple tuple:
+                    {
+                        if (tuple.values.Count != 2)
+                        {
+                            //TODO: tuples, especially nested tuples, are hard.
+                            return m.Prim("!!!{" +
+                                dc.key.Accept(this) +
+                                ": " +
+                                dc.value.Accept(this));
+                        }
+
+                        var enumvar = gensym.GenSymAutomatic("_de", null, false);
+                        gensym.PushIdMappings(new Dictionary<string, CodeExpression>
                 {
                     { tuple.values[0].ToString(), m.Access(enumvar, "Key") },
                     { tuple.values[1].ToString(), m.Access(enumvar, "Value") },
                 });
 
-                    var kValue = dc.key.Accept(this);
-                    var vValue = dc.value.Accept(this);
+                        var kValue = dc.key.Accept(this);
+                        var vValue = dc.value.Accept(this);
 
-                    gensym.PopIdMappings();
+                        gensym.PopIdMappings();
 
-                    return m.Appl(
-                        m.MethodRef(list, "ToDictionary"),
-                        m.Lambda(new CodeExpression[] { enumvar }, kValue),
-                        m.Lambda(new CodeExpression[] { enumvar }, vValue));
-                }
+                        return m.Appl(
+                            m.MethodRef(list, "ToDictionary"),
+                            m.Lambda(new CodeExpression[] { enumvar }, kValue),
+                            m.Lambda(new CodeExpression[] { enumvar }, vValue));
+                    }
             }
             throw new NotImplementedException();
         }
-
     }
 }

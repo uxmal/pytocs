@@ -1,25 +1,24 @@
 ﻿#region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
+
+#endregion License
 
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pytocs.Core.Syntax
 {
@@ -29,11 +28,17 @@ namespace Pytocs.Core.Syntax
         public List<Decorator> decorators;
 
         public abstract T Accept<T>(IStatementVisitor<T> v);
+
         public abstract void Accept(IStatementVisitor v);
 
-        public Statement(string filename, int start, int end) : base(filename, start, end) { } 
+        public Statement(string filename, int start, int end) : base(filename, start, end)
+        {
+        }
 
-        public sealed override string ToString() { var sw = new StringWriter(); Accept(new PyStatementWriter(sw)); return sw.ToString(); }
+        public sealed override string ToString()
+        {
+            var sw = new StringWriter(); Accept(new PyStatementWriter(sw)); return sw.ToString();
+        }
     }
 
     public class AsyncStatement : Statement
@@ -81,7 +86,9 @@ namespace Pytocs.Core.Syntax
 
     public class BreakStatement : Statement
     {
-        public BreakStatement(string filename, int start, int end) : base(filename, start, end) { }
+        public BreakStatement(string filename, int start, int end) : base(filename, start, end)
+        {
+        }
 
         public override void Accept(IStatementVisitor v)
         {
@@ -96,12 +103,15 @@ namespace Pytocs.Core.Syntax
 
     public class CommentStatement : Statement
     {
-        public CommentStatement(string filename, int start, int end) : base(filename, start, end) { }
+        public CommentStatement(string filename, int start, int end) : base(filename, start, end)
+        {
+        }
 
         public override void Accept(IStatementVisitor v)
         {
             v.VisitComment(this);
         }
+
         public override T Accept<T>(IStatementVisitor<T> v)
         {
             return v.VisitComment(this);
@@ -110,7 +120,9 @@ namespace Pytocs.Core.Syntax
 
     public class ContinueStatement : Statement
     {
-        public ContinueStatement(string filename, int start, int end) : base(filename, start, end) { }
+        public ContinueStatement(string filename, int start, int end) : base(filename, start, end)
+        {
+        }
 
         public override void Accept(IStatementVisitor v)
         {
@@ -137,6 +149,7 @@ namespace Pytocs.Core.Syntax
         {
             v.VisitDel(this);
         }
+
         public override T Accept<T>(IStatementVisitor<T> v)
         {
             return v.VisitDel(this);
@@ -201,8 +214,8 @@ namespace Pytocs.Core.Syntax
             SuiteStatement body,
             SuiteStatement orelse,
             string filename,
-            int start, 
-            int end) 
+            int start,
+            int end)
             : base(filename, start, end)
         {
             this.exprs = exprs;
@@ -263,6 +276,7 @@ namespace Pytocs.Core.Syntax
         {
             v.VisitGlobal(this);
         }
+
         public override T Accept<T>(IStatementVisitor<T> v)
         {
             return v.VisitGlobal(this);
@@ -279,7 +293,7 @@ namespace Pytocs.Core.Syntax
             Exp test,
             SuiteStatement then,
             SuiteStatement orelse,
-            string filename, int start, int end) 
+            string filename, int start, int end)
             : base(filename, start, end)
         {
             this.Test = test;
@@ -300,7 +314,9 @@ namespace Pytocs.Core.Syntax
 
     public class PassStatement : Statement
     {
-        public PassStatement(string filename, int start, int end) : base(filename, start, end) { }
+        public PassStatement(string filename, int start, int end) : base(filename, start, end)
+        {
+        }
 
         public override void Accept(IStatementVisitor v)
         {
@@ -346,7 +362,10 @@ namespace Pytocs.Core.Syntax
             Expression = null;
         }
 
-        public ReturnStatement(Exp e, string filename, int pos, int end) : base(filename, pos, end) { Expression = e; }
+        public ReturnStatement(Exp e, string filename, int pos, int end) : base(filename, pos, end)
+        {
+            Expression = e;
+        }
 
         public override void Accept(IStatementVisitor v)
         {
@@ -477,8 +496,8 @@ namespace Pytocs.Core.Syntax
 
         public TryStatement(
             SuiteStatement body,
-            List<ExceptHandler> exHandlers, 
-            Statement elseHandler, 
+            List<ExceptHandler> exHandlers,
+            Statement elseHandler,
             Statement finallyHandler,
             string filename,
             int start,
@@ -531,13 +550,15 @@ namespace Pytocs.Core.Syntax
         public Exp Test;
         public SuiteStatement Else;
 
-        public WhileStatement(string filename, int start, int end) : base(filename, start, end) { }
+        public WhileStatement(string filename, int start, int end) : base(filename, start, end)
+        {
+        }
 
         public override void Accept(IStatementVisitor v)
         {
             v.VisitWhile(this);
         }
-        
+
         public override T Accept<T>(IStatementVisitor<T> v)
         {
             return v.VisitWhile(this);

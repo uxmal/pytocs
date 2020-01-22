@@ -1,25 +1,25 @@
 ﻿#region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
+
+#endregion License
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pytocs.Core.Syntax
 {
@@ -82,7 +82,7 @@ namespace Pytocs.Core.Syntax
             queue.Clear();
 
             var tok = lexer.Get();
-            if (tok.Type != TokenType.COMMENT || 
+            if (tok.Type != TokenType.COMMENT ||
                 (prevTokenType != TokenType.NEWLINE &&
                  prevTokenType != TokenType.INDENT &&
                  prevTokenType != TokenType.DEDENT))
@@ -109,27 +109,29 @@ namespace Pytocs.Core.Syntax
             }
             // We have a bundle of > 1 lines that ends with a non-comment line.
             // The first one was indented or dedented. If the last, non-comment, line
-            // is indented or dedented, all previous lines must also be in- or 
+            // is indented or dedented, all previous lines must also be in- or
             // dedented. If the last line is not dedented.
             var lastLine = lines.Last();
             switch (lastLine.Tokens[0].Type)
             {
-            case TokenType.INDENT:
-                queue.AddRange(lines.SelectMany(l => l.Tokens));
-                break;
-            case TokenType.DEDENT:
-                if (lines[0].Tokens[0].Indent == lastLine.Tokens[0].Indent)
-                {
-                    // IF the preceding comment's indentation was the same
-                    // as that of the dedent, we want to move the dedent.
-                    var dedent = lastLine.RemoveFirst(TokenType.DEDENT);
-                    lines[0].Tokens.InsertRange(0, dedent);
-                }
-                queue.AddRange(lines.SelectMany(l => l.Tokens));
-                break;
-            default:
-                queue.AddRange(lines.SelectMany(l => l.Tokens));
-                break;
+                case TokenType.INDENT:
+                    queue.AddRange(lines.SelectMany(l => l.Tokens));
+                    break;
+
+                case TokenType.DEDENT:
+                    if (lines[0].Tokens[0].Indent == lastLine.Tokens[0].Indent)
+                    {
+                        // IF the preceding comment's indentation was the same
+                        // as that of the dedent, we want to move the dedent.
+                        var dedent = lastLine.RemoveFirst(TokenType.DEDENT);
+                        lines[0].Tokens.InsertRange(0, dedent);
+                    }
+                    queue.AddRange(lines.SelectMany(l => l.Tokens));
+                    break;
+
+                default:
+                    queue.AddRange(lines.SelectMany(l => l.Tokens));
+                    break;
             }
             prevTokenType = queue[iHead].Type;
             return queue[iHead++];
@@ -167,7 +169,7 @@ namespace Pytocs.Core.Syntax
             internal bool IsComment()
             {
                 int i = 0;
-                if (Tokens[i].Type == TokenType.INDENT || 
+                if (Tokens[i].Type == TokenType.INDENT ||
                     Tokens[i].Type == TokenType.DEDENT)
                 {
                     ++i;

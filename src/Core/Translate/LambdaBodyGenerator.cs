@@ -1,23 +1,18 @@
 ﻿using Pytocs.Core.CodeModel;
 using Pytocs.Core.Syntax;
-using Pytocs.Core.TypeInference;
-using Pytocs.Core.Types;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pytocs.Core.Translate
 {
     public class LambdaBodyGenerator : MethodGenerator
     {
         public LambdaBodyGenerator(
-            ClassDef classDef, 
-            FunctionDef f, 
+            ClassDef classDef,
+            FunctionDef f,
             List<Parameter> args,
             bool isStatic,
-            bool isAsync, 
+            bool isAsync,
             TypeReferenceTranslator types,
             CodeGenerator gen)
             : base(classDef, f, null, args, isStatic, isAsync, types, gen)
@@ -39,6 +34,5 @@ namespace Pytocs.Core.Translate
                 .ToArray());
             return new CodeVariableDeclarationStatement(type, f.name.Name);
         }
-
     }
 }

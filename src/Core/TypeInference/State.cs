@@ -1,24 +1,25 @@
 #region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
 
-using System;
+#endregion License
+
+using Pytocs.Core.Syntax;
+using Pytocs.Core.Types;
 using System.Collections.Generic;
 using System.Diagnostics;
-using Pytocs.Core.Types;
-using Pytocs.Core.Syntax;
 
 namespace Pytocs.Core.TypeInference
 {
@@ -234,7 +235,7 @@ namespace Pytocs.Core.TypeInference
         {
             if (table.TryGetValue(name, out var bs))
                 return bs;
-            else 
+            else
                 return null;
         }
 
@@ -280,7 +281,6 @@ namespace Pytocs.Core.TypeInference
                 return LookupLocal(name);
             }
         }
-
 
         /**
          * Look up an attribute in the type hierarchy.  Don't look at parent link,
@@ -357,7 +357,7 @@ namespace Pytocs.Core.TypeInference
         }
 
         /// <summary>
-        /// Create a datatype from the union of the 
+        /// Create a datatype from the union of the
         /// types of each binding.
         /// </summary>
         public static DataType MakeUnion(ISet<Binding> bs)
@@ -392,13 +392,13 @@ namespace Pytocs.Core.TypeInference
         /**
          * Returns the global scope (i.e. the module scope for the current module).
          */
+
         public State GetGlobalTable()
         {
             State result = getStateOfType(StateType.MODULE);
             Debug.Assert(result != null, "Couldn't find global table.");
             return result;
         }
-
 
         /// <summary>
         /// If {@code name} is declared as a global, return the module binding.
@@ -436,7 +436,7 @@ namespace Pytocs.Core.TypeInference
 
         public string ExtendPath(Analyzer analyzer, string pathname)
         {
-            return analyzer.ExtendPath(this.Path, pathname); 
+            return analyzer.ExtendPath(this.Path, pathname);
         }
 
         public override string ToString()
@@ -451,37 +451,41 @@ namespace Pytocs.Core.TypeInference
         {
             switch (target)
             {
-            case Identifier id:
-                this.Bind(analyzer, id, rvalue, kind);
-                break;
-            case PyTuple tup:
-                this.Bind(analyzer, tup.values, rvalue, kind);
-                break;
-            case PyList list:
-                this.Bind(analyzer, list.elts, rvalue, kind);
-                break;
-            case AttributeAccess attr:
-                DataType targetType = TransformExp(analyzer, attr.Expression, this);
-                setAttr(analyzer, attr, rvalue, targetType);
-                break;
-            case ArrayRef sub:
-                DataType valueType = TransformExp(analyzer, sub.array, this);
-                var xform = new TypeTransformer(this, analyzer);
-                TransformExprs(analyzer, sub.subs, this);
-                if (valueType is ListType t)
-                {
-                    t.setElementType(UnionType.Union(t.eltType, rvalue));
-                }
-                break;
-            default:
-                if (target != null)
-                {
-                    analyzer.AddProblem(target, "invalid location for assignment");
-                }
-                break;
+                case Identifier id:
+                    this.Bind(analyzer, id, rvalue, kind);
+                    break;
+
+                case PyTuple tup:
+                    this.Bind(analyzer, tup.values, rvalue, kind);
+                    break;
+
+                case PyList list:
+                    this.Bind(analyzer, list.elts, rvalue, kind);
+                    break;
+
+                case AttributeAccess attr:
+                    DataType targetType = TransformExp(analyzer, attr.Expression, this);
+                    setAttr(analyzer, attr, rvalue, targetType);
+                    break;
+
+                case ArrayRef sub:
+                    DataType valueType = TransformExp(analyzer, sub.array, this);
+                    var xform = new TypeTransformer(this, analyzer);
+                    TransformExprs(analyzer, sub.subs, this);
+                    if (valueType is ListType t)
+                    {
+                        t.setElementType(UnionType.Union(t.eltType, rvalue));
+                    }
+                    break;
+
+                default:
+                    if (target != null)
+                    {
+                        analyzer.AddProblem(target, "invalid location for assignment");
+                    }
+                    break;
             }
         }
-
 
         /// <summary>
         /// Without specifying a kind, bind determines the kind according to the type
@@ -532,45 +536,47 @@ namespace Pytocs.Core.TypeInference
         {
             switch (rvalue)
             {
-            case TupleType tuple:
-                {
-                    List<DataType> vs = tuple.eltTypes;
-                    if (xs.Count != vs.Count)
+                case TupleType tuple:
                     {
-                        ReportUnpackMismatch(analyzer, xs, vs.Count);
-                    }
-                    else
-                    {
-                        for (int i = 0; i < xs.Count; i++)
+                        List<DataType> vs = tuple.eltTypes;
+                        if (xs.Count != vs.Count)
                         {
-                            this.Bind(analyzer, xs[i], vs[i], kind);
+                            ReportUnpackMismatch(analyzer, xs, vs.Count);
                         }
+                        else
+                        {
+                            for (int i = 0; i < xs.Count; i++)
+                            {
+                                this.Bind(analyzer, xs[i], vs[i], kind);
+                            }
+                        }
+                        break;
                     }
+                case ListType list:
+                    Bind(analyzer, xs, list.toTupleType(xs.Count), kind);
                     break;
-                }
-            case ListType list:
-                Bind(analyzer, xs, list.toTupleType(xs.Count), kind);
-                break;
-            case DictType dict:
-                Bind(analyzer, xs, dict.ToTupleType(xs.Count), kind);
-                break;
-            default:
-                if (rvalue.IsUnknownType())
-                {
-                    foreach (Exp x in xs)
+
+                case DictType dict:
+                    Bind(analyzer, xs, dict.ToTupleType(xs.Count), kind);
+                    break;
+
+                default:
+                    if (rvalue.IsUnknownType())
                     {
-                        this.Bind(analyzer, x, DataType.Unknown, kind);
+                        foreach (Exp x in xs)
+                        {
+                            this.Bind(analyzer, x, DataType.Unknown, kind);
+                        }
+                        break;
+                    }
+                    else if (xs.Count > 0)
+                    {
+                        analyzer.AddProblem(xs[0].Filename,
+                                xs[0].Start,
+                                xs[xs.Count - 1].End,
+                                "unpacking non-iterable: " + rvalue);
                     }
                     break;
-                }
-                else if (xs.Count > 0)
-                {
-                    analyzer.AddProblem(xs[0].Filename,
-                            xs[0].Start,
-                            xs[xs.Count - 1].End,
-                            "unpacking non-iterable: " + rvalue);
-                }
-                break;
             }
         }
 
@@ -597,11 +603,11 @@ namespace Pytocs.Core.TypeInference
         {
             if (iterType is ListType)
             {
-                this.Bind(analyzer, target, ((ListType) iterType).eltType, kind);
+                this.Bind(analyzer, target, ((ListType)iterType).eltType, kind);
             }
             else if (iterType is TupleType)
             {
-                this.Bind(analyzer, target, ((TupleType) iterType).ToListType().eltType, kind);
+                this.Bind(analyzer, target, ((TupleType)iterType).ToListType().eltType, kind);
             }
             else
             {
@@ -620,7 +626,7 @@ namespace Pytocs.Core.TypeInference
                         }
                         else
                         {
-                            this.Bind(analyzer, target, ((FunType) ent.Type).GetReturnType(), kind);
+                            this.Bind(analyzer, target, ((FunType)ent.Type).GetReturnType(), kind);
                         }
                     }
                 }
@@ -635,7 +641,7 @@ namespace Pytocs.Core.TypeInference
         {
             if (targetType is UnionType)
             {
-                ISet<DataType> types = ((UnionType) targetType).types;
+                ISet<DataType> types = ((UnionType)targetType).types;
                 foreach (DataType tp in types)
                 {
                     setAttrType(analyzer, attr, tp, attrType);

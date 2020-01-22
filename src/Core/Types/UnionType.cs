@@ -1,23 +1,23 @@
 #region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
 
-using System;
+#endregion License
+
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Pytocs.Core.Types
 {
@@ -47,18 +47,18 @@ namespace Pytocs.Core.Types
         /**
          * Returns true if t1 == t2 or t1 is a union type that contains t2.
          */
+
         static public bool Contains(DataType t1, DataType t2)
         {
             if (t1 is UnionType)
             {
-                return ((UnionType) t1).Contains(t2);
+                return ((UnionType)t1).Contains(t2);
             }
             else
             {
                 return t1.Equals(t2);
             }
         }
-
 
         public static DataType Remove(DataType t1, DataType t2)
         {
@@ -150,11 +150,10 @@ namespace Pytocs.Core.Types
             }
         }
 
-
         /// <summary>
         /// Returns the first alternate whose type is not unknown and
         /// is not None.
-        /// 
+        ///
         /// @return the first non-unknown, non-{@code None} alternate, or {@code null} if none found
         /// </summary>
         public DataType FirstUseful()
@@ -176,7 +175,7 @@ namespace Pytocs.Core.Types
             else if (other is UnionType)
             {
                 ISet<DataType> types1 = types;
-                ISet<DataType> types2 = ((UnionType) other).types;
+                ISet<DataType> types2 = ((UnionType)other).types;
                 if (types1.Count != types2.Count)
                 {
                     return false;

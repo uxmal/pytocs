@@ -1,26 +1,26 @@
 ﻿#region License
+
 //  Copyright 2015-2020 John Källén
-// 
+//
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
-// 
+//
 //      http://www.apache.org/licenses/LICENSE-2.0
-// 
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-#endregion
+
+#endregion License
 
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pytocs.Core.Syntax
 {
@@ -30,7 +30,9 @@ namespace Pytocs.Core.Syntax
     public class Parser
     {
 #pragma warning disable IDE1006 // Naming Styles
+
         #region Python 3.4 grammar
+
         /*
 # Grammar for Python
 
@@ -152,7 +154,7 @@ dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
 classdef: 'class' NAME ['(' [arglist] ')'] ':' suite
 
 arglist: (argument ',')* (argument [',']
-                         |'*' test (',' argument)* [',' '**' test] 
+                         |'*' test (',' argument)* [',' '**' test]
                          |'**' test)
 # The reason that keywords are test nodes instead of NAME is that using NAME
 # results in an ambiguity. ast.c makes sure it's a NAME.
@@ -167,9 +169,11 @@ encoding_decl: NAME
 yield_expr: 'yield' [yield_arg]
 yield_arg: 'from' test | testlist
          */
-        #endregion
+
+        #endregion Python 3.4 grammar
 
         #region Python 2.7.6 grammar
+
         /*
 # Grammar for Python
 
@@ -296,7 +300,7 @@ dictorsetmaker: ( (test ':' test (comp_for | (',' test ':' test)* [','])) |
 classdef: 'class' NAME ['(' [testlist] ')'] ':' suite
 
 arglist: (argument ',')* (argument [',']
-                         |'*' test (',' argument)* [',' '**' test] 
+                         |'*' test (',' argument)* [',' '**' test]
                          |'**' test)
 # The reason that keywords are test nodes instead of NAME is that using NAME
 # results in an ambiguity. ast.c makes sure it's a NAME.
@@ -318,7 +322,8 @@ encoding_decl: NAME
 
 yield_expr: 'yield' [testlist]
         */
-        #endregion
+
+        #endregion Python 2.7.6 grammar
 
         private readonly string filename;
         private readonly ILexer lexer;
@@ -374,7 +379,7 @@ yield_expr: 'yield' [testlist]
             return true;
         }
 
-        private Exception Error(string str, params object [] args)
+        private Exception Error(string str, params object[] args)
         {
             str = string.Format(str, args);
             throw new InvalidOperationException($"{filename}({lexer.LineNumber}): {str}");
@@ -387,7 +392,7 @@ yield_expr: 'yield' [testlist]
 
         private Exception Unexpected(Token token)
         {
-            return Error(Resources.ErrUnexpectedToken, token); 
+            return Error(Resources.ErrUnexpectedToken, token);
         }
 
 #if NEVER
@@ -412,8 +417,9 @@ single_input: NEWLINE | simple_stmt | compound_stmt NEWLINE
 file_input: (NEWLINE | stmt)* ENDMARKER
 eval_input: testlist NEWLINE* ENDMARKER
 #endif
+
         //decorator: '@' dotted_name [ '(' [arglist] ')' ] NEWLINE
-        Decorator decorator()
+        private Decorator decorator()
         {
             var posStart = Expect(TokenType.AT).Start;
             var dn = dotted_name();
@@ -476,6 +482,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                     return;
             }
         }
+
         private Token Expect(TokenType tokenType)
         {
             var t = lexer.Peek();
@@ -505,7 +512,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             var decs = decorators();
             Statement d = null;
-            for (;;)
+            for (; ; )
             {
                 if (Peek(TokenType.Def))
                 {
@@ -574,8 +581,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             return args;
         }
 
-
-        //typedargslist: 
+        //typedargslist:
         // (tfpdef ['=' test] (',' tfpdef ['=' test])* [','  ['*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef]]
         //  |  '*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef]
         //  | '**' tfpdef)
@@ -587,77 +593,79 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 switch (lexer.Peek().Type)
                 {
-                case TokenType.OP_STAR:
-                    lexer.Get();
-                    if (Peek(TokenType.ID))
-                    {
-                        arg = fpdef();
-                        arg.vararg = true;
-                        args.Add(arg);
-                    }
-                    if (PeekAndDiscard(TokenType.COMMA))
-                    {
-                        if (PeekAndDiscard(TokenType.OP_STARSTAR))
+                    case TokenType.OP_STAR:
+                        lexer.Get();
+                        if (Peek(TokenType.ID))
                         {
                             arg = fpdef();
-                            arg.keyarg = true;
-                            args.Add(arg);
-                            return args;
-                        }
-                        arg = fpdef();
-                        args.Add(arg);
-                        if (PeekAndDiscard(TokenType.EQ))
-                            arg.test = test();
-                    }
-                    return args;
-                case TokenType.OP_STARSTAR:
-                    lexer.Get();
-                    arg = fpdef();
-                    args.Add(arg);
-                    return args;
-                default:
-                    // (tfpdef ['=' test] (',' tfpdef ['=' test])* [','  ['*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef]]
-                    arg = fpdef();
-                    args.Add(arg);
-                    if (PeekAndDiscard(TokenType.EQ))
-                        arg.test = test();
-                    while (PeekAndDiscard(TokenType.COMMA))
-                    {
-                        if (Peek(TokenType.RPAREN))
-                            break;      // Skip trailing comma
-                        else if (PeekAndDiscard(TokenType.COMMENT))
-                        {
-                            //$TODO: arg-specific comment?
-                        }
-                        if (PeekAndDiscard(TokenType.OP_STARSTAR))
-                        {
-                            arg = fpdef();
-                            arg.keyarg = true;
-                            args.Add(arg);
-                        }
-                        else if (PeekAndDiscard(TokenType.OP_STAR))
-                        {
-                            if (!Peek(TokenType.COMMA))
-                            {
-                                // *args
-                                arg = fpdef();
-                            }
-                            else
-                            {
-                                arg = new Parameter();
-                            }
                             arg.vararg = true;
                             args.Add(arg);
                         }
-                        else
+                        if (PeekAndDiscard(TokenType.COMMA))
                         {
+                            if (PeekAndDiscard(TokenType.OP_STARSTAR))
+                            {
+                                arg = fpdef();
+                                arg.keyarg = true;
+                                args.Add(arg);
+                                return args;
+                            }
                             arg = fpdef();
                             args.Add(arg);
                             if (PeekAndDiscard(TokenType.EQ))
                                 arg.test = test();
                         }
-                    }
-                    return args;
+                        return args;
+
+                    case TokenType.OP_STARSTAR:
+                        lexer.Get();
+                        arg = fpdef();
+                        args.Add(arg);
+                        return args;
+
+                    default:
+                        // (tfpdef ['=' test] (',' tfpdef ['=' test])* [','  ['*' [tfpdef] (',' tfpdef ['=' test])* [',' '**' tfpdef] | '**' tfpdef]]
+                        arg = fpdef();
+                        args.Add(arg);
+                        if (PeekAndDiscard(TokenType.EQ))
+                            arg.test = test();
+                        while (PeekAndDiscard(TokenType.COMMA))
+                        {
+                            if (Peek(TokenType.RPAREN))
+                                break;      // Skip trailing comma
+                            else if (PeekAndDiscard(TokenType.COMMENT))
+                            {
+                                //$TODO: arg-specific comment?
+                            }
+                            if (PeekAndDiscard(TokenType.OP_STARSTAR))
+                            {
+                                arg = fpdef();
+                                arg.keyarg = true;
+                                args.Add(arg);
+                            }
+                            else if (PeekAndDiscard(TokenType.OP_STAR))
+                            {
+                                if (!Peek(TokenType.COMMA))
+                                {
+                                    // *args
+                                    arg = fpdef();
+                                }
+                                else
+                                {
+                                    arg = new Parameter();
+                                }
+                                arg.vararg = true;
+                                args.Add(arg);
+                            }
+                            else
+                            {
+                                arg = fpdef();
+                                args.Add(arg);
+                                if (PeekAndDiscard(TokenType.EQ))
+                                    arg.test = test();
+                            }
+                        }
+                        return args;
                 }
             }
             throw Unexpected();
@@ -695,7 +703,7 @@ eval_input: testlist NEWLINE* ENDMARKER
 
         // fpdef: NAME | '(' fplist ')'
         // tfpdef: NAME [':' test]
-        Parameter fpdef()
+        private Parameter fpdef()
         {
             if (PeekAndDiscard(TokenType.LPAREN))
             {
@@ -724,7 +732,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         }
 
         // fplist: fpdef (',' fpdef)* [',']
-        List<Parameter> fplist()
+        private List<Parameter> fplist()
         {
             var p = new List<Parameter>();
             p.Add(fpdef());
@@ -740,9 +748,9 @@ eval_input: testlist NEWLINE* ENDMARKER
             return p;
         }
 
-        //varargslist: 
+        //varargslist:
         //        (vfpdef ['=' test] (',' vfpdef ['=' test])* [',' ['*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] | '**' vfpdef]]
-        //        |  '*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef] 
+        //        |  '*' [vfpdef] (',' vfpdef ['=' test])* [',' '**' vfpdef]
         //        | '**' vfpdef)
         public List<VarArg> varargslist()
         {
@@ -772,7 +780,8 @@ eval_input: testlist NEWLINE* ENDMARKER
                     args.Add(vfp);
                 }
             }
-            if (PeekAndDiscard(TokenType.OP_STARSTAR)) {
+            if (PeekAndDiscard(TokenType.OP_STARSTAR))
+            {
                 args.Add(VarArg.Keyword(vfpdef()));
             }
             return args;
@@ -796,24 +805,23 @@ eval_input: testlist NEWLINE* ENDMARKER
             return new Identifier((string)token.Value, filename, token.Start, token.End);
         }
 
-        static HashSet<TokenType> compoundStatement_first = new HashSet<TokenType>() {
+        private static HashSet<TokenType> compoundStatement_first = new HashSet<TokenType>() {
             TokenType.If, TokenType.While, TokenType.For, TokenType.Try, TokenType.With,
             TokenType.Def, TokenType.Class, TokenType.AT, TokenType.Async
         };
 
-        static HashSet<TokenType> augassign_set = new HashSet<TokenType>() {
+        private static HashSet<TokenType> augassign_set = new HashSet<TokenType>() {
             TokenType.ADDEQ, TokenType.SUBEQ, TokenType.MULEQ, TokenType.DIVEQ, TokenType.MODEQ,
             TokenType.ANDEQ, TokenType.OREQ, TokenType.XOREQ, TokenType.SHLEQ, TokenType.SHREQ,
             TokenType.EXPEQ, TokenType.IDIVEQ
         };
 
-        static HashSet<TokenType> stmt_follow = new HashSet<TokenType>() {
+        private static HashSet<TokenType> stmt_follow = new HashSet<TokenType>() {
             TokenType.SEMI, TokenType.NEWLINE, TokenType.EOF
         };
 
-        static HashSet<TokenType> trailer_first = new HashSet<TokenType>
+        private static HashSet<TokenType> trailer_first = new HashSet<TokenType>
         { TokenType.LPAREN, TokenType.LBRACKET, TokenType.DOT };
-
 
         // stmt: simple_stmt | compound_stmt
         public List<Statement> stmt()
@@ -897,41 +905,41 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             switch (lexer.Peek().Type)
             {
-            case TokenType.Del: return del_stmt();
-            case TokenType.Pass: return pass_stmt();
-            case TokenType.Break: return break_stmt();
-            case TokenType.Continue: return continue_stmt();
-            case TokenType.Return: return return_stmt();
-            case TokenType.Raise: return raise_stmt();
-            case TokenType.Yield: return yield_stmt();
-            case TokenType.Import: return import_stmt();
-            case TokenType.From: return import_stmt();
-            case TokenType.Global: return global_stmt();
-            case TokenType.Nonlocal: return nonlocal_stmt();
-            case TokenType.Assert: return assert_stmt();
-            case TokenType.Exec: return exec_stmt();
-            case TokenType.COMMENT: return comment_stmt();
-            case TokenType.INDENT:
-                Expect(TokenType.INDENT);
-                if (PeekAndDiscard(TokenType.COMMENT, out var c))
-                {
-                    return new CommentStatement(filename, c.Start, c.End) { comment = (string)c.Value };
-                }
-                else
-                {
-                    return null;
-                }
-            case TokenType.DEDENT:
-                Expect(TokenType.DEDENT);
-                if (PeekAndDiscard(TokenType.COMMENT, out var cc))
-                {
-                    return new CommentStatement(filename, cc.Start, cc.End) { comment = (string)cc.Value };
-                }
-                else
-                {
-                    return null;
-                }
-            default: return expr_stmt();
+                case TokenType.Del: return del_stmt();
+                case TokenType.Pass: return pass_stmt();
+                case TokenType.Break: return break_stmt();
+                case TokenType.Continue: return continue_stmt();
+                case TokenType.Return: return return_stmt();
+                case TokenType.Raise: return raise_stmt();
+                case TokenType.Yield: return yield_stmt();
+                case TokenType.Import: return import_stmt();
+                case TokenType.From: return import_stmt();
+                case TokenType.Global: return global_stmt();
+                case TokenType.Nonlocal: return nonlocal_stmt();
+                case TokenType.Assert: return assert_stmt();
+                case TokenType.Exec: return exec_stmt();
+                case TokenType.COMMENT: return comment_stmt();
+                case TokenType.INDENT:
+                    Expect(TokenType.INDENT);
+                    if (PeekAndDiscard(TokenType.COMMENT, out var c))
+                    {
+                        return new CommentStatement(filename, c.Start, c.End) { comment = (string)c.Value };
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                case TokenType.DEDENT:
+                    Expect(TokenType.DEDENT);
+                    if (PeekAndDiscard(TokenType.COMMENT, out var cc))
+                    {
+                        return new CommentStatement(filename, cc.Start, cc.End) { comment = (string)cc.Value };
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                default: return expr_stmt();
             }
         }
 
@@ -1078,19 +1086,19 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             switch (lexer.Get().Type)
             {
-            case TokenType.ADDEQ: return Op.AugAdd;
-            case TokenType.SUBEQ: return Op.AugSub;
-            case TokenType.MULEQ: return Op.AugMul;
-            case TokenType.DIVEQ: return Op.AugDiv;
-            case TokenType.MODEQ: return Op.AugMod;
-            case TokenType.ANDEQ: return Op.AugAnd;
-            case TokenType.OREQ: return Op.AugOr;
-            case TokenType.XOREQ: return Op.AugXor;
-            case TokenType.SHLEQ: return Op.AugShl;
-            case TokenType.SHREQ: return Op.AugShr;
-            case TokenType.EXPEQ: return Op.AugExp;
-            case TokenType.IDIVEQ: return Op.AugIDiv;
-            default: throw Unexpected();
+                case TokenType.ADDEQ: return Op.AugAdd;
+                case TokenType.SUBEQ: return Op.AugSub;
+                case TokenType.MULEQ: return Op.AugMul;
+                case TokenType.DIVEQ: return Op.AugDiv;
+                case TokenType.MODEQ: return Op.AugMod;
+                case TokenType.ANDEQ: return Op.AugAnd;
+                case TokenType.OREQ: return Op.AugOr;
+                case TokenType.XOREQ: return Op.AugXor;
+                case TokenType.SHLEQ: return Op.AugShl;
+                case TokenType.SHREQ: return Op.AugShr;
+                case TokenType.EXPEQ: return Op.AugExp;
+                case TokenType.IDIVEQ: return Op.AugIDiv;
+                default: throw Unexpected();
             }
         }
 
@@ -1142,10 +1150,11 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             return new ReturnStatement(e, filename, posStart, posEnd);
         }
+
         //yield_stmt: yield_expr
         public Statement yield_stmt()
         {
-            var e =  yield_expr();
+            var e = yield_expr();
             return new YieldStatement(e, filename, e.Start, e.End);
         }
 
@@ -1289,6 +1298,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             return aliases;
         }
+
         //dotted_as_names: dotted_as_name (',' dotted_as_name)*
         public List<AliasedName> dotted_as_names()
         {
@@ -1351,6 +1361,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             return new NonlocalStatement(names, filename, posStart, posEnd);
         }
+
         //assert_stmt: 'assert' test [',' test]
         public Statement assert_stmt()
         {
@@ -1399,16 +1410,16 @@ eval_input: testlist NEWLINE* ENDMARKER
         {
             switch (lexer.Peek().Type)
             {
-            case TokenType.If: return if_stmt();
-            case TokenType.While: return while_stmt();
-            case TokenType.For: return for_stmt();
-            case TokenType.Try: return try_stmt();
-            case TokenType.With: return with_stmt();
-            case TokenType.Def: return funcdef();
-            case TokenType.Class: return classdef();
-            case TokenType.AT: return decorated();
-            case TokenType.Async: return async_stmt();
-            default: throw Unexpected();
+                case TokenType.If: return if_stmt();
+                case TokenType.While: return while_stmt();
+                case TokenType.For: return for_stmt();
+                case TokenType.Try: return try_stmt();
+                case TokenType.With: return with_stmt();
+                case TokenType.Def: return funcdef();
+                case TokenType.Class: return classdef();
+                case TokenType.AT: return decorated();
+                case TokenType.Async: return async_stmt();
+                default: throw Unexpected();
             }
         }
 
@@ -1419,10 +1430,10 @@ eval_input: testlist NEWLINE* ENDMARKER
             List<Statement> stm;
             switch (lexer.Peek().Type)
             {
-            case TokenType.Def: stm = funcdef(); break;
-            case TokenType.With: stm = with_stmt(); break;
-            case TokenType.For: stm = for_stmt(); break;
-            default: throw Unexpected();
+                case TokenType.Def: stm = funcdef(); break;
+                case TokenType.With: stm = with_stmt(); break;
+                case TokenType.For: stm = for_stmt(); break;
+                default: throw Unexpected();
             }
             var filename = stm.Last().Filename;
             var posEnd = stm.Last().End;
@@ -1588,8 +1599,8 @@ eval_input: testlist NEWLINE* ENDMARKER
                 PeekAndDiscard(TokenType.NEWLINE);
             }
             return cmts;
-
         }
+
         //with_stmt: 'with' with_item (',' with_item)*  ':' suite
         public List<Statement> with_stmt()
         {
@@ -1718,6 +1729,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 body = t,
             };
         }
+
         //lambdef_nocond: 'lambda' [varargslist] ':' test_nocond
         public Lambda lambdef_nocond()
         {
@@ -1807,27 +1819,27 @@ eval_input: testlist NEWLINE* ENDMARKER
                 //'<'|'>'|'=='|'>='|'<='|'<>'|'!='|'in'|'not' 'in'|'is'|'is' 'not'
                 switch (lexer.Peek().Type)
                 {
-                case TokenType.OP_LT: op = Op.Lt; break;
-                case TokenType.OP_LE: op = Op.Le; break;
-                case TokenType.OP_GE: op = Op.Ge; break;
-                case TokenType.OP_GT: op = Op.Gt; break;
-                case TokenType.OP_EQ: op = Op.Eq; break;
-                case TokenType.OP_NE: op = Op.Ne; break;
-                case TokenType.In: op = Op.In; break;
-                case TokenType.Not:
-                    Expect(TokenType.Not);
-                    Expect(TokenType.In);
-                    inner = expr();
-                    e = new BinExp(Op.NotIn, e, inner, filename, posStart, inner.End);
-                    continue;
-                case TokenType.Is:
-                    Expect(TokenType.Is);
-                    op = PeekAndDiscard(TokenType.Not) ? Op.IsNot : Op.Is;
-                    inner = expr();
-                    e = new BinExp(op, e, inner, filename, posStart, inner.End);
-                    continue;
+                    case TokenType.OP_LT: op = Op.Lt; break;
+                    case TokenType.OP_LE: op = Op.Le; break;
+                    case TokenType.OP_GE: op = Op.Ge; break;
+                    case TokenType.OP_GT: op = Op.Gt; break;
+                    case TokenType.OP_EQ: op = Op.Eq; break;
+                    case TokenType.OP_NE: op = Op.Ne; break;
+                    case TokenType.In: op = Op.In; break;
+                    case TokenType.Not:
+                        Expect(TokenType.Not);
+                        Expect(TokenType.In);
+                        inner = expr();
+                        e = new BinExp(Op.NotIn, e, inner, filename, posStart, inner.End);
+                        continue;
+                    case TokenType.Is:
+                        Expect(TokenType.Is);
+                        op = PeekAndDiscard(TokenType.Not) ? Op.IsNot : Op.Is;
+                        inner = expr();
+                        e = new BinExp(op, e, inner, filename, posStart, inner.End);
+                        continue;
 
-                default: return e;
+                    default: return e;
                 }
                 lexer.Get();
                 inner = expr();
@@ -1905,9 +1917,9 @@ eval_input: testlist NEWLINE* ENDMARKER
                 Op op;
                 switch (lexer.Peek().Type)
                 {
-                case TokenType.OP_SHL: lexer.Get(); op = Op.Shl; break;
-                case TokenType.OP_SHR: lexer.Get(); op = Op.Shr; break;
-                default: return e;
+                    case TokenType.OP_SHL: lexer.Get(); op = Op.Shl; break;
+                    case TokenType.OP_SHR: lexer.Get(); op = Op.Shr; break;
+                    default: return e;
                 }
                 var r = arith_expr();
                 if (r == null)
@@ -1927,9 +1939,9 @@ eval_input: testlist NEWLINE* ENDMARKER
                 Op op;
                 switch (lexer.Peek().Type)
                 {
-                case TokenType.OP_PLUS: op = Op.Add; break;
-                case TokenType.OP_MINUS: op = Op.Sub; break;
-                default: return e;
+                    case TokenType.OP_PLUS: op = Op.Add; break;
+                    case TokenType.OP_MINUS: op = Op.Sub; break;
+                    default: return e;
                 }
                 lexer.Get();
                 var r = term();
@@ -1950,11 +1962,11 @@ eval_input: testlist NEWLINE* ENDMARKER
                 Op op;
                 switch (lexer.Peek().Type)
                 {
-                case TokenType.OP_STAR: op = Op.Mul; break;
-                case TokenType.OP_SLASH: op = Op.Div; break;
-                case TokenType.OP_SLASHSLASH: op = Op.IDiv; break;
-                case TokenType.OP_PERCENT: op = Op.Mod; break;
-                default: return e;
+                    case TokenType.OP_STAR: op = Op.Mul; break;
+                    case TokenType.OP_SLASH: op = Op.Div; break;
+                    case TokenType.OP_SLASHSLASH: op = Op.IDiv; break;
+                    case TokenType.OP_PERCENT: op = Op.Mod; break;
+                    default: return e;
                 }
                 lexer.Get();
                 var r = factor();
@@ -1971,10 +1983,10 @@ eval_input: testlist NEWLINE* ENDMARKER
             int posStart;
             switch (lexer.Peek().Type)
             {
-            case TokenType.OP_PLUS:  posStart = lexer.Get().Start; op = Op.Add; break;
-            case TokenType.OP_MINUS: posStart = lexer.Get().Start; op = Op.Sub; break;
-            case TokenType.OP_TILDE: posStart = lexer.Get().Start; op = Op.Complement; break;
-            default: return power();
+                case TokenType.OP_PLUS: posStart = lexer.Get().Start; op = Op.Add; break;
+                case TokenType.OP_MINUS: posStart = lexer.Get().Start; op = Op.Sub; break;
+                case TokenType.OP_TILDE: posStart = lexer.Get().Start; op = Op.Complement; break;
+                default: return power();
             }
             var e = factor();
             if (e == null)
@@ -2025,7 +2037,6 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
         }
 
-
         //atom: ('(' [yield_expr|testlist_comp] ')' |
         //       '[' [testlist_comp] ']' |
         //       '{' [dictorsetmaker] '}' |
@@ -2038,78 +2049,90 @@ eval_input: testlist NEWLINE* ENDMARKER
                 ;
             switch (lexer.Peek().Type)
             {
-            case TokenType.LPAREN:
-                lexer.Get();
-                if (Peek(TokenType.Yield))
-                {
-                    e = yield_expr();
-                }
-                else
-                {
-                    e = testlist_comp(true);
-                }
-                Expect(TokenType.RPAREN);
-                return e;
-            case TokenType.LBRACKET:
-                lexer.Get();
-                e = testlist_comp(false);
-                Expect(TokenType.RBRACKET);
-                return e;
-            case TokenType.LBRACE:
-                t = lexer.Get();
-                e = dictorsetmaker(t.Start);
-                Expect(TokenType.RBRACE);
-                return e;
-            case TokenType.ID:
-                t = lexer.Get();
-                return new Identifier((string)t.Value, filename, t.Start, t.End);
-            case TokenType.STRING:
-                t = lexer.Get();
-                var start = t.Start;
-                if (t.Value is Str str)
-                {
-                    for (; ; )
+                case TokenType.LPAREN:
+                    lexer.Get();
+                    if (Peek(TokenType.Yield))
                     {
-                        if (PeekAndDiscard(TokenType.COMMENT))
-                            continue;
-                        if (!Peek(TokenType.STRING))
-                            break;
-                        t = lexer.Get();
-                        str = new Str(str.s + ((Str)t.Value).s, filename, start, t.End);
+                        e = yield_expr();
                     }
-                    return str;
-                }
-                var byteStr = (Bytes)t.Value;
-                while (Peek(TokenType.STRING))
-                {
+                    else
+                    {
+                        e = testlist_comp(true);
+                    }
+                    Expect(TokenType.RPAREN);
+                    return e;
+
+                case TokenType.LBRACKET:
+                    lexer.Get();
+                    e = testlist_comp(false);
+                    Expect(TokenType.RBRACKET);
+                    return e;
+
+                case TokenType.LBRACE:
                     t = lexer.Get();
-                    byteStr = new Bytes(byteStr.s + ((Bytes)t.Value).s, filename, start, t.End);
-                }
-                return byteStr;
-            case TokenType.INTEGER:
-            case TokenType.LONGINTEGER:
-                t = lexer.Get();
-                return NumericLiteral(t);
-            case TokenType.REAL:
-                t = lexer.Get();
-                return new RealLiteral((string)t.Value, (double)t.NumericValue, filename, t.Start, t.End);
-            case TokenType.IMAG:
-                t = lexer.Get();
-                return new ImaginaryLiteral((string)t.Value, (double)t.NumericValue, filename, t.Start, t.End);
-            case TokenType.ELLIPSIS:
-                t = lexer.Get();
-                return new Ellipsis(filename, t.Start, t.End);
-            case TokenType.None:
-                t = lexer.Get();
-                return new NoneExp(filename, t.Start, t.End);
-            case TokenType.False:
-                t = lexer.Get();
-                return new BooleanLiteral(false, filename, t.Start, t.End);
-            case TokenType.True:
-                t = lexer.Get();
-                return new BooleanLiteral(true, filename, t.Start, t.End);
-            default:
-                return null;
+                    e = dictorsetmaker(t.Start);
+                    Expect(TokenType.RBRACE);
+                    return e;
+
+                case TokenType.ID:
+                    t = lexer.Get();
+                    return new Identifier((string)t.Value, filename, t.Start, t.End);
+
+                case TokenType.STRING:
+                    t = lexer.Get();
+                    var start = t.Start;
+                    if (t.Value is Str str)
+                    {
+                        for (; ; )
+                        {
+                            if (PeekAndDiscard(TokenType.COMMENT))
+                                continue;
+                            if (!Peek(TokenType.STRING))
+                                break;
+                            t = lexer.Get();
+                            str = new Str(str.s + ((Str)t.Value).s, filename, start, t.End);
+                        }
+                        return str;
+                    }
+                    var byteStr = (Bytes)t.Value;
+                    while (Peek(TokenType.STRING))
+                    {
+                        t = lexer.Get();
+                        byteStr = new Bytes(byteStr.s + ((Bytes)t.Value).s, filename, start, t.End);
+                    }
+                    return byteStr;
+
+                case TokenType.INTEGER:
+                case TokenType.LONGINTEGER:
+                    t = lexer.Get();
+                    return NumericLiteral(t);
+
+                case TokenType.REAL:
+                    t = lexer.Get();
+                    return new RealLiteral((string)t.Value, (double)t.NumericValue, filename, t.Start, t.End);
+
+                case TokenType.IMAG:
+                    t = lexer.Get();
+                    return new ImaginaryLiteral((string)t.Value, (double)t.NumericValue, filename, t.Start, t.End);
+
+                case TokenType.ELLIPSIS:
+                    t = lexer.Get();
+                    return new Ellipsis(filename, t.Start, t.End);
+
+                case TokenType.None:
+                    t = lexer.Get();
+                    return new NoneExp(filename, t.Start, t.End);
+
+                case TokenType.False:
+                    t = lexer.Get();
+                    return new BooleanLiteral(false, filename, t.Start, t.End);
+
+                case TokenType.True:
+                    t = lexer.Get();
+                    return new BooleanLiteral(true, filename, t.Start, t.End);
+
+                default:
+                    return null;
             }
         }
 
@@ -2209,25 +2232,29 @@ eval_input: testlist NEWLINE* ENDMARKER
             Token tok;
             switch (lexer.Peek().Type)
             {
-            case TokenType.LPAREN:
-                tok = lexer.Get();
-                var args = arglist(core, tok.Start);
-                Expect(TokenType.RPAREN);
-                return args;
-            case TokenType.LBRACKET:
-                lexer.Get();
-                var subs = subscriptlist();
-                tok = Expect(TokenType.RBRACKET);
-                return new ArrayRef(core, subs, filename, core.Start, tok.End);
-            case TokenType.DOT:
-                lexer.Get();
-                tok = Expect(TokenType.ID);
-                var id = new Identifier((string)tok.Value, filename, core.Start, tok.End);
-                return new AttributeAccess(core, id, filename, core.Start, tok.End);
-            default:
-                throw Unexpected();
+                case TokenType.LPAREN:
+                    tok = lexer.Get();
+                    var args = arglist(core, tok.Start);
+                    Expect(TokenType.RPAREN);
+                    return args;
+
+                case TokenType.LBRACKET:
+                    lexer.Get();
+                    var subs = subscriptlist();
+                    tok = Expect(TokenType.RBRACKET);
+                    return new ArrayRef(core, subs, filename, core.Start, tok.End);
+
+                case TokenType.DOT:
+                    lexer.Get();
+                    tok = Expect(TokenType.ID);
+                    var id = new Identifier((string)tok.Value, filename, core.Start, tok.End);
+                    return new AttributeAccess(core, id, filename, core.Start, tok.End);
+
+                default:
+                    throw Unexpected();
             }
         }
+
         //subscriptlist: subscript (',' subscript)* [',']
         public List<Slice> subscriptlist()
         {
@@ -2241,6 +2268,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             return subs;
         }
+
         //subscript: test | [Fact] ':' [Fact] [sliceop]
         public Slice subscript()
         {
@@ -2276,6 +2304,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             Expect(TokenType.COLON);
             return test();
         }
+
         //exprlist: (expr|star_expr) (',' (expr|star_expr))* [',']
         public Exp exprlist()
         {
@@ -2465,7 +2494,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         }
 
         //arglist: (argument ',')* (argument [',']
-        //                         |'*' test (',' argument)* [',' '**' test] 
+        //                         |'*' test (',' argument)* [',' '**' test]
         //                         |'**' test)
         public Application arglist(Exp core, int posStart)
         {
@@ -2475,7 +2504,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             Exp kwargs = null;
             if (Peek(TokenType.RPAREN, out var token))
                 return new Application(core, args, keywords, stargs, kwargs, filename, core.Start, token.End);
-            for (;;)
+            for (; ; )
             {
                 if (PeekAndDiscard(TokenType.OP_STAR))
                 {
@@ -2503,6 +2532,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             return new Application(core, args, keywords, stargs, kwargs, filename, posStart, token.End);
         }
+
         // The reason that keywords are test nodes instead of NAME is that using NAME
         // results in an ambiguity. ast.c makes sure it's a NAME.
 
@@ -2615,5 +2645,6 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
         }
     }
+
 #pragma warning restore IDE1006 // Naming Styles
 }
