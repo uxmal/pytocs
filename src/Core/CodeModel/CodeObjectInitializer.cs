@@ -34,10 +34,4 @@ namespace Pytocs.Core.CodeModel
             return visitor.VisitObjectInitializer(this);
         }
     }
-
-    public class MemberDeclarator
-    {
-        public CodeExpression Expression;
-        public string Name;
-    }
 }

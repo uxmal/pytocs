@@ -20,11 +20,6 @@ using System;
 
 namespace Pytocs.Core.TypeInference
 {
-    public interface IProgress
-    {
-        void Tick();
-    }
-
     public class Progress : IProgress
     {
         private const int MAX_SPEED_DIGITS = 5;
