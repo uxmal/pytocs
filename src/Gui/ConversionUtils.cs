@@ -23,6 +23,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading.Tasks;
+using Pytocs.Core;
 
 namespace Pytocs.Gui
 {
@@ -54,8 +55,8 @@ namespace Pytocs.Gui
                         Module module = typeAnalysis.GetAstForFile(path);
 
                         string relativePath = MakeRelative(sourcePath, path);
-                        string? targetFilePath = Path.ChangeExtension(MakeAbsolute(targetPath, relativePath), ".py.cs");
-                        string? targetFileDirectory = Path.GetDirectoryName(targetFilePath);
+                        string targetFilePath = Path.ChangeExtension(MakeAbsolute(targetPath, relativePath), ".py.cs");
+                        string targetFileDirectory = Path.GetDirectoryName(targetFilePath);
 
                         if (!Directory.Exists(targetFileDirectory))
                         {

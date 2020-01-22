@@ -22,6 +22,7 @@ using Avalonia.Markup.Xaml;
 using System;
 using System.IO;
 using System.Linq;
+using Pytocs.Core;
 using TextCopy;
 
 namespace Pytocs.Gui
@@ -50,7 +51,7 @@ namespace Pytocs.Gui
         {
             try
             {
-                var xlator = new Translator("", "Program", null, new ConsoleLogger());
+                Translator xlator = new Translator("", "Program", null, new ConsoleLogger());
                 CSharpEditor.Text = xlator.TranslateSnippet(PythonEditor.Text);
             }
             catch (Exception ex)

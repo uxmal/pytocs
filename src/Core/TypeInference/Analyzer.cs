@@ -300,25 +300,25 @@ namespace Pytocs.Core.TypeInference
                 return null;
             }
 
-            if (t is UnionType ut)
+            switch (t)
             {
-                foreach (DataType tt in ut.types)
+                case UnionType ut:
                 {
-                    if (tt is ModuleType mt)
+                    foreach (DataType tt in ut.types)
                     {
-                        return mt;
+                        if (tt is ModuleType mt)
+                        {
+                            return mt;
+                        }
                     }
+
+                    return null;
                 }
-
-                return null;
+                case ModuleType mt:
+                    return mt;
+                default:
+                    return null;
             }
-
-            if (t is ModuleType mt)
-            {
-                return mt;
-            }
-
-            return null;
         }
 
         public string GetModuleQname(string file)
