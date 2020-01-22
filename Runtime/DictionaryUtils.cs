@@ -21,7 +21,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 
-namespace pytocs.runtime
+namespace Runtime
 {
     public class DictionaryUtils
     {

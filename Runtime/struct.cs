@@ -20,7 +20,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace pytocs.runtime
+namespace Runtime
 {
     public static class @struct
     {

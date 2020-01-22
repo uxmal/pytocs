@@ -19,7 +19,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace pytocs.runtime
+namespace Runtime
 {
     public static class ListUtils
     {
