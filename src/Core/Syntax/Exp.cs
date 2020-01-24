@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -982,12 +982,20 @@ namespace Pytocs.Core.Syntax
 
         public override void Write(TextWriter writer)
         {
-            var sep = "";
-            foreach (var exp in Expressions)
+            if (Expressions.Count == 1)
             {
-                writer.Write(sep);
-                sep = ",";
-                exp.Write(writer);
+                Expressions[0].Write(writer);
+                writer.Write(",");
+            }
+            else
+            {
+                var sep = "";
+                foreach (var exp in Expressions)
+                {
+                    writer.Write(sep);
+                    sep = ",";
+                    exp.Write(writer);
+                }
             }
         }
     }

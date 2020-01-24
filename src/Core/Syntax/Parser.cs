@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -808,7 +808,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         };
 
         static HashSet<TokenType> stmt_follow = new HashSet<TokenType>() {
-            TokenType.SEMI, TokenType.NEWLINE, TokenType.EOF
+            TokenType.SEMI, TokenType.NEWLINE, TokenType.COMMENT, TokenType.EOF
         };
 
         static HashSet<TokenType> trailer_first = new HashSet<TokenType>
@@ -1043,6 +1043,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         public Exp testlist_star_expr()
         {
             List<Exp> exprs = new List<Exp>();
+            bool forceSingletonTuple = false;
             for (; ; )
             {
                 Exp e;
@@ -1050,13 +1051,16 @@ eval_input: testlist NEWLINE* ENDMARKER
                     e = star_expr();
                 else
                     e = test();
+                if (e == null)
+                    break;
                 exprs.Add(e);
                 if (!PeekAndDiscard(TokenType.COMMA))
                     break;
+                forceSingletonTuple = true;
                 if (Peek(stmt_follow))
                     break;
             }
-            return exprs.Count == 1 ? exprs[0] : new ExpList(exprs, filename, 0, 0);
+            return exprs.Count == 1 && !forceSingletonTuple ? exprs[0] : new ExpList(exprs, filename, 0, 0);
         }
 
         // annassign: ':' test ['=' test]
@@ -1125,7 +1129,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             return new ContinueStatement(filename, token.Start, token.End);
         }
 
-        //return_stmt: 'return' [testlist]
+        //return_stmt: 'return' [testlist_star_expr]
         public Statement return_stmt()
         {
             var token = Expect(TokenType.Return);
@@ -1134,7 +1138,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             Exp e = null;
             if (!Peek(stmt_follow))
             {
-                e = testlist();
+                e = testlist_star_expr();
                 if (e != null)
                 {
                     posEnd = e.End;
@@ -1225,7 +1229,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             Expect(TokenType.Import);
             int posEnd;
-            List<AliasedName> aliasNames = null;
+            List<AliasedName> aliasNames;
             if (PeekAndDiscard(TokenType.OP_STAR, out var token))
             {
                 aliasNames = new List<AliasedName>();
@@ -1590,7 +1594,8 @@ eval_input: testlist NEWLINE* ENDMARKER
             return cmts;
 
         }
-        //with_stmt: 'with' with_item (',' with_item)*  ':' suite
+
+        // with_stmt: 'with' with_item (',' with_item)*  ':' suite
         public List<Statement> with_stmt()
         {
             var posStart = Expect(TokenType.With).Start;
@@ -2600,7 +2605,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
         }
 
-        //yield_arg: 'from' test | testlist
+        //yield_arg: 'from' test | testlist_star_expr
         public Exp yield_arg(int posStart)
         {
             if (PeekAndDiscard(TokenType.From))
@@ -2610,7 +2615,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             else
             {
-                var tl = testlist();
+                var tl = testlist_star_expr();
                 return new YieldExp(tl, filename, posStart, tl.End);
             }
         }

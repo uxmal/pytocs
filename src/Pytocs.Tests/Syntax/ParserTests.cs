@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -1024,6 +1024,17 @@ def foo():
 @"@decorator()
 def foo():
     pass
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
+
+        [Fact]
+        public void Parser_return_UnaryTuple()
+        {
+            var pySrc = @"
+return x.foo,
+";
+            var sExp = @"return x.foo,
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
         }
