@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -93,12 +93,19 @@ namespace Pytocs.Core
             TypeReferenceTranslator types, 
             TextWriter output)
         {
-            var unt = new CodeCompileUnit();
-            var gen = new CodeGenerator(unt, nmspace, Path.GetFileNameWithoutExtension(moduleName));
-            var xlt = new ModuleTranslator(types, gen);
-            xlt.Translate(stm);
-            var pvd = new CSharpCodeProvider();
-            pvd.GenerateCodeFromCompileUnit(unt, output, new CodeGeneratorOptions { });
+            try
+            {
+                var unt = new CodeCompileUnit();
+                var gen = new CodeGenerator(unt, nmspace, Path.GetFileNameWithoutExtension(moduleName));
+                var xlt = new ModuleTranslator(types, gen);
+                xlt.Translate(stm);
+                var pvd = new CSharpCodeProvider();
+                pvd.GenerateCodeFromCompileUnit(unt, output, new CodeGeneratorOptions { });
+            }
+            catch (NodeException nex)
+            {
+                logger.Error($"{nex.Node.Filename}({nex.Node.Start}): {nex.Message}");
+            }
         }
 
         public void TranslateFile(string inputFileName, string outputFileName)
