@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -762,6 +762,21 @@ namespace Pytocs.UnitTests.Translate
             var pySrc = "[ 1, 2, *foo, 3, 4]";
             var sExp =
 @"ListUtils.Unpack<object>(new object[] {
+    1,
+    2,
+}, foo, new object[] {
+    3,
+    4,
+})";
+            Assert.Equal(sExp, Xlat(pySrc));
+        }
+
+        [Fact]
+        public void Ex_tuple_unpacker()
+        {
+            var pySrc = "(1, 2, *foo, 3, 4)";
+            var sExp =
+@"TupleUtils.Unpack<object>(new object[] {
     1,
     2,
 }, foo, new object[] {

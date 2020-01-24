@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -223,7 +223,7 @@ namespace Pytocs.Core.Translate
             return exp.ToString();
         }
 
-        private static Dictionary<Op, CsAssignOp> assignOps = new Dictionary<Op, CsAssignOp>()
+        private static readonly Dictionary<Op, CsAssignOp> assignOps = new Dictionary<Op, CsAssignOp>()
         {
             { Op.Eq, CsAssignOp.Assign },
             { Op.AugAdd, CsAssignOp.AugAdd },

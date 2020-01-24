@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,7 +31,7 @@ namespace Pytocs.Core.Translate
     /// </summary>
     public class ExpTranslator : IExpVisitor<CodeExpression>
     {
-        private static Dictionary<Op, CodeOperatorType> mppyoptocsop = new Dictionary<Op, CodeOperatorType>() 
+        private static readonly Dictionary<Op, CodeOperatorType> mppyoptocsop = new Dictionary<Op, CodeOperatorType>() 
         {
             { Op.Add, CodeOperatorType.Add },
             { Op.Sub, CodeOperatorType.Sub },
@@ -68,10 +68,10 @@ namespace Pytocs.Core.Translate
         };
 
         internal readonly ClassDef classDef;
-        internal CodeGenerator m;
-        internal SymbolGenerator gensym;
-        internal IntrinsicTranslator intrinsic;
-        private TypeReferenceTranslator types;
+        internal readonly CodeGenerator m;
+        internal readonly SymbolGenerator gensym;
+        internal readonly IntrinsicTranslator intrinsic;
+        private readonly TypeReferenceTranslator types;
 
         public ExpTranslator(ClassDef classDef, TypeReferenceTranslator types, CodeGenerator gen, SymbolGenerator gensym)
         {
@@ -113,12 +113,21 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitExpList(ExpList l)
         {
-            var fn = m.MethodRef(
+            //$TODO: there is no notion of a list element type.
+            var (elemType, nms) = types.TranslateListElementType(l);
+            if (ContainsStarExp(l.Expressions))
+            {
+                return ExpandIterableExpanders("TupleUtils", l.Expressions, elemType);
+            }
+            else
+            {
+                var fn = m.MethodRef(
                 m.TypeRefExpr("Tuple"),
-                "Create");
-            return m.Appl
-                (fn,
-                l.Expressions.Select(e => e.Accept(this)).ToArray());
+                    "Create");
+                    return m.Appl
+                        (fn,
+                        l.Expressions.Select(e => e.Accept(this)).ToArray());
+            }
         }
 
         private IEnumerable<CodeExpression> TranslateArgs(Application args)
@@ -632,40 +641,10 @@ namespace Pytocs.Core.Translate
             var (elemType, nms) = types.TranslateListElementType(l);
             m.EnsureImports(nms);
 
-            if (l.elts.OfType<StarExp>().Any())
+            var elements = l.elts;
+            if (ContainsStarExp(elements))
             {
-                // Found iterable unpackers.
-                var seq = new List<CodeExpression>();
-                var subseq = new List<CodeExpression>();
-                foreach (var item in l.elts)
-                {
-                    CodeExpression exp = null;
-                    if (item is StarExp unpacker)
-                    {
-                        if (subseq.Count > 0)
-                        {
-                            exp = m.NewArray(elemType, subseq.ToArray());
-                            seq.Add(exp);
-                            subseq.Clear();
-                        }
-                        exp = unpacker.e.Accept(this);
-                        seq.Add(exp);
-                    }
-                    else
-                    {
-                        exp = item.Accept(this);
-                        subseq.Add(exp);
-                    }
-                }
-                if (subseq.Count > 0)
-                {
-                    var exp = m.NewArray(elemType, subseq.ToArray());
-                    seq.Add(exp);
-                }
-
-                var unpack = m.MethodRef(m.TypeRefExpr("ListUtils"), "Unpack");
-                unpack.TypeReferences.Add(elemType);
-                return m.Appl(unpack, seq.ToArray());
+                return ExpandIterableExpanders("ListUtils", l.elts, elemType);
             }
             else
             {
@@ -675,6 +654,48 @@ namespace Pytocs.Core.Translate
                     .Where(e => e != null)
                     .Select(e => e.Accept(this)));
             }
+        }
+
+        private CodeExpression ExpandIterableExpanders(string utilityClassName, List<Exp> l, CodeTypeReference elemType)
+        {
+            // Found iterable unpackers.
+            var seq = new List<CodeExpression>();
+            var subseq = new List<CodeExpression>();
+            foreach (var item in l)
+            {
+                CodeExpression exp = null;
+                if (item is StarExp unpacker)
+                {
+                    if (subseq.Count > 0)
+                    {
+                        exp = m.NewArray(elemType, subseq.ToArray());
+                        seq.Add(exp);
+                        subseq.Clear();
+                    }
+                    exp = unpacker.e.Accept(this);
+                    seq.Add(exp);
+                }
+                else
+                {
+                    exp = item.Accept(this);
+                    subseq.Add(exp);
+                }
+            }
+            if (subseq.Count > 0)
+            {
+                var exp = m.NewArray(elemType, subseq.ToArray());
+                seq.Add(exp);
+            }
+
+            var unpack = m.MethodRef(m.TypeRefExpr(utilityClassName), "Unpack");
+            unpack.TypeReferences.Add(elemType);
+            var result = m.Appl(unpack, seq.ToArray());
+            return result;
+        }
+
+        private static bool ContainsStarExp(List<Exp> elements)
+        {
+            return elements.OfType<StarExp>().Any();
         }
 
         public CodeExpression VisitFieldAccess(AttributeAccess acc)
@@ -732,7 +753,7 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitStarExp(StarExp s)
         {
-            throw new NotImplementedException();
+            throw new NodeException(s, "StarExp not implemented yet.");
         }
 
         public CodeExpression VisitBytes(Bytes b)
@@ -761,7 +782,16 @@ namespace Pytocs.Core.Translate
             }
             else
             {
-                return MakeTupleCreate(tuple.values.Select(v => v.Accept(this)).ToArray());
+                //$BUG: tuple elements can be of different types.
+                var elemType = m.TypeRef(typeof(object));
+                if (ContainsStarExp(tuple.values))
+                {
+                    return ExpandIterableExpanders("TupleUtils",tuple.values, elemType);
+                }
+                else
+                {
+                    return MakeTupleCreate(tuple.values.Select(v => v.Accept(this)).ToArray());
+                }
             }
         }
 
