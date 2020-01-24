@@ -842,24 +842,21 @@ namespace Pytocs.Core.TypeInference
 
         private BindingKind DetermineFunctionKind(FunctionDef f)
         {
-            BindingKind funkind;
             if (scope.stateType == State.StateType.CLASS)
             {
                 if ("__init__" == f.name.Name)
                 {
-                    funkind = BindingKind.CONSTRUCTOR;
+                    return BindingKind.CONSTRUCTOR;
                 }
                 else
                 {
-                    funkind = BindingKind.METHOD;
+                    return BindingKind.METHOD;
                 }
             }
             else
             {
-                funkind = BindingKind.FUNCTION;
+                return BindingKind.FUNCTION;
             }
-
-            return funkind;
         }
 
         public DataType VisitGlobal(GlobalStatement g)
@@ -990,7 +987,7 @@ namespace Pytocs.Core.TypeInference
                 return DataType.Cont;
             }
 
-            DataType dtModule = analyzer.LoadModule(i.DottedName.segs, scope);
+            var dtModule = analyzer.LoadModule(i.DottedName.segs, scope);
             if (dtModule == null)
             {
                 analyzer.AddProblem(i, "Cannot load module");
@@ -1003,8 +1000,8 @@ namespace Pytocs.Core.TypeInference
             {
                 foreach (var a in i.AliasedNames)
                 {
-                    Identifier first = a.orig.segs[0];
-                    ISet<Binding> bs = dtModule.Table.Lookup(first.Name);
+                    var idFirst = a.orig.segs[0];
+                    var bs = dtModule.Table.Lookup(idFirst.Name);
                     if (bs != null)
                     {
                         if (a.alias != null)
@@ -1014,15 +1011,15 @@ namespace Pytocs.Core.TypeInference
                         }
                         else
                         {
-                            scope.Update(first.Name, bs);
-                            analyzer.putRef(first, bs);
+                            scope.Update(idFirst.Name, bs);
+                            analyzer.putRef(idFirst, bs);
                         }
                     }
                     else
                     {
-                        List<Identifier> ext = new List<Identifier>(i.DottedName.segs)
+                        var ext = new List<Identifier>(i.DottedName.segs)
                         {
-                            first
+                            idFirst
                         };
                         DataType mod2 = analyzer.LoadModule(ext, scope);
                         if (mod2 != null)
@@ -1033,7 +1030,7 @@ namespace Pytocs.Core.TypeInference
                             }
                             else
                             {
-                                scope.Insert(analyzer, first.Name, first, mod2, BindingKind.VARIABLE);
+                                scope.Insert(analyzer, idFirst.Name, idFirst, mod2, BindingKind.VARIABLE);
                             }
                         }
                     }

@@ -22,33 +22,32 @@ namespace Pytocs.Core.TypeInference
 {
     public class Statistics
     {
-        IDictionary<string, long> contents = new Dictionary<string, long>();
+        private readonly IDictionary<string, long> contents = new Dictionary<string, long>();
 
-        public void putInt(string key, long value)
+        public void PutInt(string key, long value)
         {
             contents[key] = value;
         }
 
-        public void inc(string key, long x)
+        public void Inc(string key, long x)
         {
-            long old = getInt(key);
+            long old = GetInt(key);
             contents[key] = old + x;
         }
 
-        public void inc(string key)
+        public void Inc(string key)
         {
-            inc(key, 1);
+            Inc(key, 1);
         }
 
-        public long getInt(string key)
+        public long GetInt(string key)
         {
-            long ret;
-            if (!contents.TryGetValue(key, out ret))
+            if (!contents.TryGetValue(key, out long ret))
                 return 0;
             return ret;
         }
 
-        public string print()
+        public string Print()
         {
             StringBuilder sb = new StringBuilder();
             foreach (var e in contents)
