@@ -1170,7 +1170,7 @@ namespace Pytocs.Core.TypeInference
                 qname = m.Name;
             }
 
-            var mt = analyzer.TypeFactory.CreateModule(m.Name, m.Filename, qname, analyzer.GlobalTable);
+            var mt = analyzer.TypeFactory.CreateModule(m.Name, m.Filename!, qname, analyzer.GlobalTable);
 
             scope.Insert(analyzer, analyzer.GetModuleQname(m.Filename!), m, mt, BindingKind.MODULE);
             if (m.Body != null)

@@ -1,4 +1,4 @@
-﻿    #region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,6 +24,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#nullable enable
+
 namespace Pytocs.Core.Translate
 {
     /// <summary>
@@ -31,24 +33,24 @@ namespace Pytocs.Core.Translate
     /// </summary>
     public class MethodGenerator
     {
-        private readonly ClassDef classDef;
+        private readonly ClassDef? classDef;
         protected readonly FunctionDef f;
-        protected readonly string fnName;
+        protected readonly string? fnName;
         protected readonly List<Parameter> args;
         private readonly bool isStatic;
         private readonly bool isAsync;
         protected ExpTranslator xlat;
         protected StatementTranslator stmtXlat;
         protected CodeGenerator gen;
-        private Dictionary<Parameter, CodeParameterDeclarationExpression> mpPyParamToCs;
+        private Dictionary<Parameter, CodeParameterDeclarationExpression>? mpPyParamToCs;
         private SymbolGenerator gensym;
         private TypeReferenceTranslator types;
         protected HashSet<string> globals;
 
         public MethodGenerator(
-            ClassDef classDef,
+            ClassDef? classDef,
             FunctionDef f, 
-            string fnName,
+            string? fnName,
             List<Parameter> args,
             bool isStatic, 
             bool isAsync,
@@ -100,7 +102,7 @@ namespace Pytocs.Core.Translate
         {
             foreach (var parameter in args.Where(p => p.tuple != null))
             {
-                var csTupleParam = mpPyParamToCs[parameter];
+                var csTupleParam = mpPyParamToCs![parameter];
                 var tuplePath = new CodeVariableReferenceExpression(csTupleParam.ParameterName);
                 foreach (var component in parameter.tuple.Select((p, i) => new { p, i = i + 1 }))
                 {
@@ -111,9 +113,9 @@ namespace Pytocs.Core.Translate
 
         private void GenerateTupleParameterUnpacker(Parameter p, int i, CodeExpression tuplePath, CodeMemberMethod method)
         {
-            if (p.Id.Name == "_")
+            if (p.Id?.Name == "_")
                 return;
-            method.Statements.Insert(0, new CodeVariableDeclarationStatement("object", p.Id.Name)
+            method.Statements.Insert(0, new CodeVariableDeclarationStatement("object", p.Id!.Name)
             {
                 InitExpression = gen.Access(tuplePath, "Item" + i)
             });
@@ -177,7 +179,7 @@ namespace Pytocs.Core.Translate
             }
             else
             {
-                var (dtParam, _)= types.TranslateTypeOf(ta.Id);
+                var (dtParam, _)= types.TranslateTypeOf(ta.Id!);
                 parameterType = dtParam;
             }
             return new CodeParameterDeclarationExpression

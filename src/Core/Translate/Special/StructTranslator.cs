@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,11 +22,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#nullable enable
+
 namespace Pytocs.Core.Translate.Special
 {
     public class StructTranslator
     {
-        public CodeExpression Translate(CodeGenerator m, CodeFieldReferenceExpression method, CodeExpression[] args)
+        public CodeExpression? Translate(CodeGenerator m, CodeFieldReferenceExpression method, CodeExpression[] args)
         {
             if (method.FieldName == "unpack")
             {
@@ -35,7 +37,7 @@ namespace Pytocs.Core.Translate.Special
             return null;
         }
 
-        public CodeExpression TranslateUnpack(CodeExpression[]args)
+        public CodeExpression? TranslateUnpack(CodeExpression[]args)
         {
             if (args == null || args.Length < 2)
                 return null;
@@ -62,7 +64,7 @@ namespace Pytocs.Core.Translate.Special
             return null;
         }
 
-        private IEnumerable<char> CreateFormatEnumerator(CodeExpression formatString)
+        private IEnumerable<char>? CreateFormatEnumerator(CodeExpression formatString)
         {
             if (formatString is CodePrimitiveExpression p && 
                 p.Value is Str s)

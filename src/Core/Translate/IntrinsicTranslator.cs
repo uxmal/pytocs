@@ -1,10 +1,28 @@
-﻿using Pytocs.Core.CodeModel;
+#region License
+//  Copyright 2015-2020 John Källén
+// 
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+// 
+//      http://www.apache.org/licenses/LICENSE-2.0
+// 
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+#endregion
+
+using Pytocs.Core.CodeModel;
 using Pytocs.Core.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace Pytocs.Core.Translate
 {
@@ -13,17 +31,17 @@ namespace Pytocs.Core.Translate
     /// </summary>
     public class IntrinsicTranslator
     {
-        private ExpTranslator expTranslator;
-        private CodeGenerator m;
+        private readonly ExpTranslator expTranslator;
+        private readonly CodeGenerator m;
 
-        private readonly Dictionary<string, Func<Application, CodeExpression[], CodeExpression>> translators;
+        private readonly Dictionary<string, Func<Application, CodeExpression[], CodeExpression?>> translators;
 
 
         public IntrinsicTranslator(ExpTranslator expTranslator)
         {
             this.expTranslator = expTranslator;
             this.m = expTranslator.m;
-            this.translators = new Dictionary<string, Func<Application, CodeExpression[], CodeExpression>>
+            this.translators = new Dictionary<string, Func<Application, CodeExpression[], CodeExpression?>>
             {
                 { "isinstance", Translate_isinstance },
                 { "int", Translate_int },
@@ -49,14 +67,14 @@ namespace Pytocs.Core.Translate
         /// <returns>If a built-in function is found, returns a translated expression,
         /// otherwise returns null.
         /// </returns>
-        public CodeExpression MaybeTranslate(string id_Name, Application appl, CodeExpression[] args)
+        public CodeExpression? MaybeTranslate(string id_Name, Application appl, CodeExpression[] args)
         {
             if (!translators.TryGetValue(id_Name, out var func))
                 return null;
             return func(appl, args);
         }
 
-        CodeExpression Translate_isinstance(Application appl, CodeExpression[] args)
+        CodeExpression? Translate_isinstance(Application appl, CodeExpression[] args)
         {
             if (appl.args.Count != 2)
                 return null;
@@ -86,7 +104,7 @@ namespace Pytocs.Core.Translate
             return m.Appl(fn, args);
         }
 
-        CodeExpression Translate_list(Application appl, CodeExpression[] args)
+        CodeExpression? Translate_list(Application appl, CodeExpression[] args)
         {
             if (args.Length == 0)
             {
@@ -102,7 +120,7 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression Translate_set(Application appl, CodeExpression[] args)
+        CodeExpression? Translate_set(Application appl, CodeExpression[] args)
         {
             if (args.Length == 0 || args.Length == 1)
             {
@@ -114,7 +132,7 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression Translate_dict(Application appl, CodeExpression[] args)
+        CodeExpression? Translate_dict(Application appl, CodeExpression[] args)
         {
             if (args.Length == 0)
             {
@@ -145,7 +163,7 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression Translate_len(Application appl, CodeExpression[] args)
+        CodeExpression? Translate_len(Application appl, CodeExpression[] args)
         {
             if (args.Length == 1)
             {
@@ -157,7 +175,7 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression Translate_sum(Application appl, CodeExpression[] args)
+        CodeExpression? Translate_sum(Application appl, CodeExpression[] args)
         {
             if (args.Length == 1)
             {
@@ -170,7 +188,7 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression Translate_range(Application appl, CodeExpression[] args)
+        CodeExpression? Translate_range(Application appl, CodeExpression[] args)
         {
             var argsCount = args.Length;
 
@@ -240,7 +258,7 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression Translate_filter(Application appl, CodeExpression[] args)
+        CodeExpression? Translate_filter(Application appl, CodeExpression[] args)
         {
             if (args.Length == 2)
             {
@@ -263,7 +281,7 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression Translate_complex(Application appl, CodeExpression[] args)
+        CodeExpression? Translate_complex(Application appl, CodeExpression[] args)
         {
             if (args.Length == 2)
             {
@@ -273,7 +291,7 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression Translate_float(Application appl, CodeExpression[] args)
+        CodeExpression? Translate_float(Application appl, CodeExpression[] args)
         {
             if (args[0] is CodePrimitiveExpression c && c.Value is Str str)
             {
@@ -378,7 +396,7 @@ namespace Pytocs.Core.Translate
             }
         }
 
-        CodeExpression Translate_enumerate(Application appl, CodeExpression[] args)
+        CodeExpression? Translate_enumerate(Application appl, CodeExpression[] args)
         {
             if (args.Length == 1)
             {
@@ -395,9 +413,9 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        private bool IsReverse(CodeExpression rev)
+        private bool IsReverse(CodeExpression? rev)
         {
-            if (rev == null)
+            if (rev is null)
                 return false;
             if (rev is CodePrimitiveExpression p)
             {

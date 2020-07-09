@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#nullable enable
+
 namespace Pytocs.Core.Translate
 {
     /// <summary>
@@ -37,9 +39,9 @@ namespace Pytocs.Core.Translate
 
         private readonly Dictionary<Node, DataType> types;
         private readonly Stack<DataType> stackq;
-        private readonly Dictionary<string, (string, string)> pyToCsClasses;
+        private readonly Dictionary<string, (string, string?)> pyToCsClasses;
 
-        public TypeReferenceTranslator(Dictionary<Node, DataType> types, Dictionary<string, (string,string)> pyToCsClasses = null)
+        public TypeReferenceTranslator(Dictionary<Node, DataType> types, Dictionary<string, (string,string?)>? pyToCsClasses = null)
         {
             this.types = types;
             this.stackq = new Stack<DataType>();
@@ -55,7 +57,7 @@ namespace Pytocs.Core.Translate
             return result;
         }
 
-        public (CodeTypeReference, ISet<string>) TranslateTypeOf(Node node)
+        public (CodeTypeReference, ISet<string>?) TranslateTypeOf(Node node)
         {
             if (types.TryGetValue(node, out var dt))
             {
@@ -75,7 +77,7 @@ namespace Pytocs.Core.Translate
         /// <returns>A tuple of the resulting <see cref="CodeTypeReference"/> and a set 
         /// of any namespaces that should be imported.
         /// </returns>
-        public (CodeTypeReference csTypeRef, ISet<string> namespaces) Translate(DataType dt)
+        public (CodeTypeReference csTypeRef, ISet<string>? namespaces) Translate(DataType dt)
         {
             if (stackq.Contains(dt))
                 return (new CodeTypeReference(typeof(object)), null);
@@ -147,7 +149,7 @@ namespace Pytocs.Core.Translate
             throw new NotImplementedException($"Data type {dt} ({dt.GetType().Name}).");
         }
 
-        private (CodeTypeReference csTypeRef, ISet<string> namespaces) TranslateClass(ClassType classType)
+        private (CodeTypeReference csTypeRef, ISet<string>? namespaces) TranslateClass(ClassType classType)
         {
             if (!this.pyToCsClasses.TryGetValue(classType.name, out var nameAndSpace))
             {
@@ -160,7 +162,7 @@ namespace Pytocs.Core.Translate
             return (csClass, nmset);
         }
 
-        private (CodeTypeReference, ISet<string>) TranslateInstance(InstanceType inst)
+        private (CodeTypeReference, ISet<string>?) TranslateInstance(InstanceType inst)
         {
             if (inst == DataType.Unknown)
                 return (new CodeTypeReference(typeof(object)
@@ -168,7 +170,7 @@ namespace Pytocs.Core.Translate
             return this.Translate(inst.classType);
         }
 
-        private (CodeTypeReference, ISet<string>) TranslateFunc(FunType fun)
+        private (CodeTypeReference, ISet<string>?) TranslateFunc(FunType fun)
         {
             if (fun.arrows.Count != 0)
             {
@@ -199,9 +201,9 @@ namespace Pytocs.Core.Translate
             }
         }
 
-        private (CodeTypeReference, ISet<string>) TranslateTuple(TupleType tuple)
+        private (CodeTypeReference, ISet<string>?) TranslateTuple(TupleType tuple)
         {
-            ISet<string> namespaces = null;
+            ISet<string>? namespaces = null;
             var types = tuple.eltTypes;
             var (elementTypes, nms) = TranslateTypes(types, namespaces);
             var tt = new CodeTypeReference(
@@ -210,7 +212,7 @@ namespace Pytocs.Core.Translate
             return (tt, Join(nms, SystemNamespace));
         }
 
-        private (List<CodeTypeReference>, ISet<string>) TranslateTypes(IEnumerable<DataType> types, ISet<string> namespaces)
+        private (List<CodeTypeReference>, ISet<string>?) TranslateTypes(IEnumerable<DataType> types, ISet<string>? namespaces)
         {
             var elementTypes = new List<CodeTypeReference>();
             foreach (var type in types)
@@ -223,7 +225,7 @@ namespace Pytocs.Core.Translate
             return (elementTypes, namespaces);
         }
 
-        private ISet<string> Join(ISet<string> a, ISet<string> b)
+        private ISet<string>? Join(ISet<string>? a, ISet<string>? b)
         {
             if (a == null && b == null)
                 return null;
@@ -236,7 +238,7 @@ namespace Pytocs.Core.Translate
             return result;
         }
 
-        private ISet<string> Join(ISet<string> a, string b)
+        private ISet<string>? Join(ISet<string>? a, string b)
         {
             if (b == null)
                 return a;
@@ -246,7 +248,7 @@ namespace Pytocs.Core.Translate
             return a;
         }
 
-        public (CodeTypeReference, ISet<string>) TranslateListElementType(Exp l)
+        public (CodeTypeReference, ISet<string>?) TranslateListElementType(Exp l)
         {
             var dt = TypeOf(l);
             if (dt is ListType listType)
@@ -261,7 +263,7 @@ namespace Pytocs.Core.Translate
             }
         }
 
-        private static readonly Dictionary<string, (string, string)> DefaultClassTranslations = new Dictionary<string, (string, string)>
+        private static readonly Dictionary<string, (string, string?)> DefaultClassTranslations = new Dictionary<string, (string, string?)>
         {
             { "None", ("void", null) },
             { "NotImplementedError", (nameof(NotImplementedException), SystemNamespace) }

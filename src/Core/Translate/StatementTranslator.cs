@@ -25,22 +25,24 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#nullable enable
+
 namespace Pytocs.Core.Translate
 {
     public class StatementTranslator : IStatementVisitor
     {
-        private ClassDef classDef;
+        private ClassDef? classDef;
         private TypeReferenceTranslator types;
         private CodeGenerator gen;
         private ExpTranslator xlat;
         private SymbolGenerator gensym;
-        private IEnumerable<CodeAttributeDeclaration> customAttrs;
+        private IEnumerable<CodeAttributeDeclaration>? customAttrs;
         private Dictionary<Statement, PropertyDefinition> properties;
         private HashSet<string> globals;
-        private CodeConstructor classConstructor;
+        private CodeConstructor? classConstructor;
         private bool async;
 
-        public StatementTranslator(ClassDef classDef, TypeReferenceTranslator types, CodeGenerator gen, SymbolGenerator gensym, HashSet<string> globals)
+        public StatementTranslator(ClassDef? classDef, TypeReferenceTranslator types, CodeGenerator gen, SymbolGenerator gensym, HashSet<string> globals)
         {
             this.classDef = classDef;
             this.types = types;
@@ -618,7 +620,7 @@ namespace Pytocs.Core.Translate
 
         public void VisitPrint(PrintStatement p)
         {
-            CodeExpression e = null;
+            CodeExpression? e = null;
             if (p.outputStream != null)
             {
                 e = p.outputStream.Accept(xlat);
@@ -740,8 +742,8 @@ namespace Pytocs.Core.Translate
                 this.customAttrs = decorators.Select(dd => VisitDecorator(dd));
                 var prop = gen.PropertyDef(
                     propdef.Name,
-                    () => GeneratePropertyGetter(propdef.Getter),
-                    () => GeneratePropertySetter(propdef.Setter));
+                    () => GeneratePropertyGetter(propdef.Getter!),
+                    () => GeneratePropertySetter(propdef.Setter!));
                 LocalVariableGenerator.Generate(null, prop.GetStatements, globals);
                 LocalVariableGenerator.Generate(
                     new List<CodeParameterDeclarationExpression> {
@@ -858,7 +860,7 @@ namespace Pytocs.Core.Translate
         private CodeStatement Translate(WithItem wi)
         {
             CodeExpression e1 = wi.t.Accept(xlat);
-            CodeExpression e2 = wi.e?.Accept(xlat);
+            CodeExpression? e2 = wi.e?.Accept(xlat);
             if (e2 != null)
                 return new CodeAssignStatement(e2, e1);
             else
@@ -874,10 +876,10 @@ namespace Pytocs.Core.Translate
     public class PropertyDefinition
     {
         public string Name;
-        public Statement Getter;
-        public Statement Setter;
-        public Decorator GetterDecoration;
-        public Decorator SetterDecoration;
+        public Statement? Getter;
+        public Statement? Setter;
+        public Decorator? GetterDecoration;
+        public Decorator? SetterDecoration;
         public bool IsTranslated;
 
         public PropertyDefinition(string name)

@@ -24,6 +24,8 @@ using System.Numerics;
 using Pytocs.Core.Types;
 using System.Globalization;
 
+#nullable enable
+
 namespace Pytocs.Core.Translate
 {
     /// <summary>
@@ -67,13 +69,13 @@ namespace Pytocs.Core.Translate
             { Op.AugXor, CodeOperatorType.XorEq },
         };
 
-        internal readonly ClassDef classDef;
+        internal readonly ClassDef? classDef;
         internal readonly CodeGenerator m;
         internal readonly SymbolGenerator gensym;
         internal readonly IntrinsicTranslator intrinsic;
         private readonly TypeReferenceTranslator types;
 
-        public ExpTranslator(ClassDef classDef, TypeReferenceTranslator types, CodeGenerator gen, SymbolGenerator gensym)
+        public ExpTranslator(ClassDef? classDef, TypeReferenceTranslator types, CodeGenerator gen, SymbolGenerator gensym)
         {
             this.classDef = classDef;
             this.types = types;
@@ -206,7 +208,7 @@ namespace Pytocs.Core.Translate
             return m.Appl(fn, args);
         }
 
-        private Func<CodeGenerator, CodeFieldReferenceExpression, CodeExpression[], CodeExpression> GetSpecialTranslator(
+        private Func<CodeGenerator, CodeFieldReferenceExpression, CodeExpression[], CodeExpression?>? GetSpecialTranslator(
             CodeFieldReferenceExpression field)
         {
             if (field.Expression is CodeVariableReferenceExpression id)
@@ -253,7 +255,7 @@ namespace Pytocs.Core.Translate
             if (a.name == null)
             {
                 Debug.Assert(a.defval != null);
-                return a.defval.Accept(this);
+                return a.defval!.Accept(this);
             }
             else
             {
@@ -352,7 +354,7 @@ namespace Pytocs.Core.Translate
                 var subseq = new List<CodeExpression>();
                 foreach (var item in s.exps)
                 {
-                    CodeExpression exp = null;
+                    CodeExpression? exp = null;
                     if (item is IterableUnpacker unpacker)
                     {
                         if (subseq.Count > 0)
@@ -481,7 +483,7 @@ namespace Pytocs.Core.Translate
             return m.BinOp(l, mppyoptocsop[bin.op], r);
         }
 
-        private CodeExpression CondenseComplexConstant(CodeExpression l, CodeExpression r, double imScale)
+        private CodeExpression? CondenseComplexConstant(CodeExpression l, CodeExpression r, double imScale)
         {
             if (r is CodePrimitiveExpression primR && primR.Value is Complex complexR)
             {
@@ -663,7 +665,7 @@ namespace Pytocs.Core.Translate
             var subseq = new List<CodeExpression>();
             foreach (var item in l)
             {
-                CodeExpression exp = null;
+                CodeExpression exp;
                 if (item is StarExp unpacker)
                 {
                     if (subseq.Count > 0)
@@ -835,9 +837,9 @@ namespace Pytocs.Core.Translate
                 {
                     //if (varList.Expressions.Count != 2)
                     //    throw new InvalidOperationException("Variable list should contain one or two variables.");
-                    var args = varList.Expressions.Select((e, i) => Tuple.Create(e, string.Format($"Item{i + 1}")))
+                    var args = varList.Expressions.Select((e, i) => (e, string.Format($"Item{i + 1}")))
                         .ToDictionary(d => d.Item1, d => d.Item2);
-                    var tpl = gensym.GenSymAutomatic("_tup_", null, false);
+                    var tpl = gensym.GenSymAutomatic("_tup_", null!, false);
 
                     gensym.PushIdMappings(varList.Expressions.ToDictionary(e => e.ToString(), e => m.Access(tpl, args[e])));
 
@@ -871,7 +873,7 @@ namespace Pytocs.Core.Translate
                             dc.value.Accept(this));
                     }
 
-                    var enumvar = gensym.GenSymAutomatic("_de", null, false);
+                    var enumvar = gensym.GenSymAutomatic("_de", null!, false);
                     gensym.PushIdMappings(new Dictionary<string, CodeExpression>
                 {
                     { tuple.values[0].ToString(), m.Access(enumvar, "Key") },

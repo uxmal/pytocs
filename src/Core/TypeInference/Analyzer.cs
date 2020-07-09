@@ -111,13 +111,13 @@ namespace Pytocs.Core.TypeInference
             this.Builtins.Initialize();
             AddPythonPath();
             CopyModels();
+            var p = FileSystem.CombinePath(FileSystem.getSystemTempDir(), "pytocs");
+            cacheDir = FileSystem.CombinePath(p, "ast_cache");
             CreateCacheDirectory();
             if (astCache is null)
             {
                 astCache = new AstCache(this, FileSystem, logger, cacheDir);
             }
-            var p = FileSystem.CombinePath(FileSystem.getSystemTempDir(), "pytocs");
-            cacheDir = FileSystem.CombinePath(p, "ast_cache");
         }
 
         public DataTypeFactory TypeFactory { get; private set; }

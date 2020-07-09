@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +21,8 @@ using System.Text;
 using System.Threading.Tasks;
 using Pytocs.Core.CodeModel;
 
+#nullable enable
+
 namespace Pytocs.Core.Translate
 {
     public class LocalVariableGenerator : ICodeStatementVisitor<int>
@@ -39,7 +41,7 @@ namespace Pytocs.Core.Translate
             gen.Generate();
         }
 
-        public static void Generate(List<CodeParameterDeclarationExpression> parameters, List<CodeStatement> statements, HashSet<string> globals)
+        public static void Generate(List<CodeParameterDeclarationExpression>? parameters, List<CodeStatement> statements, HashSet<string> globals)
         {
             parameters = parameters ?? new List<CodeParameterDeclarationExpression>();
             var gen = new LocalVariableGenerator(parameters, statements, globals);
@@ -56,6 +58,7 @@ namespace Pytocs.Core.Translate
             this.statements = statements;
             this.globals = globals;
             this.parentOf = new Dictionary<CodeStatement, List<CodeStatement>>();
+            this.path = new List<CodeStatement>();
             this.paths = new Dictionary<CodeVariableReferenceExpression, List<List<CodeStatement>>>(
                 new IdCmp());
         }
