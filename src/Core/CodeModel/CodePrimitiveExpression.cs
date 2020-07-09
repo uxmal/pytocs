@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,12 +24,12 @@ namespace Pytocs.Core.CodeModel
 {
     public class CodePrimitiveExpression : CodeExpression
     {
-        public CodePrimitiveExpression(object o)
+        public CodePrimitiveExpression(object? o)
         {
             this.Value = o;
         }
 
-        public object Value { get; set; }
+        public object? Value { get; set; }
 
         public override void Accept(ICodeExpressionVisitor visitor)
         {

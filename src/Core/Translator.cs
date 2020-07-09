@@ -110,8 +110,8 @@ namespace Pytocs.Core
 
         public void TranslateFile(string inputFileName, string outputFileName)
         {
-            TextReader reader = null;
-            TextWriter writer = null;
+            TextReader? reader = null;
+            TextWriter? writer = null;
             try
             {
                 try

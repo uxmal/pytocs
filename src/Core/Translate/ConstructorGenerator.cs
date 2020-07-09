@@ -24,8 +24,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace Pytocs.Core.Translate
 {
     public class ConstructorGenerator : MethodGenerator
@@ -58,16 +56,13 @@ namespace Pytocs.Core.Translate
             if (gen.Scope.Count == 0)
                 return;
             gen.Scope[0].ToString();
-            var expStm = gen.Scope[0] as CodeExpressionStatement;
-            if (expStm == null)
+            if (!(gen.Scope[0] is CodeExpressionStatement expStm))
                 return;
-            var appl = expStm.Expression as CodeApplicationExpression;
-            if (appl == null)
+            if (!(expStm.Expression is CodeApplicationExpression appl))
                 return;
-            var method = appl.Method as CodeFieldReferenceExpression;
-            if (method == null || method.FieldName != "__init__")
+            if (!(appl.Method is CodeFieldReferenceExpression method) || method.FieldName != "__init__")
                 return;
-            var ctor = (CodeConstructor) gen.CurrentMember;
+            var ctor = (CodeConstructor) gen.CurrentMember!;
             ctor.Comments.AddRange(comments);
             ctor.BaseConstructorArgs.AddRange(appl.Arguments.Skip(1));
             gen.Scope.RemoveAt(0);

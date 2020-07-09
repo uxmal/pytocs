@@ -19,8 +19,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
-#nullable enable
-
 namespace Pytocs.Core.Syntax
 {
     public class AliasedExp : Exp

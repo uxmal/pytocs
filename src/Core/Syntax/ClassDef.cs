@@ -19,8 +19,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-#nullable enable
-
 namespace Pytocs.Core.Syntax
 {
     public class ClassDef : Statement

@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -333,7 +333,7 @@ namespace Pytocs.Core.CodeModel
                     writer.Write(md.Name);
                     writer.Write(" = ");
                 }
-                md.Expression.Accept(this);
+                md.Expression!.Accept(this);
             }
             --writer.IndentLevel;
             writer.Write("}");
@@ -366,7 +366,7 @@ namespace Pytocs.Core.CodeModel
             else
             {
                 var sw = new CSharpStatementWriter(writer);
-                sw.WriteStatements(l.Statements);
+                sw.WriteStatements(l.Statements!);
             }
         }
 
@@ -496,7 +496,7 @@ namespace Pytocs.Core.CodeModel
                 writer.Write(" {");
                 writer.WriteLine();
                 ++writer.IndentLevel;
-                string sep = null;
+                string? sep = null;
                 foreach (var e in c.Initializers)
                 {
                     if (sep != null)
@@ -532,13 +532,13 @@ namespace Pytocs.Core.CodeModel
             case string s:
                 WriteStringLiteral(s);
                 break;
-            case int i:
+            case int _:
                 writer.Write(p.Value.ToString());
                 break;
             case long l:
                 writer.Write("{0}L", l);
                 break;
-            case bool b:
+            case bool _:
                 writer.Write((bool)p.Value ? "true" : "false");
                 break;
             case double d:

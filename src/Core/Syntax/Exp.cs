@@ -19,8 +19,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Numerics;
 
-#nullable enable
-
 namespace Pytocs.Core.Syntax
 {
     public abstract class Exp : Node

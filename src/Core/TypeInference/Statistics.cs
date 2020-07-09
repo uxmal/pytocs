@@ -18,8 +18,6 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-#nullable enable
-
 namespace Pytocs.Core.TypeInference
 {
     public class Statistics

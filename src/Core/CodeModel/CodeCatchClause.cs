@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +33,7 @@ namespace Pytocs.Core.CodeModel
             LocalName = localName;
         }
 
-        public CodeCatchClause(string localName, CodeTypeReference catchExceptionType) : this()
+        public CodeCatchClause(string? localName, CodeTypeReference? catchExceptionType) : this()
         {
             LocalName = localName;
             CatchExceptionType = catchExceptionType;
@@ -46,8 +46,8 @@ namespace Pytocs.Core.CodeModel
             Statements.AddRange(statements);
         }
 
-        public CodeTypeReference CatchExceptionType { get; set; }
-        public string LocalName { get; set; }
+        public CodeTypeReference? CatchExceptionType { get; set; }
+        public string? LocalName { get; set; }
         public List<CodeStatement> Statements { get; private set; }
     }
 }

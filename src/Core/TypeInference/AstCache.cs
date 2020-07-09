@@ -21,8 +21,6 @@ using System.IO;
 using System.Linq;
 using System.Diagnostics;
 
-#nullable enable
-
 namespace Pytocs.Core.TypeInference
 {
     /// <summary>

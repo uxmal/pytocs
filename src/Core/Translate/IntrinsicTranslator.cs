@@ -22,8 +22,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace Pytocs.Core.Translate
 {
     /// <summary>
@@ -151,7 +149,7 @@ namespace Pytocs.Core.Translate
                             new CodeCollectionInitializer(
                                 m.Prim(
                                     ((CodeVariableReferenceExpression)a.exp1).Name),
-                                a.exp2))
+                                a.exp2!))
                         .ToArray());
                 return exp;
             }

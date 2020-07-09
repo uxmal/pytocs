@@ -20,8 +20,6 @@ using System.Linq;
 using State = Pytocs.Core.TypeInference.State;
 using TypeStack = Pytocs.Core.TypeInference.TypeStack;
 
-#nullable enable
-
 namespace Pytocs.Core.Types
 {
     public abstract class DataType

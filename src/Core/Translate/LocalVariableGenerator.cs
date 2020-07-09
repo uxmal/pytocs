@@ -21,8 +21,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Pytocs.Core.CodeModel;
 
-#nullable enable
-
 namespace Pytocs.Core.Translate
 {
     public class LocalVariableGenerator : ICodeStatementVisitor<int>
@@ -77,7 +75,7 @@ namespace Pytocs.Core.Translate
 
         private void Generate()
         {
-            var paramNames = new HashSet<string>(
+            var paramNames = new HashSet<string?>(
                 parameters
                 .Select(p => p.ParameterName));
             foreach (var de in paths.Where(

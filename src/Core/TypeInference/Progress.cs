@@ -16,8 +16,6 @@
 
 using System;
 
-#nullable enable
-
 namespace Pytocs.Core.TypeInference
 {
     public interface IProgress

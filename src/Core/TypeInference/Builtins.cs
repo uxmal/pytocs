@@ -20,8 +20,6 @@ using Url = Pytocs.Core.Syntax.Url;
 using Pytocs.Core.Types;
 using System.Runtime.CompilerServices;
 
-#nullable enable
-
 namespace Pytocs.Core.TypeInference
 {
 #pragma warning disable IDE1006 // Naming Styles

@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,8 +30,8 @@ namespace Pytocs.Core.CodeModel
             this.Initializers = new List<CodeExpression>();
         }
 
-        public CodeTypeReference Type { get; set; }
-        public CodeInitializer Initializer { get; set; }
+        public CodeTypeReference? Type { get; set; }
+        public CodeInitializer? Initializer { get; set; }
         public List<CodeExpression> Arguments { get; private set; }
         public List<CodeExpression> Initializers { get; set; }
 

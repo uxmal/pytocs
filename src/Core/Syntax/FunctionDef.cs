@@ -20,8 +20,6 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-#nullable enable
-
 namespace Pytocs.Core.Syntax
 {
     public class FunctionDef : Statement

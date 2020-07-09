@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -35,10 +35,10 @@ namespace Pytocs.Core
         { 
         }
 
-        public Symbol GetSymbol(string name)
+        public Symbol? GetSymbol(string name)
         {
             if (!symbols.TryGetValue(name, out Symbol s))
-                s = null;
+                s = null!;
             return s;
         }
 

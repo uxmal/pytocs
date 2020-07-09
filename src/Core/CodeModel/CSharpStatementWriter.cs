@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -100,7 +100,7 @@ namespace Pytocs.Core.CodeModel
         {
             writer.Write("if");
             writer.Write(" (");
-            cond.Condition.Accept(this.expWriter);
+            cond.Condition!.Accept(this.expWriter);
             writer.Write(")");
             WriteStatements(cond.TrueStatements);
             if (cond.FalseStatements.Count > 0)
@@ -152,7 +152,7 @@ namespace Pytocs.Core.CodeModel
                 if (!string.IsNullOrEmpty(clause.LocalName))
                 {
                     writer.Write(" ");
-                    writer.WriteName(clause.LocalName);
+                    writer.WriteName(clause.LocalName!);
                 }
                 writer.Write(")");
             }
@@ -166,7 +166,7 @@ namespace Pytocs.Core.CodeModel
             writer.Write(" ");
             writer.Write("while");
             writer.Write(" (");
-            loop.Test.Accept(expWriter);
+            loop.Test!.Accept(expWriter);
             writer.Write(");");
             TerminateLine();
             return 0;
@@ -176,7 +176,7 @@ namespace Pytocs.Core.CodeModel
         {
             writer.Write("while");
             writer.Write(" (");
-            loop.Test.Accept(expWriter);
+            loop.Test!.Accept(expWriter);
             writer.Write(")");
             WriteStatements(loop.Body);
             writer.WriteLine();

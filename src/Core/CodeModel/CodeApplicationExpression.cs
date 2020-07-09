@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,20 +24,15 @@ namespace Pytocs.Core.CodeModel
 {
     public class CodeApplicationExpression : CodeExpression
     {
-        public CodeExpression Method { get; private set; }
-
-        private CodeApplicationExpression()
-        {
-            this.Arguments = new List<CodeExpression>();
-        }
-
-        public CodeApplicationExpression(CodeExpression fn, IEnumerable<CodeExpression> args) : this()
+        public CodeApplicationExpression(CodeExpression fn, IEnumerable<CodeExpression> args)
         {
             this.Method = fn;
-            this.Arguments.AddRange(args);
+            this.Arguments = new List<CodeExpression>(args);
         }
 
-        public List<CodeExpression> Arguments { get; private set; }
+        public CodeExpression Method { get; }
+
+        public List<CodeExpression> Arguments { get;  }
 
         public override void Accept(ICodeExpressionVisitor visitor)
         {

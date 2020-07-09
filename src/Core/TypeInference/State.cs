@@ -20,8 +20,6 @@ using System.Diagnostics;
 using Pytocs.Core.Types;
 using Pytocs.Core.Syntax;
 
-#nullable enable
-
 namespace Pytocs.Core.TypeInference
 {
     /// <summary>

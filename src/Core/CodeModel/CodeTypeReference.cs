@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,14 +24,9 @@ namespace Pytocs.Core.CodeModel
 {
     public class CodeTypeReference
     {
-        public CodeTypeReference()
+        public CodeTypeReference(Type type)
         {
             TypeArguments = new List<CodeTypeReference>();
-        }
-
-        public CodeTypeReference(Type type)
-            : this()
-        {
             if (type.IsGenericType)
             {
                 TypeName = type.FullName.Remove(type.FullName.IndexOf('`'));
@@ -46,14 +41,14 @@ namespace Pytocs.Core.CodeModel
         }
 
         public CodeTypeReference(string typeName)
-            : this()
         {
+            TypeArguments = new List<CodeTypeReference>();
             TypeName = typeName;
         }
 
         public CodeTypeReference(string typeName, params CodeTypeReference[] typeArgs)
-            : this()
         {
+            TypeArguments = new List<CodeTypeReference>();
             this.TypeName = typeName;
             this.TypeArguments.AddRange(typeArgs);
         }

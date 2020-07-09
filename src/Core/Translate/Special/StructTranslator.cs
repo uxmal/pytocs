@@ -22,8 +22,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace Pytocs.Core.Translate.Special
 {
     public class StructTranslator

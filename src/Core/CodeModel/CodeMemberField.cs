@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -26,7 +26,7 @@ namespace Pytocs.Core.CodeModel
     {
         public CodeTypeReference FieldType { get; set; }
         public string FieldName { get; set; }
-        public CodeExpression InitExpression;
+        public CodeExpression? InitExpression { get; set; }
 
         public CodeMemberField(Type type, string fieldName)
         {

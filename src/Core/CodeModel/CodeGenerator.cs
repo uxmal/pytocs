@@ -64,7 +64,7 @@ namespace Pytocs.Core.CodeModel
             return new CodeBinaryOperatorExpression(l, op, r);
         }
 
-        public CodeCatchClause CatchClause(string localName, CodeTypeReference type, Action generateClauseBody)
+        public CodeCatchClause CatchClause(string? localName, CodeTypeReference? type, Action generateClauseBody)
         {
             var clause = new CodeCatchClause(localName, type);
             var oldScope = Scope;
@@ -383,7 +383,7 @@ namespace Pytocs.Core.CodeModel
             {
                 Type = new CodeTypeReference("List", elemType)
             };
-            list.Initializers.AddRange(exprs);
+            list.Initializers!.AddRange(exprs);
             return list;
         }
 
@@ -404,7 +404,7 @@ namespace Pytocs.Core.CodeModel
             return new CodeCastExpression(type, exp);
         }
 
-        public void EnsureImports(IEnumerable<string> nmespaces)
+        public void EnsureImports(IEnumerable<string>? nmespaces)
         {
             if (nmespaces == null)
                 return;
@@ -491,7 +491,7 @@ namespace Pytocs.Core.CodeModel
             {
                 Type = type
             };
-            exp.Arguments.AddRange(args);
+            exp.Arguments!.AddRange(args);
             return exp;
         }
 
@@ -506,7 +506,7 @@ namespace Pytocs.Core.CodeModel
             return new CodeNumericLiteral(sNumber);
         }
 
-        public CodePrimitiveExpression Prim(object o)
+        public CodePrimitiveExpression Prim(object? o)
         {
             if (o is long l)
             {

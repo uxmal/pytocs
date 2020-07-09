@@ -25,8 +25,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace Pytocs.Core.Translate
 {
     public class StatementTranslator : IStatementVisitor
@@ -187,7 +185,7 @@ namespace Pytocs.Core.Translate
 
         public void VisitComment(CommentStatement c)
         {
-            gen.Comment(c.comment);
+            gen.Comment(c.Comment!);
         }
 
         public void VisitTry(TryStatement t)
@@ -513,9 +511,9 @@ namespace Pytocs.Core.Translate
                 var def = lgen.GenerateLambdaVariable(f);
                 var meth = lgen.Generate();
                 def.InitExpression = gen.Lambda(
-                    meth.Parameters.Select(p => new CodeVariableReferenceExpression(p.ParameterName)).ToArray(),
+                    meth.Parameters.Select(p => new CodeVariableReferenceExpression(p.ParameterName!)).ToArray(),
                     meth.Statements);
-                gen.CurrentMemberStatements.Add(def);
+                gen.CurrentMemberStatements!.Add(def);
                 return;
             }
             if (this.classDef != null)
@@ -747,7 +745,7 @@ namespace Pytocs.Core.Translate
                 LocalVariableGenerator.Generate(null, prop.GetStatements, globals);
                 LocalVariableGenerator.Generate(
                     new List<CodeParameterDeclarationExpression> {
-                        new CodeParameterDeclarationExpression(prop.PropertyType, "value"),
+                        new CodeParameterDeclarationExpression(prop.PropertyType!, "value"),
                     },
                     prop.SetStatements,
                     globals);
@@ -766,7 +764,7 @@ namespace Pytocs.Core.Translate
             var def = (FunctionDef)getter;
             var mgen = new MethodGenerator(this.classDef, def, null, def.parameters, false, async, types, gen);
             var comments = ConvertFirstStringToComments(def.body.stmts);
-            gen.CurrentMemberComments.AddRange(comments);
+            gen.CurrentMemberComments!.AddRange(comments);
             mgen.Xlat(def.body);
         }
 
@@ -777,7 +775,7 @@ namespace Pytocs.Core.Translate
             var def = (FunctionDef)setter;
             var mgen = new MethodGenerator(this.classDef, def, null, def.parameters, false, async, types, gen);
             var comments = ConvertFirstStringToComments(def.body.stmts);
-            gen.CurrentMemberComments.AddRange(comments);
+            gen.CurrentMemberComments!.AddRange(comments);
             mgen.Xlat(def.body);
         }
 

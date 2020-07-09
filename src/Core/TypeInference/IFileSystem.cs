@@ -22,8 +22,6 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace Pytocs.Core.TypeInference
 {
     public interface IFileSystem

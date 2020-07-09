@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -30,7 +30,7 @@ namespace Pytocs.Core.CodeModel
             this.Comments = new List<CodeCommentStatement>();
         }
 
-        public string Name { get; set; }
+        public string? Name { get; set; }
         public List<CodeAttributeDeclaration> CustomAttributes { get; private set; }
         public MemberAttributes Attributes { get; set; }
         public List<CodeCommentStatement> Comments { get; private set; }

@@ -21,8 +21,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Pytocs.Core.TypeInference;
 
-#nullable enable
-
 namespace Pytocs.Core.Types
 {
     public class DataTypeFactory

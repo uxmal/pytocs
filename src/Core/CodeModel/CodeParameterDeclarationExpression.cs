@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,9 +44,9 @@ namespace Pytocs.Core.CodeModel
             this.DefaultValue = defaultValue;
         }
 
-        public CodeTypeReference ParameterType { get; set; }
-        public string ParameterName { get; set; }
-        public CodeExpression DefaultValue { get; set; }
+        public CodeTypeReference? ParameterType { get; set; }
+        public string? ParameterName { get; set; }
+        public CodeExpression? DefaultValue { get; set; }
         public bool IsVarargs { get; set; }
 
         public override void Accept(ICodeExpressionVisitor visitor)

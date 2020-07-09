@@ -20,8 +20,6 @@ using System.Linq;
 using System.IO;
 using System.Text;
 
-#nullable enable
-
 namespace Pytocs.Core.Syntax
 {
     public class Argument : Node

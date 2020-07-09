@@ -16,8 +16,6 @@
 
 using State = Pytocs.Core.TypeInference.State;
 
-#nullable enable
-
 namespace Pytocs.Core.Types
 {
     public class ModuleType : DataType

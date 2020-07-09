@@ -24,8 +24,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace Pytocs.Core.Translate
 {
     /// <summary>
@@ -86,11 +84,11 @@ namespace Pytocs.Core.Translate
             CodeMemberMethod method;
             if (isStatic)
             {
-                method = gen.StaticMethod(fnName, retType, parms, () => Xlat(f.body));
+                method = gen.StaticMethod(fnName!, retType, parms, () => Xlat(f.body));
             }
             else
             {
-                method = gen.Method(fnName, retType, parms, () => Xlat(f.body));
+                method = gen.Method(fnName!, retType, parms, () => Xlat(f.body));
             }
             method.IsAsync = isAsync;
             GenerateTupleParameterUnpackers(method);
@@ -103,7 +101,7 @@ namespace Pytocs.Core.Translate
             foreach (var parameter in args.Where(p => p.tuple != null))
             {
                 var csTupleParam = mpPyParamToCs![parameter];
-                var tuplePath = new CodeVariableReferenceExpression(csTupleParam.ParameterName);
+                var tuplePath = new CodeVariableReferenceExpression(csTupleParam.ParameterName!);
                 foreach (var component in parameter.tuple.Select((p, i) => new { p, i = i + 1 }))
                 {
                     GenerateTupleParameterUnpacker(component.p, component.i, tuplePath, method);
@@ -125,7 +123,7 @@ namespace Pytocs.Core.Translate
         {
             var comments = StatementTranslator.ConvertFirstStringToComments(suite.stmts);
             stmtXlat.Xlat(suite);
-            gen.CurrentMemberComments.AddRange(comments);
+            gen.CurrentMemberComments!.AddRange(comments);
         }
 
         private CodeTypeReference CreateReturnType()
@@ -185,7 +183,7 @@ namespace Pytocs.Core.Translate
             return new CodeParameterDeclarationExpression
             {
                 ParameterType = parameterType,
-                ParameterName = ta.Id?.Name,
+                ParameterName = ta.Id?.Name!,
                 IsVarargs = ta.vararg,
                 DefaultValue = ta.Test?.Accept(this.xlat)
             };

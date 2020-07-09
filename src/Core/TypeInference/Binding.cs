@@ -21,8 +21,6 @@ using System.Linq;
 using System.Text;
 using Pytocs.Core.Types;
 
-#nullable enable
-
 namespace Pytocs.Core.TypeInference
 {
     /// <summary>

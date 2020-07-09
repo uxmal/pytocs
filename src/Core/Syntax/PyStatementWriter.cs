@@ -21,8 +21,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace Pytocs.Core.Syntax
 {
     class PyStatementWriter : IStatementVisitor
@@ -73,7 +71,7 @@ namespace Pytocs.Core.Syntax
 
         public void VisitComment(CommentStatement c)
         {
-            w.Write("#{0}", c.comment);
+            w.Write("#{0}", c.Comment ?? "");
         }
 
         public void VisitContinue(ContinueStatement c)

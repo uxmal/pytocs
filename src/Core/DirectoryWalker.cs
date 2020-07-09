@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,16 +42,18 @@ namespace Pytocs.Core
         {
             public string DirectoryName;
             public string Namespace;
+
+            public EnumerationState(string dir, string nmspace)
+            {
+                this.DirectoryName = dir;
+                this.Namespace = nmspace;
+            }
         }
 
         public void Enumerate(Action<EnumerationState> transformer)
         {
             var stack = new Stack<IEnumerator<EnumerationState>>();
-            stack.Push(new List<EnumerationState>{new EnumerationState 
-            {
-                DirectoryName = rootDirectory,
-                Namespace = ""
-            }}.GetEnumerator());
+            stack.Push(new List<EnumerationState>{new EnumerationState(rootDirectory, "") }.GetEnumerator());
             while (stack.Count > 0)
             {
                 var e = stack.Pop();
@@ -61,11 +63,7 @@ namespace Pytocs.Core
                 var state = e.Current;
                 transformer(state);
                 e = (fs.GetDirectories(state.DirectoryName, "*", SearchOption.TopDirectoryOnly)
-                     .Select(d => new EnumerationState
-                     {
-                         DirectoryName = d,
-                         Namespace = GenerateNamespace(state, d),
-                     })).GetEnumerator();
+                     .Select(d => new EnumerationState(d, GenerateNamespace(state, d)))).GetEnumerator();
                 stack.Push(e);
             }
         }

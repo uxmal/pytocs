@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -25,9 +25,9 @@ namespace Pytocs.Core.CodeModel
     public class CodeNamedArgument : CodeExpression
     {
         public CodeExpression exp1;
-        public CodeExpression exp2;
+        public CodeExpression? exp2;
 
-        public CodeNamedArgument(CodeExpression exp1, CodeExpression exp2)
+        public CodeNamedArgument(CodeExpression exp1, CodeExpression? exp2)
         {
             this.exp1 = exp1;
             this.exp2 = exp2;

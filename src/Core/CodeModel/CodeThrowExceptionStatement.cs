@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,7 +33,7 @@ namespace Pytocs.Core.CodeModel
             this.Expression = e;
         }
 
-        public CodeExpression Expression { get; set; }
+        public CodeExpression? Expression { get; set; }
 
         public override T Accept<T>(ICodeStatementVisitor<T> visitor)
         {

@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,11 +23,11 @@ namespace Pytocs.Core.CodeModel
 {
     public class CSharpTypeWriter : ICodeMemberVisitor<int>
     {
-        private CodeTypeDeclaration type;
-        private IndentingTextWriter writer;
-        private CSharpExpressionWriter expWriter;
+        private CodeTypeDeclaration? type;
+        private readonly IndentingTextWriter writer;
+        private readonly CSharpExpressionWriter expWriter;
 
-        public CSharpTypeWriter(CodeTypeDeclaration type, IndentingTextWriter writer)
+        public CSharpTypeWriter(CodeTypeDeclaration? type, IndentingTextWriter writer)
         {
             this.type = type;
             this.writer = writer;
@@ -61,9 +61,9 @@ namespace Pytocs.Core.CodeModel
             RenderCustomAttributes(property);
             RenderMemberFieldAttributes(property.Attributes);
             var expWriter = new CSharpExpressionWriter(writer);
-            expWriter.VisitTypeReference(property.PropertyType);
+            expWriter.VisitTypeReference(property.PropertyType!);
             writer.Write(" ");
-            writer.WriteName(property.Name);
+            writer.WriteName(property.Name!);
             writer.Write(" ");
             writer.Write("{");
             writer.WriteLine();
@@ -98,9 +98,9 @@ namespace Pytocs.Core.CodeModel
             RenderCustomAttributes(method);
             RenderMethodAttributes(method);
             var expWriter = new CSharpExpressionWriter(writer);
-            expWriter.VisitTypeReference(method.ReturnType);
+            expWriter.VisitTypeReference(method.ReturnType!);
             writer.Write(" ");
-            writer.WriteName(method.Name);
+            writer.WriteName(method.Name!);
             WriteMethodParameters(method);
 
             var stmWriter = new CSharpStatementWriter(writer);
@@ -144,7 +144,7 @@ namespace Pytocs.Core.CodeModel
         {
             RenderCustomAttributes(cons);
             RenderMethodAttributes(cons);
-            writer.WriteName(type.Name);
+            writer.WriteName(type!.Name!);
             WriteMethodParameters(cons);
             if (cons.BaseConstructorArgs.Count > 0)
             {
@@ -196,13 +196,13 @@ namespace Pytocs.Core.CodeModel
                 writer.Write(" ");
                 writer.Write("object");
                 writer.Write(" [] ");
-                writer.WriteName(param.ParameterName);
+                writer.WriteName(param.ParameterName!);
             }
             else
             {
-                expType.VisitTypeReference(param.ParameterType);
+                expType.VisitTypeReference(param.ParameterType!);
                 writer.Write(" ");
-                writer.WriteName(param.ParameterName);
+                writer.WriteName(param.ParameterName!);
                 if (param.DefaultValue != null)
                 {
                     writer.Write(" = ");
@@ -224,7 +224,7 @@ namespace Pytocs.Core.CodeModel
             RenderTypeMemberAttributes(type.Attributes);
             writer.Write("class");
             writer.Write(" ");
-            writer.WriteName(type.Name);
+            writer.WriteName(type.Name!);
 
             if (type.BaseTypes.Count > 0)
             {
@@ -282,8 +282,8 @@ namespace Pytocs.Core.CodeModel
             foreach (var attr in member.CustomAttributes)
             {
                 writer.Write("[");
-                writer.Write(attr.AttributeType.TypeName);
-                if (attr.Arguments.Count > 0)
+                writer.Write(attr.AttributeType!.TypeName);
+                if (attr.Arguments!.Count > 0)
                 {
                     writer.Write("(");
                     var sep = "";
@@ -306,7 +306,7 @@ namespace Pytocs.Core.CodeModel
                 writer.Write(arg.Name);
                 writer.Write("=");
             }
-            arg.Value.Accept(expWriter);
+            arg.Value!.Accept(expWriter);
         }
 
         private void RenderMemberFieldAttributes(MemberAttributes attrs)

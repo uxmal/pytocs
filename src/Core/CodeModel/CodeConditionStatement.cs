@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -29,7 +29,7 @@ namespace Pytocs.Core.CodeModel
             FalseStatements = new List<CodeStatement>();
         }
 
-        public CodeExpression Condition { get; set; }
+        public CodeExpression? Condition { get; set; }
         public List<CodeStatement> TrueStatements { get; private set; }
         public List<CodeStatement> FalseStatements { get; private set; }
 

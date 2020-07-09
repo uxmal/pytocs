@@ -21,8 +21,6 @@ using System.Text;
 using System.Threading.Tasks;
 using Pytocs.Core.CodeModel;
 
-#nullable enable
-
 namespace Pytocs.Core.Translate
 {
     public class LocalSymbol

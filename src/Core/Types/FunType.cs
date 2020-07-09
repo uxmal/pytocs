@@ -19,8 +19,6 @@ using Pytocs.Core.Syntax;
 using System.Collections.Generic;
 using System.Linq;
 
-#nullable enable
-
 namespace Pytocs.Core.Types
 {
     public class FunType : DataType

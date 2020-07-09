@@ -23,8 +23,6 @@ using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
-#nullable enable
-
 namespace Pytocs.Core.Syntax
 {
     /// <summary>
@@ -842,7 +840,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 return new List<Statement> {
                     new CommentStatement(this.filename, 0, 0)
                     {
-                        comment = "<parser-error>",
+                        Comment = "<parser-error>",
                     }
                 };
             }
@@ -890,7 +888,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 return new List<Statement>
                 {
-                    new SuiteStatement(stmts, filename, stmts[0].Start, stmts.Last().End) { comment = comment }
+                    new SuiteStatement(stmts, filename, stmts[0].Start, stmts.Last().End) { Comment = comment }
                 };
             }
         }
@@ -919,7 +917,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 Expect(TokenType.INDENT);
                 if (PeekAndDiscard(TokenType.COMMENT, out var c))
                 {
-                    return new CommentStatement(filename, c.Start, c.End) { comment = (string)c.Value! };
+                    return new CommentStatement(filename, c.Start, c.End) { Comment = (string)c.Value! };
                 }
                 else
                 {
@@ -929,7 +927,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 Expect(TokenType.DEDENT);
                 if (PeekAndDiscard(TokenType.COMMENT, out var cc))
                 {
-                    return new CommentStatement(filename, cc.Start, cc.End) { comment = (string)cc.Value! };
+                    return new CommentStatement(filename, cc.Start, cc.End) { Comment = (string)cc.Value! };
                 }
                 else
                 {
@@ -1402,7 +1400,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             var token = Expect(TokenType.COMMENT);
             return new CommentStatement(filename, token.Start, token.End)
             {
-                comment = (string)token.Value!
+                Comment = (string)token.Value!
             };
         }
 
@@ -1544,10 +1542,10 @@ eval_input: testlist NEWLINE* ENDMARKER
             string? c = null;
             if (Peek(TokenType.COMMENT))
             {
-                c = comment_stmt().comment;
+                c = comment_stmt().Comment;
             }
             var body = suite();
-            body.comment = c;
+            body.Comment = c;
             int posEnd = body.End;
             var exHandlers = new List<ExceptHandler>();
             Statement? elseHandler = null;
@@ -1591,7 +1589,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 Expect(TokenType.COMMENT);
                 cmts.Add(new CommentStatement(filename, token.Start, token.End)
                 {
-                    comment = (string)token.Value!
+                    Comment = (string)token.Value!
                 });
                 PeekAndDiscard(TokenType.NEWLINE);
             }
@@ -1666,7 +1664,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 while (!Peek(TokenType.INDENT))
                 {
                     var token = Expect(TokenType.COMMENT);
-                    stmts.Add(new CommentStatement(filename, token.Start, token.End) { comment = (string)token.Value! });
+                    stmts.Add(new CommentStatement(filename, token.Start, token.End) { Comment = (string)token.Value! });
                     Expect(TokenType.NEWLINE);
                 }
                 Expect(TokenType.INDENT);
@@ -2176,15 +2174,19 @@ eval_input: testlist NEWLINE* ENDMARKER
                 e = test();
 
             if (Peek(TokenType.COMMENT))
-                e.Comment = (string)Expect(TokenType.COMMENT).Value!;
+            {
+                var comment = (string) Expect(TokenType.COMMENT).Value!;
+                if (e != null)
+                    e.Comment = comment;
+            }
             Exp e2;
             if (Peek(TokenType.For))
             {
                 e2 = comp_for();
                 if (tuple)
-                    return new GeneratorExp(e, e2, filename, e.Start, e2.End);
+                    return new GeneratorExp(e!, e2, filename, e!.Start, e2.End);
                 else
-                    return new ListComprehension(e, e2, filename, e.Start, e2.End);
+                    return new ListComprehension(e!, e2, filename, e!.Start, e2.End);
             }
             else
             {

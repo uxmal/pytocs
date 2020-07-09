@@ -14,8 +14,6 @@
 //  limitations under the License.
 #endregion
 
-#nullable enable
-
 namespace Pytocs.Core.Types
 {
     public class BoolType : DataType

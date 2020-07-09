@@ -24,8 +24,6 @@ using System.Numerics;
 using Pytocs.Core.Types;
 using System.Globalization;
 
-#nullable enable
-
 namespace Pytocs.Core.Translate
 {
     /// <summary>
@@ -279,7 +277,7 @@ namespace Pytocs.Core.Translate
             return m.BinOp(
                 e.Dst.Accept(this),
                 mppyoptocsop[e.op],
-                e.Src?.Accept(this));
+                e.Src!.Accept(this));
         }
 
         public CodeExpression VisitAwait(AwaitExp awaitExp)

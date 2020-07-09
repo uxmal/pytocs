@@ -17,8 +17,6 @@
 using System.Collections.Generic;
 using State = Pytocs.Core.TypeInference.State;
 
-#nullable enable
-
 namespace Pytocs.Core.Types
 {
     public class InstanceType : DataType

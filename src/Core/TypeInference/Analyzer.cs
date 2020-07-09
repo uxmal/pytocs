@@ -25,8 +25,6 @@ using Name = Pytocs.Core.Syntax.Identifier;
 using System.Diagnostics;
 using Pytocs.Core;
 
-#nullable enable
-
 namespace Pytocs.Core.TypeInference
 {
     public interface Analyzer

@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,16 +24,12 @@ namespace Pytocs.Core.CodeModel
 {
     public class CodeNamespace :ICodeElement
     {
-        public CodeNamespace()
+        public CodeNamespace(string @namespace)
         {
+            this.Name = @namespace;
             this.Types = new List<CodeTypeDeclaration>();
             this.Imports = new List<CodeNamespaceImport>();
             this.Comments = new List<CodeCommentStatement>();
-        }
-
-        public CodeNamespace(string @namespace) : this()
-        {
-            this.Name = @namespace;
         }
 
         public T Accept<T>(ICodeElementVisitor<T> visitor)
