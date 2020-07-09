@@ -3,7 +3,7 @@
     "Cli": {
       "commandName": "Project",
       "commandLineArgs": "-r .",
-      "workingDirectory": "D:\\dev\\uxmal\\rev\\angr\\cle"
+      "workingDirectory": "D:\\dev\\uxmal\\rev\\py\\angr\\angr"
     }
   }
 }

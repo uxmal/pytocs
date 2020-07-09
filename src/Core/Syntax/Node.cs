@@ -24,9 +24,9 @@ namespace Pytocs.Core.Syntax
 {
     public abstract class Node
     {
-        public /*readonly*/ string Filename;
-        public /*readonly*/ int Start;
-        public /*readonly*/ int End;
+        public readonly string Filename;
+        public readonly int Start;
+        public readonly int End;
 
         public Node Parent;
         public string Name;

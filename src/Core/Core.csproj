@@ -4,6 +4,8 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <AssemblyName>Pytocs.Core</AssemblyName>
     <RootNamespace>Pytocs.Core</RootNamespace>
+    <LangVersion>8.0</LangVersion>
+    <nullable>enable</nullable>
   </PropertyGroup>
 
   <ItemGroup>

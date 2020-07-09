@@ -1,5 +1,5 @@
 #region License
-//  Copyright 2015-2020 John Källén
+//  Copyright 2015-2020 John Kï¿½llï¿½n
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -113,7 +113,6 @@ namespace Pytocs.Core.TypeInference
                 this.bodyStart = node.Start;
                 this.bodyEnd = node.End;
                 return modNode.Name;
-
             }
             else
             {
@@ -127,7 +126,7 @@ namespace Pytocs.Core.TypeInference
         {
             Node parent = Node.Parent;
             if (parent is Pytocs.Core.Syntax.FunctionDef funcDef && funcDef.name == Node)
-                return parent.GetDocString();
+                return funcDef.GetDocString();
             else
                 return Node.GetDocString();
         }

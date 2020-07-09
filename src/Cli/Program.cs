@@ -71,7 +71,7 @@ namespace Pytocs.Cli
                              logger);
                         var module = typeAnalysis.GetAstForFile(path);
                         xlator.TranslateModuleStatements(
-                            module.body.stmts,
+                            module.Body.stmts,
                             types,
                             Path.ChangeExtension(path, ".py.cs"));
                     }
@@ -96,7 +96,7 @@ namespace Pytocs.Cli
                          logger);
                     var module = typeAnalysis.GetAstForFile(path);
                     xlator.TranslateModuleStatements(
-                        module.body.stmts,
+                        module.Body.stmts,
                         types,
                         Path.ChangeExtension(path, ".py.cs"));
                 }

@@ -309,15 +309,6 @@ namespace Pytocs.Core.TypeInference
             return file.Replace(".", "%20").Replace('/', '.').Replace('\\', '.');
         }
 
-        public List<Diagnostic> GetDiagnosticsForFile(string file)
-        {
-            if (semanticErrors.TryGetValue(file, out var errs))
-            {
-                return errs;
-            }
-            return new List<Diagnostic>();
-        }
-
         public void putRef(Node node, ICollection<Binding> bs)
         {
             if (!(node is Url))
@@ -437,7 +428,7 @@ namespace Pytocs.Core.TypeInference
         private void CreateCacheDirectory()
         {
             var p = FileSystem.CombinePath(FileSystem.getSystemTempDir(), "pytocs");
-            cacheDir =FileSystem.CombinePath(p, "ast_cache");
+            cacheDir = FileSystem.CombinePath(p, "ast_cache");
             string f = cacheDir;
             msg(Resources.AstCacheIsAt, cacheDir);
 
@@ -553,9 +544,7 @@ namespace Pytocs.Core.TypeInference
                     {
                         state.Insert(this, name[i].Name, name[i], mod, BindingKind.VARIABLE);
                     }
-
                     prev = mod;
-
                 }
                 else if (i == name.Count - 1)
                 {

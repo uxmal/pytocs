@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -47,9 +47,9 @@ namespace Pytocs.Core.CodeModel
         }
 
         public List<CodeStatement> Scope { get;  private set; }
-        public CodeMember CurrentMember { get; private set; }
-        public List<CodeStatement> CurrentMemberStatements { get; private set; }
-        public List<CodeCommentStatement> CurrentMemberComments { get; private set; }
+        public CodeMember? CurrentMember { get; private set; }
+        public List<CodeStatement>? CurrentMemberStatements { get; private set; }
+        public List<CodeCommentStatement>? CurrentMemberComments { get; private set; }
         public CodeNamespace CurrentNamespace { get; set; }
         public CodeTypeDeclaration CurrentType { get; set; }
 
@@ -293,7 +293,7 @@ namespace Pytocs.Core.CodeModel
             return new CodeParameterDeclarationExpression(type, name, defaultValue);
         }
 
-        public void Return(CodeExpression e = null)
+        public void Return(CodeExpression? e = null)
         {
             Scope.Add(new CodeMethodReturnStatement(e));
         }
