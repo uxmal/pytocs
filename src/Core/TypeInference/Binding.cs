@@ -1,5 +1,5 @@
 #region License
-//  Copyright 2015-2020 John K�ll�n
+//  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Pytocs.Core.Types;
+
+#nullable enable
 
 namespace Pytocs.Core.TypeInference
 {
@@ -86,9 +88,9 @@ namespace Pytocs.Core.TypeInference
         /// True if not from a source file.
         /// </summary>
         public bool IsBuiltin { get; set; }
-        public string File => IsURL ? null : fileOrUrl;
+        public string? File => IsURL ? null : fileOrUrl;
 
-        public string URL => IsURL ? fileOrUrl : null;
+        public string? URL => IsURL ? fileOrUrl : null;
 
         public bool IsURL => fileOrUrl != null && fileOrUrl.StartsWith("http://");
 
@@ -98,7 +100,7 @@ namespace Pytocs.Core.TypeInference
             this.start = node.Start;
             this.end = node.End;
 
-            Node parent = node.Parent;
+            Node? parent = node.Parent;
             if ((parent is FunctionDef def && def.name == node) ||
                     (parent is ClassDef cldef && cldef.name == node))
             {
@@ -124,8 +126,8 @@ namespace Pytocs.Core.TypeInference
 
         public Str GetDocString()
         {
-            Node parent = Node.Parent;
-            if (parent is Pytocs.Core.Syntax.FunctionDef funcDef && funcDef.name == Node)
+            Node? parent = Node.Parent;
+            if (parent is FunctionDef funcDef && funcDef.name == Node)
                 return funcDef.GetDocString();
             else
                 return Node.GetDocString();

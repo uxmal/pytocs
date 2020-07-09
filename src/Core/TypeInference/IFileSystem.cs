@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -22,6 +22,8 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Threading.Tasks;
 
+#nullable enable
+
 namespace Pytocs.Core.TypeInference
 {
     public interface IFileSystem
@@ -41,8 +43,8 @@ namespace Pytocs.Core.TypeInference
         string GetFileName(string path);
         string makePathString(params string[] files);
         byte[] ReadFileBytes(string path);
-        string ReadFile(string path);
-        string relPath(string path1, string path2);
+        string? ReadFile(string path);
+        string? relPath(string path1, string path2);
         string GetFullPath(string file);
         void WriteFile(string path, string contents);
         void DeleteFile(string path);
@@ -148,7 +150,7 @@ namespace Pytocs.Core.TypeInference
             return sb.ToString();
         }
 
-        public string ReadFile(string path)
+        public string? ReadFile(string path)
         {
             // Don't use line-oriented file read -- need to retain CRLF if present
             // so the style-run and link offsets are correct.
@@ -169,7 +171,7 @@ namespace Pytocs.Core.TypeInference
             return File.ReadAllBytes(path);
         }
 
-        public string relPath(string path1, string path2)
+        public string? relPath(string path1, string path2)
         {
             string a = GetFullPath(path1);
             string b = GetFullPath(path2);
@@ -187,24 +189,24 @@ namespace Pytocs.Core.TypeInference
             }
 
             int ups = aSegments.Length - i - 1;
-            string res = null;
+            var res = new StringBuilder();
             for (int x = 0; x < ups; x++)
             {
-                res = res + Path.DirectorySeparatorChar + "..";
+                res = res.AppendFormat("{0}..", Path.DirectorySeparatorChar);
             }
 
             for (int y = i; y < bSegments.Length; y++)
             {
-                res = res + bSegments[y];
+                res.Append(bSegments[y]);
             }
 
-            if (res == null)
+            if (res.Length == 0)
             {
                 return null;
             }
             else
             {
-                return res;
+                return res.ToString();
             }
         }
 

@@ -70,7 +70,7 @@ namespace Pytocs.Core.TypeInference
 
         private void BindClassSlots(Exp eSlotNames)
         {
-            IEnumerable<Exp> slotNames = null;
+            IEnumerable<Exp>? slotNames = null;
             switch (eSlotNames)
             {
             case PyList srcList:
@@ -83,7 +83,7 @@ namespace Pytocs.Core.TypeInference
                 slotNames = expList.Expressions;
                 break;
             }
-            if (slotNames == null)
+            if (slotNames is null)
             {
                 //$TODO: dynamically generated slots are hard.
             }
@@ -131,8 +131,8 @@ namespace Pytocs.Core.TypeInference
 
         public DataType GetAttrType(AttributeAccess a, DataType targetType)
         {
-            ISet<Binding> bs = targetType.Table.LookupAttribute(a.FieldName.Name);
-            if (bs == null)
+            ISet<Binding>? bs = targetType.Table.LookupAttribute(a.FieldName.Name);
+            if (bs is null)
             {
                 analyzer.AddProblem(a.FieldName, "attribute not found in type: " + targetType);
                 DataType t = DataType.Unknown;
@@ -172,7 +172,7 @@ namespace Pytocs.Core.TypeInference
             foreach (var id in globalNames)
             {
                 scope.AddGlobalName(id.Name);
-                ISet<Binding> nb = scope.Lookup(id.Name);
+                ISet<Binding>? nb = scope.Lookup(id.Name);
                 if (nb != null)
                 {
                     analyzer.putRef(id, nb);
@@ -247,8 +247,8 @@ namespace Pytocs.Core.TypeInference
             DataType fun,
             List<DataType> pos,
             IDictionary<string, DataType> hash,
-            DataType kw,
-            DataType star)
+            DataType? kw,
+            DataType? star)
         {
             if (fun is FunType ft)
             {
@@ -285,11 +285,11 @@ namespace Pytocs.Core.TypeInference
         public static DataType Apply(
             Analyzer analyzer,
             FunType func,
-            List<DataType> pos,
-            IDictionary<string, DataType> hash,
-            DataType kw,
-            DataType star,
-            Exp call)
+            List<DataType>? pos,
+            IDictionary<string, DataType>? hash,
+            DataType? kw,
+            DataType? star,
+            Exp? call)
         {
             analyzer.RemoveUncalled(func);
 
@@ -374,7 +374,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-        public static DataType FirstArgumentType(FunctionDef f, FunType func, DataType selfType)
+        public static DataType? FirstArgumentType(FunctionDef f, FunType func, DataType? selfType)
         {
             if (f.parameters.Count == 0)
                 return null;
@@ -432,17 +432,17 @@ namespace Pytocs.Core.TypeInference
         /// <returns></returns>
         private static DataType BindParameters(
             Analyzer analyzer,
-            Node call,
+            Node? call,
             FunctionDef func,
             State funcTable,
             List<Parameter> parameters,
             Identifier rest,
             Identifier restKw,
-            List<DataType> pTypes,
-            List<DataType> dTypes,
-            IDictionary<string, DataType> hash,
-            DataType kw,
-            DataType star)
+            List<DataType>? pTypes,
+            List<DataType>? dTypes,
+            IDictionary<string, DataType>? hash,
+            DataType? kw,
+            DataType? star)
         {
             TupleType fromType = analyzer.TypeFactory.CreateTuple();
             int pSize = parameters == null ? 0 : parameters.Count;
@@ -457,15 +457,15 @@ namespace Pytocs.Core.TypeInference
 
             for (int i = 0, j = 0; i < pSize; i++)
             {
-                Parameter param = parameters[i];
+                Parameter param = parameters![i];
                 DataType aType;
                 if (i < aSize)
                 {
-                    aType = pTypes[i];
+                    aType = pTypes![i];
                 }
                 else if (i - nPos >= 0 && i - nPos < dSize)
                 {
-                    aType = dTypes[i - nPos];
+                    aType = dTypes![i - nPos];
                 }
                 else
                 {
@@ -488,13 +488,13 @@ namespace Pytocs.Core.TypeInference
                             aType = DataType.Unknown;
                             if (call != null)
                             {
-                                analyzer.AddProblem(param.Id, //$REVIEW: should be using identifiers
+                                analyzer.AddProblem(param.Id!, //$REVIEW: should be using identifiers
                                         "unable to bind argument:" + param);
                             }
                         }
                     }
                 }
-                funcTable.Bind(analyzer, param.Id, aType, BindingKind.PARAMETER);
+                funcTable.Bind(analyzer, param.Id!, aType, BindingKind.PARAMETER);
                 fromType.Add(aType);
             }
 
@@ -519,7 +519,7 @@ namespace Pytocs.Core.TypeInference
 
             if (rest != null)
             {
-                if (pTypes.Count > pSize)
+                if (pTypes!.Count > pSize)
                 {
                     DataType restType = analyzer.TypeFactory.CreateTuple(pTypes.SubList(pSize, pTypes.Count).ToArray());
                     funcTable.Bind(analyzer, rest, restType, BindingKind.PARAMETER);
@@ -562,7 +562,7 @@ namespace Pytocs.Core.TypeInference
         {
             if (cl.Table.Parent != null)
             {
-                DataType cls = cl.Table.Parent.DataType;
+                DataType? cls = cl.Table.Parent.DataType;
                 if (cls != null && cls is ClassType)
                 {
                     AddReadOnlyAttr(analyzer, cl, "im_class", cls, BindingKind.CLASS);
@@ -813,8 +813,8 @@ namespace Pytocs.Core.TypeInference
             fun.Table.Parent = this.scope;
             fun.Table.Path = scope.ExtendPath(analyzer, f.name.Name);
             fun.SetDefaultTypes(ResolveList(f.parameters
-                .Where(p => p.test != null)
-                .Select(p => p.test)));
+                .Where(p => p.Test != null)
+                .Select(p => p.Test!)));
             if (isAsync)
             {
                 fun = fun.MakeAwaitable();
@@ -967,8 +967,8 @@ namespace Pytocs.Core.TypeInference
         {
             foreach (var a in i.names)
             {
-                DataType mod = analyzer.LoadModule(a.orig.segs, scope);
-                if (mod == null)
+                DataType? mod = analyzer.LoadModule(a.orig.segs, scope);
+                if (mod is null)
                 {
                     analyzer.AddProblem(i, $"Cannot load module {a}");
                 }
@@ -1021,7 +1021,7 @@ namespace Pytocs.Core.TypeInference
                         {
                             idFirst
                         };
-                        DataType mod2 = analyzer.LoadModule(ext, scope);
+                        DataType? mod2 = analyzer.LoadModule(ext, scope);
                         if (mod2 != null)
                         {
                             if (a.alias != null)
@@ -1046,13 +1046,13 @@ namespace Pytocs.Core.TypeInference
                 return;
             }
 
-            Module node = analyzer.GetAstForFile(mt.file);
+            Module? node = analyzer.GetAstForFile(mt.file);
             if (node == null)
             {
                 return;
             }
 
-            DataType allType = mt.Table.LookupType("__all__");
+            DataType? allType = mt.Table.LookupType("__all__");
 
             List<string> names = new List<string>();
             if (allType != null && allType is ListType lt)
@@ -1068,7 +1068,7 @@ namespace Pytocs.Core.TypeInference
                 int start = i.Start;
                 foreach (string name in names)
                 {
-                    ISet<Binding> b = mt.Table.LookupLocal(name);
+                    ISet<Binding>? b = mt.Table.LookupLocal(name);
                     if (b != null)
                     {
                         scope.Update(name, b);
@@ -1078,7 +1078,7 @@ namespace Pytocs.Core.TypeInference
                         var m2 = new List<Identifier>(i.DottedName.segs);
                         var fakeName = new Identifier(name, i.Filename, start, start + name.Length);
                         m2.Add(fakeName);
-                        DataType type = analyzer.LoadModule(m2, scope);
+                        DataType? type = analyzer.LoadModule(m2, scope);
                         if (type != null)
                         {
                             start += name.Length;
@@ -1157,7 +1157,7 @@ namespace Pytocs.Core.TypeInference
 
         public ModuleType VisitModule(Module m)
         {
-            string qname = null;
+            string? qname = null;
             if (m.Filename != null)
             {
                 // This will return null iff specified file is not prefixed by
@@ -1172,7 +1172,7 @@ namespace Pytocs.Core.TypeInference
 
             var mt = analyzer.TypeFactory.CreateModule(m.Name, m.Filename, qname, analyzer.GlobalTable);
 
-            scope.Insert(analyzer, analyzer.GetModuleQname(m.Filename), m, mt, BindingKind.MODULE);
+            scope.Insert(analyzer, analyzer.GetModuleQname(m.Filename!), m, mt, BindingKind.MODULE);
             if (m.Body != null)
             {
                 m.Body.Accept(new TypeTransformer(mt.Table, this.analyzer));
@@ -1182,7 +1182,7 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitIdentifier(Identifier id)
         {
-            ISet<Binding> b = scope.Lookup(id.Name);
+            ISet<Binding>? b = scope.Lookup(id.Name);
             if (b != null)
             {
                 analyzer.putRef(id, b);
@@ -1317,7 +1317,7 @@ namespace Pytocs.Core.TypeInference
         public DataType VisitArrayRef(ArrayRef s)
         {
             DataType vt = s.array.Accept(this);
-            DataType st;
+            DataType? st;
             if (s.subs == null || s.subs.Count == 0)
                 st = null;
             else if (s.subs.Count == 1)
@@ -1325,10 +1325,10 @@ namespace Pytocs.Core.TypeInference
             else
                 st = VisitExtSlice(s.subs);
 
-            if (vt is UnionType)
+            if (vt is UnionType ut)
             {
                 DataType retType = DataType.Unknown;
-                foreach (DataType t in ((UnionType)vt).types)
+                foreach (DataType t in ut.types)
                 {
                     retType = UnionType.Union( retType, GetSubscript(s, t, st));
                 }
@@ -1340,7 +1340,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-        public DataType GetSubscript(ArrayRef s, DataType vt, DataType st)
+        public DataType GetSubscript(ArrayRef s, DataType vt, DataType? st)
         {
             if (vt.IsUnknownType())
             {
@@ -1372,7 +1372,7 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-        private DataType GetListSubscript(ArrayRef s, DataType vt, DataType st)
+        private DataType GetListSubscript(ArrayRef s, DataType vt, DataType? st)
         {
             if (vt is ListType list)
             {
@@ -1386,7 +1386,7 @@ namespace Pytocs.Core.TypeInference
                 }
                 else
                 {
-                    DataType sliceFunc = vt.Table.LookupAttributeType("__getslice__");
+                    DataType? sliceFunc = vt.Table.LookupAttributeType("__getslice__");
                     if (sliceFunc == null)
                     {
                         AddError(s, "The type can't be sliced: " + vt);
@@ -1536,7 +1536,7 @@ namespace Pytocs.Core.TypeInference
         /// <summary>
         /// Resolves each element, and constructs a result list.
         /// </summary>
-        private List<DataType> ResolveList(IEnumerable<Exp> nodes)
+        private List<DataType>? ResolveList(IEnumerable<Exp> nodes)
         {
             if (nodes == null)
             {
@@ -1545,7 +1545,7 @@ namespace Pytocs.Core.TypeInference
             else
             {
                 return nodes
-                    .Select(n => n?.Accept(this))
+                    .Select(n => n.Accept(this))
                     .ToList();
             }
         }

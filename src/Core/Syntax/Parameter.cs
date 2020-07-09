@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+#nullable enable
+
 namespace Pytocs.Core.Syntax
 {
     public class Parameter
@@ -26,17 +28,24 @@ namespace Pytocs.Core.Syntax
         /// <summary>
         /// Parameter name
         /// </summary>
-        public Identifier Id;
+        public Identifier Id { get; set; }
+
+
+        public bool vararg;
+        public bool keyarg;
+        public List<Parameter>? tuple;
+
+        public Parameter(Identifier id)
+        {
+            this.Id = id;
+        }
 
         /// <summary>
         /// Default value
         /// </summary>
-        public Exp test;
-        public bool vararg;
-        public bool keyarg;
-        public List<Parameter> tuple;
+        public Exp? Test { get; set; }
 
-        public string Comment { get; internal set; }
+        public string? Comment { get; set; }
 
         public override string ToString()
         {
@@ -58,9 +67,9 @@ namespace Pytocs.Core.Syntax
             else
             {
                 sb.Append(Id);
-                if (test != null)
+                if (Test != null)
                 {
-                    sb.AppendFormat("={0}", test);
+                    sb.AppendFormat("={0}", Test);
                 }
             }
             return sb.ToString();

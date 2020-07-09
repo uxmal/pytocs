@@ -607,7 +607,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                         arg = fpdef();
                         args.Add(arg);
                         if (PeekAndDiscard(TokenType.EQ))
-                            arg.test = test();
+                            arg.Test = test();
                     }
                     return args;
                 case TokenType.OP_STARSTAR:
@@ -620,7 +620,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                     arg = fpdef();
                     args.Add(arg);
                     if (PeekAndDiscard(TokenType.EQ))
-                        arg.test = test();
+                        arg.Test = test();
                     while (PeekAndDiscard(TokenType.COMMA))
                     {
                         if (Peek(TokenType.RPAREN))
@@ -654,7 +654,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                             arg = fpdef();
                             args.Add(arg);
                             if (PeekAndDiscard(TokenType.EQ))
-                                arg.test = test();
+                                arg.Test = test();
                         }
                     }
                     return args;
@@ -671,7 +671,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 Parameter t = fpdef();
                 if (PeekAndDiscard(TokenType.EQ))
                 {
-                    t.test = test();
+                    t.Test = test();
                 }
                 args.Add(t);
                 if (!PeekAndDiscard(TokenType.COMMA))
@@ -718,7 +718,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             return new Parameter
             {
                 Id = name,
-                test = t,
+                Test = t,
                 Comment = eolComment,
             };
         }

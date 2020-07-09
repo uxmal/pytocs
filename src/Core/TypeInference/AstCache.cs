@@ -1,5 +1,5 @@
 #region License
-//  Copyright 2015-2020 John Källén
+//  Copyright 2015-2020 John KÃ¤llÃ©n
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -21,6 +21,8 @@ using System.IO;
 using System.Linq;
 using System.Diagnostics;
 
+#nullable enable
+
 namespace Pytocs.Core.TypeInference
 {
     /// <summary>
@@ -29,11 +31,11 @@ namespace Pytocs.Core.TypeInference
     /// </summary>
     public class AstCache
     {
-        private IDictionary<string, Module> cache;
-        private Analyzer analyzer;
-        private IFileSystem fs;
-        private string cacheDir;
-        private ILogger logger;
+        private readonly IDictionary<string, Module> cache;
+        private readonly Analyzer analyzer;
+        private readonly IFileSystem fs;
+        private readonly string cacheDir;
+        private readonly ILogger logger;
 
         public AstCache(Analyzer analyzer, IFileSystem fs, ILogger logger, string cacheDir)
         {
@@ -123,7 +125,7 @@ namespace Pytocs.Core.TypeInference
             }
             finally
             {
-                cache[path] = module;  // may be null
+                cache[path] = module!;  // may be null
             }
             return module;
         }
@@ -139,7 +141,7 @@ namespace Pytocs.Core.TypeInference
         }
 
         // package-private for testing
-        internal Module GetSerializedModule(string sourcePath)
+        internal Module? GetSerializedModule(string sourcePath)
         {
             if (!File.Exists(sourcePath))
             {
@@ -154,7 +156,7 @@ namespace Pytocs.Core.TypeInference
         }
 
         // package-private for testing
-        Module Deserialize(string sourcePath)
+        Module? Deserialize(string sourcePath)
         {
 #if NEVER
         string cachePath = getCachePath(sourcePath);

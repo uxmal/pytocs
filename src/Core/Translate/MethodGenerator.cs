@@ -185,7 +185,7 @@ namespace Pytocs.Core.Translate
                 ParameterType = parameterType,
                 ParameterName = ta.Id?.Name,
                 IsVarargs = ta.vararg,
-                DefaultValue = ta.test?.Accept(this.xlat)
+                DefaultValue = ta.Test?.Accept(this.xlat)
             };
         }
 

@@ -25,6 +25,8 @@ using Name = Pytocs.Core.Syntax.Identifier;
 using System.Diagnostics;
 using Pytocs.Core;
 
+#nullable enable
+
 namespace Pytocs.Core.TypeInference
 {
     public interface Analyzer
@@ -35,8 +37,8 @@ namespace Pytocs.Core.TypeInference
         HashSet<Name> Resolved { get; }
         HashSet<Name> Unresolved { get; }
 
-        DataType LoadModule(List<Name> name, State state);
-        Module GetAstForFile(string file);
+        DataType? LoadModule(List<Name> name, State state);
+        Module? GetAstForFile(string file);
         string GetModuleQname(string file);
 
         Binding CreateBinding(string id, Node node, DataType type, BindingKind kind);
@@ -76,16 +78,16 @@ namespace Pytocs.Core.TypeInference
         private readonly HashSet<object> importStack = new HashSet<object>();
         private readonly ILogger logger;
         private readonly IFileSystem FileSystem;
-        private readonly AstCache astCache;
+        private readonly AstCache? astCache;
         private readonly HashSet<string> failedToParse = new HashSet<string>();
         private readonly string suffix;
         private readonly DateTime startTime;
         private readonly Dictionary<string, object> options;
+        private readonly string cacheDir;
 
-        private IProgress loadingProgress;
-        private string cacheDir;
-        private string cwd = null;
-        private string projectDir;
+        private IProgress? loadingProgress;
+        private string? cwd = null;
+        private string? projectDir;
 
         public AnalyzerImpl(ILogger logger)
             : this(new FileSystem(), logger, new Dictionary<string, object>(), DateTime.Now)
@@ -110,10 +112,12 @@ namespace Pytocs.Core.TypeInference
             AddPythonPath();
             CopyModels();
             CreateCacheDirectory();
-            if (astCache == null)
+            if (astCache is null)
             {
                 astCache = new AstCache(this, FileSystem, logger, cacheDir);
             }
+            var p = FileSystem.CombinePath(FileSystem.getSystemTempDir(), "pytocs");
+            cacheDir = FileSystem.CombinePath(p, "ast_cache");
         }
 
         public DataTypeFactory TypeFactory { get; private set; }
@@ -268,10 +272,10 @@ namespace Pytocs.Core.TypeInference
                             !g.IsBuiltin && !g.IsSynthetic);
         }
 
-        ModuleType GetCachedModule(string file)
+        ModuleType? GetCachedModule(string file)
         {
-            DataType t = ModuleTable.LookupType(GetModuleQname(file));
-            if (t == null)
+            DataType? t = ModuleTable.LookupType(GetModuleQname(file));
+            if (t is null)
             {
                 return null;
             }
@@ -343,10 +347,10 @@ namespace Pytocs.Core.TypeInference
 
         public void AddProblem(Node loc, string msg)
         {
-            string file = loc?.Filename;
+            string? file = loc?.Filename;
             if (file != null)
             {
-                AddFileError(file, loc.Start, loc.End, msg);
+                AddFileError(file, loc!.Start, loc.End, msg);
             }
         }
 
@@ -375,7 +379,7 @@ namespace Pytocs.Core.TypeInference
             return msgs;
         }
 
-        public DataType LoadFile(string path)
+        public DataType? LoadFile(string path)
         {
             path = FileSystem.GetFullPath(path);
             if (!FileSystem.FileExists(path))
@@ -383,7 +387,7 @@ namespace Pytocs.Core.TypeInference
                 return null;
             }
 
-            ModuleType module = GetCachedModule(path);
+            ModuleType? module = GetCachedModule(path);
             if (module != null)
             {
                 return module;
@@ -396,14 +400,14 @@ namespace Pytocs.Core.TypeInference
             }
 
             // set new CWD and save the old one on stack
-            string oldcwd = cwd;
+            string? oldcwd = cwd;
             setCWD(FileSystem.GetDirectoryName(path));
 
             PushImportStack(path);
-            loadingProgress.Tick();
+            loadingProgress?.Tick();
 
             var ast = GetAstForFile(path);
-            DataType type = null;
+            DataType? type = null;
             if (ast == null)
             {
                 failedToParse.Add(path);
@@ -416,7 +420,7 @@ namespace Pytocs.Core.TypeInference
             PopImportStack(path);
 
             // restore old CWD
-            setCWD(oldcwd);
+            setCWD(oldcwd!);
             return type;
         }
 
@@ -427,8 +431,6 @@ namespace Pytocs.Core.TypeInference
 
         private void CreateCacheDirectory()
         {
-            var p = FileSystem.CombinePath(FileSystem.getSystemTempDir(), "pytocs");
-            cacheDir = FileSystem.CombinePath(p, "ast_cache");
             string f = cacheDir;
             msg(Resources.AstCacheIsAt, cacheDir);
 
@@ -450,12 +452,12 @@ namespace Pytocs.Core.TypeInference
         /// <summary>
         /// Returns the syntax tree for {@code file}. <p>
         /// </summary>
-        public Module GetAstForFile(string file)
+        public Module? GetAstForFile(string file)
         {
-            return astCache.getAST(file);
+            return astCache?.getAST(file);
         }
 
-        public ModuleType GetBuiltinModule(string qname)
+        public ModuleType? GetBuiltinModule(string qname)
         {
             return Builtins.get(qname);
         }
@@ -473,7 +475,7 @@ namespace Pytocs.Core.TypeInference
         /// Find the path that contains modname. Used to find the starting point of locating a qname.
         /// </summary>
         /// <param name="headName">first module name segment</param>
-        public string LocateModule(string headName)
+        public string? LocateModule(string headName)
         {
             List<string> loadPath = getLoadPath();
             foreach (string p in loadPath)
@@ -495,7 +497,7 @@ namespace Pytocs.Core.TypeInference
             return null;
         }
 
-        public DataType LoadModule(List<Name> name, State state)
+        public DataType? LoadModule(List<Name> name, State state)
         {
             if (name.Count == 0)
             {
@@ -503,7 +505,7 @@ namespace Pytocs.Core.TypeInference
             }
 
             string qname = MakeQname(name);
-            DataType mt = GetBuiltinModule(qname);
+            DataType? mt = GetBuiltinModule(qname);
             if (mt != null)
             {
                 state.Insert(
@@ -515,14 +517,14 @@ namespace Pytocs.Core.TypeInference
             }
 
             // If there are more than one segment load the packages first
-            string startPath = LocateModule(name[0].Name);
+            string? startPath = LocateModule(name[0].Name);
 
             if (startPath == null)
             {
                 return null;
             }
 
-            DataType prev = null;
+            DataType? prev = null;
             string path = startPath;
             for (int i = 0; i < name.Count; i++)
             {
@@ -530,8 +532,8 @@ namespace Pytocs.Core.TypeInference
                 string initFile = FileSystem.CombinePath(path, "__init__.py");
                 if (FileSystem.FileExists(initFile))
                 {
-                    DataType mod = LoadFile(initFile);
-                    if (mod == null)
+                    DataType? mod = LoadFile(initFile);
+                    if (mod is null)
                     {
                         return null;
                     }
@@ -551,8 +553,8 @@ namespace Pytocs.Core.TypeInference
                     string startFile = path + suffix;
                     if (FileSystem.FileExists(startFile))
                     {
-                        DataType mod = LoadFile(startFile);
-                        if (mod == null)
+                        DataType? mod = LoadFile(startFile);
+                        if (mod is null)
                         {
                             return null;
                         }
@@ -682,7 +684,7 @@ namespace Pytocs.Core.TypeInference
 
         public void Close()
         {
-            astCache.Close();
+            astCache?.Close();
         }
 
         public void msg(string m, params object[] args)
