@@ -58,11 +58,11 @@ namespace Pytocs.Core.TypeInference
             {
                 // The __slots__ attribute needs to be handled specially:
                 // it actually introduces new attributes.
-                BindClassSlots(a.Src);
+                BindClassSlots(a.Src!);
             }
             else
             {
-                DataType valueType = a.Src.Accept(this);
+                DataType valueType = a.Src!.Accept(this);
                 scope.BindByScope(analyzer, a.Dst, valueType);
             }
             return DataType.Cont;
@@ -215,13 +215,13 @@ namespace Pytocs.Core.TypeInference
         public DataType VisitApplication(Application c)
         {
             var fun = c.fn.Accept(this);
-            var dtPos = c.args.Select(a => a.defval.Accept(this)).ToList();
+            var dtPos = c.args.Select(a => a.defval!.Accept(this)).ToList();
             var hash = new Dictionary<string, DataType>();
             if (c.keywords != null)
             {
                 foreach (var k in c.keywords)
                 {
-                    hash[k.name.Name] = k.defval.Accept(this);
+                    hash[k.name!.Name] = k.defval!.Accept(this);
                 }
             }
             var dtKw = c.kwargs?.Accept(this);
@@ -436,8 +436,8 @@ namespace Pytocs.Core.TypeInference
             FunctionDef func,
             State funcTable,
             List<Parameter> parameters,
-            Identifier rest,
-            Identifier restKw,
+            Identifier? rest,
+            Identifier? restKw,
             List<DataType>? pTypes,
             List<DataType>? dTypes,
             IDictionary<string, DataType>? hash,
@@ -602,7 +602,7 @@ namespace Pytocs.Core.TypeInference
             var baseTypes = new List<DataType>();
             foreach (var @base in c.args)
             {
-                DataType baseType = @base.defval.Accept(this);
+                DataType baseType = @base.defval!.Accept(this);
                 switch (baseType)
                 {
                 case ClassType _:
@@ -690,7 +690,7 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitDictInitializer(DictInitializer d)
         {
-            DataType keyType = ResolveUnion(d.KeyValues.Where(kv => kv.Key != null).Select(kv => kv.Key));
+            DataType keyType = ResolveUnion(d.KeyValues.Where(kv => kv.Key != null).Select(kv => kv.Key!));
             DataType valType = ResolveUnion(d.KeyValues.Select(kv => kv.Value));
             return analyzer.TypeFactory.CreateDict(keyType, valType);
         }
@@ -796,7 +796,7 @@ namespace Pytocs.Core.TypeInference
             var fun = new FunType(lambda, env);
             fun.Table.Parent = this.scope;
             fun.Table.Path = scope.ExtendPath(analyzer, "{lambda}");
-            fun.SetDefaultTypes(ResolveList(lambda.args.Select(p => p.test)));
+            fun.SetDefaultTypes(ResolveList(lambda.args.Select(p => p.test!)));
             analyzer.AddUncalled(fun);
             return fun;
         }
@@ -1075,7 +1075,7 @@ namespace Pytocs.Core.TypeInference
                     }
                     else
                     {
-                        var m2 = new List<Identifier>(i.DottedName.segs);
+                        var m2 = new List<Identifier>(i.DottedName!.segs);
                         var fakeName = new Identifier(name, i.Filename, start, start + name.Length);
                         m2.Add(fakeName);
                         DataType? type = analyzer.LoadModule(m2, scope);
@@ -1099,7 +1099,7 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitArgument(Argument arg)
         {
-            return arg.defval.Accept(this);
+            return arg.defval!.Accept(this);
         }
 
         public DataType VisitBigLiteral(BigLiteral i)
@@ -1222,7 +1222,7 @@ namespace Pytocs.Core.TypeInference
             }
             if (p.args != null)
             {
-                ResolveList(p.args.Select(a => a.defval));
+                ResolveList(p.args.Select(a => a.defval!));
             }
             return DataType.Cont;
         }

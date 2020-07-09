@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,20 +19,22 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+#nullable enable
+
 namespace Pytocs.Core.Syntax
 {
     public class AliasedName : Node
     {
         public readonly DottedName orig;
-        public readonly Identifier alias;
+        public readonly Identifier? alias;
 
-        public AliasedName(Identifier orig, Identifier alias, string filename, int start, int end) : base(filename, start, end)
+        public AliasedName(Identifier orig, Identifier? alias, string filename, int start, int end) : base(filename, start, end)
         {
             this.orig = new DottedName(new List<Identifier> {orig }, filename, start, end);
             this.alias = alias;
         }
 
-        public AliasedName(DottedName orig, Identifier alias, string filename, int start, int end) : base(filename, start, end)
+        public AliasedName(DottedName orig, Identifier? alias, string filename, int start, int end) : base(filename, start, end)
         {
             this.orig = orig;
             this.alias = alias;

@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#nullable enable
+
 namespace Pytocs.Core.Syntax
 {
     public struct Token
@@ -27,12 +29,12 @@ namespace Pytocs.Core.Syntax
         public readonly int LineNumber;
         public readonly int Indent;
         public readonly TokenType Type;
-        public readonly object Value;
-        public readonly object NumericValue;
+        public readonly object? Value;
+        public readonly object? NumericValue;
         public readonly int Start;
         public readonly int End;
 
-        public Token(int lineNumber, int indent, TokenType type, object value, object numericValue, int start, int end)
+        public Token(int lineNumber, int indent, TokenType type, object? value, object? numericValue, int start, int end)
         {
             this.LineNumber = lineNumber;
             this.Indent = indent;

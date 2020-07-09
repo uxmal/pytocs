@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,6 +20,8 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace Pytocs.Core.Syntax
 {
@@ -143,7 +145,7 @@ namespace Pytocs.Core.Syntax
                 tok = lexer.Get();
                 list.Add(tok);
             } while (tok.Type != TokenType.EOF && tok.Type != TokenType.NEWLINE);
-            return new Line { Tokens = list };
+            return new Line(list);
         }
 
         private Line ReadLine()
@@ -155,11 +157,16 @@ namespace Pytocs.Core.Syntax
                 tok = lexer.Get();
                 list.Add(tok);
             } while (tok.Type != TokenType.EOF && tok.Type != TokenType.NEWLINE);
-            return new Line { Tokens = list };
+            return new Line(list);
         }
 
         private class Line
         {
+            public Line(List<Token> tokens)
+            {
+                this.Tokens = tokens;
+            }
+
             public TokenType Type { get { return Tokens[0].Type; } }
 
             public List<Token> Tokens;

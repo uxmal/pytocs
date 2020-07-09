@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,11 +21,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#nullable enable
+
 namespace Pytocs.Core.Syntax
 {
     class PyStatementWriter : IStatementVisitor
     {
-        private TextWriter writer;
+        private readonly TextWriter writer;
         private Pytocs.Core.CodeModel.IndentingTextWriter w;
 
         public PyStatementWriter(TextWriter textWriter)
@@ -79,9 +81,9 @@ namespace Pytocs.Core.Syntax
             throw new NotImplementedException();
         }
 
-        public void VisitDecorators(List<Decorator> decorators)
+        public void VisitDecorators(List<Decorator>? decorators)
         {
-            if (decorators == null)
+            if (decorators is null)
                 return;
             foreach (var dec in decorators)
             {
@@ -132,8 +134,11 @@ namespace Pytocs.Core.Syntax
         {
             w.Write("from");
             w.Write(" ");
-            w.Write(f.DottedName.ToString());
-            w.Write(" ");
+            if (f.DottedName != null)
+            {
+                w.Write(f.DottedName.ToString());
+                w.Write(" ");
+            }
             w.Write("import");
             if (f.AliasedNames != null && f.AliasedNames.Count > 0)
             {
@@ -223,7 +228,7 @@ namespace Pytocs.Core.Syntax
             }
         }
 
-        private IfStatement GetElif(SuiteStatement s)
+        private IfStatement? GetElif(SuiteStatement s)
         {
             if (s.stmts.Count != 1)
                 return null;
@@ -268,12 +273,15 @@ namespace Pytocs.Core.Syntax
         public void VisitRaise(RaiseStatement r)
         {
             w.Write("raise");
-            w.Write(" ");
-            r.exToRaise.Write(writer);
-            if (r.exOriginal != null)
+            if (r.exToRaise != null)
             {
-                w.Write(", ");
-                r.exOriginal.Write(writer);
+                w.Write(" ");
+                r.exToRaise.Write(writer);
+                if (r.exOriginal != null)
+                {
+                    w.Write(", ");
+                    r.exOriginal.Write(writer);
+                }
             }
         }
 
@@ -310,7 +318,7 @@ namespace Pytocs.Core.Syntax
             {
                 w.Write("except");
                 w.Write(" ");
-                h.type.Write(writer);
+                h.type!.Write(writer);
                 if (h.name != null)
                 {
                     w.Write(" ");

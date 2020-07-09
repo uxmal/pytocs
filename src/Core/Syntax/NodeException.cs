@@ -18,6 +18,8 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
+#nullable enable
+
 namespace Pytocs.Core.Syntax
 {
     public class NodeException : Exception

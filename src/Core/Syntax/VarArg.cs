@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,12 +20,14 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#nullable enable
+
 namespace Pytocs.Core.Syntax
 {
     public class VarArg
     {
-        public Exp name;    // could be tuple
-        public Exp test;
+        public Exp? name;    // could be tuple
+        public Exp? test;
         public bool IsKeyword;
         public bool IsIndexed;
 

@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,6 +23,8 @@ using System.Linq;
 using System.Numerics;
 using System.Text;
 using System.Threading.Tasks;
+
+#nullable enable
 
 namespace Pytocs.Core.Syntax
 {
@@ -59,6 +61,7 @@ namespace Pytocs.Core.Syntax
             this.st = State.Start;
             this.lastTokenType = TokenType.NONE;
             this.lastLineEndedInComment = false;
+            this.sb = new StringBuilder();
         }
 
         public int LineNumber { get; private set; }
@@ -204,7 +207,7 @@ namespace Pytocs.Core.Syntax
         private Token GetToken()
         {
             string lexeme;
-            this.sb = new StringBuilder();
+            this.sb.Clear();
             State oldState = (State)(-1);
             for (; ; )
             {
@@ -1110,7 +1113,7 @@ namespace Pytocs.Core.Syntax
             throw Error(string.Format(Resources.ErrInvalidCharacter, ch, c));
         }
 
-        private Token EatChToken(TokenType t, object value = null)
+        private Token EatChToken(TokenType t, object? value = null)
         {
             Advance();
             st = State.Base;
@@ -1119,9 +1122,9 @@ namespace Pytocs.Core.Syntax
 
         private Token Token(TokenType t) { return Token(t, null, State.Base); }
         private Token Token(TokenType t, State newState) { return Token(t, null, null, newState); }
-        private Token Token(TokenType t, object value) { return Token(t, value, null, State.Base); }
-        private Token Token(TokenType t, object value, object numValue) { return Token(t, value, numValue, State.Base); }
-        private Token Token(TokenType t, object value, object numValue, State newState)
+        private Token Token(TokenType t, object? value) { return Token(t, value, null, State.Base); }
+        private Token Token(TokenType t, object? value, object? numValue) { return Token(t, value, numValue, State.Base); }
+        private Token Token(TokenType t, object? value, object? numValue, State newState)
         {
             if (t == TokenType.NEWLINE)
             {

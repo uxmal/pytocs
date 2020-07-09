@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,14 +19,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+#nullable enable
+
 namespace Pytocs.Core.Syntax
 {
     public class WithItem : Node
     {
         public Exp t;
-        public Exp e;
+        public Exp? e;
 
-        public WithItem(Exp t, Exp e, string filename, int start, int end) : base(filename, start, end)
+        public WithItem(Exp t, Exp? e, string filename, int start, int end) : base(filename, start, end)
         {
             this.t = t;
             this.e = e;

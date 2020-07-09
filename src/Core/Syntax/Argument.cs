@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,12 +20,14 @@ using System.Linq;
 using System.IO;
 using System.Text;
 
+#nullable enable
+
 namespace Pytocs.Core.Syntax
 {
     public class Argument : Node
     {
-        public readonly Exp name;
-        public readonly Exp defval;
+        public readonly Exp? name;
+        public readonly Exp? defval;
 
         public Argument(Exp name, string filename, int start, int end)
             : base(filename, start, end)
@@ -34,7 +36,7 @@ namespace Pytocs.Core.Syntax
             this.defval = null;
         }
 
-        public Argument(Exp name, Exp defval, string filename, int start, int end) : base(filename, start, end)
+        public Argument(Exp? name, Exp? defval, string filename, int start, int end) : base(filename, start, end)
         {
             this.name = name;
             this.defval = defval;

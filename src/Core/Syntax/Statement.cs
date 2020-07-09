@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,19 +21,26 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+#nullable enable
+
 namespace Pytocs.Core.Syntax
 {
     public abstract class Statement : Node
     {
-        public string comment;
-        public List<Decorator> decorators;
+        public string? comment;
+        public List<Decorator>? decorators;
 
         public abstract T Accept<T>(IStatementVisitor<T> v);
         public abstract void Accept(IStatementVisitor v);
 
-        public Statement(string filename, int start, int end) : base(filename, start, end) { } 
+        public Statement(string filename, int start, int end) : base(filename, start, end) { }
 
-        public sealed override string ToString() { var sw = new StringWriter(); Accept(new PyStatementWriter(sw)); return sw.ToString(); }
+        public sealed override string ToString()
+        {
+            var sw = new StringWriter();
+            Accept(new PyStatementWriter(sw));
+            return sw.ToString();
+        }
     }
 
     public class AsyncStatement : Statement
@@ -66,7 +73,7 @@ namespace Pytocs.Core.Syntax
         }
 
         public List<Exp> Tests { get; set; }
-        public Exp Message { get; set; }    //$TODO: initialize this?
+        public Exp? Message { get; set; }    //$TODO: initialize this?
 
         public override void Accept(IStatementVisitor v)
         {
@@ -145,7 +152,7 @@ namespace Pytocs.Core.Syntax
 
     public class ExecStatement : Statement
     {
-        public ExecStatement(Exp code, Exp globals, Exp locals, string filename, int pos, int end) : base(filename, pos, end)
+        public ExecStatement(Exp code, Exp? globals, Exp? locals, string filename, int pos, int end) : base(filename, pos, end)
         {
             this.code = code;
             this.globals = globals;
@@ -153,8 +160,8 @@ namespace Pytocs.Core.Syntax
         }
 
         public Exp code;
-        public Exp globals;
-        public Exp locals;
+        public Exp? globals;
+        public Exp? locals;
 
         public override void Accept(IStatementVisitor v)
         {
@@ -193,13 +200,13 @@ namespace Pytocs.Core.Syntax
         public readonly Exp exprs;     // var or vars
         public readonly Exp tests;     // iterator
         public readonly SuiteStatement Body;
-        public readonly SuiteStatement Else;
+        public readonly SuiteStatement? Else;
 
         public ForStatement(
             Exp exprs,
             Exp tests,
             SuiteStatement body,
-            SuiteStatement orelse,
+            SuiteStatement? orelse,
             string filename,
             int start, 
             int end) 
@@ -224,10 +231,10 @@ namespace Pytocs.Core.Syntax
 
     public class FromStatement : Statement
     {
-        public readonly DottedName DottedName;
+        public readonly DottedName? DottedName;
         public readonly List<AliasedName> AliasedNames;
 
-        public FromStatement(DottedName name, List<AliasedName> aliasedNames, string filename, int pos, int end)
+        public FromStatement(DottedName? name, List<AliasedName> aliasedNames, string filename, int pos, int end)
             : base(filename, pos, end)
         {
             this.DottedName = name;
@@ -273,12 +280,12 @@ namespace Pytocs.Core.Syntax
     {
         public readonly Exp Test;
         public readonly SuiteStatement Then;
-        public readonly SuiteStatement Else;
+        public readonly SuiteStatement? Else;
 
         public IfStatement(
             Exp test,
             SuiteStatement then,
-            SuiteStatement orelse,
+            SuiteStatement? orelse,
             string filename, int start, int end) 
             : base(filename, start, end)
         {
@@ -315,16 +322,16 @@ namespace Pytocs.Core.Syntax
 
     public class RaiseStatement : Statement
     {
-        public RaiseStatement(Exp exToRaise, Exp exOriginal, string filename, int pos, int end)
+        public RaiseStatement(Exp? exToRaise, Exp? exOriginal, string filename, int pos, int end)
             : base(filename, pos, end)
         {
             this.exToRaise = exToRaise;
             this.exOriginal = exOriginal;
         }
 
-        public Exp exToRaise;
-        public Exp exOriginal;
-        public Exp traceback;
+        public Exp? exToRaise;
+        public Exp? exOriginal;
+        public Exp? traceback;
 
         public override void Accept(IStatementVisitor v)
         {
@@ -339,14 +346,12 @@ namespace Pytocs.Core.Syntax
 
     public class ReturnStatement : Statement
     {
-        public readonly Exp Expression;
+        public readonly Exp? Expression;
 
-        public ReturnStatement(string filename, int pos, int end) : base(filename, pos, end)
+        public ReturnStatement(Exp? e, string filename, int pos, int end) : base(filename, pos, end) 
         {
-            Expression = null;
+            Expression = e;
         }
-
-        public ReturnStatement(Exp e, string filename, int pos, int end) : base(filename, pos, end) { Expression = e; }
 
         public override void Accept(IStatementVisitor v)
         {
@@ -382,7 +387,7 @@ namespace Pytocs.Core.Syntax
 
     public class PrintStatement : Statement
     {
-        public PrintStatement(Exp outputStream, List<Argument> args, bool trailingComma, string filename, int pos, int end)
+        public PrintStatement(Exp? outputStream, List<Argument> args, bool trailingComma, string filename, int pos, int end)
             : base(filename, pos, end)
         {
             this.outputStream = outputStream;
@@ -390,7 +395,7 @@ namespace Pytocs.Core.Syntax
             this.trailingComma = trailingComma;
         }
 
-        public Exp outputStream;
+        public Exp? outputStream;
         public List<Argument> args;
         public bool trailingComma;
 
@@ -472,14 +477,14 @@ namespace Pytocs.Core.Syntax
     {
         public SuiteStatement body;
         public List<ExceptHandler> exHandlers;
-        public Statement elseHandler;
-        public Statement finallyHandler;
+        public Statement? elseHandler;
+        public Statement? finallyHandler;
 
         public TryStatement(
             SuiteStatement body,
             List<ExceptHandler> exHandlers, 
-            Statement elseHandler, 
-            Statement finallyHandler,
+            Statement? elseHandler, 
+            Statement? finallyHandler,
             string filename,
             int start,
             int end)
@@ -529,9 +534,14 @@ namespace Pytocs.Core.Syntax
     {
         public SuiteStatement Body;
         public Exp Test;
-        public SuiteStatement Else;
+        public SuiteStatement? Else;
 
-        public WhileStatement(string filename, int start, int end) : base(filename, start, end) { }
+        public WhileStatement(Exp test, SuiteStatement body, SuiteStatement? els, string filename, int start, int end) : base(filename, start, end)
+        {
+            this.Test = test;
+            this.Body = body;
+            this.Else = els;
+        }
 
         public override void Accept(IStatementVisitor v)
         {

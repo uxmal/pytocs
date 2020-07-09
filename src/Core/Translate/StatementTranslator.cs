@@ -58,7 +58,7 @@ namespace Pytocs.Core.Translate
         {
             if (VisitDecorators(c))
                 return;
-            var baseClasses = c.args.Select(a => GenerateBaseClassName(a.defval)).ToList();
+            var baseClasses = c.args.Select(a => GenerateBaseClassName(a.defval!)).ToList();
             var comments = ConvertFirstStringToComments(c.body.stmts);
             var gensym = new SymbolGenerator();
             var stmtXlt = new StatementTranslator(c, types, gen, gensym, new HashSet<string>());
@@ -269,12 +269,12 @@ namespace Pytocs.Core.Translate
                     }
                     else
                     {
-                        var rhsTuple = ass.Src.Accept(xlat);
+                        var rhsTuple = ass.Src!.Accept(xlat);
                         EmitTupleAssignment(dstTuple.Expressions, rhsTuple);
                     }
                     return;
                 }
-                var rhs = ass.Src.Accept(xlat);
+                var rhs = ass.Src!.Accept(xlat);
                 var lhs = ass.Dst.Accept(xlat);
                 if (gen.CurrentMember != null)
                 {
@@ -440,7 +440,7 @@ namespace Pytocs.Core.Translate
                 var (fieldType, nmspcs) = types.TranslateTypeOf(id);
                 gen.EnsureImports(nmspcs);
 
-                GenerateField(id.Name, fieldType, ass.Src.Accept(xlat));
+                GenerateField(id.Name, fieldType, ass.Src!.Accept(xlat));
             }
         }
 
@@ -606,7 +606,7 @@ namespace Pytocs.Core.Translate
             }
         }
 
-        public void Xlat(Statement stmt)
+        public void Xlat(Statement? stmt)
         {
             if (stmt != null)
             {
@@ -737,8 +737,8 @@ namespace Pytocs.Core.Translate
             {
                 if (propdef.IsTranslated)
                     return true;
-                decorators.Remove(propdef.GetterDecoration);
-                decorators.Remove(propdef.SetterDecoration);
+                decorators.Remove(propdef.GetterDecoration!);
+                decorators.Remove(propdef.SetterDecoration!);
                 this.customAttrs = decorators.Select(dd => VisitDecorator(dd));
                 var prop = gen.PropertyDef(
                     propdef.Name,

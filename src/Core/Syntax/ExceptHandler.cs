@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,15 +19,17 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+#nullable enable
+
 namespace Pytocs.Core.Syntax
 {
     public class ExceptHandler : Node
     {
-        public Exp type;
-        public Identifier name;
+        public Exp? type;
+        public Identifier? name;
         public SuiteStatement body;
 
-        public ExceptHandler(Exp type, Identifier name, SuiteStatement body, string filename, int start, int end) : base(filename, start, end)
+        public ExceptHandler(Exp? type, Identifier? name, SuiteStatement body, string filename, int start, int end) : base(filename, start, end)
         {
             this.type = type;
             this.name = name;

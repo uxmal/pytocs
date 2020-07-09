@@ -17,17 +17,18 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Diagnostics;
-using System.Text;
 using System.Numerics;
-using System.Globalization;
+
+#nullable enable
 
 namespace Pytocs.Core.Syntax
 {
     public abstract class Exp : Node
     {
-        public Exp(string filename, int start, int end) : base(filename, start, end) { }
+        public Exp(string filename, int start, int end) : base(filename, start, end) {
+        }
+
+        public string? Comment { get; set; }
 
         public abstract T Accept<T>(IExpVisitor<T> v);
 
@@ -96,8 +97,6 @@ namespace Pytocs.Core.Syntax
         {
             yield return this;
         }
-
-        public string Comment { get; set; }
     }
 
     public class NoneExp : Exp
@@ -416,13 +415,13 @@ namespace Pytocs.Core.Syntax
     public class DictInitializer : Exp
     {
 
-        public DictInitializer(List<KeyValuePair<Exp, Exp>> keyValues, string filename, int start, int end)
+        public DictInitializer(List<KeyValuePair<Exp?, Exp>> keyValues, string filename, int start, int end)
             : base(filename, start, end)
         {
             this.KeyValues = keyValues;
         }
 
-        public List<KeyValuePair<Exp, Exp>> KeyValues { get; }
+        public List<KeyValuePair<Exp?, Exp>> KeyValues { get; }
 
         public override T Accept<T>(IExpVisitor<T> v)
         {
@@ -533,9 +532,12 @@ namespace Pytocs.Core.Syntax
         public Exp Condition;
         public Exp Alternative;
 
-        public TestExp(string filename, int start, int end)
+        public TestExp(Exp consequent, Exp condition, Exp alternative, string filename, int start, int end)
             : base(filename, start, end)
         {
+            this.Consequent = consequent;
+            this.Condition = condition;
+            this.Alternative = alternative;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -587,10 +589,10 @@ namespace Pytocs.Core.Syntax
         public readonly Exp fn;
         public readonly List<Argument> args;
         public readonly List<Argument> keywords;
-        public readonly Exp stargs;
-        public readonly Exp kwargs;
+        public readonly Exp? stargs;
+        public readonly Exp? kwargs;
 
-        public Application(Exp fn, List<Argument> args, List<Argument> keywords, Exp stargs, Exp kwargs,
+        public Application(Exp fn, List<Argument> args, List<Argument> keywords, Exp? stargs, Exp? kwargs,
             string filename, int start, int end) : base(filename, start, end)
         {
             this.fn = fn;
@@ -679,11 +681,11 @@ namespace Pytocs.Core.Syntax
 
     public class Slice : Exp
     {
-        public Exp lower;
-        public Exp step;
-        public Exp upper;
+        public Exp? lower;
+        public Exp? step;
+        public Exp? upper;
 
-        public Slice(Exp start, Exp end, Exp slice, string filename, int s, int e) : base(filename, s, e)
+        public Slice(Exp? start, Exp? end, Exp? slice, string filename, int s, int e) : base(filename, s, e)
         {
             this.lower = start;
             this.step = end;
@@ -783,9 +785,9 @@ namespace Pytocs.Core.Syntax
 
     public class YieldExp : Exp
     {
-        public readonly Exp exp;
+        public readonly Exp? exp;
 
-        public YieldExp(Exp exp, string filename, int start, int end) : base(filename, start, end) { this.exp = exp; }
+        public YieldExp(Exp? exp, string filename, int start, int end) : base(filename, start, end) { this.exp = exp; }
 
         public override T Accept<T>(IExpVisitor<T> v)
         {
@@ -799,7 +801,12 @@ namespace Pytocs.Core.Syntax
 
         public override void Write(TextWriter writer)
         {
-            exp.Write(writer);
+            writer.Write("yield");
+            if (exp != null)
+            {
+                writer.Write(" ");
+                exp.Write(writer);
+            }
         }
     }
 
@@ -829,7 +836,7 @@ namespace Pytocs.Core.Syntax
 
     public abstract class CompIter : Exp
     {
-        public CompIter next;
+        public CompIter? next;
 
         public CompIter(string filename, int start, int end) : base(filename, start, end) { }
     }
@@ -839,7 +846,11 @@ namespace Pytocs.Core.Syntax
         public Exp variable;
         public Exp collection;
 
-        public CompFor(string filename, int start, int end) : base(filename, start, end) { }
+        public CompFor(Exp variable, Exp collection, string filename, int start, int end) : base(filename, start, end)
+        {
+            this.variable = variable;
+            this.collection = collection;
+        }
 
         public bool Async { get; set; }
 
@@ -874,7 +885,10 @@ namespace Pytocs.Core.Syntax
     {
         public Exp test;
 
-        public CompIf(string filename, int start, int end) : base(filename, start, end) { }
+        public CompIf(Exp test, string filename, int start, int end) : base(filename, start, end)
+        {
+            this.test = test;
+        }
 
         public override T Accept<T>(IExpVisitor<T> v)
         {
@@ -937,7 +951,10 @@ namespace Pytocs.Core.Syntax
     {
         public Exp e;
 
-        public StarExp(string filename, int start, int end) : base(filename, start, end) { }
+        public StarExp(Exp e, string filename, int start, int end) : base(filename, start, end)
+        {
+            this.e = e;
+        }
 
         public override T Accept<T>(IExpVisitor<T> v)
         {
@@ -1122,8 +1139,8 @@ namespace Pytocs.Core.Syntax
     {
         public readonly Exp Dst;
         public readonly Op op;
-        public readonly Exp Src;
-        public readonly Exp Annotation;
+        public readonly Exp? Src;
+        public readonly Exp? Annotation;
 
         public AssignExp(Exp lhs, Op op, Exp rhs, string filename, int start, int end)
             : base(filename, start, end)
@@ -1134,8 +1151,8 @@ namespace Pytocs.Core.Syntax
             this.Annotation = null;
         }
 
-        public AssignExp(Exp lhs, Exp annotation, Op op, Exp rhs, string filename, int start, int end)
-        : base(filename, start, end)
+        public AssignExp(Exp lhs, Exp annotation, Op op, Exp? rhs, string filename, int start, int end)
+            : base(filename, start, end)
         {
             this.Dst = lhs;
             this.op = op;
@@ -1162,7 +1179,10 @@ namespace Pytocs.Core.Syntax
                 this.Annotation.Write(writer);
             }
             writer.Write(base.OpToString(op));
-            Src.Write(writer);
+            if (Src != null)
+            {
+                Src.Write(writer);
+            }
         }
     }
 
@@ -1208,7 +1228,7 @@ namespace Pytocs.Core.Syntax
     {
         public string url;
 
-        public Url(string url) : base(null, -1, -1)
+        public Url(string url) : base(null!, -1, -1)
         {
             this.url = url;
         }

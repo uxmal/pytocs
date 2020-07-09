@@ -250,7 +250,7 @@ namespace Pytocs.Core.Translate
             {
                 return m.Appl(
                     new CodeVariableReferenceExpression("__flatten___"),
-                    new CodeNamedArgument(a.name.Accept(this), null));
+                    new CodeNamedArgument(a.name!.Accept(this), null));
             }
             if (a.name == null)
             {
@@ -279,7 +279,7 @@ namespace Pytocs.Core.Translate
             return m.BinOp(
                 e.Dst.Accept(this),
                 mppyoptocsop[e.op],
-                e.Src.Accept(this));
+                e.Src?.Accept(this));
         }
 
         public CodeExpression VisitAwait(AwaitExp awaitExp)
@@ -307,7 +307,7 @@ namespace Pytocs.Core.Translate
             if (s.KeyValues.All(kv => kv.Key != null))
             {
                 var items = s.KeyValues.Select(kv => new CodeCollectionInitializer(
-                    kv.Key.Accept(this),
+                    kv.Key!.Accept(this),
                     kv.Value.Accept(this)));
                 m.EnsureImport("System.Collections.Generic");
                 var init = new CodeObjectCreateExpression
@@ -555,8 +555,8 @@ namespace Pytocs.Core.Translate
         public CodeExpression VisitLambda(Lambda l)
         {
             var e = new CodeLambdaExpression(
-                l.args.Select(a => a.name.Accept(this)).ToArray(),
-                l.body.Accept(this));
+                l.args.Select(a => a.name!.Accept(this)).ToArray(),
+                l.Body.Accept(this));
             return e;
         }
 

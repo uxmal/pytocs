@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,16 +19,18 @@ using System.Collections.Generic;
 using System.IO;
 using System.Text;
 
+#nullable enable
+
 namespace Pytocs.Core.Syntax
 {
     public class AliasedExp : Exp
     {
-        public Exp exp;
-        public Identifier alias;
+        public Exp? exp;
+        public Identifier? alias;
 
-        public AliasedExp(Exp t, Identifier alias, string filename, int start, int end) : base(filename, start, end)
+        public AliasedExp(Exp? exp, Identifier? alias, string filename, int start, int end) : base(filename, start, end)
         {
-            this.exp = t;
+            this.exp = exp;
             this.alias = alias;
         }
 

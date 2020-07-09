@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,24 +20,26 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
+#nullable enable
+
 namespace Pytocs.Core.Syntax
 {
     public class FunctionDef : Statement
     {
         public readonly Identifier name;
         public readonly List<Parameter> parameters;
-        public readonly Exp annotation;
+        public readonly Exp? annotation;
         public readonly SuiteStatement body;
         public bool called = false;         //$ move to big state
-        public readonly Identifier vararg;
-        public readonly Identifier kwarg;
+        public readonly Identifier? vararg;
+        public readonly Identifier? kwarg;
 
         public FunctionDef(
             Identifier name, 
             List<Parameter> parameters,
-            Identifier vararg,
-            Identifier kwarg,
-            Exp annotation,
+            Identifier? vararg,
+            Identifier? kwarg,
+            Exp? annotation,
             SuiteStatement body, string filename, int start, int end) 
             : base(filename, start, end) 
         {
@@ -90,10 +92,14 @@ namespace Pytocs.Core.Syntax
 
     public class Lambda : Exp
     {
-        public List<VarArg> args;
-        public Exp body;
+        public readonly List<VarArg> args;
+        public readonly Exp Body;
 
-        public Lambda(string filename, int start, int end) : base(filename, start, end) { }
+        public Lambda(List<VarArg> args, Exp body, string filename, int start, int end) : base(filename, start, end) 
+        {
+            this.Body = body;
+            this.args = args;
+        }
 
         public override T Accept<T>(IExpVisitor<T> v)
         {
@@ -123,7 +129,7 @@ namespace Pytocs.Core.Syntax
             }
             writer.Write(":");
             writer.Write(" ");
-            this.body.Write(writer);
+            this.Body.Write(writer);
         }
     }
 }
