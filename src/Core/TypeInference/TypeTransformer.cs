@@ -378,9 +378,9 @@ namespace Pytocs.Core.TypeInference
         {
             if (f.parameters.Count == 0)
                 return null;
-            if (!func.Definition.IsStaticMethod())
+            if (!func.Definition!.IsStaticMethod())
             {
-                if (func.Definition.IsClassMethod())
+                if (func.Definition!.IsClassMethod())
                 {
                     if (func.Class != null)
                     {
@@ -833,7 +833,7 @@ namespace Pytocs.Core.TypeInference
             var firstArgType = FirstArgumentType(f, fun, ct);
             if (firstArgType != null)
             {
-                fun.Table.Bind(analyzer, f.parameters[0].Id, firstArgType, BindingKind.PARAMETER);
+                fun.Table.Bind(analyzer, f.parameters[0].Id!, firstArgType, BindingKind.PARAMETER);
             }
 
             f.body.Accept(new TypeTransformer(fun.Table, this.analyzer));
@@ -1352,7 +1352,7 @@ namespace Pytocs.Core.TypeInference
             case TupleType tup:
                 return GetListSubscript(s, tup.ToListType(), st);
             case DictType dt:
-                if (!dt.KeyType.Equals(st))
+                if (!dt.KeyType.Equals(st!))
                 {
                     AddWarning(s, "Possible KeyError (wrong type for subscript)");
                 }

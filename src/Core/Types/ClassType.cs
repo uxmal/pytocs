@@ -1,5 +1,5 @@
 #region License
-//  Copyright 2015-2020 John Källén
+//  Copyright 2015-2020 John KÃ¤llÃ©n
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -19,20 +19,22 @@ using System;
 using System.Collections.Generic;
 using State = Pytocs.Core.TypeInference.State;
 
+#nullable enable
+
 namespace Pytocs.Core.Types
 {
     public class ClassType : DataType
     {
         public string name;
-        public InstanceType instance;
+        public InstanceType? instance;
 
-        public ClassType(string name, State parent, string path)
+        public ClassType(string name, State? parent, string? path)
         {
             this.name = name;
             this.Table = new State(parent, State.StateType.CLASS) { DataType = this };
             if (parent != null)
             {
-                Table.Path = path;
+                Table.Path = path!;
             }
             else
             {
@@ -40,7 +42,7 @@ namespace Pytocs.Core.Types
             }
         }
 
-        public ClassType(string name, State parent, string path, ClassType superClass)
+        public ClassType(string name, State parent, string path, ClassType? superClass)
             : this(name, parent, path)
         {
             if (superClass != null)

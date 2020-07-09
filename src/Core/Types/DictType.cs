@@ -1,5 +1,5 @@
 #region License
-//  Copyright 2015-2020 John Källén
+//  Copyright 2015-2020 John KÃ¤llÃ©n
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
 //  limitations under the License.
 #endregion
 
-using Analyzer = Pytocs.Core.TypeInference.Analyzer;
+#nullable enable
 
 namespace Pytocs.Core.Types
 {

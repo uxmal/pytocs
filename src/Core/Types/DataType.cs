@@ -1,5 +1,5 @@
 #region License
-//  Copyright 2015-2020 John Källén
+//  Copyright 2015-2020 John KÃ¤llÃ©n
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -20,11 +20,13 @@ using System.Linq;
 using State = Pytocs.Core.TypeInference.State;
 using TypeStack = Pytocs.Core.TypeInference.TypeStack;
 
+#nullable enable
+
 namespace Pytocs.Core.Types
 {
     public abstract class DataType
     {
-        public string file = null;
+        public string? file = null;
 
         protected static TypeStack typeStack = new TypeStack();
 
@@ -45,18 +47,18 @@ namespace Pytocs.Core.Types
             return GetType().Name.GetHashCode();
         }
 
-        public static bool operator ==(DataType a, DataType b)
+        public static bool operator ==(DataType? a, DataType? b)
         {
             if (a is null)
                 return b is null;
-            return a.Equals(b);
+            return a.Equals(b!);
         }
 
-        public static bool operator !=(DataType a, DataType b)
+        public static bool operator !=(DataType? a, DataType? b)
         {
             if (a is null)
                 return !(b is null);
-            return !a.Equals(b);
+            return !a.Equals(b!);
         }
     
         public bool IsNumType()

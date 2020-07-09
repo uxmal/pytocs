@@ -131,7 +131,7 @@ namespace Pytocs.Core.TypeInference
 
         ModuleType newModule(string name)
         {
-            return new ModuleType(name, null, name, analyzer.GlobalTable);
+            return new ModuleType(name, null!, name, analyzer.GlobalTable);
         }
 
         ClassType newException(string name, State t)

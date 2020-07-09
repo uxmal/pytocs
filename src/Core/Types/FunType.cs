@@ -1,5 +1,5 @@
 #region License
-//  Copyright 2015-2020 John Källén
+//  Copyright 2015-2020 John KÃ¤llÃ©n
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -19,16 +19,18 @@ using Pytocs.Core.Syntax;
 using System.Collections.Generic;
 using System.Linq;
 
+#nullable enable
+
 namespace Pytocs.Core.Types
 {
     public class FunType : DataType
     {
         public IDictionary<DataType, DataType> arrows = new Dictionary<DataType, DataType>();
-        public readonly FunctionDef Definition;
-        public Lambda lambda;
-        public ClassType Class = null;
-        public readonly State scope;
-        public List<DataType> defaultTypes;       // types for default parameters (evaluated at def time)
+        public readonly FunctionDef? Definition;
+        public Lambda? lambda;
+        public ClassType? Class = null;
+        public readonly State? scope;
+        public List<DataType>? defaultTypes;       // types for default parameters (evaluated at def time)
 
         public FunType()
         {
@@ -52,7 +54,7 @@ namespace Pytocs.Core.Types
             AddMapping(from, to);
         }
 
-        public DataType SelfType { get; set; }                 // self's type for calls
+        public DataType? SelfType { get; set; }                 // self's type for calls
 
 
         public override T Accept<T>(IDataTypeVisitor<T> visitor)
@@ -80,7 +82,7 @@ namespace Pytocs.Core.Types
             }
         }
 
-        public DataType GetMapping(DataType from)
+        public DataType? GetMapping(DataType from)
         {
             return arrows.TryGetValue(from, out var to)
                 ? to
@@ -99,7 +101,7 @@ namespace Pytocs.Core.Types
             }
         }
 
-        public void SetDefaultTypes(List<DataType> defaultTypes)
+        public void SetDefaultTypes(List<DataType>? defaultTypes)
         {
             this.defaultTypes = defaultTypes;
         }
@@ -126,7 +128,7 @@ namespace Pytocs.Core.Types
         /// </summary>
         public FunType MakeAwaitable()
         {
-            var fnAwaitable = new FunType(this.Definition, this.scope)
+            var fnAwaitable = new FunType(this.Definition!, this.scope!)
             {
                 arrows = this.arrows.ToDictionary(k => k.Key, v => (DataType)new AwaitableType(v.Value)),
                 lambda = this.lambda,

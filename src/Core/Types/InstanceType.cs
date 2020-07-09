@@ -1,5 +1,5 @@
 #region License
-//  Copyright 2015-2020 John Källén
+//  Copyright 2015-2020 John KÃ¤llÃ©n
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 using System.Collections.Generic;
 using State = Pytocs.Core.TypeInference.State;
+
+#nullable enable
 
 namespace Pytocs.Core.Types
 {

@@ -28,14 +28,14 @@ namespace Pytocs.Core.Syntax
         /// <summary>
         /// Parameter name
         /// </summary>
-        public Identifier Id { get; set; }
+        public Identifier? Id { get; set; }
 
 
         public bool vararg;
         public bool keyarg;
         public List<Parameter>? tuple;
 
-        public Parameter(Identifier id)
+        public Parameter(Identifier? id = null)
         {
             this.Id = id;
         }
