@@ -645,8 +645,14 @@ namespace Pytocs.Core.CodeModel
             {
                 writer.Write("@\"");
             }
+            else if (literal.Format)
+            {
+                writer.Write("$\"");
+            }
             else
+            {
                 writer.Write("\"");
+            }
 
             for (int i = 0; i < literal.s.Length; ++i)
             {

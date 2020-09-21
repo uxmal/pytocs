@@ -11,3 +11,4 @@
 *.user
 .vs/
 /src/packages/
+/src/.vscode

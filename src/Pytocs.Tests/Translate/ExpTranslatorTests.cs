@@ -785,5 +785,13 @@ namespace Pytocs.UnitTests.Translate
 })";
             Assert.Equal(sExp, Xlat(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Ex_FormatString))]
+        public void Ex_FormatString()
+        {
+            var pySrc = "f'Hello {world}'";
+            var sExp = "$\"Hello {world}\"";
+            Assert.Equal(sExp, Xlat(pySrc));
+        }
     }
 }
