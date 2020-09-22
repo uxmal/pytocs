@@ -6,6 +6,9 @@
     <RootNamespace>Pytocs.Core</RootNamespace>
     <LangVersion>8.0</LangVersion>
     <nullable>enable</nullable>
+    <Version>1.2.0</Version>
+    <AssemblyVersion>1.2.0.0</AssemblyVersion>
+    <FileVersion>1.2.0.0</FileVersion>   
   </PropertyGroup>
 
   <ItemGroup>
