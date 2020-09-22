@@ -62,7 +62,7 @@ namespace Pytocs.Core.Types
             return positional[i];
         }
 
-        public TupleType toTupleType(int n)
+        public TupleType ToTupleType(int n)
         {
             TupleType ret = new TupleType();    //$ no regs
             for (int i = 0; i < n; i++)

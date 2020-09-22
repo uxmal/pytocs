@@ -67,6 +67,16 @@ namespace Pytocs.Core.Translate
             { Op.AugXor, CodeOperatorType.XorEq },
         };
 
+        private static readonly HashSet<CodeOperatorType> comparisons = new HashSet<CodeOperatorType>
+        {
+            CodeOperatorType.Equal,
+            CodeOperatorType.NotEqual,
+            CodeOperatorType.Gt,
+            CodeOperatorType.Ge,
+            CodeOperatorType.Le,
+            CodeOperatorType.Lt,
+        };
+
         internal readonly ClassDef? classDef;
         internal readonly CodeGenerator m;
         internal readonly SymbolGenerator gensym;
@@ -439,10 +449,6 @@ namespace Pytocs.Core.Translate
                     return cSub;
                 break;
             }
-            if (mppyoptocsop.TryGetValue(bin.op, out var opDst))
-            {
-                return m.BinOp(l, opDst, r);
-            }
             switch (bin.op)
             {
             case Op.Is:
@@ -477,8 +483,36 @@ namespace Pytocs.Core.Translate
                 return m.Appl(
                     m.MethodRef(m.TypeRefExpr("Math"), "Pow"),
                     l, r);
+            case Op.Lt:
+            case Op.Gt:
+            case Op.Ge:
+            case Op.Le:
+                if (l is CodeBinaryOperatorExpression binL && IsComparison(binL))
+                {
+                    return FuseComparisons(binL, bin.op, r);
+                }
+                break;
             }
             return m.BinOp(l, mppyoptocsop[bin.op], r);
+        }
+
+        private CodeExpression FuseComparisons(CodeBinaryOperatorExpression binL, Op op, CodeExpression r)
+        {
+            if (!(binL.Right is CodeVariableReferenceExpression variable))
+            {
+                // Python https://docs.python.org/3/reference/expressions.html#comparisons
+                // Stats that the second expression in a comparison chain is only evaluated once.
+                variable = gensym.GenSymLocal("_tmp_", m.TypeRef(typeof(object)));
+                m.Assign(variable, binL.Right);
+                binL = m.BinOp(binL.Left, binL.Operator, variable);
+            }
+            var newR = m.BinOp(variable, mppyoptocsop[op], r);
+            return m.BinOp(binL, CodeOperatorType.LogAnd, newR);
+        }
+
+        private bool IsComparison(CodeBinaryOperatorExpression bin)
+        {
+            return comparisons.Contains(bin.Operator);
         }
 
         private CodeExpression? CondenseComplexConstant(CodeExpression l, CodeExpression r, double imScale)

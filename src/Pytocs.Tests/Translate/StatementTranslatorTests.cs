@@ -1618,7 +1618,7 @@ c = _it_1.Skip(2).ToList();
         }
 
         [Fact]
-        public void Stmp_def_ellipsis()
+        public void Stmt_def_ellipsis()
         {
             var pySrc = "def func(arg):\n    ...\n";
             var sExp =
@@ -1627,6 +1627,26 @@ c = _it_1.Skip(2).ToList();
 
 ";
             Assert.Equal(sExp, XlatMember(pySrc));
+        }
+
+        [Fact(DisplayName = nameof(Stmt_ChainedComparison))]
+        public void Stmt_ChainedComparison()
+        {
+            var pySrc = "valid = 0 <= value < maxValue";
+            var sExp = @"valid = 0 <= value && value < maxValue;
+";
+            Assert.Equal(sExp, XlatStmts(pySrc));
+        }
+
+        [Fact(DisplayName = nameof(Stmt_ChainedComparison_SideEffect))]
+        public void Stmt_ChainedComparison_SideEffect()
+        {
+            var pySrc = "valid = 0 <= sideEffect() < maxValue";
+            var sExp =
+@"_tmp_1 = sideEffect();
+valid = 0 <= _tmp_1 && _tmp_1 < maxValue;
+";
+            Assert.Equal(sExp, XlatStmts(pySrc));
         }
     }
 }

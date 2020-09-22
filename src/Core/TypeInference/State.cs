@@ -546,7 +546,7 @@ namespace Pytocs.Core.TypeInference
                     break;
                 }
             case ListType list:
-                Bind(analyzer, xs, list.toTupleType(xs.Count), kind);
+                Bind(analyzer, xs, list.ToTupleType(xs.Count), kind);
                 break;
             case DictType dict:
                 Bind(analyzer, xs, dict.ToTupleType(xs.Count), kind);
