@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -1615,6 +1615,18 @@ b = _it_1.Element(1);
 c = _it_1.Skip(2).ToList();
 ";
             Assert.Equal(sExp, XlatStmts(pySrc));
+        }
+
+        [Fact]
+        public void Stmp_def_ellipsis()
+        {
+            var pySrc = "def func(arg):\n    ...\n";
+            var sExp =
+@"public static object func(object arg) {
+}
+
+";
+            Assert.Equal(sExp, XlatMember(pySrc));
         }
     }
 }

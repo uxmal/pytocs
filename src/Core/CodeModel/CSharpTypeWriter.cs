@@ -98,8 +98,11 @@ namespace Pytocs.Core.CodeModel
             RenderCustomAttributes(method);
             RenderMethodAttributes(method);
             var expWriter = new CSharpExpressionWriter(writer);
-            expWriter.VisitTypeReference(method.ReturnType!);
-            writer.Write(" ");
+            if (method.ReturnType != null)
+            {
+                expWriter.VisitTypeReference(method.ReturnType);
+                writer.Write(" ");
+            }
             writer.WriteName(method.Name!);
             WriteMethodParameters(method);
 

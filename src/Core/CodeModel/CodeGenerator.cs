@@ -24,6 +24,9 @@ using System.Threading.Tasks;
 
 namespace Pytocs.Core.CodeModel
 {
+    /// <summary>
+    /// Factory class that can be called to build up C# code.
+    /// </summary>
     public class CodeGenerator
     {
         private CSharpCodeProvider provider;
@@ -245,7 +248,7 @@ namespace Pytocs.Core.CodeModel
             return method;
         }
 
-        public CodeMemberMethod StaticMethod(string name, CodeTypeReference retType, IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
+        public CodeMemberMethod StaticMethod(string name, CodeTypeReference? retType, IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
         {
             var method = new CodeMemberMethod
             {

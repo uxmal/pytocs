@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Pytocs.Core.Types;
@@ -53,17 +53,33 @@ namespace Pytocs.Core.TypeInference
         public DataType VisitAssignExp(AssignExp a)
         {
             if (scope.stateType == State.StateType.CLASS &&
-                a.Dst is Identifier id &&
-                id.Name == "__slots__")
+                a.Dst is Identifier id)
             {
-                // The __slots__ attribute needs to be handled specially:
-                // it actually introduces new attributes.
-                BindClassSlots(a.Src!);
+                if (id.Name == "__slots__")
+                {
+                    // The __slots__ attribute needs to be handled specially:
+                    // it actually introduces new attributes.
+                    BindClassSlots(a.Src!);
+                }
+                else if (a.Annotation != null)
+                {
+                    //$TODO: do something with the type info.
+                    //var dt = scope.LookupType(a.Annotation.ToString());
+                    //scope.Bind(analyzer, id, dt ?? DataType.Unknown, BindingKind.ATTRIBUTE);
+                    if (a.Src != null)
+                    {
+                        DataType valueType = a.Src!.Accept(this);
+                        scope.BindByScope(analyzer, a.Dst, valueType);
+                    }
+                }
             }
             else
             {
-                DataType valueType = a.Src!.Accept(this);
-                scope.BindByScope(analyzer, a.Dst, valueType);
+                if (a.Src != null)
+                {
+                    DataType valueType = a.Src!.Accept(this);
+                    scope.BindByScope(analyzer, a.Dst, valueType);
+                }
             }
             return DataType.Cont;
         }
@@ -439,7 +455,7 @@ namespace Pytocs.Core.TypeInference
             Identifier? rest,
             Identifier? restKw,
             List<DataType>? pTypes,
-            List<DataType>? dTypes,
+            List<DataType?>? dTypes,
             IDictionary<string, DataType>? hash,
             DataType? kw,
             DataType? star)
@@ -465,7 +481,7 @@ namespace Pytocs.Core.TypeInference
                 }
                 else if (i - nPos >= 0 && i - nPos < dSize)
                 {
-                    aType = dTypes![i - nPos];
+                    aType = dTypes![i - nPos]!;
                 }
                 else
                 {
@@ -1536,7 +1552,7 @@ namespace Pytocs.Core.TypeInference
         /// <summary>
         /// Resolves each element, and constructs a result list.
         /// </summary>
-        private List<DataType>? ResolveList(IEnumerable<Exp> nodes)
+        private List<DataType?>? ResolveList(IEnumerable<Exp?> nodes)
         {
             if (nodes == null)
             {
@@ -1545,7 +1561,7 @@ namespace Pytocs.Core.TypeInference
             else
             {
                 return nodes
-                    .Select(n => n.Accept(this))
+                    .Select(n => n?.Accept(this))
                     .ToList();
             }
         }

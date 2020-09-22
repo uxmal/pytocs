@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,6 +32,7 @@ namespace Pytocs.Core.CodeModel
         void VisitCollectionInitializer(CodeCollectionInitializer i);
         void VisitCondition(CodeConditionExpression condition);
         void VisitCast(CodeCastExpression cast);
+        void VisitDefaultExpression(CodeDefaultExpression defaultExp);
         void VisitNumericLiteral(CodeNumericLiteral literal);
         void VisitFieldReference(CodeFieldReferenceExpression field);
         void VisitLambda(CodeLambdaExpression l);
@@ -62,6 +63,7 @@ namespace Pytocs.Core.CodeModel
         T VisitCast(CodeCastExpression cast);
         T VisitCollectionInitializer(CodeCollectionInitializer i);
         T VisitCondition(CodeConditionExpression codeConditionExpression);
+        T VisitDefaultExpression(CodeDefaultExpression defaultExp);
         T VisitFieldReference(CodeFieldReferenceExpression field);
         T VisitLambda(CodeLambdaExpression l);
         T VisitMethodReference(CodeMethodReferenceExpression m);

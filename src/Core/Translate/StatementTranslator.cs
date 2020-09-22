@@ -272,13 +272,17 @@ namespace Pytocs.Core.Translate
                     }
                     return;
                 }
-                var rhs = ass.Src!.Accept(xlat);
+                CodeExpression? rhs = ass.Src?.Accept(xlat);
                 var lhs = ass.Dst.Accept(xlat);
                 if (gen.CurrentMember != null)
                 {
                     if (ass.op == Op.Assign)
                     {
-                        gen.Assign(lhs, rhs);
+                            //$TODO: declarations
+                        if (rhs != null)
+                        {
+                            gen.Assign(lhs, rhs);
+                        }
                     }
                     else
                     {
@@ -293,10 +297,18 @@ namespace Pytocs.Core.Translate
                     }
                     else
                     {
-                        EnsureClassConstructor().Statements.Add(
-                            new CodeAssignStatement(lhs, rhs));
+                        //$TODO: declarations
+                        if (rhs != null)
+                        {
+                            EnsureClassConstructor().Statements.Add(
+                                new CodeAssignStatement(lhs, rhs));
+                        }
                     }
                 }
+                return;
+            }
+            else if (e.Expression is Ellipsis)
+            {
                 return;
             }
             if (gen.CurrentMember != null)
@@ -438,11 +450,11 @@ namespace Pytocs.Core.Translate
                 var (fieldType, nmspcs) = types.TranslateTypeOf(id);
                 gen.EnsureImports(nmspcs);
 
-                GenerateField(id.Name, fieldType, ass.Src!.Accept(xlat));
+                GenerateField(id.Name, fieldType, ass.Src?.Accept(xlat));
             }
         }
 
-        protected virtual CodeMemberField GenerateField(string name, CodeTypeReference type, CodeExpression value)
+        protected virtual CodeMemberField GenerateField(string name, CodeTypeReference type, CodeExpression? value)
         {
             var field = gen.Field(type, name);
             if (value != null)

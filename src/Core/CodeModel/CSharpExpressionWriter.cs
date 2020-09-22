@@ -311,6 +311,11 @@ namespace Pytocs.Core.CodeModel
             writer.Write("}");
         }
 
+        public void VisitDefaultExpression(CodeDefaultExpression _)
+        {
+            writer.Write("default");
+        }
+
         public void VisitObjectInitializer(CodeObjectInitializer i)
         {
             writer.Write("new");

@@ -108,7 +108,7 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitEllipsis(Ellipsis e)
         {
-            throw new NotImplementedException();
+            return new CodeDefaultExpression();
         }
 
         public CodeExpression VisitExpList(ExpList l)

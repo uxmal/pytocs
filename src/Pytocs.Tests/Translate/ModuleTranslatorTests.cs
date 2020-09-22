@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -528,6 +528,28 @@ class TestClass:
         
         public static Tuple<bool, int, string> foo(int i = 0, string s = ""empty"", bool f = true) {
             return (f, i, s);
+        }
+    }
+}
+";
+            Assert.Equal(sExp, XlatModule(pySrc));
+        }
+
+        [Fact]
+        public void Module_TopLevelAssignment()
+        {
+            var pySrc =
+@"a, b, c = 'a', ""b"", 'c'
+";
+            var sExp =
+@"namespace test {
+    
+    public static class module {
+        
+        static module() {
+            a = ""a"";
+            b = ""b"";
+            c = ""c"";
         }
     }
 }

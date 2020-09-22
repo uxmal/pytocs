@@ -30,7 +30,8 @@ namespace Pytocs.Core.Translate
     {
         private readonly CodeGenerator gen;
 
-        public ModuleTranslator(TypeReferenceTranslator types, CodeGenerator gen) : base(null, types, gen, new SymbolGenerator(), new HashSet<string>())
+        public ModuleTranslator(TypeReferenceTranslator types, CodeGenerator gen) : 
+            base(null, types, gen, new SymbolGenerator(), new HashSet<string>())
         {
             this.gen = gen;
         }
@@ -49,6 +50,15 @@ namespace Pytocs.Core.Translate
                     s.Accept(this);
                 }
                 ++c;
+            }
+            if (gen.Scope.Count > 0)
+            {
+                // Module-level statements are simulated with a static constructor.
+                var methodName = gen.CurrentType.Name!;
+                var parameters = new CodeParameterDeclarationExpression[0];
+                var static_ctor = gen.StaticMethod(methodName, null, parameters, () => { });
+                static_ctor.Attributes = MemberAttributes.Static;
+                static_ctor.Statements.AddRange(gen.Scope);
             }
         }
 
@@ -76,7 +86,7 @@ namespace Pytocs.Core.Translate
             return lit != null;
         }
 
-        protected override CodeMemberField GenerateField(string name, CodeTypeReference fieldType, CodeExpression value)
+        protected override CodeMemberField GenerateField(string name, CodeTypeReference fieldType, CodeExpression? value)
         {
             var field = base.GenerateField(name, fieldType, value);
             field.Attributes |= MemberAttributes.Static;

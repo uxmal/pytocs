@@ -28,7 +28,7 @@ namespace Pytocs.Core.Types
         public Lambda? lambda;
         public ClassType? Class = null;
         public readonly State? scope;
-        public List<DataType>? defaultTypes;       // types for default parameters (evaluated at def time)
+        public List<DataType?>? defaultTypes;       // types for default parameters (evaluated at def time)
 
         public FunType()
         {
@@ -99,7 +99,7 @@ namespace Pytocs.Core.Types
             }
         }
 
-        public void SetDefaultTypes(List<DataType>? defaultTypes)
+        public void SetDefaultTypes(List<DataType?>? defaultTypes)
         {
             this.defaultTypes = defaultTypes;
         }
