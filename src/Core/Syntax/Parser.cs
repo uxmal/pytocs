@@ -1549,7 +1549,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             int posEnd = body.End;
             var exHandlers = new List<ExceptHandler>();
             Statement? elseHandler = null;
-            Statement? finallyHandler = null;
+            SuiteStatement? finallyHandler = null;
 
             // Collect comments right before the except/finally.
             var comments = CollectComments();
@@ -1561,18 +1561,20 @@ eval_input: testlist NEWLINE* ENDMARKER
                 handler.stmts.InsertRange(0, comments);
                 posEnd = handler.End;
                 exHandlers.Add(new ExceptHandler(ec.exp, ec.alias, handler, filename, token.Start, posEnd));
+                comments = CollectComments();
                 if (PeekAndDiscard(TokenType.Else))
                 {
+                    handler.stmts.AddRange(comments);
                     Expect(TokenType.COLON);
                     elseHandler = suite();
                     posEnd = elseHandler.End;
                 }
-                comments = CollectComments();
             }
             if (PeekAndDiscard(TokenType.Finally))
             {
                 Expect(TokenType.COLON);
                 finallyHandler = suite();
+                finallyHandler.stmts.InsertRange(0, comments);
                 posEnd = finallyHandler.End;
             }
             if (exHandlers.Count == 0 && finallyHandler == null)

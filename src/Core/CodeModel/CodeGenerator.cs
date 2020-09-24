@@ -138,6 +138,20 @@ namespace Pytocs.Core.CodeModel
             return ass;
         }
 
+        public CodeConditionStatement If(CodeExpression test, Action xlatThen)
+        {
+            var i = new CodeConditionStatement
+            {
+                Condition = test
+            };
+            Scope.Add(i);
+            var old = Scope;
+            Scope = i.TrueStatements;
+            xlatThen();
+            Scope = old;
+            return i;
+        }
+
         public CodeConditionStatement If(CodeExpression test, Action xlatThen, Action xlatElse)
         {
             var i = new CodeConditionStatement
@@ -153,7 +167,6 @@ namespace Pytocs.Core.CodeModel
             Scope = old;
             return i;
         }
-
         public CodeStatement Foreach(CodeExpression exp, CodeExpression list, Action xlatLoopBody)
         {
             var c = new CodeForeachStatement(exp, list);

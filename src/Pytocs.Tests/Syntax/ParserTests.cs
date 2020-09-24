@@ -204,7 +204,7 @@ baz(),
         [Fact]
         public void Parse_MultipleExceptClauses()
         {
-            var pyStm = (TryStatement)ParseStmt(
+            var pyStm = (TryStatement) ParseStmt(
 @"try:
     foo()
 except Foo:
@@ -253,7 +253,7 @@ except:
         public void Parse_DefaultArgValue()
         {
             var pyStm = ParseStmt("def foo(bar = baz.naz): pass\n");
-            var funcDef = (FunctionDef)pyStm[0];
+            var funcDef = (FunctionDef) pyStm[0];
             Assert.Equal("bar=baz.naz", funcDef.parameters[0].ToString());
         }
 
@@ -267,7 +267,7 @@ except:
         [Fact]
         public void Parse_StaggeredComment()
         {
-            var pyStm = (FunctionDef)ParseFuncdef("def x():\n  version = 1\n  #foo\n    #bar\n");
+            var pyStm = (FunctionDef) ParseFuncdef("def x():\n  version = 1\n  #foo\n    #bar\n");
             Assert.Equal("version=1\r\n#foo\r\n#bar\r\n", pyStm.body.ToString());
         }
 
@@ -949,7 +949,7 @@ if (
     return early
 return late
 ";
-            var sExp = 
+            var sExp =
 @"if (condition1 and not condition2):
     return early
 ";
@@ -1020,7 +1020,7 @@ return late
 def foo():
     pass
 ";
-            var sExp = 
+            var sExp =
 @"@decorator()
 def foo():
     pass

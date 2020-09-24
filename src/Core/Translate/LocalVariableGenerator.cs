@@ -158,8 +158,7 @@ namespace Pytocs.Core.Translate
 
         public int VisitAssignment(CodeAssignStatement ass)
         {
-            var id = ass.Destination as CodeVariableReferenceExpression;
-            if (id == null)
+            if (!(ass.Destination is CodeVariableReferenceExpression id))
                 return 0;
             if (this.globals.Contains(id.Name))
                 return 0;

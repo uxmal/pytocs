@@ -1648,5 +1648,35 @@ valid = 0 <= _tmp_1 && _tmp_1 < maxValue;
 ";
             Assert.Equal(sExp, XlatStmts(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Stmt_TryElse))]
+        public void Stmt_TryElse()
+        {
+            var pySrc =
+@"try:
+    stmt1()
+except (Ex1):
+    exception1()
+else:
+    succeeded()
+finally:
+    finalStmt()
+";
+            var sExp =
+@"_success1 = false;
+try {
+    stmt1();
+    _success1 = true;
+} catch (Ex1) {
+    exception1();
+} finally {
+    finalStmt();
+}
+if (_success1) {
+    succeeded();
+}
+";
+            Assert.Equal(sExp, XlatStmts(pySrc));
+        }
     }
 }

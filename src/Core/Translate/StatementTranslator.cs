@@ -190,14 +190,33 @@ namespace Pytocs.Core.Translate
 
         public void VisitTry(TryStatement t)
         {
+            CodeVariableReferenceExpression? successVar = null;
+            if (t.elseHandler != null)
+            {
+                // C# has no equivalent to Python's else handler, so we have
+                // to emulate it with a boolean flag.
+                successVar = gensym.GenSymLocal("_success", gen.TypeRef(typeof(bool)));
+                gen.Assign(successVar, gen.Prim(false));
+            }
             var tryStmt = gen.Try(
-                () => t.body.Accept(this),
+                () => {
+                    t.body.Accept(this);
+                    if (successVar != null)
+                    {
+                        gen.Assign(successVar, gen.Prim(true));
+                    }
+                },
                 t.exHandlers.Select(eh => GenerateClause(eh)),
                 () =>
                 {
                     if (t.finallyHandler != null)
                         t.finallyHandler.Accept(this);
                 });
+            if (successVar != null)
+            {
+                gen.If(successVar,
+                    () => t.elseHandler!.Accept(this));
+            }
         }
 
         private CodeCatchClause GenerateClause(ExceptHandler eh)

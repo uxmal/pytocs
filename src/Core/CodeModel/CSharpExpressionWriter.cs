@@ -644,6 +644,7 @@ namespace Pytocs.Core.CodeModel
             }
             writer.Write(" }");
         }
+
         private void WriteStringLiteral(Syntax.Str literal)
         {
             if (literal.Long || literal.Raw)

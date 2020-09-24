@@ -109,8 +109,7 @@ namespace Pytocs.Core.CodeModel
                 writer.Write("else");
                 if (cond.FalseStatements.Count == 1)
                 {
-                    var elseIf = cond.FalseStatements[0] as CodeConditionStatement;
-                    if (elseIf != null)
+                    if (cond.FalseStatements[0] is CodeConditionStatement elseIf)
                     {
                         writer.Write(" ");
                         return VisitIf(elseIf);
