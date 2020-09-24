@@ -1,9 +1,9 @@
-version: 1.1.0.{build}
+version: 1.2.0.{build}
 
 init: 
   - git config --global core.autocrlf true 
 
-image: Visual Studio 2017
+image: Visual Studio 2019
 platform: Any CPU
 
 configuration: Debug
