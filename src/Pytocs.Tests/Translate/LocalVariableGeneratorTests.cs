@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -224,6 +224,40 @@ namespace Pytocs.UnitTests.Translate
         frog = ""default"";
     }
     bar(frog);
+}
+
+";
+            Assert.Equal(sExp, XlatMember(pySrc).ToString());
+        }
+
+        [Fact]
+        public void Liv_ChainedIfElses()
+        {
+            var pySrc =
+@"def fn(arg):
+    if arg == 1:
+        result = 'one'
+    elif arg == 2:
+        result = 'two'
+    elif arg == 3:
+        result = 'three'
+    else:
+        result = 'many'
+    return result
+";
+            var sExp =
+@"public static object fn(object arg) {
+    object result;
+    if (arg == 1) {
+        result = ""one"";
+    } else if (arg == 2) {
+        result = ""two"";
+    } else if (arg == 3) {
+        result = ""three"";
+    } else {
+        result = ""many"";
+    }
+    return result;
 }
 
 ";
