@@ -36,5 +36,10 @@ namespace Pytocs.Core.Types
         {
             return visitor.VisitAwaitable(this);
         }
+
+        public override DataType MakeGenericType(params DataType[] typeArguments)
+        {
+            return new AwaitableType(ResultType.MakeGenericType(typeArguments));
+        }
     }
 }

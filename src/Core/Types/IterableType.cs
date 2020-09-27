@@ -17,5 +17,12 @@ namespace Pytocs.Core.Types
         {
             return visitor.VisitIterable(this);
         }
+
+        public override DataType MakeGenericType(params DataType[] typeArguments)
+        {
+            if (typeArguments.Length != 1)
+                throw new ArgumentException("Should only be one type argument.");
+            return new IterableType(typeArguments[0]);
+        }
     }
 }

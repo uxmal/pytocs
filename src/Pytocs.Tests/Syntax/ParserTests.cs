@@ -1038,5 +1038,19 @@ return x.foo,
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
         }
+
+        [Fact]
+        public void Parser_FunctionDefAnnotation()
+        {
+            var pySrc = @"
+def func(arg1: int, arg2: str) -> str:
+    return 'Hi'
+";
+            var sExp =
+@"def func(arg1: int,arg2: str) -> str:
+    return ""Hi""
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
     }
 }

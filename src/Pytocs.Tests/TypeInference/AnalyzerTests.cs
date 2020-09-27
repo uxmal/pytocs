@@ -454,6 +454,39 @@ class Derived(Base):
 @"(binding:kind=PARAMETER:node=s:type=?:qname=.foo.test.foo.s:refs=[s])" + nl;
             ExpectBindings(sExp);
         }
-    }
 
+        [Fact(DisplayName = nameof(TypeAn_typed_parameters))]
+        public void TypeAn_typed_parameters()
+        {
+            fs.Dir("foo")
+                .File("test.py",
+@"def foo(s: str) -> int:
+    return int(s)
+");
+            an.Analyze(@"\foo");
+            an.Finish();
+            var sExp = 
+@"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
+@"(binding:kind=FUNCTION:node=foo:type=str -> int:qname=.foo.test.foo:refs=[])" + nl +
+@"(binding:kind=PARAMETER:node=s:type=str:qname=.foo.test.foo.s:refs=[s])" + nl;
+            ExpectBindings(sExp);
+        }
+
+        [Fact(DisplayName = nameof(TypeAn_typed_list_parameter))]
+        public void TypeAn_typed_list_parameter()
+        {
+            fs.Dir("foo")
+                .File("test.py",
+@"def foo(s: List[str]) -> int:
+    return bar(s)
+");
+            an.Analyze(@"\foo");
+            an.Finish();
+            var sExp =
+@"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
+@"(binding:kind=FUNCTION:node=foo:type=[str] -> int:qname=.foo.test.foo:refs=[])" + nl +
+@"(binding:kind=PARAMETER:node=s:type=[str]:qname=.foo.test.foo.s:refs=[s])" + nl;
+            ExpectBindings(sExp);
+        }
+    }
 }

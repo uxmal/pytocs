@@ -713,13 +713,13 @@ eval_input: testlist NEWLINE* ENDMARKER
                 eolComment = (string)Expect(TokenType.COMMENT).Value!;
             }
             var name = id();
-            Exp? t = null;
+            Exp? a = null;
             if (PeekAndDiscard(TokenType.COLON))
-                t = test();
+                a = test();
             return new Parameter
             {
                 Id = name,
-                Test = t,
+                Annotation = a,
                 Comment = eolComment,
             };
         }

@@ -26,7 +26,6 @@ namespace Pytocs.Core.Syntax
     {
         public readonly Identifier name;
         public readonly List<Parameter> parameters;
-        public readonly Exp? annotation;
         public readonly SuiteStatement body;
         public bool called = false;         //$ move to big state
         public readonly Identifier? vararg;
@@ -45,9 +44,11 @@ namespace Pytocs.Core.Syntax
             this.parameters = parameters;
             this.vararg = vararg;
             this.kwarg = kwarg;
-            this.annotation = annotation;
+            this.Annotation = annotation;
             this.body = body;
         }
+
+        public Exp? Annotation { get; }
 
         public override void Accept(IStatementVisitor v)
         {

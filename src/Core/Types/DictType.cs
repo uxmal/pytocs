@@ -14,6 +14,8 @@
 //  limitations under the License.
 #endregion
 
+using System;
+
 namespace Pytocs.Core.Types
 {
     public class DictType : DataType
@@ -73,6 +75,13 @@ namespace Pytocs.Core.Types
         public override int GetHashCode()
         {
             return "DictType".GetHashCode();
+        }
+
+        public override DataType MakeGenericType(params DataType[] typeArguments)
+        {
+            if (typeArguments.Length != 2)
+                throw new ArgumentException("DictType expects two type arguments.");
+            return new DictType(typeArguments[0], typeArguments[1]);
         }
     }
 }

@@ -14,6 +14,7 @@
 //  limitations under the License.
 #endregion
 
+using System;
 using State = Pytocs.Core.TypeInference.State;
 
 namespace Pytocs.Core.Types
@@ -58,6 +59,11 @@ namespace Pytocs.Core.Types
                 }
             }
             return object.ReferenceEquals(this, other);
+        }
+
+        public override DataType MakeGenericType(params DataType[] typeArguments)
+        {
+            throw new InvalidOperationException("ModuleType cannot be generic.");
         }
     }
 }

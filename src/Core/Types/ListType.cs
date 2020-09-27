@@ -105,5 +105,12 @@ namespace Pytocs.Core.Types
             return "ListType".GetHashCode();
         }
 
+        public override DataType MakeGenericType(params DataType[] typeArguments)
+        {
+            if (typeArguments.Length != 1)
+                throw new ArgumentException("Should only be one argument.");
+            return new ListType(typeArguments[0]);
+        }
+
     }
 }

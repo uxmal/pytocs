@@ -214,5 +214,10 @@ namespace Pytocs.Core.Types
         {
             return "UnionType".GetHashCode();
         }
+
+        public override DataType MakeGenericType(params DataType[] typeArguments)
+        {
+            return new UnionType(typeArguments);
+        }
     }
 }

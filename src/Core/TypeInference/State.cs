@@ -38,12 +38,17 @@ namespace Pytocs.Core.TypeInference
         }
 
         public IDictionary<string, ISet<Binding>> table = new Dictionary<string, ISet<Binding>>(0);
+        public IDictionary<string, DataType> DataTypes { get; } = new Dictionary<string, DataType>(); 
         public State? Parent { get; set; }      // all are non-null except global table
         public State? Forwarding { get; set; }  // link to the closest non-class scope, for lifting functions out
         private List<State>? supers;
         public ISet<string>? globalNames;
         public StateType stateType { get; set; }
         public string Path { get; set; }
+
+        /// <summary>
+        /// The data type of this scope.
+        /// </summary>
         public DataType? DataType { get; set; }
 
         public State(State? parent, StateType type)
@@ -140,11 +145,6 @@ namespace Pytocs.Core.TypeInference
                 supers = new List<State>();
             }
             supers.Add(sup);
-        }
-
-        public void setStateType(StateType type)
-        {
-            this.stateType = type;
         }
 
         public void AddGlobalName(string name)
@@ -323,7 +323,7 @@ namespace Pytocs.Core.TypeInference
         /// <summary>
         /// Look for a binding named <paramref name="name"/> and if found, return its type.
         /// </summary>
-        public DataType? LookupType(string name)
+        public DataType? LookupTypeOf(string name)
         {
             ISet<Binding>? bs = Lookup(name);
             if (bs is null)
@@ -351,6 +351,16 @@ namespace Pytocs.Core.TypeInference
             {
                 return MakeUnion(bs);
             }
+        }
+
+        public DataType? LookupTypeByName(string typeName)
+        {
+            if (this.DataTypes.TryGetValue(typeName, out DataType dt))
+                return dt;
+            if (this.Parent != null)
+                return Parent.LookupTypeByName(typeName);
+            else
+                return null;
         }
 
         /// <summary>
@@ -630,9 +640,9 @@ namespace Pytocs.Core.TypeInference
 
         private static void setAttr(Analyzer analyzer, AttributeAccess attr, DataType attrType, DataType targetType)
         {
-            if (targetType is UnionType)
+            if (targetType is UnionType type)
             {
-                ISet<DataType> types = ((UnionType) targetType).types;
+                ISet<DataType> types = type.types;
                 foreach (DataType tp in types)
                 {
                     setAttrType(analyzer, attr, tp, attrType);

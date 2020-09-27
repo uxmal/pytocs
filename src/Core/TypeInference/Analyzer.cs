@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -272,7 +272,7 @@ namespace Pytocs.Core.TypeInference
 
         ModuleType? GetCachedModule(string file)
         {
-            DataType? t = ModuleTable.LookupType(GetModuleQname(file));
+            DataType? t = ModuleTable.LookupTypeOf(GetModuleQname(file));
             if (t is null)
             {
                 return null;
@@ -724,7 +724,8 @@ namespace Pytocs.Core.TypeInference
                 foreach (FunType cl in uncalledDup)
                 {
                     progress.Tick();
-                    TypeTransformer.Apply(this, cl, null, null, null, null, null);
+                    var transformer = new TypeTransformer(cl.scope, this);
+                    transformer.Apply(cl, null, null, null, null, null);
                 }
             }
         }

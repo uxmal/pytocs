@@ -195,6 +195,9 @@
   <data name="ErrUnhandledState" xml:space="preserve">
     <value>Unhandled state {0}.</value>
   </data>
+  <data name="ErrUnknownTypeInTypeAnnotation" xml:space="preserve">
+    <value>Unknown type in type annotation {0}.</value>
+  </data>
   <data name="ErrUnparseableIntegerToken" xml:space="preserve">
     <value>Unparseable long integer token {0}.</value>
   </data>

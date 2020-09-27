@@ -268,12 +268,12 @@ namespace Pytocs.Core.TypeInference
         {
             if (fun is FunType ft)
             {
-                return Apply(analyzer, ft, pos, hash, kw, star, c);
+                return Apply(ft, pos, hash, kw, star, c);
             }
             else if (fun is ClassType)
             {
                 var instance = new InstanceType(fun);
-                ApplyConstructor(analyzer, instance, c, pos);
+                ApplyConstructor(instance, c, pos);
                 return instance;
             }
             else
@@ -283,12 +283,12 @@ namespace Pytocs.Core.TypeInference
             }
         }
 
-        public static void ApplyConstructor(Analyzer analyzer, InstanceType i, Application call, List<DataType> args)
+        public void ApplyConstructor(InstanceType i, Application call, List<DataType> args)
         {
             if (i.Table.LookupAttributeType("__init__") is FunType initFunc && initFunc.Definition != null)
             {
                 initFunc.SelfType = i;
-                Apply(analyzer, initFunc, args, null, null, null, call);
+                Apply(initFunc, args, null, null, null, call);
                 initFunc.SelfType = null;
             }
         }
@@ -297,9 +297,8 @@ namespace Pytocs.Core.TypeInference
         /// <summary>
         /// Called when an application of a function is encountered.
         /// </summary>
-        //$TODO: move to Analyzer.
-        public static DataType Apply(
-            Analyzer analyzer,
+        /// <param name="pos">Types deduced for positional arguments.</param>
+        public DataType Apply(
             FunType func,
             List<DataType>? pos,
             IDictionary<string, DataType>? hash,
@@ -361,9 +360,9 @@ namespace Pytocs.Core.TypeInference
                 funcTable.Path = func.Definition.name.Name;
             }
 
-            DataType fromType = BindParameters(analyzer,
-                call, func.Definition, funcTable, func.Definition.parameters,
-                func.Definition.vararg, func.Definition.kwarg,
+            DataType fromType = BindParameters(
+                call, func.Definition, funcTable, 
+                func.Definition.parameters, func.Definition.vararg, func.Definition.kwarg,
                 pTypes, func.defaultTypes, hash, kw, star);
 
             if (func.arrows.TryGetValue(fromType, out var cachedTo))
@@ -373,6 +372,13 @@ namespace Pytocs.Core.TypeInference
             }
             else
             {
+                if (func.Definition.Annotation != null)
+                {
+                    var dtReturn = TranslateAnnotation(func.Definition.Annotation, funcTable);
+                    func.Definition.body.Accept(new TypeTransformer(funcTable, analyzer));
+                    func.AddMapping(fromType, dtReturn);
+                    return dtReturn;
+                }
                 DataType toType = func.Definition.body.Accept(new TypeTransformer(funcTable, analyzer));
                 if (MissingReturn(toType))
                 {
@@ -437,17 +443,16 @@ namespace Pytocs.Core.TypeInference
         /// <param name="call"></param>
         /// <param name="func"></param>
         /// <param name="funcTable"></param>
-        /// <param name="parameters"></param>
-        /// <param name="rest"></param>
-        /// <param name="restKw"></param>
+        /// <param name="parameters">Positional parameters as declared by the 'def'</param>
+        /// <param name="rest">Rest parameters declared by the 'def'</param>
+        /// <param name="restKw">Keyword parameters declared by the 'def'</param>
         /// <param name="pTypes"></param>
-        /// <param name="dTypes"></param>
+        /// <param name="dTypes">Default types</param>
         /// <param name="hash"></param>
         /// <param name="kw"></param>
         /// <param name="star"></param>
         /// <returns></returns>
-        private static DataType BindParameters(
-            Analyzer analyzer,
+        private DataType BindParameters(
             Node? call,
             FunctionDef func,
             State funcTable,
@@ -471,11 +476,16 @@ namespace Pytocs.Core.TypeInference
                 star = list.ToTupleType();
             }
 
+            // Do the positional parameters first.
             for (int i = 0, j = 0; i < pSize; i++)
             {
                 Parameter param = parameters![i];
                 DataType aType;
-                if (i < aSize)
+                if (param.Annotation != null)
+                {
+                    aType = TranslateAnnotation(param.Annotation, funcTable);
+                }
+                else if (i < aSize)
                 {
                     aType = pTypes![i];
                 }
@@ -1068,7 +1078,7 @@ namespace Pytocs.Core.TypeInference
                 return;
             }
 
-            DataType? allType = mt.Table.LookupType("__all__");
+            DataType? allType = mt.Table.LookupTypeOf("__all__");
 
             List<string> names = new List<string>();
             if (allType != null && allType is ListType lt)
@@ -1410,7 +1420,7 @@ namespace Pytocs.Core.TypeInference
                     }
                     else if (sliceFunc is FunType ft)
                     {
-                        return Apply(analyzer, ft, null, null, null, null, s);
+                        return Apply(ft, null, null, null, null, s);
                     }
                     else
                     {
@@ -1580,6 +1590,44 @@ namespace Pytocs.Core.TypeInference
                 result = UnionType.Union(result, nodeType);
             }
             return result;
+        }
+
+        private DataType TranslateAnnotation(Exp exp, State state)
+        {
+            if (exp is ArrayRef aref)
+            {
+                var dts = new List<DataType>();
+                foreach (var sub in aref.subs)
+                {
+                    if (sub.lower != null)
+                    {
+                        dts.Add(TranslateAnnotation(sub.lower, state));
+                    }
+                    else
+                    {
+                        dts.Add(DataType.Unknown);
+                    }
+                }
+                var genericType = state.LookupTypeByName(aref.array.ToString());
+                if (genericType is null)
+                {
+                    analyzer.AddProblem(exp, string.Format(Resources2.ErrUnknownTypeInTypeAnnotation, exp));
+                    return DataType.Unknown;
+                }
+                return genericType.MakeGenericType(dts.ToArray());
+            }
+            if (exp is Identifier id)
+            {
+                var dt = state.LookupTypeByName(id.Name);
+                if (dt is null)
+                {
+                    analyzer.AddProblem(exp, string.Format(Resources2.ErrUnknownTypeInTypeAnnotation, exp));
+                    return DataType.Unknown;
+                }
+                return dt;
+            }
+            analyzer.AddProblem(exp, string.Format(Resources2.ErrUnknownTypeInTypeAnnotation, exp));
+            return DataType.Unknown;
         }
     }
 

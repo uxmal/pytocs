@@ -228,5 +228,10 @@ namespace Pytocs.Core.Types
             }
             return simplified;
         }
+
+        public override DataType MakeGenericType(params DataType[] typeArguments)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }

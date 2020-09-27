@@ -41,5 +41,11 @@ namespace Pytocs.Core.Types
         {
             return GetType().GetHashCode();
         }
+
+        public override DataType MakeGenericType(params DataType[] typeArguments)
+        {
+            throw new System.InvalidOperationException("StrType cannot be generic.");
+        }
+
     }
 }

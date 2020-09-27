@@ -111,5 +111,10 @@ namespace Pytocs.Core.Types
         {
             return "TupleType".GetHashCode();
         }
+
+        public override DataType MakeGenericType(params DataType[] typeArguments)
+        {
+            return new TupleType(typeArguments);
+        }
     }
 }

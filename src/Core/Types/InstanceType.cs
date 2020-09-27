@@ -48,5 +48,10 @@ namespace Pytocs.Core.Types
         {
             return classType.GetHashCode();
         }
+
+        public override DataType MakeGenericType(params DataType[] typeArguments)
+        {
+            return new InstanceType(classType.MakeGenericType(typeArguments));
+        }
     }
 }

@@ -178,12 +178,22 @@ namespace Pytocs.Core.Syntax
                 w.Write(sep);
                 sep = ",";
                 w.Write(p.ToString());
+                if (p.Annotation != null)
+                {
+                    w.Write(": ");
+                    p.Annotation.Write(writer);
+                }
             }
-            w.WriteLine("):");
+            w.Write(")");
+            if (f.Annotation != null)
+            {
+                w.Write(" -> ");
+                f.Annotation.Write(writer);
+            }
+            w.WriteLine(":");
             ++w.IndentLevel;
             f.body.Accept(this);
             --w.IndentLevel;
-
         }
 
         public void VisitGlobal(GlobalStatement g)

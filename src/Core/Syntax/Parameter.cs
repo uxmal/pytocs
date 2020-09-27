@@ -28,9 +28,9 @@ namespace Pytocs.Core.Syntax
         /// </summary>
         public Identifier? Id { get; set; }
 
-
         public bool vararg;
         public bool keyarg;
+        
         public List<Parameter>? tuple;
 
         public Parameter(Identifier? id = null)
@@ -44,6 +44,11 @@ namespace Pytocs.Core.Syntax
         public Exp? Test { get; set; }
 
         public string? Comment { get; set; }
+
+        /// <summary>
+        /// Type annotation.
+        /// </summary>
+        public Exp? Annotation { get; set; }
 
         public override string ToString()
         {

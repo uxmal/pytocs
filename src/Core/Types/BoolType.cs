@@ -14,6 +14,8 @@
 //  limitations under the License.
 #endregion
 
+using System;
+
 namespace Pytocs.Core.Types
 {
     public class BoolType : DataType
@@ -45,6 +47,11 @@ namespace Pytocs.Core.Types
         public override int GetHashCode()
         {
             return "BoolType".GetHashCode();
+        }
+
+        public override DataType MakeGenericType(params DataType[] typeArguments)
+        {
+            throw new InvalidOperationException("ComplexType cannot be generic.");
         }
     }
 }

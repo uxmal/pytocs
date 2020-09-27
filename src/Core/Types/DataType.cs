@@ -71,6 +71,8 @@ namespace Pytocs.Core.Types
 
         public abstract T Accept<T>(IDataTypeVisitor<T> visitor);
 
+        public abstract DataType MakeGenericType(params DataType[] typeArguments);
+
         public override string ToString()
         {
             return this.Accept(new TypePrinter());

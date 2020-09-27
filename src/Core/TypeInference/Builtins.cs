@@ -193,13 +193,12 @@ namespace Pytocs.Core.TypeInference
                 outer.modules[name] = this;
             }
 
-            /**
-             * Lazily load the module.
-             */
-
+            /// <summary>
+            /// Lazily load the module.
+            /// </summary>
             public ModuleType? getModule()
             {
-                if (module == null)
+                if (module is null)
                 {
                     createModuleType();
                     initBindings(this.table!);
@@ -450,7 +449,7 @@ namespace Pytocs.Core.TypeInference
             }
             for (int i = 1; i < mods.Length; i++)
             {
-                type = type.Table.LookupType(mods[i]);
+                type = type.Table.LookupTypeOf(mods[i]);
                 if (!(type is ModuleType))
                 {
                     return null;
@@ -536,7 +535,7 @@ namespace Pytocs.Core.TypeInference
 
             string[] list_methods_none = {
                 "append", "extend", "index", "insert", "pop", "remove", "reverse", "sort"
-        };
+            };
             foreach (string m in list_methods_none)
             {
                 BaseList.Table.Insert(analyzer, m, newLibUrl("stdtypes"), newFunc(DataType.None), BindingKind.METHOD).IsBuiltin = true;
@@ -833,7 +832,7 @@ namespace Pytocs.Core.TypeInference
                     "property", "quit", "raw_input", "reduce", "reload", "reversed",
                     "set", "setattr", "slice", "sorted", "staticmethod", "super",
                     "type", "unichr", "unicode",
-            };
+                };
                 foreach (string f in builtin_func_unknown)
                 {
                     addFunction(f, newLibUrl("functions.html#" + f), DataType.Unknown);
@@ -872,7 +871,7 @@ namespace Pytocs.Core.TypeInference
                     addClass(f, newDataModelUrl("org/yinwang/pysonar/types"),
                             outer.newClass(f, outer.analyzer.GlobalTable, outer.objectType));
                 }
-                outer.BaseException = (ClassType) table.LookupType("BaseException")!;
+                outer.BaseException = (ClassType) table.LookupTypeOf("BaseException")!;
 
                 foreach (string f in new[] { "True", "False" })
                 {
@@ -885,6 +884,17 @@ namespace Pytocs.Core.TypeInference
 
                 outer.analyzer.GlobalTable.Insert(outer.analyzer, "__builtins__", liburl(), module!, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 outer.analyzer.GlobalTable.putAll(table);
+
+                AddBuiltinTypes(outer.analyzer.GlobalTable.DataTypes);
+            }
+
+            private void AddBuiltinTypes(IDictionary<string, DataType> dataTypes)
+            {
+                dataTypes.Add("int", DataType.Int);
+                dataTypes.Add("str", DataType.Str);
+                dataTypes.Add("bool", DataType.Bool);
+                dataTypes.Add("List", new ListType());
+                dataTypes.Add("Dict", new DictType(DataType.Unknown,DataType.Unknown));
             }
         }
 

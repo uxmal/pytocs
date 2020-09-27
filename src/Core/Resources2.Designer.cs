@@ -295,6 +295,15 @@ namespace Pytocs.Core {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Unknown type in type annotation {0}..
+        /// </summary>
+        internal static string ErrUnknownTypeInTypeAnnotation {
+            get {
+                return ResourceManager.GetString("ErrUnknownTypeInTypeAnnotation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Unparseable long integer token {0}..
         /// </summary>
         internal static string ErrUnparseableIntegerToken {

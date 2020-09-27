@@ -35,5 +35,10 @@ namespace Pytocs.Core.Types
         {
             return visitor.VisitSet(this);
         }
+
+        public override DataType MakeGenericType(params DataType[] typeArguments)
+        {
+            throw new InvalidOperationException("IntType cannot be generic.");
+        }
     }
 }
