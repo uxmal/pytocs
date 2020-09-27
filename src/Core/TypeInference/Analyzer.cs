@@ -424,7 +424,7 @@ namespace Pytocs.Core.TypeInference
 
         public DataType LoadModule(Module ast)
         {
-            return new TypeTransformer(ModuleTable, this).VisitModule(ast);
+            return new TypeCollector(ModuleTable, this).VisitModule(ast);
         }
 
         private void CreateCacheDirectory()
@@ -640,6 +640,8 @@ namespace Pytocs.Core.TypeInference
                 {
                     dt = UnionType.CreateUnion(new[] { dt, dtOld });
                 }
+                if (b.Node != null && b.Node.ToString().Contains("list_of_"))
+                    b.ToString();
                 types[b.Node] = dt;
             }
 
@@ -724,7 +726,7 @@ namespace Pytocs.Core.TypeInference
                 foreach (FunType cl in uncalledDup)
                 {
                     progress.Tick();
-                    var transformer = new TypeTransformer(cl.scope, this);
+                    var transformer = new TypeCollector(cl.scope, this);
                     transformer.Apply(cl, null, null, null, null, null);
                 }
             }

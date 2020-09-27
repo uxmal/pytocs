@@ -6,14 +6,20 @@ using Pytocs.Core.Syntax;
 
 namespace Pytocs.Core.TypeInference
 {
-    public class TypeTransformer : 
+    /// <summary>
+    /// Visits Python statements and collects data types from:
+    ///  - user annotations
+    ///  - expression usage.
+    ///  The results are collected in the provided <see cref="State"/> object.
+    /// </summary>
+    public class TypeCollector : 
         IStatementVisitor<DataType>,
         IExpVisitor<DataType>
     {
         private readonly State scope;
         private readonly Analyzer analyzer;
 
-        public TypeTransformer(State s, Analyzer analyzer)
+        public TypeCollector(State s, Analyzer analyzer)
         {
             this.scope = s;
             this.analyzer = analyzer;
@@ -375,11 +381,11 @@ namespace Pytocs.Core.TypeInference
                 if (func.Definition.Annotation != null)
                 {
                     var dtReturn = TranslateAnnotation(func.Definition.Annotation, funcTable);
-                    func.Definition.body.Accept(new TypeTransformer(funcTable, analyzer));
+                    func.Definition.body.Accept(new TypeCollector(funcTable, analyzer));
                     func.AddMapping(fromType, dtReturn);
                     return dtReturn;
                 }
-                DataType toType = func.Definition.body.Accept(new TypeTransformer(funcTable, analyzer));
+                DataType toType = func.Definition.body.Accept(new TypeCollector(funcTable, analyzer));
                 if (MissingReturn(toType))
                 {
                     analyzer.AddProblem(func.Definition.name, "Function doesn't always return a value");
@@ -661,7 +667,7 @@ namespace Pytocs.Core.TypeInference
             scope.Bind(analyzer, c.name, classType, BindingKind.CLASS);
             if (c.body != null)
             {
-                var xform = new TypeTransformer(classType.Table, this.analyzer);
+                var xform = new TypeCollector(classType.Table, this.analyzer);
                 c.body.Accept(xform);
             }
             return DataType.Cont;
@@ -862,7 +868,7 @@ namespace Pytocs.Core.TypeInference
                 fun.Table.Bind(analyzer, f.parameters[0].Id!, firstArgType, BindingKind.PARAMETER);
             }
 
-            f.body.Accept(new TypeTransformer(fun.Table, this.analyzer));
+            f.body.Accept(new TypeCollector(fun.Table, this.analyzer));
             return DataType.Cont;
         }
 
@@ -1201,7 +1207,7 @@ namespace Pytocs.Core.TypeInference
             scope.Insert(analyzer, analyzer.GetModuleQname(m.Filename!), m, mt, BindingKind.MODULE);
             if (m.Body != null)
             {
-                m.Body.Accept(new TypeTransformer(mt.Table, this.analyzer));
+                m.Body.Accept(new TypeCollector(mt.Table, this.analyzer));
             }
             return mt;
         }

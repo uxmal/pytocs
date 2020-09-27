@@ -473,7 +473,7 @@ namespace Pytocs.Core.TypeInference
                 break;
             case ArrayRef sub:
                 DataType valueType = TransformExp(analyzer, sub.array, this);
-                var xform = new TypeTransformer(this, analyzer);
+                var xform = new TypeCollector(this, analyzer);
                 TransformExprs(analyzer, sub.subs, this);
                 if (valueType is ListType t)
                 {
@@ -671,7 +671,7 @@ namespace Pytocs.Core.TypeInference
 
         public static void TransformExprs(Analyzer analyzer, List<Slice> exprs, State s)
         {
-            var x = new TypeTransformer(s, analyzer);
+            var x = new TypeCollector(s, analyzer);
             foreach (var e in exprs)
             {
                 e.Accept(x);
@@ -680,7 +680,7 @@ namespace Pytocs.Core.TypeInference
 
         public static DataType TransformExp(Analyzer analyzer, Exp n, State s)
         {
-            return n.Accept(new TypeTransformer(s, analyzer));
+            return n.Accept(new TypeCollector(s, analyzer));
         }
     }
 }
