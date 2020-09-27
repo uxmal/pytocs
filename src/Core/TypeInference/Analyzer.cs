@@ -636,13 +636,14 @@ namespace Pytocs.Core.TypeInference
             foreach (var b in GetAllBindings())
             {
                 var dt = b.Type;
-                if (types.TryGetValue(b.Node, out var dtOld))
+                if (b.Node != null)
                 {
-                    dt = UnionType.CreateUnion(new[] { dt, dtOld });
+                    if (types.TryGetValue(b.Node, out var dtOld))
+                    {
+                        dt = UnionType.CreateUnion(new[] { dt, dtOld });
+                    }
+                    types[b.Node] = dt;
                 }
-                if (b.Node != null && b.Node.ToString().Contains("list_of_"))
-                    b.ToString();
-                types[b.Node] = dt;
             }
 
             foreach (var b in GetAllBindings())
@@ -726,7 +727,7 @@ namespace Pytocs.Core.TypeInference
                 foreach (FunType cl in uncalledDup)
                 {
                     progress.Tick();
-                    var transformer = new TypeCollector(cl.scope, this);
+                    var transformer = new TypeCollector(cl.scope!, this);
                     transformer.Apply(cl, null, null, null, null, null);
                 }
             }
@@ -862,9 +863,9 @@ namespace Pytocs.Core.TypeInference
             {
                 putRef(attr, b);
                 if (attr.Parent is Application &&
-                        b.Type is FunType && targetType is InstanceType)
+                        b.Type is FunType fn && targetType is InstanceType)
                 {  // method call 
-                    ((FunType) b.Type).SelfType = targetType;
+                    fn.SelfType = targetType;
                 }
             }
         }
