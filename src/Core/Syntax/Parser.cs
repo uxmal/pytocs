@@ -414,7 +414,7 @@ file_input: (NEWLINE | stmt)* ENDMARKER
 eval_input: testlist NEWLINE* ENDMARKER
 #endif
         //decorator: '@' dotted_name [ '(' [arglist] ')' ] NEWLINE
-        Decorator decorator()
+        private Decorator decorator()
         {
             var posStart = Expect(TokenType.AT).Start;
             var dn = dotted_name();
@@ -491,8 +491,8 @@ eval_input: testlist NEWLINE* ENDMARKER
         //decorators: decorator+
         public List<Decorator> decorators()
         {
-            var decs = new List<Decorator>();
-            decs.Add(decorator());
+            var dec = decorator();
+            var decs = new List<Decorator> { dec };
             while (Peek(TokenType.AT))
             {
                 decs.Add(decorator());
@@ -544,8 +544,8 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             Expect(TokenType.COLON);
             var s = suite();
-            var vararg = parms.Where(p => p.vararg).SingleOrDefault();
-            var kwarg = parms.Where(p => p.keyarg).SingleOrDefault();
+            var vararg = parms.Where(p => p.IsVarArg).SingleOrDefault();
+            var kwarg = parms.Where(p => p.IsKeyArg).SingleOrDefault();
             var fndef = new FunctionDef(
                 fnName,
                 parms,
@@ -593,7 +593,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                     if (Peek(TokenType.ID))
                     {
                         arg = fpdef();
-                        arg.vararg = true;
+                        arg.IsVarArg = true;
                         args.Add(arg);
                     }
                     if (PeekAndDiscard(TokenType.COMMA))
@@ -601,7 +601,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                         if (PeekAndDiscard(TokenType.OP_STARSTAR))
                         {
                             arg = fpdef();
-                            arg.keyarg = true;
+                            arg.IsKeyArg = true;
                             args.Add(arg);
                             return args;
                         }
@@ -633,7 +633,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                         if (PeekAndDiscard(TokenType.OP_STARSTAR))
                         {
                             arg = fpdef();
-                            arg.keyarg = true;
+                            arg.IsKeyArg = true;
                             args.Add(arg);
                         }
                         else if (PeekAndDiscard(TokenType.OP_STAR))
@@ -647,7 +647,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                             {
                                 arg = new Parameter();
                             }
-                            arg.vararg = true;
+                            arg.IsVarArg = true;
                             args.Add(arg);
                         }
                         else
@@ -727,8 +727,8 @@ eval_input: testlist NEWLINE* ENDMARKER
         // fplist: fpdef (',' fpdef)* [',']
         List<Parameter> fplist()
         {
-            var p = new List<Parameter>();
-            p.Add(fpdef());
+            var fp = fpdef();
+            var p = new List<Parameter> { fp };
             if (PeekAndDiscard(TokenType.COMMA))
             {
                 while (!Peek(TokenType.EOF, TokenType.RPAREN))
@@ -797,22 +797,22 @@ eval_input: testlist NEWLINE* ENDMARKER
             return new Identifier((string)token.Value!, filename, token.Start, token.End);
         }
 
-        static HashSet<TokenType> compoundStatement_first = new HashSet<TokenType>() {
+        private readonly static HashSet<TokenType> compoundStatement_first = new HashSet<TokenType>() {
             TokenType.If, TokenType.While, TokenType.For, TokenType.Try, TokenType.With,
             TokenType.Def, TokenType.Class, TokenType.AT, TokenType.Async
         };
 
-        static HashSet<TokenType> augassign_set = new HashSet<TokenType>() {
+        private readonly static HashSet<TokenType> augassign_set = new HashSet<TokenType>() {
             TokenType.ADDEQ, TokenType.SUBEQ, TokenType.MULEQ, TokenType.DIVEQ, TokenType.MODEQ,
             TokenType.ANDEQ, TokenType.OREQ, TokenType.XOREQ, TokenType.SHLEQ, TokenType.SHREQ,
             TokenType.EXPEQ, TokenType.IDIVEQ
         };
 
-        static HashSet<TokenType> stmt_follow = new HashSet<TokenType>() {
+        private readonly static HashSet<TokenType> stmt_follow = new HashSet<TokenType>() {
             TokenType.SEMI, TokenType.NEWLINE, TokenType.COMMENT, TokenType.EOF
         };
 
-        static HashSet<TokenType> trailer_first = new HashSet<TokenType> {
+        private readonly static HashSet<TokenType> trailer_first = new HashSet<TokenType> {
             TokenType.LPAREN, TokenType.LBRACKET, TokenType.DOT
         };
 
@@ -1301,8 +1301,8 @@ eval_input: testlist NEWLINE* ENDMARKER
         //dotted_as_names: dotted_as_name (',' dotted_as_name)*
         public List<AliasedName> dotted_as_names()
         {
-            var aliases = new List<AliasedName>();
-            aliases.Add(dotted_as_name());
+            var alias = dotted_as_name();
+            var aliases = new List<AliasedName> { alias };
             while (PeekAndDiscard(TokenType.COMMA))
             {
                 aliases.Add(dotted_as_name());
@@ -1360,12 +1360,13 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             return new NonlocalStatement(names, filename, posStart, posEnd);
         }
+
         //assert_stmt: 'assert' test [',' test]
         public Statement assert_stmt()
         {
             var posStart = Expect(TokenType.Assert).Start;
-            var tests = new List<Exp>();
-            tests.Add(ExpectTest());
+            var test = ExpectTest();
+            var tests = new List<Exp> { test };
             while (PeekAndDiscard(TokenType.COMMA))
             {
                 tests.Add(ExpectTest());
@@ -1603,8 +1604,8 @@ eval_input: testlist NEWLINE* ENDMARKER
         public List<Statement> with_stmt()
         {
             var posStart = Expect(TokenType.With).Start;
-            var ws = new List<WithItem>();
-            ws.Add(with_item());
+            var w = with_item();
+            var ws = new List<WithItem> { w };
             while (PeekAndDiscard(TokenType.COMMA))
                 ws.Add(with_item());
             Expect(TokenType.COLON);
@@ -2258,11 +2259,12 @@ eval_input: testlist NEWLINE* ENDMARKER
                 throw Unexpected();
             }
         }
+
         //subscriptlist: subscript (',' subscript)* [',']
         public List<Slice> subscriptlist()
         {
-            var subs = new List<Slice>();
-            subs.Add(subscript());
+            var sub = subscript();
+            var subs = new List<Slice> { sub };
             while (PeekAndDiscard(TokenType.COMMA))
             {
                 if (Peek(TokenType.RBRACKET))
@@ -2271,6 +2273,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             return subs;
         }
+
         //subscript: test | [Fact] ':' [Fact] [sliceop]
         public Slice subscript()
         {

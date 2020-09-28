@@ -29,14 +29,14 @@ namespace Pytocs.Core.Translate
 {
     public class StatementTranslator : IStatementVisitor
     {
-        private ClassDef? classDef;
-        private TypeReferenceTranslator types;
-        private CodeGenerator gen;
-        private ExpTranslator xlat;
-        private SymbolGenerator gensym;
+        private readonly ClassDef? classDef;
+        private readonly TypeReferenceTranslator types;
+        private readonly CodeGenerator gen;
+        private readonly ExpTranslator xlat;
+        private readonly SymbolGenerator gensym;
+        private readonly HashSet<string> globals;
         private IEnumerable<CodeAttributeDeclaration>? customAttrs;
         private Dictionary<Statement, PropertyDefinition> properties;
-        private HashSet<string> globals;
         private CodeConstructor? classConstructor;
         private bool async;
 
@@ -147,7 +147,7 @@ namespace Pytocs.Core.Translate
         private static bool IsGetterDecorator(Decorator decoration)
         {
             return decoration.className.segs.Count == 1 &&
-                                    decoration.className.segs[0].Name == "property";
+                   decoration.className.segs[0].Name == "property";
         }
 
         private static bool IsSetterDecorator(Decorator decorator)
@@ -156,6 +156,7 @@ namespace Pytocs.Core.Translate
                 return false;
             return decorator.className.segs[1].Name == "setter";
         }
+
         public static IEnumerable<CodeCommentStatement> ConvertFirstStringToComments(List<Statement> statements)
         {
             var nothing = new CodeCommentStatement[0];
@@ -297,7 +298,6 @@ namespace Pytocs.Core.Translate
                 {
                     if (ass.op == Op.Assign)
                     {
-                            //$TODO: declarations
                         if (rhs != null)
                         {
                             gen.Assign(lhs, rhs);
@@ -339,7 +339,7 @@ namespace Pytocs.Core.Translate
             {
                 var ex = e.Expression.Accept(xlat);
                 EnsureClassConstructor().Statements.Add(
-                    new CodeExpressionStatement(e.Expression.Accept(xlat)));
+                    new CodeExpressionStatement(ex));
             }
         }
 
@@ -355,7 +355,6 @@ namespace Pytocs.Core.Translate
                 gen.Assign(tup, rhs);
                 EmitTupleFieldAssignments(lhs, tup);
             }
-
         }
 
         /// <summary>
@@ -366,7 +365,7 @@ namespace Pytocs.Core.Translate
         private void EmitStarredTupleAssignments(List<Exp> lhs, CodeExpression rhs)
         {
             //$TODO: we don't handle (a, *b, c, d) = ... yet. Who writes code like that?
-            gen.EnsureImport("System.Linq");
+            gen.EnsureImport(TypeReferenceTranslator.LinqNamespace);
 
             var tmp = GenSymLocalIterator();
             gen.Scope.Add(new CodeVariableDeclarationStatement("var", tmp.Name)

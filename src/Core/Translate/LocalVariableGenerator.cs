@@ -41,7 +41,7 @@ namespace Pytocs.Core.Translate
 
         public static void Generate(List<CodeParameterDeclarationExpression>? parameters, List<CodeStatement> statements, HashSet<string> globals)
         {
-            parameters = parameters ?? new List<CodeParameterDeclarationExpression>();
+            parameters ??= new List<CodeParameterDeclarationExpression>();
             var gen = new LocalVariableGenerator(parameters, statements, globals);
             gen.Analyze(new List<CodeStatement>(), statements);
             gen.Generate();
@@ -129,8 +129,7 @@ namespace Pytocs.Core.Translate
                         // An assignment of type 'name = <exp>'. If the value
                         // assigned is null, use object type 'object', otherwise
                         // use 'var'.
-                        var prim = ass.Source as CodePrimitiveExpression;
-                        var dstType = prim != null && prim.Value == null
+                        var dstType = ass.Source is CodePrimitiveExpression prim && prim.Value == null
                             ? "object"
                             : "var";
                         stms[i] = new CodeVariableDeclarationStatement(dstType, id.Name)

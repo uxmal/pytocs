@@ -1316,17 +1316,17 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitSlice(Slice s)
         {
-            if (s.lower != null)
+            if (s.Lower != null)
             {
-                s.lower.Accept(this);
+                s.Lower.Accept(this);
             }
-            if (s.step != null)
+            if (s.Step != null)
             {
-                s.step.Accept(this);
+                s.Step.Accept(this);
             }
-            if (s.upper != null)
+            if (s.Upper != null)
             {
-                s.upper.Accept(this);
+                s.Upper.Accept(this);
             }
             return analyzer.TypeFactory.CreateList();
         }
@@ -1598,16 +1598,20 @@ namespace Pytocs.Core.TypeInference
             return result;
         }
 
+        /// <summary>
+        /// Translate a Python type annotation to a <see cref="DataType"/>.
+        /// </summary>
         private DataType TranslateAnnotation(Exp exp, State state)
         {
             if (exp is ArrayRef aref)
             {
+                // Generic types are expressed like: GenericType[TypeArg1,TypeArg2,...]
                 var dts = new List<DataType>();
                 foreach (var sub in aref.subs)
                 {
-                    if (sub.lower != null)
+                    if (sub.Lower != null)
                     {
-                        dts.Add(TranslateAnnotation(sub.lower, state));
+                        dts.Add(TranslateAnnotation(sub.Lower, state));
                     }
                     else
                     {

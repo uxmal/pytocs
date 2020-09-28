@@ -33,6 +33,7 @@ namespace Pytocs.Core.Translate
     {
         public const string SystemNamespace = "System";
         public const string GenericCollectionNamespace = "System.Collections.Generic";
+        public const string LinqNamespace = "System.Linq";
         public const string TasksNamespace = "System.Threading.Tasks";
 
         private readonly Dictionary<Node, DataType> types;

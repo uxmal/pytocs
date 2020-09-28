@@ -23,20 +23,21 @@ namespace Pytocs.Core.Syntax
 {
     public class Parameter
     {
-        /// <summary>
-        /// Parameter name
-        /// </summary>
-        public Identifier? Id { get; set; }
-
-        public bool vararg;
-        public bool keyarg;
-        
-        public List<Parameter>? tuple;
 
         public Parameter(Identifier? id = null)
         {
             this.Id = id;
         }
+
+        /// <summary>
+        /// Parameter name
+        /// </summary>
+        public Identifier? Id { get; set; }
+
+        public bool IsVarArg { get; set; }
+        public bool IsKeyArg { get; set; }
+
+        public List<Parameter>? tuple;
 
         /// <summary>
         /// Default value
@@ -59,11 +60,11 @@ namespace Pytocs.Core.Syntax
                 sb.Append(string.Join(",", tuple));
                 sb.Append(")");
             }
-            else if (keyarg)
+            else if (IsKeyArg)
             {
                 sb.AppendFormat("**{0}", Id);
             }
-            else if (vararg)
+            else if (IsVarArg)
             {
                 sb.AppendFormat("*{0}", Id);
             }

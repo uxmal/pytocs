@@ -16,13 +16,8 @@
 
 using Pytocs.Core.CodeModel;
 using Pytocs.Core.Syntax;
-using Pytocs.Core.TypeInference;
-using Pytocs.Core.Types;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pytocs.Core.Translate
 {

@@ -150,8 +150,8 @@ namespace Pytocs.Core.Translate
         private CodeParameterDeclarationExpression[] CreateFunctionParameters(IEnumerable<Parameter> parameters)
         {
             var convs = parameters
-                .OrderBy(ta => ta.vararg)
-                .Where(ta => !ta.vararg || ta.Id != null)
+                .OrderBy(ta => ta.IsVarArg)
+                .Where(ta => !ta.IsVarArg || ta.Id != null)
                 .Select(ta => (ta, GenerateFunctionParameter(ta))).ToArray();
             this.mpPyParamToCs = convs.ToDictionary(k => k.Item1, v => v.Item2);
             return convs.Select(c => c.Item2).ToArray();
@@ -170,21 +170,22 @@ namespace Pytocs.Core.Translate
                     IsVarargs = false,
                 };
             }
-            else if (ta.keyarg)
+            else if (ta.IsKeyArg)
             {
                 parameterType = new CodeTypeReference("Hashtable");
                 gen.EnsureImport("System.Collections");
             }
             else
             {
-                var (dtParam, _)= types.TranslateTypeOf(ta.Id!);
+                var (dtParam, ns)= types.TranslateTypeOf(ta.Id!);
+                gen.EnsureImports(ns);
                 parameterType = dtParam;
             }
             return new CodeParameterDeclarationExpression
             {
                 ParameterType = parameterType,
                 ParameterName = ta.Id?.Name!,
-                IsVarargs = ta.vararg,
+                IsVarargs = ta.IsVarArg,
                 DefaultValue = ta.Test?.Accept(this.xlat)
             };
         }

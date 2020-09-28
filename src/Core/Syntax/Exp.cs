@@ -679,15 +679,15 @@ namespace Pytocs.Core.Syntax
 
     public class Slice : Exp
     {
-        public Exp? lower;
-        public Exp? step;
-        public Exp? upper;
+        public Exp? Lower;
+        public Exp? Step;
+        public Exp? Upper;
 
         public Slice(Exp? start, Exp? end, Exp? slice, string filename, int s, int e) : base(filename, s, e)
         {
-            this.lower = start;
-            this.step = end;
-            this.upper = slice;
+            this.Lower = start;
+            this.Step = end;
+            this.Upper = slice;
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -702,22 +702,22 @@ namespace Pytocs.Core.Syntax
 
         public override void Write(TextWriter writer)
         {
-            if (lower == null && step == null && upper == null)
+            if (Lower == null && Step == null && Upper == null)
             {
                 writer.Write("::");
             }
-            else if (lower != null)
+            else if (Lower != null)
             {
-                lower.Write(writer);
-                if (step != null)
+                Lower.Write(writer);
+                if (Step != null)
                 {
                     writer.Write(':');
-                    step.Write(writer);
+                    Step.Write(writer);
                     writer.Write(':');
-                    if (upper != null)
+                    if (Upper != null)
                     {
                         writer.Write(':');
-                        upper.Write(writer);
+                        Upper.Write(writer);
                     }
                 }
             }
@@ -1015,6 +1015,9 @@ namespace Pytocs.Core.Syntax
         }
     }
 
+    /// <summary>
+    /// A list of expressions.
+    /// </summary>
     public class PyList : Exp
     {
         public readonly List<Exp> elts;

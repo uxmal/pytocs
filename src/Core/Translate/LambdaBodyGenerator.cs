@@ -57,6 +57,5 @@ namespace Pytocs.Core.Translate
                 .ToArray());
             return new CodeVariableDeclarationStatement(type, f.name.Name);
         }
-
     }
 }

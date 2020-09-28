@@ -106,12 +106,12 @@ namespace Pytocs.Core.Translate
         {
             if (args.Length == 0)
             {
-                m.EnsureImport("System.Collections.Generic");
+                m.EnsureImport(TypeReferenceTranslator.GenericCollectionNamespace);
                 return m.New(m.TypeRef("List", "object"));
             }
             if (args.Length == 1)
             {
-                m.EnsureImport("System.Linq");
+                m.EnsureImport(TypeReferenceTranslator.LinqNamespace);
                 var fn = m.MethodRef(args[0], "ToList");
                 return m.Appl(fn);
             }
@@ -122,7 +122,7 @@ namespace Pytocs.Core.Translate
         {
             if (args.Length == 0 || args.Length == 1)
             {
-                m.EnsureImport("System.Collections.Generic");
+                m.EnsureImport(TypeReferenceTranslator.GenericCollectionNamespace);
                 return m.New(
                     m.TypeRef("HashSet", "object"),
                     args);
@@ -134,13 +134,13 @@ namespace Pytocs.Core.Translate
         {
             if (args.Length == 0)
             {
-                m.EnsureImport("System.Collections.Generic");
+                m.EnsureImport(TypeReferenceTranslator.GenericCollectionNamespace);
                 return m.New(
                     m.TypeRef("Dictionary", "object", "object"));
             }
             else if (args.All(a => a is CodeNamedArgument))
             {
-                m.EnsureImport("System.Collections.Generic");
+                m.EnsureImport(TypeReferenceTranslator.GenericCollectionNamespace);
                 var exp = m.New(
                     m.TypeRef("Dictionary", "string", "object"));
                 exp.Initializer = new CodeCollectionInitializer(
@@ -155,7 +155,7 @@ namespace Pytocs.Core.Translate
             }
             else if (args.Length == 1)
             {
-                m.EnsureImport("System.Collections.Generic");
+                m.EnsureImport(TypeReferenceTranslator.GenericCollectionNamespace);
                 return m.Appl(m.MethodRef(args[0], "ToDictionary"));
             }
             return null;
@@ -177,7 +177,7 @@ namespace Pytocs.Core.Translate
         {
             if (args.Length == 1)
             {
-                m.EnsureImport("System.Linq");
+                m.EnsureImport(TypeReferenceTranslator.LinqNamespace);
                 var arg = args[0];
                 args = new CodeExpression[0];
                 var fn = m.Access(arg, "Sum");
@@ -260,8 +260,8 @@ namespace Pytocs.Core.Translate
         {
             if (args.Length == 2)
             {
-                m.EnsureImport("System.Collections.Generic");
-                m.EnsureImport("System.Linq");
+                m.EnsureImport(TypeReferenceTranslator.GenericCollectionNamespace);
+                m.EnsureImport(TypeReferenceTranslator.LinqNamespace);
                 var filter = args[0];
                 if (appl.args[0].defval is NoneExp)
                 {
@@ -333,7 +333,7 @@ namespace Pytocs.Core.Translate
             if (namedArgs.TryGetValue("reverse", out tmp))
                 rev = tmp;
 
-            m.EnsureImport("System.Collections.Generic");
+            m.EnsureImport(TypeReferenceTranslator.GenericCollectionNamespace);
             var formal = expTranslator.gensym.GenSymLocal("_p_", m.TypeRef("object"));
             return m.ApplyMethod(
                 m.ApplyMethod(

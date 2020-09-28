@@ -29,8 +29,8 @@ namespace Pytocs.Core.Translate
     /// </summary>
     public class SymbolGenerator
     {
-        private Dictionary<string, LocalSymbol> autos;
-        private List<Dictionary<string, CodeExpression>> stack;
+        private readonly Dictionary<string, LocalSymbol> autos;
+        private readonly List<Dictionary<string, CodeExpression>> stack;
 
         public SymbolGenerator()
         {

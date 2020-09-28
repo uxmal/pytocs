@@ -45,10 +45,9 @@ namespace Pytocs.Core.Syntax
 
         public override bool Equals(object obj)
         {
-            if (obj != null && obj is Token)
+            if (obj != null && obj is Token that)
             {
-                var oToken = (Token) obj;
-                return this == oToken;
+                return this == that;
             }
             return false;
         }
@@ -78,7 +77,6 @@ namespace Pytocs.Core.Syntax
                 Type,
                 Value);
         }
-
     }
 
     public enum TokenType

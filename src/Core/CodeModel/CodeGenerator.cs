@@ -394,7 +394,7 @@ namespace Pytocs.Core.CodeModel
 
         public CodeExpression ListInitializer(CodeTypeReference elemType,  IEnumerable<CodeExpression> exprs)
         {
-            EnsureImport("System.Collections.Generic");
+            EnsureImport(Translate.TypeReferenceTranslator.GenericCollectionNamespace);
             var list = new CodeObjectCreateExpression
             {
                 Type = new CodeTypeReference("List", elemType)

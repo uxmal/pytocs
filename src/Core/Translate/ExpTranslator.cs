@@ -235,16 +235,16 @@ namespace Pytocs.Core.Translate
             var subs = aref.subs
                 .Select(s =>
                 {
-                    if (s.upper != null || s.step != null)
+                    if (s.Upper != null || s.Step != null)
                         return new CodeVariableReferenceExpression(string.Format(
                             "{0}:{1}:{2}",
-                            s.lower, s.upper, s.step));
-                    if (s.lower != null)
-                        return s.lower.Accept(this);
-                    else if (s.upper != null)
-                        return s.upper.Accept(this);
-                    else if (s.step != null)
-                        return s.step.Accept(this);
+                            s.Lower, s.Upper, s.Step));
+                    if (s.Lower != null)
+                        return s.Lower.Accept(this);
+                    else if (s.Upper != null)
+                        return s.Upper.Accept(this);
+                    else if (s.Step != null)
+                        return s.Step.Accept(this);
                     else
                         return m.Prim(":");
                 })
@@ -317,7 +317,7 @@ namespace Pytocs.Core.Translate
                 var items = s.KeyValues.Select(kv => new CodeCollectionInitializer(
                     kv.Key!.Accept(this),
                     kv.Value.Accept(this)));
-                m.EnsureImport("System.Collections.Generic");
+                m.EnsureImport(TypeReferenceTranslator.GenericCollectionNamespace);
                 var init = new CodeObjectCreateExpression
                 {
                     Type = m.TypeRef("Dictionary", "object", "object"),
@@ -401,7 +401,7 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitSetComprehension(SetComprehension sc)
         {
-            m.EnsureImport("System.Linq");
+            m.EnsureImport(TypeReferenceTranslator.LinqNamespace);
             var compFor = (CompFor) sc.Collection;
             var v = sc.Projection.Accept(this);
             var c = TranslateToLinq(v, compFor);
@@ -569,7 +569,7 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitListComprehension(ListComprehension lc)
         {
-            m.EnsureImport("System.Linq");
+            m.EnsureImport(TypeReferenceTranslator.LinqNamespace);
             var compFor = (CompFor) lc.Collection;
             var v = lc.Projection.Accept(this);
             var c = TranslateToLinq(v, compFor);
@@ -740,7 +740,7 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitGeneratorExp(GeneratorExp g)
         {
-            m.EnsureImport("System.Linq");
+            m.EnsureImport(TypeReferenceTranslator.LinqNamespace);
             var compFor = (CompFor)g.Collection;
             var v = g.Projection.Accept(this);
             var c = TranslateToLinq(v, compFor);

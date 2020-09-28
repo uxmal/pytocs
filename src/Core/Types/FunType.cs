@@ -25,7 +25,7 @@ namespace Pytocs.Core.Types
     {
         public IDictionary<DataType, DataType> arrows = new Dictionary<DataType, DataType>();
         public readonly FunctionDef? Definition;
-        public Lambda? lambda;
+        public Lambda? Lambda;
         public ClassType? Class = null;
         public readonly State? scope;
         public List<DataType?>? defaultTypes;       // types for default parameters (evaluated at def time)
@@ -43,7 +43,7 @@ namespace Pytocs.Core.Types
 
         public FunType(Lambda lambda, State env)
         {
-            this.lambda = lambda;
+            this.Lambda = lambda;
             this.scope = env;
         }
 
@@ -129,7 +129,7 @@ namespace Pytocs.Core.Types
             var fnAwaitable = new FunType(this.Definition!, this.scope!)
             {
                 arrows = this.arrows.ToDictionary(k => k.Key, v => (DataType)new AwaitableType(v.Value)),
-                lambda = this.lambda,
+                Lambda = this.Lambda,
                 Class = this.Class,
                 defaultTypes = this.defaultTypes
             };
