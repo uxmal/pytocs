@@ -205,10 +205,21 @@ namespace Pytocs.Core.Translate
             ISet<string>? namespaces = null;
             var types = tuple.eltTypes;
             var (elementTypes, nms) = TranslateTypes(types, namespaces);
-            var tt = new CodeTypeReference(
-                "Tuple",
-                elementTypes.ToArray());
-            return (tt, Join(nms, SystemNamespace));
+            if (tuple.IsVariant)
+            {
+                // C# has no variant tuple concept, so we are forced to make this an array.
+                //$TODO: find the most general unifier of elementTypes.
+                var mgu = typeof(object);
+                var tt = new CodeTypeReference(new CodeTypeReference(mgu), 1);
+                return (tt, nms);
+            }
+            else
+            {
+                var tt = new CodeTypeReference(
+                    nameof(Tuple),
+                    elementTypes.ToArray());
+                return (tt, Join(nms, SystemNamespace));
+            }
         }
 
         private (List<CodeTypeReference>, ISet<string>?) TranslateTypes(IEnumerable<DataType> types, ISet<string>? namespaces)

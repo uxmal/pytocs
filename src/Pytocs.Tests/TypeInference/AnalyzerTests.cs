@@ -465,7 +465,7 @@ class Derived(Base):
 ");
             an.Analyze(@"\foo");
             an.Finish();
-            var sExp = 
+            var sExp =
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
 @"(binding:kind=FUNCTION:node=foo:type=str -> int:qname=.foo.test.foo:refs=[])" + nl +
 @"(binding:kind=PARAMETER:node=s:type=str:qname=.foo.test.foo.s:refs=[s])" + nl;
@@ -486,6 +486,40 @@ class Derived(Base):
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
 @"(binding:kind=FUNCTION:node=foo:type=[str] -> int:qname=.foo.test.foo:refs=[])" + nl +
 @"(binding:kind=PARAMETER:node=s:type=[str]:qname=.foo.test.foo.s:refs=[s])" + nl;
+            ExpectBindings(sExp);
+        }
+
+        [Fact(DisplayName = nameof(TypeAn_list_of_tuples))]
+        public void TypeAn_list_of_tuples()
+        {
+            fs.Dir("foo")
+        .File("test.py",
+@"records = [
+    ('a', 3, 8),
+    ('b', 14, -3)
+]");
+            an.Analyze(@"\foo");
+            an.Finish();
+            var sExp =
+@"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
+@"(binding:kind=SCOPE:node=records:type=[(str, int, int)]:qname=.foo.test.records:refs=[])" + nl;
+            ExpectBindings(sExp);
+        }
+
+        [Fact(DisplayName = nameof(TypeAn_list_of_unequal_sized_tuples))]
+        public void TypeAn_list_of_unequal_sized_tuples()
+        {
+            fs.Dir("foo")
+                .File("test.py",
+@"records = [
+    ('malloc', 'size_t'),
+    ('memset', 'void *', 'char', 'size_t')
+]");
+            an.Analyze(@"\foo");
+            an.Finish();
+            var sExp =
+@"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
+@"(binding:kind=SCOPE:node=records:type=[(str, str, ...)]:qname=.foo.test.records:refs=[])" + nl;
             ExpectBindings(sExp);
         }
     }

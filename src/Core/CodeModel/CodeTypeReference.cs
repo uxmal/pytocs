@@ -40,6 +40,13 @@ namespace Pytocs.Core.CodeModel
             }
         }
 
+        public CodeTypeReference(CodeTypeReference arrayElementType, int rank) 
+            : this(arrayElementType.TypeName)
+        {
+            this.ArrayRank = rank;
+            this.TypeArguments = arrayElementType.TypeArguments;
+        }
+
         public CodeTypeReference(string typeName)
         {
             TypeArguments = new List<CodeTypeReference>();
@@ -53,6 +60,7 @@ namespace Pytocs.Core.CodeModel
             this.TypeArguments.AddRange(typeArgs);
         }
 
+        public int ArrayRank { get; set; }
         public string TypeName { get; set; }
         public List<CodeTypeReference> TypeArguments { get; private set; }
     }

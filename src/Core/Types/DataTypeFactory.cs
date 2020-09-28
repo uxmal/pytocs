@@ -68,11 +68,6 @@ namespace Pytocs.Core.Types
             return module;
         }
 
-        public TupleType CreateTuple()
-        {
-            return Register(new TupleType());
-        }
-
         public TupleType CreateTuple(DataType[] dataTypes)
         {
             return Register(new TupleType(dataTypes));

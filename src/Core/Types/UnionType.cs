@@ -144,10 +144,31 @@ namespace Pytocs.Core.Types
             {
                 return u;
             }
+            else if (u is TupleType tu && v is TupleType tv)
+            {
+                return UnifyTuples(tu, tv);
+            }
             else
             {
                 return new UnionType(u, v);
             }
+        }
+
+        /// <summary>
+        /// Unifies two tuples. 
+        /// </summary>
+        /// <param name="tu"></param>
+        /// <param name="tv"></param>
+        /// <returns></returns>
+        private static TupleType UnifyTuples(TupleType tu, TupleType tv)
+        {
+            var common = Math.Min(tu.eltTypes.Length, tv.eltTypes.Length);
+            var elts = new List<DataType>();
+            for (int i = 0; i < common; ++i)
+            {
+                elts.Add(Union(tu.eltTypes[i], tv.eltTypes[i]));
+            }
+            return new TupleType(true, elts.ToArray());
         }
 
 

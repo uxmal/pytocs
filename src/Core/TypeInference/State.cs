@@ -541,10 +541,10 @@ namespace Pytocs.Core.TypeInference
             {
             case TupleType tuple:
                 {
-                    List<DataType> vs = tuple.eltTypes;
-                    if (xs.Count != vs.Count)
+                    DataType[]  vs = tuple.eltTypes;
+                    if (xs.Count != vs.Length)
                     {
-                        ReportUnpackMismatch(analyzer, xs, vs.Count);
+                        ReportUnpackMismatch(analyzer, xs, vs.Length);
                     }
                     else
                     {

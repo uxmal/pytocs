@@ -155,13 +155,13 @@ namespace Pytocs.Core.Types
 
             if (type1 is TupleType tuple1 && type2 is TupleType tuple2)
             {
-                List<DataType> elems1 = tuple1.eltTypes;
-                List<DataType> elems2 = tuple2.eltTypes;
+                DataType[] elems1 = tuple1.eltTypes;
+                DataType[] elems2 = tuple2.eltTypes;
 
-                if (elems1.Count == elems2.Count)
+                if (elems1.Length == elems2.Length)
                 {
                     typeStack.Push(type1, type2);
-                    for (int i = 0; i < elems1.Count; i++)
+                    for (int i = 0; i < elems1.Length; i++)
                     {
                         if (!SubsumedInner(elems1[i], elems2[i], typeStack))
                         {
@@ -209,8 +209,8 @@ namespace Pytocs.Core.Types
         /// </summary>
         private TupleType SimplifySelf(TupleType from)
         {
-            TupleType simplified = new TupleType();     //$NO regs
-            if (from.eltTypes.Count > 0)
+            var simplified = new List<DataType>();     //$NO regs
+            if (from.eltTypes.Length > 0)
             {
                 if (Class != null)
                 {
@@ -218,15 +218,15 @@ namespace Pytocs.Core.Types
                 }
                 else
                 {
-                    simplified.Add(from.Get(0));
+                    simplified.Add(from[0]);
                 }
             }
 
-            for (int i = 1; i < from.eltTypes.Count; i++)
+            for (int i = 1; i < from.eltTypes.Length; i++)
             {
-                simplified.Add(from.Get(i));
+                simplified.Add(from[i]);
             }
-            return simplified;
+            return new TupleType(simplified.ToArray());
         }
 
         public override DataType MakeGenericType(params DataType[] typeArguments)

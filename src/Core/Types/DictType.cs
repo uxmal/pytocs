@@ -15,6 +15,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 
 namespace Pytocs.Core.Types
 {
@@ -42,12 +43,13 @@ namespace Pytocs.Core.Types
 
         public TupleType ToTupleType(int n)
         {
-            TupleType ret = new TupleType();        //$ NO registation. Badness?
+            
+            var ret = new List<DataType>(); //$ NO registation. Badness?
             for (int i = 0; i < n; i++)
             {
                 ret.Add(KeyType);
             }
-            return ret;
+            return new TupleType(ret.ToArray());
         }
 
         public override bool Equals(object other)

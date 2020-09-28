@@ -25,44 +25,45 @@ namespace Pytocs.Core.Types
     /// </summary>
     public class TupleType : DataType
     {
-        public List<DataType> eltTypes;
-
-        public TupleType()
-        {
-            this.eltTypes = new List<DataType>();
-        }
-
-        public TupleType(List<DataType> eltTypes)
+        public TupleType(bool isVariant, params DataType[] eltTypes)
         {
             this.eltTypes = eltTypes;
+            this.IsVariant = isVariant;
         }
 
         public TupleType(DataType elt0)
             : this()
         {
-            this.eltTypes.Add(elt0);
+            this.eltTypes = new[] { elt0 };
         }
 
         public TupleType(params DataType[] types)
-            : this()
         {
-            this.eltTypes.AddRange(types);
+            this.eltTypes = types;
+            this.IsVariant = false;
         }
+
+        public readonly DataType[] eltTypes;
+
+        public bool IsVariant { get; }
 
         public override T Accept<T>(IDataTypeVisitor<T> visitor)
         {
             return visitor.VisitTuple(this);
         }
 
+        [Obsolete("", true)]
         public void Add(DataType elt)
         {
-            eltTypes.Add(elt);
         }
+
+        [Obsolete("", true)]
 
         public DataType Get(int i)
         {
             return eltTypes[i];
         }
+        public DataType this[int i] => eltTypes[i];
 
         public ListType ToListType()
         {
@@ -84,13 +85,13 @@ namespace Pytocs.Core.Types
             }
             else if (other is TupleType that)
             {
-                List<DataType> types1 = eltTypes;
-                List<DataType> types2 = that.eltTypes;
+                DataType[] types1 = this.eltTypes;
+                DataType[] types2 = that.eltTypes;
 
-                if (types1.Count != types2.Count)
+                if (types1.Length != types2.Length)
                     return false;
                 typeStack.Push(this, dtOther);
-                for (int i = 0; i < types1.Count; i++)
+                for (int i = 0; i < types1.Length; i++)
                 {
                     if (!types1[i].Equals(types2[i]))
                     {

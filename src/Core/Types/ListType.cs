@@ -64,17 +64,17 @@ namespace Pytocs.Core.Types
 
         public TupleType ToTupleType(int n)
         {
-            TupleType ret = new TupleType();    //$ no regs
+            var ret = new List<DataType>();    //$ no regs
             for (int i = 0; i < n; i++)
             {
                 ret.Add(eltType);
             }
-            return ret;
+            return new TupleType(ret.ToArray());
         }
 
         public TupleType ToTupleType()
         {
-            return new TupleType(positional);
+            return new TupleType(positional.ToArray());
         }
 
         public override bool Equals(object other)

@@ -731,10 +731,14 @@ namespace Pytocs.Core.CodeModel
                 }
                 writer.Write(">");
             }
+            if (t.ArrayRank > 0)
+            {
+                writer.Write("[{0}]", new string(',', t.ArrayRank - 1));
+            }
         }
 
 
-        private static Dictionary<string, string> csharpTypenames = new Dictionary<string, string>
+        private static readonly Dictionary<string, string> csharpTypenames = new Dictionary<string, string>
         {
             { "int", "int" },
             { "long", "long" },

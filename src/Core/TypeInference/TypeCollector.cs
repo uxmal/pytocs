@@ -471,7 +471,7 @@ namespace Pytocs.Core.TypeInference
             DataType? kw,
             DataType? star)
         {
-            TupleType fromType = analyzer.TypeFactory.CreateTuple();
+            var fromTypes = new List<DataType>(); 
             int pSize = parameters == null ? 0 : parameters.Count;
             int aSize = pTypes == null ? 0 : pTypes.Count;
             int dSize = dTypes == null ? 0 : dTypes.Count;
@@ -510,9 +510,9 @@ namespace Pytocs.Core.TypeInference
                     {
                         if (star != null &&
                             star is TupleType tup &&
-                            j < tup.eltTypes.Count)
+                            j < tup.eltTypes.Length)
                         {
-                            aType = tup.Get(j);
+                            aType = tup[j];
                             ++j;
                         }
                         else
@@ -527,8 +527,9 @@ namespace Pytocs.Core.TypeInference
                     }
                 }
                 funcTable.Bind(analyzer, param.Id!, aType, BindingKind.PARAMETER);
-                fromType.Add(aType);
+                fromTypes.Add(aType);
             }
+            TupleType fromType = analyzer.TypeFactory.CreateTuple(fromTypes.ToArray());
 
             if (restKw != null)
             {
@@ -784,7 +785,7 @@ namespace Pytocs.Core.TypeInference
                 var elt = el.Accept(this);
                 elTypes.Add(elt);
             }
-            return new TupleType(elTypes);
+            return new TupleType(elTypes.ToArray());
         }
 
         public DataType VisitExtSlice(List<Slice> e)
@@ -1475,11 +1476,8 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitTuple(PyTuple t)
         {
-            TupleType tt = analyzer.TypeFactory.CreateTuple();
-            foreach (var e in t.values)
-            {
-                tt.Add(e.Accept(this));
-            }
+            var tts = t.values.Select(e => e.Accept(this)).ToArray();
+            TupleType tt = analyzer.TypeFactory.CreateTuple(tts);
             return tt;
         }
 

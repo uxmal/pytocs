@@ -214,7 +214,7 @@ namespace Pytocs.Core.Types
             {
                 int newNum = ctr.Push(t);
                 bool first = true;
-                if (t.eltTypes.Count != 1)
+                if (t.eltTypes.Length != 1)
                 {
                     sb.Append("(");
                 }
@@ -234,8 +234,12 @@ namespace Pytocs.Core.Types
                     sb.Append("=#").Append(newNum).Append(":");
                 }
 
-                if (t.eltTypes.Count != 1)
+                if (t.eltTypes.Length != 1)
                 {
+                    if (t.IsVariant)
+                    {
+                        sb.Append(", ...");
+                    }    
                     sb.Append(")");
                 }
                 ctr.Pop(t);
