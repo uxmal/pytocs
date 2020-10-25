@@ -1108,7 +1108,7 @@ namespace Pytocs.Core.Syntax
 
         private Exception Invalid(int c, char ch)
         {
-            throw Error(string.Format(Resources.ErrInvalidCharacter, ch, c));
+            throw Error(string.Format(Resources.ErrInvalidCharacter, ch, c, LineNumber));
         }
 
         private Token EatChToken(TokenType t, object? value = null)
