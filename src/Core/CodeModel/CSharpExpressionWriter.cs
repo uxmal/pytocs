@@ -27,7 +27,11 @@ namespace Pytocs.Core.CodeModel
         /// <summary> Precedence in ascending Order </summary>
         enum Precedence
         {
-            Base = 0,
+            /// <summary> Minimum Precedence </summary>
+            /// <remarks>
+            /// Starting with 1 allows to detect uninitialized enum Values with 0.
+            /// </remarks>
+            Base = 1,
             Assignment,
             Conditional,
             LogicalOr,
