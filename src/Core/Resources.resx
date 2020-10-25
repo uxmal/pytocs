@@ -153,7 +153,7 @@
     <value>Failed to create tmp directory {0}.</value>
   </data>
   <data name="ErrInvalidCharacter" xml:space="preserve">
-    <value>Invalid character '{0}' (U+{1:X4}).</value>
+    <value>Invalid character '{0}' (U+{1:X4}) in Line {2}.</value>
   </data>
   <data name="ErrInvalidHexadecimalString" xml:space="preserve">
     <value>Invalid hexadecimal string {0}.</value>
