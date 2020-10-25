@@ -24,67 +24,67 @@ namespace Pytocs.Core.CodeModel
 {
     public class CSharpExpressionWriter : ICodeExpressionVisitor
     {
-
-        enum Prec
+        /// <summary> Precedence in ascending Order </summary>
+        enum Precedence
         {
             Base = 0,
-            Assignment = 1,
-            Conditional = 2,
-            LogicalOr = 3,
-            LogicalAnd = 4,
-            BitOr = 5,
-            BitXor = 6,
-            BinAnd = 7,
-            Equality = 8,
-            Relational = 9,
-            Shift = 10,
-            Additive = 11,
-            Multplicative = 12,
-            Unary = 13,
-            Postfix = 14,
-            Primary = 15,
+            Assignment,
+            Conditional,
+            LogicalOr,
+            LogicalAnd,
+            BitOr,
+            BitXor,
+            BinAnd,
+            Equality,
+            Relational,
+            Shift,
+            Additive,
+            Multiplicative,
+            Unary,
+            Postfix,
+            Primary,
 
         }
 
-        private static Prec operatorPrecedence(CodeOperatorType op) => op switch
+        private static Precedence operatorPrecedence(CodeOperatorType op) => op switch
         {
-            CodeOperatorType.Complement => Prec.Unary,
-            CodeOperatorType.Not => Prec.Unary,
-            CodeOperatorType.Times => Prec.Multplicative,
-            CodeOperatorType.Divide => Prec.Multplicative,
-            CodeOperatorType.Mul => Prec.Multplicative,
-            CodeOperatorType.Div => Prec.Multplicative,
-            CodeOperatorType.Mod => Prec.Multplicative,
-            CodeOperatorType.Add => Prec.Additive,
-            CodeOperatorType.Sub => Prec.Additive,
-            CodeOperatorType.Shl => Prec.Shift,
-            CodeOperatorType.Shr => Prec.Shift,
-            CodeOperatorType.Lt => Prec.Relational,
-            CodeOperatorType.Gt => Prec.Relational,
-            CodeOperatorType.Le => Prec.Relational,
-            CodeOperatorType.Ge => Prec.Relational,
-            CodeOperatorType.Equal => Prec.Equality,
-            CodeOperatorType.NotEqual => Prec.Equality,
-            CodeOperatorType.IdentityEquality => Prec.Equality,
-            CodeOperatorType.IdentityInequality => Prec.Equality,
-            CodeOperatorType.Is => Prec.Equality,
-            CodeOperatorType.BitAnd => Prec.BinAnd,
-            CodeOperatorType.BitXor => Prec.BitXor,
-            CodeOperatorType.BitOr => Prec.BitOr,
-            CodeOperatorType.LogAnd => Prec.LogicalAnd,
-            CodeOperatorType.LogOr => Prec.LogicalOr,
-            CodeOperatorType.Conditional => Prec.Conditional,
-            CodeOperatorType.Assign => Prec.Assignment,
-            CodeOperatorType.AddEq => Prec.Assignment,
-            CodeOperatorType.SubEq => Prec.Assignment,
-            CodeOperatorType.ModEq => Prec.Assignment,
-            CodeOperatorType.MulEq => Prec.Assignment,
-            CodeOperatorType.AndEq => Prec.Assignment,
-            CodeOperatorType.OrEq => Prec.Assignment,
-            CodeOperatorType.DivEq => Prec.Assignment,
-            CodeOperatorType.ShlEq => Prec.Assignment,
-            CodeOperatorType.ShrEq => Prec.Assignment,
-            CodeOperatorType.XorEq => Prec.Assignment,
+            CodeOperatorType.Complement => Precedence.Unary,
+            CodeOperatorType.Not => Precedence.Unary,
+            CodeOperatorType.Times => Precedence.Multiplicative,
+            CodeOperatorType.Divide => Precedence.Multiplicative,
+            CodeOperatorType.Mul => Precedence.Multiplicative,
+            CodeOperatorType.Div => Precedence.Multiplicative,
+            CodeOperatorType.Mod => Precedence.Multiplicative,
+            CodeOperatorType.Add => Precedence.Additive,
+            CodeOperatorType.Sub => Precedence.Additive,
+            CodeOperatorType.Shl => Precedence.Shift,
+            CodeOperatorType.Shr => Precedence.Shift,
+            CodeOperatorType.Lt => Precedence.Relational,
+            CodeOperatorType.Gt => Precedence.Relational,
+            CodeOperatorType.Le => Precedence.Relational,
+            CodeOperatorType.Ge => Precedence.Relational,
+            CodeOperatorType.Equal => Precedence.Equality,
+            CodeOperatorType.NotEqual => Precedence.Equality,
+            CodeOperatorType.IdentityEquality => Precedence.Equality,
+            CodeOperatorType.IdentityInequality => Precedence.Equality,
+            CodeOperatorType.Is => Precedence.Equality,
+            CodeOperatorType.BitAnd => Precedence.BinAnd,
+            CodeOperatorType.BitXor => Precedence.BitXor,
+            CodeOperatorType.BitOr => Precedence.BitOr,
+            CodeOperatorType.LogAnd => Precedence.LogicalAnd,
+            CodeOperatorType.LogOr => Precedence.LogicalOr,
+            CodeOperatorType.Conditional => Precedence.Conditional,
+            CodeOperatorType.Assign => Precedence.Assignment,
+            CodeOperatorType.AddEq => Precedence.Assignment,
+            CodeOperatorType.SubEq => Precedence.Assignment,
+            CodeOperatorType.ModEq => Precedence.Assignment,
+            CodeOperatorType.MulEq => Precedence.Assignment,
+            CodeOperatorType.AndEq => Precedence.Assignment,
+            CodeOperatorType.OrEq => Precedence.Assignment,
+            CodeOperatorType.DivEq => Precedence.Assignment,
+            CodeOperatorType.ShlEq => Precedence.Assignment,
+            CodeOperatorType.ShrEq => Precedence.Assignment,
+            CodeOperatorType.XorEq => Precedence.Assignment,
             _ => throw new ArgumentOutOfRangeException(nameof(op), op, null)
         };
 
@@ -94,25 +94,25 @@ namespace Pytocs.Core.CodeModel
         }
 
         private IndentingTextWriter writer;
-        private Prec precedence;
+        private Precedence precedence;
         private bool parensIfSamePrecedence;
 
         public CSharpExpressionWriter(IndentingTextWriter writer)
         {
             this.writer = writer;
-            this.precedence = Prec.Base;
+            this.precedence = Precedence.Base;
         }
 
         public void VisitArrayIndexer(CodeArrayIndexerExpression aref)
         {
-            Write(aref.TargetObject, Prec.Primary, false);
+            Write(aref.TargetObject, Precedence.Primary, false);
             writer.Write("[");
             var sep = "";
             foreach (var sub in aref.Indices)
             {
                 writer.Write(sep);
                 sep = ",";
-                Write(sub, Prec.Base, false);
+                Write(sub, Precedence.Base, false);
             }
             writer.Write("]");
         }
@@ -126,7 +126,7 @@ namespace Pytocs.Core.CodeModel
             {
                 writer.Write(sep);
                 sep = ", ";
-                Write(e, Prec.Base, false);
+                Write(e, Precedence.Base, false);
             }
             writer.Write(")");
         }
@@ -162,7 +162,7 @@ namespace Pytocs.Core.CodeModel
         {
             writer.Write("await");
             writer.Write(" ");
-            Write(awaitExp.Expression, Prec.Unary, false);
+            Write(awaitExp.Expression, Precedence.Unary, false);
         }
 
         public void VisitBase(CodeBaseReferenceExpression _)
@@ -191,7 +191,7 @@ namespace Pytocs.Core.CodeModel
 
         public void VisitCast(CodeCastExpression cast)
         {
-            bool needParens = (this.precedence > Prec.Unary);
+            bool needParens = (this.precedence > Precedence.Unary);
             if (needParens)
             {
                 writer.Write("(");
@@ -199,14 +199,14 @@ namespace Pytocs.Core.CodeModel
             writer.Write("(");
             VisitTypeReference(cast.TargetType);
             writer.Write(") ");
-            Write(cast.Expression, Prec.Unary, true);
+            Write(cast.Expression, Precedence.Unary, true);
             if (needParens)
             {
                 writer.Write(")");
             }
         }
 
-        private void Write(CodeExpression e, Prec prec, bool parens)
+        private void Write(CodeExpression e, Precedence prec, bool parens)
         {
             var oldPrec = precedence;
             var oldParens = this.parensIfSamePrecedence;
@@ -268,16 +268,16 @@ namespace Pytocs.Core.CodeModel
 
         public void VisitCondition(CodeConditionExpression c)
         {
-            Write(c.Condition, Prec.Conditional, false);
+            Write(c.Condition, Precedence.Conditional, false);
             writer.Write(" ? ");
-            Write(c.Consequent, Prec.Conditional, false);
+            Write(c.Consequent, Precedence.Conditional, false);
             writer.Write(" : ");
-            Write(c.Alternative, Prec.Conditional, false);
+            Write(c.Alternative, Precedence.Conditional, false);
         }
 
         public void VisitFieldReference(CodeFieldReferenceExpression field)
         {
-            Write(field.Expression, Prec.Postfix, false);
+            Write(field.Expression, Precedence.Postfix, false);
             writer.Write(".");
             writer.WriteName(field.FieldName);
         }
@@ -371,7 +371,7 @@ namespace Pytocs.Core.CodeModel
         {
             if (m.TargetObject != null)
             {
-                Write(m.TargetObject, Prec.Postfix, false);
+                Write(m.TargetObject, Precedence.Postfix, false);
                 writer.Write(".");
             }
             writer.WriteName(m.MethodName);
@@ -395,13 +395,13 @@ namespace Pytocs.Core.CodeModel
             if (arg.exp2 != null)
             {
                 writer.Write(": ");
-                Write(arg.exp2, Prec.Base, false);
+                Write(arg.exp2, Precedence.Base, false);
             }
         }
 
         public void VisitQueryExpression(CodeQueryExpression q)
         {
-            bool needParens = (this.precedence > Prec.Base);
+            bool needParens = (this.precedence > Precedence.Base);
             if (needParens)
             {
                 writer.Write("(");
@@ -437,14 +437,14 @@ namespace Pytocs.Core.CodeModel
             case CodeLetClause l:
                 writer.Write("let");
                 writer.Write(" ");
-                Write(l.Identifier, Prec.Base, false);
+                Write(l.Identifier, Precedence.Base, false);
                 writer.Write(" = ");
-                Write(l.Value, Prec.Base, false);
+                Write(l.Value, Precedence.Base, false);
                 break;
             case CodeWhereClause w:
                 writer.Write("where");
                 writer.Write(" ");
-                Write(w.Condition, Prec.Base, false);
+                Write(w.Condition, Precedence.Base, false);
                 break;
             case CodeSelectClause s:
                 writer.Write("select");

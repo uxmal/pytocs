@@ -223,7 +223,7 @@ namespace Pytocs.Core {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Invalid character &apos;{0}&apos; (U+{1:X4}) in Line {2}..
+        ///   Looks up a localized string similar to Invalid character &apos;{0}&apos; (U+{1:X4}) in line {2}..
         /// </summary>
         internal static string ErrInvalidCharacter {
             get {
