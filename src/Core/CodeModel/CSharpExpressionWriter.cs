@@ -263,7 +263,7 @@ namespace Pytocs.Core.CodeModel
             case CodeOperatorType.MulEq: return "*=";
             case CodeOperatorType.DivEq: return "/=";
             case CodeOperatorType.OrEq: return "|=";
-            case CodeOperatorType.AndEq: return "|=";
+            case CodeOperatorType.AndEq: return "&=";
             case CodeOperatorType.ShlEq: return "<<=";
             case CodeOperatorType.ShrEq: return ">>=";
             case CodeOperatorType.XorEq: return "^=";
