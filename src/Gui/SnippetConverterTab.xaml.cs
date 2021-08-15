@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -80,7 +80,7 @@ namespace Pytocs.Gui
         
         private void SelectAndCopyAll_Click(object sender, RoutedEventArgs e)
         {
-            TextCopy.Clipboard.SetText(CSharpEditor.Text);
+            TextCopy.ClipboardService.SetText(CSharpEditor.Text);
         }
 
         private async void Save_Click(object sender, RoutedEventArgs e)
