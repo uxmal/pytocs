@@ -349,11 +349,16 @@ namespace Pytocs.Core.Translate
             {
                 EmitStarredTupleAssignments(lhs, rhs);
             }
-            else
+            else if (lhs.Count == 1)
             {
                 var tup = GenSymLocalTuple();
                 gen.Assign(tup, rhs);
                 EmitTupleFieldAssignments(lhs, tup);
+            }
+            else
+            {
+                var tup = gen.ValueTuple(lhs.Select(e => e.Accept(xlat)));
+                gen.Assign(tup, rhs);
             }
         }
 
@@ -518,11 +523,10 @@ namespace Pytocs.Core.Translate
 
         private void GenerateForTuple(ForStatement f, List<Exp> ids)
         {
-            var localVar = GenSymLocalTuple();
+            var tuple = gen.ValueTuple(ids.Select(i => i.Accept(xlat)));
             var v = f.tests.Accept(xlat);
-            gen.Foreach(localVar, v, () =>
+            gen.Foreach(tuple, v, () =>
             {
-                EmitTupleFieldAssignments(ids, localVar);
                 f.Body.Accept(this);
             });
         }

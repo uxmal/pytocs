@@ -598,7 +598,7 @@ public static class testModule {
         public void Stmt_ReturnExprList()
         {
             var pyStm = "return a, b\r\n";
-            var sExp = "return Tuple.Create(a, b);\r\n";
+            var sExp = "return (a, b);\r\n";
             Assert.Equal(sExp, XlatStmts(pyStm));
         }
 
@@ -842,44 +842,39 @@ public static object wrapper(Hashtable kwargs, params object [] args) {
             Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Stmt_AssignTuple))]
         public void Stmt_AssignTuple()
         {
             var pySrc =
 @"foo, bar = baz()
 ";
             var sExp =
-@"_tup_1 = baz();
-foo = _tup_1.Item1;
-bar = _tup_1.Item2;
+@"(foo, bar) = baz();
 ";
             Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
 
-        [Fact]
+        [Fact(DisplayName = nameof(Stmt_AssignTuple_Dummy))]
         public void Stmt_AssignTuple_Dummy()
         {
             var pySrc =
 @"_, bar = baz()
 ";
             var sExp =
-@"_tup_1 = baz();
-bar = _tup_1.Item2;
+@"(_, bar) = baz();
 ";
             Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Stmt_AssignTuple_Nonlocals))]
         public void Stmt_AssignTuple_Nonlocals()
         {
             var pySrc =
 @"foo.x, foo.y = baz()
 ";
             var sExp =
-@"_tup_1 = baz();
-foo.x = _tup_1.Item1;
-foo.y = _tup_1.Item2;
+@"(foo.x, foo.y) = baz();
 ";
             Assert.Equal(sExp, XlatStmts(pySrc));
         }
@@ -909,7 +904,7 @@ foo.y = _tup_1.Item2;
             Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Stmt_TupleSingletonAssignment))]
         public void Stmt_TupleSingletonAssignment()
         {
             var pySrc =
@@ -1002,9 +997,7 @@ yx = _tup_1.Item1;
     print(a + b)
 ";
             var sExp =
-@"foreach (var _tup_1 in foo) {
-    a = _tup_1.Item1;
-    b = _tup_1.Item2;
+@"foreach (var (a, b) in foo) {
     Console.WriteLine(a + b);
 }
 ";
@@ -1060,7 +1053,7 @@ c.de = ""f"";
             Assert.Equal(sExp, XlatStmts(pySrc));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Stmt_For_Tuple_regression1))]
         public void Stmt_For_Tuple_regression1()
         {
             var pySrc =
@@ -1071,9 +1064,7 @@ c.de = ""f"";
         addr_strs.append(""%#x"" % target_addr)
 ";
             var sExp =
-@"foreach (var _tup_1 in targets) {
-    exit_stmt_id = _tup_1.Item1;
-    target_addr = _tup_1.Item2;
+@"foreach (var (exit_stmt_id, target_addr) in targets) {
     if (target_addr == null) {
         addr_strs.append(""default"");
     } else {
@@ -1678,5 +1669,7 @@ if (_success1) {
 ";
             Assert.Equal(sExp, XlatStmts(pySrc));
         }
+
+
     }
 }

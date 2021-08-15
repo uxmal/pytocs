@@ -131,12 +131,7 @@ namespace Pytocs.Core.Translate
             }
             else
             {
-                var fn = m.MethodRef(
-                m.TypeRefExpr("Tuple"),
-                    "Create");
-                    return m.Appl
-                        (fn,
-                        l.Expressions.Select(e => e.Accept(this)).ToArray());
+                return m.ValueTuple(l.Expressions.Select(e => e.Accept(this)));
             }
         }
 
@@ -498,7 +493,7 @@ namespace Pytocs.Core.Translate
 
         private CodeExpression FuseComparisons(CodeBinaryOperatorExpression binL, Op op, CodeExpression r)
         {
-            if (!(binL.Right is CodeVariableReferenceExpression variable))
+            if (binL.Right is not CodeVariableReferenceExpression variable)
             {
                 // Python https://docs.python.org/3/reference/expressions.html#comparisons
                 // Stats that the second expression in a comparison chain is only evaluated once.
@@ -558,13 +553,6 @@ namespace Pytocs.Core.Translate
                     m.TypeRefExpr("String"),
                     "Format"),
                 args.ToArray());
-        }
-
-        private bool IsIdentityProjection(CompFor compFor, Exp projection)
-        {
-            var idV = compFor.variable as Identifier;
-            var idP = projection as Identifier;
-            return (idV != null && idP != null && idV.Name == idP.Name);
         }
 
         public CodeExpression VisitListComprehension(ListComprehension lc)

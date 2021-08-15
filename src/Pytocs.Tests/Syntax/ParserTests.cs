@@ -1052,5 +1052,20 @@ def func(arg1: int, arg2: str) -> str:
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Parser_Multiline_FuncDef_Trailing_Comma))]
+        public void Parser_Multiline_FuncDef_Trailing_Comma()
+        {
+            var pySrc = @"
+def __init__(
+        self,
+        aux_data={},  # type: DictLike[str, AuxData]
+        uuid=None,  # type: typing.Optional[UUID]
+    ):
+    pass
+";
+            var sExp = "@@@";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
     }
 }
