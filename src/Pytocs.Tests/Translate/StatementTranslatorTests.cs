@@ -1,5 +1,5 @@
 #region License
-//  Copyright 2015-2020 John Källén
+//  Copyright 2015-2021 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -960,7 +960,7 @@ yx = _tup_1.Item1;
             Assert.Equal(sExp, XlatMember(pySrc).ToString());
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Stmt_NestedDef))]
         public void Stmt_NestedDef()
         {
             var pySrc =
