@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2020 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -48,6 +48,7 @@ namespace Pytocs.Core.CodeModel
         T VisitContinue(CodeContinueStatement c);
         T VisitForeach(CodeForeachStatement f);
         T VisitIf(CodeConditionStatement cond);
+        T VisitLocalFunction(CodeLocalFunction fn);
         T VisitPostTestLoop(CodePostTestLoopStatement l);
         T VisitPreTestLoop(CodePreTestLoopStatement l);
         T VisitReturn(CodeMethodReturnStatement ret);

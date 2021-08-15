@@ -193,6 +193,11 @@ namespace Pytocs.Core.Translate
             return 0;
         }
 
+        public int VisitLocalFunction(CodeLocalFunction _)
+        {
+            return 0;
+        }
+
         public int VisitPostTestLoop(CodePostTestLoopStatement l)
         {
             Analyze(this.path, l.Body);

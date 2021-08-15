@@ -36,7 +36,7 @@ namespace Pytocs.Core.Translate
         protected readonly string? fnName;
         protected readonly List<Parameter> args;
         private readonly bool isStatic;
-        private readonly bool isAsync;
+        protected readonly bool isAsync;
         protected ExpTranslator xlat;
         protected StatementTranslator stmtXlat;
         protected CodeGenerator gen;
@@ -72,14 +72,14 @@ namespace Pytocs.Core.Translate
         /// <summary>
         /// Generate a C# method implementation from the Python function definition.
         /// </summary>
-        public CodeMemberMethod Generate()
+        public ICodeFunction Generate()
         {
             var parameters = CreateFunctionParameters(args);
             var returnType = CreateReturnType();
             return Generate(returnType, parameters);
         }
 
-        protected virtual CodeMemberMethod Generate(CodeTypeReference retType, CodeParameterDeclarationExpression[] parms)
+        protected virtual ICodeFunction Generate(CodeTypeReference retType, CodeParameterDeclarationExpression[] parms)
         {
             CodeMemberMethod method;
             if (isStatic)
@@ -102,7 +102,7 @@ namespace Pytocs.Core.Translate
             {
                 var csTupleParam = mpPyParamToCs![parameter];
                 var tuplePath = new CodeVariableReferenceExpression(csTupleParam.ParameterName!);
-                foreach (var component in parameter.tuple.Select((p, i) => new { p, i = i + 1 }))
+                foreach (var component in parameter.tuple!.Select((p, i) => new { p, i = i + 1 }))
                 {
                     GenerateTupleParameterUnpacker(component.p, component.i, tuplePath, method);
                 }
@@ -123,7 +123,7 @@ namespace Pytocs.Core.Translate
         {
             var comments = StatementTranslator.ConvertFirstStringToComments(suite.stmts);
             stmtXlat.Xlat(suite);
-            gen.CurrentMemberComments!.AddRange(comments);
+            gen.CurrentComments!.AddRange(comments);
         }
 
         private CodeTypeReference CreateReturnType()

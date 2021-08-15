@@ -243,12 +243,6 @@ namespace Pytocs.Core.Translate
             return exp.ToString();
         }
 
-        private static readonly Dictionary<Op, CsAssignOp> assignOps = new Dictionary<Op, CsAssignOp>()
-        {
-            { Op.Eq, CsAssignOp.Assign },
-            { Op.AugAdd, CsAssignOp.AugAdd },
-        };
-
         public void VisitExec(ExecStatement e)
         {
             var args = new List<CodeExpression>();
@@ -540,14 +534,7 @@ namespace Pytocs.Core.Translate
 
             if (this.gen.CurrentMember != null)
             {
-                //$TODO: C# 7 supports local functions.
-                var lgen = new LambdaBodyGenerator(classDef, f, f.parameters, true, async, types, gen);
-                var def = lgen.GenerateLambdaVariable(f);
-                var meth = lgen.Generate();
-                def.InitExpression = gen.Lambda(
-                    meth.Parameters.Select(p => new CodeVariableReferenceExpression(p.ParameterName!)).ToArray(),
-                    meth.Statements);
-                gen.CurrentMemberStatements!.Add(def);
+                GenerateLocalFunction(f);
                 return;
             }
             if (this.classDef != null)
@@ -583,13 +570,24 @@ namespace Pytocs.Core.Translate
             {
                 mgen = new MethodGenerator(this.classDef, f, f.name.Name, f.parameters, true, async, types, gen);
             }
-            CodeMemberMethod m = mgen.Generate();
-            m.Attributes |= attrs;
-            if (customAttrs != null)
+            ICodeFunction fn = mgen.Generate();
+            //$TODO: move into generate
+            if (fn is CodeMember m)
             {
-                m.CustomAttributes.AddRange(this.customAttrs);
-                customAttrs = null;
+                m.Attributes |= attrs;
+                if (customAttrs != null)
+                {
+                    m.CustomAttributes.AddRange(this.customAttrs);
+                    customAttrs = null;
+                }
             }
+        }
+
+        private void GenerateLocalFunction(FunctionDef f)
+        {
+            var mgen = new FunctionGenerator(f, f.name.Name, f.parameters, true, async, types, gen);
+            var localFn = mgen.Generate();
+            gen.CurrentStatements!.Add((CodeStatement) localFn);
         }
 
         public void VisitIf(IfStatement i)
@@ -798,7 +796,7 @@ namespace Pytocs.Core.Translate
             var def = (FunctionDef)getter;
             var mgen = new MethodGenerator(this.classDef, def, null, def.parameters, false, async, types, gen);
             var comments = ConvertFirstStringToComments(def.body.stmts);
-            gen.CurrentMemberComments!.AddRange(comments);
+            gen.CurrentComments!.AddRange(comments);
             mgen.Xlat(def.body);
         }
 
@@ -809,7 +807,7 @@ namespace Pytocs.Core.Translate
             var def = (FunctionDef)setter;
             var mgen = new MethodGenerator(this.classDef, def, null, def.parameters, false, async, types, gen);
             var comments = ConvertFirstStringToComments(def.body.stmts);
-            gen.CurrentMemberComments!.AddRange(comments);
+            gen.CurrentComments!.AddRange(comments);
             mgen.Xlat(def.body);
         }
 

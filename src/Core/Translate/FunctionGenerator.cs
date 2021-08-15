@@ -14,32 +14,35 @@
 //  limitations under the License.
 #endregion
 
+using Pytocs.Core.CodeModel;
+using Pytocs.Core.Syntax;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.Core.CodeModel
+namespace Pytocs.Core.Translate
 {
-    public class CodeMemberMethod : CodeMember, ICodeFunction
+    public class FunctionGenerator : MethodGenerator
     {
-        public CodeMemberMethod()
+        public FunctionGenerator(
+            FunctionDef f,
+            string fnName,
+            List<Parameter> args,
+            bool isStatic,
+            bool isAsync,
+            TypeReferenceTranslator types,
+            CodeGenerator gen) : base(
+                null, f, fnName, args, isStatic, isAsync, types, gen)
         {
-            this.Parameters = new List<CodeParameterDeclarationExpression>();
-            this.Statements = new List<CodeStatement>();
         }
 
-        public List<CodeParameterDeclarationExpression> Parameters { get; private set; }
-        public CodeTypeReference? ReturnType { get; set; }
-
-        public List<CodeStatement> Statements { get; private set; }
-
-        public bool IsAsync { get; set; }
-
-        public override T Accept<T>(ICodeMemberVisitor<T> visitor)
+        protected override ICodeFunction Generate(CodeTypeReference retType, CodeParameterDeclarationExpression[] parms)
         {
-            return visitor.VisitMethod(this);
+            var func = gen.LocalFunction(fnName!, retType, parms, () => Xlat(f.body));
+            func.IsAsync = isAsync;
+            return func;
         }
     }
 }

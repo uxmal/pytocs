@@ -52,17 +52,6 @@ namespace Pytocs.Core.Types
             return visitor.VisitTuple(this);
         }
 
-        [Obsolete("", true)]
-        public void Add(DataType elt)
-        {
-        }
-
-        [Obsolete("", true)]
-
-        public DataType Get(int i)
-        {
-            return eltTypes[i];
-        }
         public DataType this[int i] => eltTypes[i];
 
         public ListType ToListType()
@@ -75,9 +64,9 @@ namespace Pytocs.Core.Types
             return t;
         }
 
-        public override bool Equals(object other)
+        public override bool Equals(object? other)
         {
-            if (!(other is DataType dtOther))
+            if (other is not DataType dtOther)
                 return false;
             if (typeStack.Contains(this, dtOther))
             {

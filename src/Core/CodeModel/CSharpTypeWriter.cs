@@ -104,7 +104,7 @@ namespace Pytocs.Core.CodeModel
                 writer.Write(" ");
             }
             writer.WriteName(method.Name!);
-            WriteMethodParameters(method);
+            WriteMethodParameters(method.Parameters, writer);
 
             var stmWriter = new CSharpStatementWriter(writer);
             stmWriter.WriteStatements(method.Statements); 
@@ -112,18 +112,18 @@ namespace Pytocs.Core.CodeModel
             return 0;
         }
 
-        private void WriteMethodParameters(CodeMemberMethod method)
+        public static void WriteMethodParameters(List<CodeParameterDeclarationExpression> parameters, IndentingTextWriter writer)
         {
             writer.Write("(");
-            if (method.Parameters.Count > 4)
+            if (parameters.Count > 4)
             {
                 // Poor man's pretty printer
                 ++writer.IndentLevel;
                 writer.WriteLine();
-                for (int i = 0; i < method.Parameters.Count; ++i)
+                for (int i = 0; i < parameters.Count; ++i)
                 {
-                    WriteParameter(method.Parameters[i]);
-                    if (i < method.Parameters.Count - 1)
+                    WriteParameter(parameters[i], writer);
+                    if (i < parameters.Count - 1)
                     {
                         writer.WriteLine(",");
                     }
@@ -133,11 +133,11 @@ namespace Pytocs.Core.CodeModel
             else
             {
                 var sep = "";
-                foreach (var param in method.Parameters)
+                foreach (var param in parameters)
                 {
                     writer.Write(sep);
                     sep = ", ";
-                    WriteParameter(param);
+                    WriteParameter(param, writer);
                 }
             }
             writer.WriteName(")");
@@ -148,7 +148,7 @@ namespace Pytocs.Core.CodeModel
             RenderCustomAttributes(cons);
             RenderMethodAttributes(cons);
             writer.WriteName(type!.Name!);
-            WriteMethodParameters(cons);
+            WriteMethodParameters(cons.Parameters, writer);
             if (cons.BaseConstructorArgs.Count > 0)
             {
                 writer.WriteLine();
@@ -190,7 +190,7 @@ namespace Pytocs.Core.CodeModel
             return 0;
         }
 
-        private void WriteParameter(CodeParameterDeclarationExpression param)
+        public static  void WriteParameter(CodeParameterDeclarationExpression param, IndentingTextWriter writer)
         {
             var expType = new CSharpExpressionWriter(writer);
             if (param.IsVarargs)

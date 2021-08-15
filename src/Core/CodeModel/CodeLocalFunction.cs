@@ -22,24 +22,27 @@ using System.Threading.Tasks;
 
 namespace Pytocs.Core.CodeModel
 {
-    public class CodeMemberMethod : CodeMember, ICodeFunction
+    public class CodeLocalFunction : CodeStatement, ICodeFunction
     {
-        public CodeMemberMethod()
+        public CodeLocalFunction()
         {
             this.Parameters = new List<CodeParameterDeclarationExpression>();
             this.Statements = new List<CodeStatement>();
+            this.Comments = new List<CodeCommentStatement>();
         }
 
-        public List<CodeParameterDeclarationExpression> Parameters { get; private set; }
-        public CodeTypeReference? ReturnType { get; set; }
-
-        public List<CodeStatement> Statements { get; private set; }
-
         public bool IsAsync { get; set; }
+        public CodeTypeReference ReturnType { get; set; }
+        public string Name { get; set; }
 
-        public override T Accept<T>(ICodeMemberVisitor<T> visitor)
+        public List<CodeParameterDeclarationExpression> Parameters { get; }
+        public List<CodeStatement> Statements { get; }
+        public List<CodeCommentStatement> Comments { get; set; }
+
+
+        public override T Accept<T>(ICodeStatementVisitor<T> visitor)
         {
-            return visitor.VisitMethod(this);
+            return visitor.VisitLocalFunction(this);
         }
     }
 }

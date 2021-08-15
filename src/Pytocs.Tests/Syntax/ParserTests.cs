@@ -1064,7 +1064,10 @@ def __init__(
     ):
     pass
 ";
-            var sExp = "@@@";
+            var sExp = 
+@"def @__init__(self,aux_data={  },uuid=None):
+    pass
+";
             AssertStmt(sExp, ParseStmt(pySrc));
         }
     }

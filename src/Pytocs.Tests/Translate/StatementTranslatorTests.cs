@@ -49,7 +49,7 @@ namespace Pytocs.UnitTests.Translate
             var par = new Parser("foo.py", flt);
             var stm = par.stmt();
             var gen = new CodeGenerator(new CodeCompileUnit(), "", "module");
-            gen.SetCurrentMethod(new CodeMemberMethod());
+            gen.SetCurrentFunction(new CodeMemberMethod());
             var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
             var xlt = new StatementTranslator(null, types, gen, new SymbolGenerator(), new HashSet<string>());
             stm[0].Accept(xlt);
@@ -967,7 +967,7 @@ yx = _tup_1.Item1;
 @"def foo():
     bar = 4
 
-    " + "#" + @" inner fn should become C# lambda
+    " + "#" + @" inner fn should become C# local function
     def baz(a, b):
         print (""Bar squared"" + bar * bar)
         return False
@@ -977,11 +977,11 @@ yx = _tup_1.Item1;
             var sExp =
 @"public static object foo() {
     var bar = 4;
-    // inner fn should become C# lambda
-    Func<object, object, object> baz = (a,b) => {
+    // inner fn should become C# local function
+    object baz(object a, object b) {
         Console.WriteLine(""Bar squared"" + bar * bar);
         return false;
-    };
+    }
     baz(""3"", 4);
 }
 

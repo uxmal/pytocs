@@ -121,6 +121,16 @@ namespace Pytocs.Core.CodeModel
             return 0;
         }
 
+        public int VisitLocalFunction(CodeLocalFunction fn)
+        { 
+            expWriter.VisitTypeReference(fn.ReturnType);
+            writer.Write(' ');
+            writer.Write(fn.Name);
+            CSharpTypeWriter.WriteMethodParameters(fn.Parameters, writer);
+            WriteStatements(fn.Statements);
+            writer.WriteLine();
+            return 0;
+        }
 
         public int VisitTry(CodeTryCatchFinallyStatement t)
         {

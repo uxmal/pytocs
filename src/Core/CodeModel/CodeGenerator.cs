@@ -49,10 +49,11 @@ namespace Pytocs.Core.CodeModel
             unt.Namespaces.Add(CurrentNamespace);
         }
 
+
         public List<CodeStatement> Scope { get;  private set; }
         public CodeMember? CurrentMember { get; private set; }
-        public List<CodeStatement>? CurrentMemberStatements { get; private set; }
-        public List<CodeCommentStatement>? CurrentMemberComments { get; private set; }
+        public List<CodeStatement>? CurrentStatements { get; private set; }
+        public List<CodeCommentStatement>? CurrentComments { get; private set; }
         public CodeNamespace CurrentNamespace { get; set; }
         public CodeTypeDeclaration CurrentType { get; set; }
 
@@ -104,19 +105,19 @@ namespace Pytocs.Core.CodeModel
             c.BaseTypes.AddRange(baseClasses.Select(b => new CodeTypeReference(b)).ToArray());
             var old = CurrentType;
             var oldMethod = CurrentMember;
-            var oldStmts = CurrentMemberStatements;
-            var oldComments = CurrentMemberComments;
+            var oldStmts = CurrentStatements;
+            var oldComments = CurrentComments;
             var oldIsInit = isInit;
             CurrentType = c;
             CurrentMember = null;
-            CurrentMemberStatements = null;
-            CurrentMemberComments = null;
+            CurrentStatements = null;
+            CurrentComments = null;
             isInit = false;
             c.Members.AddRange(fieldGenerator());
             bodyGenerator();
             CurrentMember = oldMethod;
-            CurrentMemberStatements = oldStmts;
-            CurrentMemberComments = oldComments;
+            CurrentStatements = oldStmts;
+            CurrentComments = oldComments;
 
             CurrentType = old;
             isInit = oldIsInit;
@@ -210,11 +211,12 @@ namespace Pytocs.Core.CodeModel
                 args);
         }
 
-        public void SetCurrentMethod(CodeMemberMethod method)
+        public void SetCurrentFunction(ICodeFunction fn)
         {
-            this.CurrentMember = method;
-            this.CurrentMemberStatements = method.Statements;
-            this.CurrentMemberComments = method.Comments;
+            if (fn is CodeMember member)
+                this.CurrentMember = member;
+            this.CurrentStatements = fn.Statements;
+            this.CurrentComments = fn.Comments;
         }
 
         public void SetCurrentPropertyAccessor(
@@ -222,8 +224,8 @@ namespace Pytocs.Core.CodeModel
             List<CodeStatement> stmts)
         {
             this.CurrentMember = property;
-            this.CurrentMemberStatements = stmts;
-            this.CurrentMemberComments = property.Comments;
+            this.CurrentStatements = stmts;
+            this.CurrentComments = property.Comments;
         }
 
         public CodeStatement SideEffect(CodeExpression exp)
@@ -261,6 +263,19 @@ namespace Pytocs.Core.CodeModel
             return method;
         }
 
+        public CodeLocalFunction LocalFunction(string name, CodeTypeReference retType, IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
+        {
+            var localFn = new CodeLocalFunction
+            {
+                Name = name,
+                ReturnType = retType,
+            };
+            localFn.Parameters.AddRange(parms);
+
+            GenerateMethodBody(localFn, body);
+            return localFn;
+        }
+
         public CodeMemberMethod StaticMethod(string name, CodeTypeReference? retType, IEnumerable<CodeParameterDeclarationExpression> parms, Action body)
         {
             var method = new CodeMemberMethod
@@ -284,19 +299,19 @@ namespace Pytocs.Core.CodeModel
             return method;
         }
 
-        private void GenerateMethodBody(CodeMemberMethod method, Action body)
+        private void GenerateMethodBody(ICodeFunction fn, Action body)
         {
             var old = Scope;
             var oldMethod = CurrentMember;
-            var oldStatements = CurrentMemberStatements;
-            var oldComments = CurrentMemberComments;
-            SetCurrentMethod(method);
-            Scope = method.Statements;
+            var oldStatements = CurrentStatements;
+            var oldComments = CurrentComments;
+            SetCurrentFunction(fn);
+            Scope = fn.Statements;
             body();
             Scope = old;
             CurrentMember = oldMethod;
-            CurrentMemberStatements = oldStatements;
-            CurrentMemberComments = oldComments;
+            CurrentStatements = oldStatements;
+            CurrentComments = oldComments;
         }
 
         public CodeParameterDeclarationExpression Param(Type type, string name)
@@ -613,8 +628,8 @@ namespace Pytocs.Core.CodeModel
             var mem = new CodeMemberProperty();
             var old = Scope;
             var oldMethod = CurrentMember;
-            var oldStatements = CurrentMemberStatements;
-            var oldComments = CurrentMemberComments;
+            var oldStatements = CurrentStatements;
+            var oldComments = CurrentComments;
 
             SetCurrentPropertyAccessor(prop, prop.GetStatements);
             this.Scope = prop.GetStatements;
@@ -628,8 +643,8 @@ namespace Pytocs.Core.CodeModel
             AddMemberWithComments(prop);
             this.Scope = old;
             this.CurrentMember = oldMethod;
-            this.CurrentMemberStatements = oldStatements;
-            this.CurrentMemberComments = oldComments;
+            this.CurrentStatements = oldStatements;
+            this.CurrentComments = oldComments;
 
             return prop;
         }

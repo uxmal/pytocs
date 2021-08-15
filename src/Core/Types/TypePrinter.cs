@@ -249,18 +249,18 @@ namespace Pytocs.Core.Types
 
         public string VisitUnion(UnionType u)
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
 
             int? num = ctr.Visit(u);
-            if (num != null)
+            if (num is not null)
             {
-                sb.Append("#").Append(num.Value);
+                sb.Append('#').Append(num.Value);
             }
             else
             {
                 int newNum = ctr.Push(u);
                 bool first = true;
-                sb.Append("{");
+                sb.Append('{');
 
                 foreach (DataType t in u.types)
                 {
@@ -277,7 +277,7 @@ namespace Pytocs.Core.Types
                     sb.Append("=#").Append(newNum).Append(":");
                 }
 
-                sb.Append("}");
+                sb.Append('}');
                 ctr.Pop(u);
             }
 

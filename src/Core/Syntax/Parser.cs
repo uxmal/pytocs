@@ -624,12 +624,12 @@ eval_input: testlist NEWLINE* ENDMARKER
                         arg.Test = test();
                     while (PeekAndDiscard(TokenType.COMMA))
                     {
-                        if (Peek(TokenType.RPAREN))
-                            break;      // Skip trailing comma
-                        else if (PeekAndDiscard(TokenType.COMMENT))
+                        if (PeekAndDiscard(TokenType.COMMENT))
                         {
                             //$TODO: arg-specific comment?
                         }
+                        if (Peek(TokenType.RPAREN))
+                            break;      // Skip trailing comma
                         if (PeekAndDiscard(TokenType.OP_STARSTAR))
                         {
                             arg = fpdef();

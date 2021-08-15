@@ -149,9 +149,9 @@ namespace Pytocs.Core.TypeInference
                 return false;
         }
 
-        public void setCWD(string cd)
+        public void setCWD(string? cd)
         {
-            if (cd != null)
+            if (cd is not null)
             {
                 cwd = FileSystem.GetFullPath(cd);
             }
@@ -180,8 +180,8 @@ namespace Pytocs.Core.TypeInference
 
         private void AddPythonPath()
         {
-            string path = Environment.GetEnvironmentVariable("PYTHONPATH");
-            if (path != null)
+            string? path = Environment.GetEnvironmentVariable("PYTHONPATH");
+            if (path is not null)
             {
                 var pathseparator = ':';
                 if (Array.IndexOf(System.IO.Path.GetInvalidPathChars(), ':') >= 0)
@@ -215,11 +215,11 @@ namespace Pytocs.Core.TypeInference
         public List<string> getLoadPath()
         {
             var loadPath = new List<string>();
-            if (cwd != null)
+            if (cwd is not null)
             {
                 loadPath.Add(cwd);
             }
-            if (projectDir != null && FileSystem.DirectoryExists(projectDir))
+            if (projectDir is not null && FileSystem.DirectoryExists(projectDir))
             {
                 loadPath.Add(projectDir);
             }
@@ -346,7 +346,7 @@ namespace Pytocs.Core.TypeInference
         public void AddProblem(Node loc, string msg)
         {
             string? file = loc?.Filename;
-            if (file != null)
+            if (file is not null)
             {
                 AddFileError(file, loc!.Start, loc.End, msg);
             }
@@ -355,7 +355,7 @@ namespace Pytocs.Core.TypeInference
         // for situations without a Node
         public void AddProblem(string file, int begin, int end, string msg)
         {
-            if (file != null)
+            if (file is not null)
             {
                 AddFileError(file, begin, end, msg);
             }
@@ -386,7 +386,7 @@ namespace Pytocs.Core.TypeInference
             }
 
             ModuleType? module = GetCachedModule(path);
-            if (module != null)
+            if (module is not null)
             {
                 return module;
             }
