@@ -1,14 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>net471;netcoreapp2.1</TargetFrameworks>
+    <TargetFrameworks>net5.0</TargetFrameworks>
     <OutputType>exe</OutputType>
     <AssemblyName>pytocs</AssemblyName>
     <RootNamespace>Pytocs.Cli</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="docopt.net" Version="0.6.1.10" />
+    <PackageReference Include="docopt.net" Version="0.6.1.11" />
   </ItemGroup>
 
   <ItemGroup>

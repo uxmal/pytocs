@@ -1,14 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <OutputType>Library</OutputType>
+    <TargetFramework>net5.0</TargetFramework>
     <AssemblyName>Pytocs.Core</AssemblyName>
     <RootNamespace>Pytocs.Core</RootNamespace>
-    <LangVersion>8.0</LangVersion>
-    <nullable>enable</nullable>
-    <Version>1.2.1</Version>
-    <AssemblyVersion>1.2.1.0</AssemblyVersion>
-    <FileVersion>1.2.1.0</FileVersion>   
+    <LangVersion>9.0</LangVersion>
+    <Nullable>enable</Nullable>
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>   
   </PropertyGroup>
 
   <ItemGroup>
