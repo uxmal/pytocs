@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <OutputType>WinExe</OutputType>
     <TargetFrameworks>net5.0</TargetFrameworks>
     <AssemblyName>Pytocs.Gui</AssemblyName>
     <RootNamespace>Pytocs.Gui</RootNamespace>
