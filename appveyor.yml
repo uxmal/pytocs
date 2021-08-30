@@ -45,7 +45,7 @@ after_build:
 
 test_script:
   - cmd: dir /s .\src\Core\bin\%CONFIGURATION%
-  - cmd: 'dotnet test ./src/Pytocs.Tests/Pytocs.Tests.csproj'
+  - cmd: 'dotnet test ./src/Pytocs.Tests/UnitTests.csproj'
  # - cmd: '%xunit20%\xunit.console ./src/Pytocs.Tests/bin/%CONFIGURATION%/net5.0/Pytocs.UnitTests.dll -appveyor'
  # - cmd: python ./subjects/regressionTests.py --check-output --configuration=%CONFIGURATION%
 
