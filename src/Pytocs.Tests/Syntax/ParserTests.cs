@@ -242,7 +242,7 @@ except:
             Assert.Equal(sExp, pyStm.ToString());
         }
 
-        [Fact]
+        [Fact(Skip = "This is a Python 2-ism")]
         public void Parse_Exec()
         {
             var pyStm = ParseStmt("exec code in globals_, locals_\n");

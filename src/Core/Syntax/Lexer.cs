@@ -106,7 +106,7 @@ namespace Pytocs.Core.Syntax
             { "in", TokenType.In },
             { "raise", TokenType.Raise },
 
-            { "exec", TokenType.Exec },
+            // { "exec", TokenType.Exec }, Python 2.x-ism
             { "async", TokenType.Async },
             { "await", TokenType.Await},
         };

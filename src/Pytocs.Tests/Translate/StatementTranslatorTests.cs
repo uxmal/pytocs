@@ -615,7 +615,7 @@ public static object foo() {
             Assert.Equal(sExp, XlatMember(pyStm));
         }
 
-        [Fact]
+        [Fact(Skip = "This is a Python 2-ism")]
         public void Stmt_Exec()
         {
             var pyStm = "exec a in b, c\n";
