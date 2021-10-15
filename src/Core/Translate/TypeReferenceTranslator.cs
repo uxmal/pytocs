@@ -235,24 +235,24 @@ namespace Pytocs.Core.Translate
             return (elementTypes, namespaces);
         }
 
-        private ISet<string>? Join(ISet<string>? a, ISet<string>? b)
+        private static ISet<string>? Join(ISet<string>? a, ISet<string>? b)
         {
-            if (a == null && b == null)
+            if (a is null && b is null)
                 return null;
-            if (a == null)
+            if (a is null)
                 return b;
-            if (b == null)
+            if (b is null)
                 return a;
             var result = new HashSet<string>(a);
             result.UnionWith(b);
             return result;
         }
 
-        private ISet<string>? Join(ISet<string>? a, string b)
+        private static ISet<string>? Join(ISet<string>? a, string b)
         {
-            if (b == null)
+            if (b is null)
                 return a;
-            if (a == null)
+            if (a is null)
                 return new HashSet<string> { b };
             a.Add(b);
             return a;
