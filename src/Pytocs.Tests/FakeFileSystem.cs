@@ -204,7 +204,7 @@ namespace Pytocs.UnitTests
                 .ToArray();
         }
 
-        public string getSystemTempDir()
+        public string GetTempPath()
         {
             return "\\tmp";
         }

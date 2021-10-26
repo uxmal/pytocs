@@ -26,8 +26,6 @@ namespace Pytocs.Core.TypeInference
 {
     public interface IFileSystem
     {
-        string DirectorySeparatorChar { get; }
-
         void CreateDirectory(string f);
         TextReader CreateStreamReader(string filename);
         void DeleteDirectory(string directory);
@@ -37,7 +35,7 @@ namespace Pytocs.Core.TypeInference
         string GetDirectoryName(string filePath);
         string getFileHash(string path);
         string [] GetFileSystemEntries(string file_or_dir);
-        string getSystemTempDir();
+        string GetTempPath();
         string GetFileName(string path);
         string makePathString(params string[] files);
         byte[] ReadFileBytes(string path);
@@ -98,15 +96,9 @@ namespace Pytocs.Core.TypeInference
 
         public bool FileExists(string filePath) { return File.Exists(filePath); }
 
-        public string getSystemTempDir()
+        public string GetTempPath()
         {
-            string tmp = Environment.GetEnvironmentVariable("TEMP");
-            var sep = DirectorySeparatorChar;
-            if (tmp.EndsWith(sep + ""))
-            {
-                return tmp;
-            }
-            return tmp + sep;
+            return Path.GetTempPath();
         }
 
         public IEnumerable<string> GetDirectories(string directory, string searchPattern, SearchOption options)

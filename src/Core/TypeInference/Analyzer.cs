@@ -109,7 +109,7 @@ namespace Pytocs.Core.TypeInference
             this.Builtins.Initialize();
             AddPythonPath();
             CopyModels();
-            var p = FileSystem.CombinePath(FileSystem.getSystemTempDir(), "pytocs");
+            var p = FileSystem.CombinePath(FileSystem.GetTempPath(), "pytocs");
             cacheDir = FileSystem.CombinePath(p, "ast_cache");
             CreateCacheDirectory();
             if (astCache is null)
