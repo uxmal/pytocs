@@ -73,6 +73,12 @@ namespace Pytocs.Core.Translate
             }
         }
 
+        private void AnalyzeExp(List<CodeStatement> basePath, CodeExpression exp)
+        {
+            var visitor = new ExpLocalVarGenerator(this);
+            exp.Accept(visitor);
+        }
+
         private void Generate()
         {
             var paramNames = new HashSet<string?>(
@@ -157,11 +163,13 @@ namespace Pytocs.Core.Translate
 
         public int VisitAssignment(CodeAssignStatement ass)
         {
-            if (!(ass.Destination is CodeVariableReferenceExpression id))
+            if (ass.Destination is CodeVariableReferenceExpression id)
+            {
+                if (this.globals.Contains(id.Name))
+                    return 0;
+                EnsurePath(id);
                 return 0;
-            if (this.globals.Contains(id.Name))
-                return 0;
-            EnsurePath(id);
+            }
             return 0;
         }
 
@@ -182,12 +190,14 @@ namespace Pytocs.Core.Translate
 
         public int VisitForeach(CodeForeachStatement f)
         {
+            AnalyzeExp(this.path, f.Collection);
             Analyze(this.path, f.Statements);
             return 0;
         }
 
         public int VisitIf(CodeConditionStatement cond)
         {
+            AnalyzeExp(this.path, cond.Condition);
             Analyze(this.path, cond.TrueStatements);
             Analyze(this.path, cond.FalseStatements);
             return 0;
@@ -200,12 +210,14 @@ namespace Pytocs.Core.Translate
 
         public int VisitPostTestLoop(CodePostTestLoopStatement l)
         {
+            AnalyzeExp(this.path, l.Test);
             Analyze(this.path, l.Body);
             return 0;
         }
 
         public int VisitPreTestLoop(CodePreTestLoopStatement l)
         {
+            AnalyzeExp(this.path, l.Test);
             Analyze(this.path, l.Body);
             return 0;
         }
@@ -261,6 +273,149 @@ namespace Pytocs.Core.Translate
             public int GetHashCode(CodeVariableReferenceExpression obj)
             {
                 return obj.Name.GetHashCode();
+            }
+        }
+
+        class ExpLocalVarGenerator : ICodeExpressionVisitor
+        {
+            private readonly LocalVariableGenerator outer;
+
+            public ExpLocalVarGenerator(LocalVariableGenerator outer)
+            {
+                this.outer = outer;
+            }
+
+            public void VisitApplication(CodeApplicationExpression app)
+            {
+                foreach (var e in app.Arguments)
+                {
+                    e.Accept(this);
+                }
+            }
+
+            public void VisitArrayIndexer(CodeArrayIndexerExpression aref)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void VisitArrayInitializer(CodeArrayCreateExpression arr)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void VisitAwait(CodeAwaitExpression awaitExp)
+            {
+                awaitExp.Expression.Accept(this);
+            }
+
+            public void VisitBase(CodeBaseReferenceExpression baseExp)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void VisitBinary(CodeBinaryOperatorExpression bin)
+            {
+                if (bin.Operator == CodeOperatorType.Assign && bin.Left is CodeVariableReferenceExpression id)
+                {
+                    if (outer.globals.Contains(id.Name))
+                        return;
+                    outer.EnsurePath(id);
+                }
+                else
+                {
+                    bin.Left.Accept(this);
+                }
+                bin.Right.Accept(this);
+            }
+
+            public void VisitCast(CodeCastExpression cast)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void VisitCollectionInitializer(CodeCollectionInitializer i)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void VisitCondition(CodeConditionExpression condition)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void VisitDefaultExpression(CodeDefaultExpression defaultExp)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void VisitFieldReference(CodeFieldReferenceExpression field)
+            {
+                field.Expression.Accept(this);
+            }
+
+            public void VisitLambda(CodeLambdaExpression l)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void VisitMethodReference(CodeMethodReferenceExpression m)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void VisitNamedArgument(CodeNamedArgument arg)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void VisitNumericLiteral(CodeNumericLiteral literal)
+            {
+            }
+
+            public void VisitObjectCreation(CodeObjectCreateExpression c)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void VisitObjectInitializer(CodeObjectInitializer i)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void VisitParameterDeclaration(CodeParameterDeclarationExpression param)
+            {
+                param.DefaultValue?.Accept(this);
+            }
+
+            public void VisitPrimitive(CodePrimitiveExpression p)
+            {
+            }
+
+            public void VisitQueryExpression(CodeQueryExpression q)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void VisitThisReference(CodeThisReferenceExpression t)
+            {
+            }
+
+            public void VisitTypeReference(CodeTypeReferenceExpression t)
+            {
+            }
+
+            public void VisitUnary(CodeUnaryOperatorExpression u)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void VisitValueTuple(CodeValueTupleExpression codeValueTupleExpression)
+            {
+                throw new NotImplementedException();
+            }
+
+            public void VisitVariableReference(CodeVariableReferenceExpression var)
+            {
             }
         }
     }

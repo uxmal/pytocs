@@ -90,6 +90,11 @@ namespace Pytocs.Core.TypeInference
             return DataType.Cont;
         }
 
+        public DataType VisitAssignmentExp(AssignmentExp e)
+        {
+            return e.Src.Accept(this);
+        }
+
         private void BindClassSlots(Exp eSlotNames)
         {
             IEnumerable<Exp>? slotNames = null;

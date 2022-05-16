@@ -1070,5 +1070,19 @@ def __init__(
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Parser_AssignmentExpression))]
+        public void Parser_AssignmentExpression()
+        {
+            var pySrc = @"
+while chunk := read(256):
+    process(chunk)
+";
+            var sExp =
+@"while chunk := read(256):
+    process(chunk)
+";
+            AssertStmt(sExp, ParseStmt(pySrc));
+        }
     }
 }

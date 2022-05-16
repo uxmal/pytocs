@@ -1671,5 +1671,19 @@ if (_success1) {
         }
 
 
+        [Fact(DisplayName = nameof(Stmt_AssignmentExpression))]
+        public void Stmt_AssignmentExpression()
+        {
+            var pySrc = @"
+while chunk := read(256):
+    process(chunk)
+";
+            var sExp =
+@"while ((chunk = read(256)) != null) {
+    process(chunk);
+}
+";
+            Assert.Equal(sExp, XlatStmts(pySrc));
+        }
     }
 }

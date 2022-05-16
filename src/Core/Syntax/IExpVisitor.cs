@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2021 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -28,6 +28,7 @@ namespace Pytocs.Core.Syntax
         void VisitApplication(Application appl);
         void VisitArrayRef(ArrayRef arrayRef);
         void VisitAssignExp(AssignExp assignExp);
+        void VisitAssignmentExp(AssignmentExp assignmentExp);
         void VisitAwait(AwaitExp awaitExp);
         void VisitBigLiteral(BigLiteral bigLiteral);
         void VisitBinExp(BinExp bin);
@@ -70,6 +71,7 @@ namespace Pytocs.Core.Syntax
         T VisitApplication(Application appl);
         T VisitArrayRef(ArrayRef arrayRef);
         T VisitAssignExp(AssignExp assignExp);
+        T VisitAssignmentExp(AssignmentExp assignmentExp);
         T VisitAwait(AwaitExp awaitExp);
         T VisitBigLiteral(BigLiteral bigLiteral);
         T VisitBinExp(BinExp bin);

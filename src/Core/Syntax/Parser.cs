@@ -1694,14 +1694,25 @@ eval_input: testlist NEWLINE* ENDMARKER
             var o = or_test();
             if (o == null)
                 return o;
-            if (!PeekAndDiscard(TokenType.If))
-                return o;
-            var condition = or_test();
-            if (condition is null) throw Unexpected();
-            Expect(TokenType.Else);
-            var alternative = test();
-            if (alternative is null) throw Unexpected();
-            return new TestExp(o, condition, alternative, filename, o.Start, alternative.End);
+            if (PeekAndDiscard(TokenType.If))
+            {
+                var condition = or_test();
+                if (condition is null) throw Unexpected();
+                Expect(TokenType.Else);
+                var alternative = test();
+                if (alternative is null) throw Unexpected();
+                return new TestExp(o, condition, alternative, filename, o.Start, alternative.End);
+            }
+            if (o is Identifier id)
+            {
+                if (PeekAndDiscard(TokenType.COLONEQ))
+                {
+                    var e = ExpectTest();
+                    return new AssignmentExp(id, e, filename, id.Start, e.End);
+                }
+            }
+            return o;
+
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

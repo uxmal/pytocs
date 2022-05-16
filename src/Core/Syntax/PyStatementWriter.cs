@@ -341,9 +341,14 @@ namespace Pytocs.Core.Syntax
             }
         }
 
-        public void VisitWhile(WhileStatement w)
+        public void VisitWhile(WhileStatement wh)
         {
-            throw new NotImplementedException();
+            w.Write("while");
+            w.Write(" ");
+            wh.Test.Write(writer);
+            w.WriteLine(":");
+            ++w.IndentLevel;
+            wh.Body.Accept(this);
         }
 
         public void VisitWith(WithStatement w)

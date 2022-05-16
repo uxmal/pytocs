@@ -251,7 +251,7 @@ namespace Pytocs.Core.CodeModel
             case CodeOperatorType.LogOr: return "||";
 
             case CodeOperatorType.Not: return "!";
-            case CodeOperatorType.Assign: return ":=";
+            case CodeOperatorType.Assign: return "=";
             case CodeOperatorType.Mul: return "*";
             case CodeOperatorType.Div: return "/";
             case CodeOperatorType.Shl: return "<<";

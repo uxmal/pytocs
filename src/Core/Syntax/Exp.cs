@@ -1249,4 +1249,38 @@ namespace Pytocs.Core.Syntax
             throw new NotImplementedException();
         }
     }
+
+    // The "walrus operator"
+    public class AssignmentExp : Exp
+    {
+        public Identifier Dst;
+
+        public Exp Src;
+
+        public AssignmentExp(Identifier dst, Exp src, string filename, int start, int end) 
+            : base(filename, start, end)
+        {
+            this.Dst = dst;
+            this.Src = src;
+        }
+
+        public override void Write(TextWriter writer)
+        {
+            Dst.Write(writer);
+            writer.Write(" ");
+            writer.Write(":=");
+            writer.Write(" ");
+            Src.Write(writer);
+        }
+
+        public override T Accept<T>(IExpVisitor<T> v)
+        {
+            return v.VisitAssignmentExp(this);
+        }
+
+        public override void Accept(IExpVisitor v)
+        {
+            v.VisitAssignmentExp(this);
+        }
+    }
 }

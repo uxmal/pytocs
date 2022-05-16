@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2021 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -496,6 +496,13 @@ namespace Pytocs.UnitTests.Syntax
             tok = LexMore();
             Assert.Equal(TokenType.STRING, tok.Type);
             Assert.True(tok.Value is Str);
+        }
+
+        [Fact]
+        public void Lex_assignment_expression()
+        {
+            var tok = Lex(":=");
+            Assert.Equal(TokenType.COLONEQ, tok.Type);
         }
     }
 }

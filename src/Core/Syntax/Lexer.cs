@@ -159,6 +159,7 @@ namespace Pytocs.Core.Syntax
             EApos,
             EApos2,
             RawStringEscape,
+            Colon, 
 
             Zero,
             Decimal,
@@ -287,7 +288,7 @@ namespace Pytocs.Core.Syntax
                     case ']': --nestedBrackets; return Token(TokenType.RBRACKET);
                     case '}': --nestedBraces; return Token(TokenType.RBRACE);
                     case ',': return Token(TokenType.COMMA);
-                    case ':': return Token(TokenType.COLON);
+                    case ':': st = State.Colon; break;
                     case '.': st = State.Dot; break;
                     case ';': return Token(TokenType.SEMI);
                     case '@': return Token(TokenType.AT);
@@ -1006,6 +1007,13 @@ namespace Pytocs.Core.Syntax
                     {
                     case '.': return EatChToken(TokenType.ELLIPSIS);
                     default: this.token = Token(TokenType.DOT); return Token(TokenType.DOT);
+                    }
+                case State.Colon:
+                    switch (ch)
+                    {
+                    case '=': return EatChToken(TokenType.COLONEQ); break;
+                    default:
+                        return Token(TokenType.COLON);
                     }
                 default:
                     throw Error(string.Format(Resources.ErrUnhandledState, st));

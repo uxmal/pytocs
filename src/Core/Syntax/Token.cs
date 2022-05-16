@@ -146,6 +146,7 @@ namespace Pytocs.Core.Syntax
         SHLEQ,
         EXPEQ,
 
+        COLONEQ,
 
         False,
         Class,

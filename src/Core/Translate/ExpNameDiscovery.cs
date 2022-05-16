@@ -47,6 +47,11 @@ namespace Pytocs.Core.Translate
             throw new NotImplementedException();
         }
 
+        public void VisitAssignmentExp(AssignmentExp aExp)
+        {
+            throw new NotImplementedException();
+        }
+
         public void VisitAwait(AwaitExp awaitExp)
         {
             throw new NotImplementedException();

@@ -263,6 +263,26 @@ namespace Pytocs.UnitTests.Translate
 ";
             Assert.Equal(sExp, XlatMember(pySrc).ToString());
         }
+
+        [Fact(DisplayName = nameof(Lv_AssignmentExpression))]
+        public void Lv_AssignmentExpression()
+        {
+            var pySrc = @"
+def foo():
+    while chunk := read(256):
+        process(chunk)
+";
+            var sExp =
+@"public static object foo() {
+    object chunk;
+    while ((chunk = read(256)) != null) {
+        process(chunk);
+    }
+}
+
+";
+            Assert.Equal(sExp, XlatMember(pySrc));
+        }
     }
 }
 #endif

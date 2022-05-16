@@ -285,6 +285,16 @@ namespace Pytocs.Core.Translate
                 e.Src!.Accept(this));
         }
 
+        public CodeExpression VisitAssignmentExp(AssignmentExp e)
+        {
+            var id = gensym.MapLocalReference(e.Dst.Name);
+            var exp = e.Src.Accept(this);
+            return m.BinOp(
+                    m.AssignExp(id, exp),
+                    CodeOperatorType.NotEqual,
+                    m.Prim(null));
+        }
+
         public CodeExpression VisitAwait(AwaitExp awaitExp)
         {
             var exp = awaitExp.exp.Accept(this);

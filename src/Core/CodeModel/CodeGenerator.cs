@@ -63,6 +63,11 @@ namespace Pytocs.Core.CodeModel
             return new CodeFieldReferenceExpression(exp, fieldName);
         }
 
+        public CodeExpression AssignExp(CodeExpression id, CodeExpression exp)
+        {
+            return new CodeBinaryOperatorExpression(id, CodeOperatorType.Assign, exp);
+        }
+
         public CodeBinaryOperatorExpression BinOp(CodeExpression l, CodeOperatorType op, CodeExpression r)
         {
             return new CodeBinaryOperatorExpression(l, op, r);
