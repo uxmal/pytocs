@@ -30,7 +30,7 @@ namespace Pytocs.Core.Translate
     public class StatementTranslator : IStatementVisitor
     {
         private readonly ClassDef? classDef;
-        private readonly TypeReferenceTranslator types;
+        protected readonly TypeReferenceTranslator types;
         private readonly CodeGenerator gen;
         private readonly ExpTranslator xlat;
         private readonly SymbolGenerator gensym;
@@ -49,8 +49,10 @@ namespace Pytocs.Core.Translate
             this.xlat = new ExpTranslator(classDef, types, gen, gensym);
             this.properties = new Dictionary<Statement, PropertyDefinition>();
             this.globals = globals;
+            this.GenerateFieldForAssignment = true;
         }
 
+        public bool GenerateFieldForAssignment { get; set; }
 
         public void VisitClass(ClassDef c)
         {
@@ -290,6 +292,7 @@ namespace Pytocs.Core.Translate
                 var lhs = ass.Dst.Accept(xlat);
                 if (gen.CurrentMember != null)
                 {
+                    // We're inside a method/fun.
                     if (ass.op == Op.Assign)
                     {
                         if (rhs != null)
@@ -464,10 +467,17 @@ namespace Pytocs.Core.Translate
             }
             else
             {
-                var (fieldType, nmspcs) = types.TranslateTypeOf(id);
-                gen.EnsureImports(nmspcs);
+                if (GenerateFieldForAssignment)
+                {
+                    var (fieldType, nmspcs) = types.TranslateTypeOf(id);
+                    gen.EnsureImports(nmspcs);
 
-                GenerateField(id.Name, fieldType, ass.Src?.Accept(xlat));
+                    GenerateField(id.Name, fieldType, ass.Src?.Accept(xlat));
+                }
+                else if (ass.Src is not null)
+                {
+                    gen.Assign(gensym.MapLocalReference(id.Name), ass.Src.Accept(xlat));
+                }
             }
         }
 

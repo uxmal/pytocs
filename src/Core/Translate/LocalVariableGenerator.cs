@@ -295,12 +295,19 @@ namespace Pytocs.Core.Translate
 
             public void VisitArrayIndexer(CodeArrayIndexerExpression aref)
             {
-                throw new NotImplementedException();
+                aref.TargetObject.Accept(this);
+                foreach (var i in aref.Indices)
+                {
+                    i.Accept(this);
+                }
             }
 
             public void VisitArrayInitializer(CodeArrayCreateExpression arr)
             {
-                throw new NotImplementedException();
+                foreach (var e in arr.Initializers)
+                {
+                    e.Accept(this);
+                }
             }
 
             public void VisitAwait(CodeAwaitExpression awaitExp)
@@ -310,7 +317,6 @@ namespace Pytocs.Core.Translate
 
             public void VisitBase(CodeBaseReferenceExpression baseExp)
             {
-                throw new NotImplementedException();
             }
 
             public void VisitBinary(CodeBinaryOperatorExpression bin)
@@ -330,22 +336,26 @@ namespace Pytocs.Core.Translate
 
             public void VisitCast(CodeCastExpression cast)
             {
-                throw new NotImplementedException();
+                cast.Expression.Accept(this);
             }
 
             public void VisitCollectionInitializer(CodeCollectionInitializer i)
             {
-                throw new NotImplementedException();
+                foreach (var e in i.Values)
+                {
+                    e.Accept(this);
+                }
             }
 
             public void VisitCondition(CodeConditionExpression condition)
             {
-                throw new NotImplementedException();
+                condition.Condition.Accept(this);
+                condition.Consequent.Accept(this);
+                condition.Alternative.Accept(this);
             }
 
             public void VisitDefaultExpression(CodeDefaultExpression defaultExp)
             {
-                throw new NotImplementedException();
             }
 
             public void VisitFieldReference(CodeFieldReferenceExpression field)
@@ -355,17 +365,16 @@ namespace Pytocs.Core.Translate
 
             public void VisitLambda(CodeLambdaExpression l)
             {
-                throw new NotImplementedException();
+                l.Body.Accept(this);
             }
 
             public void VisitMethodReference(CodeMethodReferenceExpression m)
             {
-                throw new NotImplementedException();
+                m.TargetObject.Accept(this);
             }
 
             public void VisitNamedArgument(CodeNamedArgument arg)
             {
-                throw new NotImplementedException();
             }
 
             public void VisitNumericLiteral(CodeNumericLiteral literal)
@@ -374,12 +383,13 @@ namespace Pytocs.Core.Translate
 
             public void VisitObjectCreation(CodeObjectCreateExpression c)
             {
-                throw new NotImplementedException();
+                c.Initializer?.Accept(this);
+                c.Initializers.ForEach(e => e.Accept(this));
             }
 
             public void VisitObjectInitializer(CodeObjectInitializer i)
             {
-                throw new NotImplementedException();
+                i.MemberDeclarators.ForEach(d => d.Expression?.Accept(this));
             }
 
             public void VisitParameterDeclaration(CodeParameterDeclarationExpression param)
@@ -393,8 +403,27 @@ namespace Pytocs.Core.Translate
 
             public void VisitQueryExpression(CodeQueryExpression q)
             {
-                throw new NotImplementedException();
+                foreach (var c in q.Clauses)
+                {
+                    switch (c)
+                    {
+                    case CodeFromClause f:
+                        f.Identifier.Accept(this);
+                        f.Collection.Accept(this);
+                        break;
+                    case CodeLetClause l:
+                        l.Value.Accept(this);
+                        break;
+                    case CodeWhereClause w:
+                        w.Condition.Accept(this);
+                        break;
+                    case CodeSelectClause s:
+                        s.Projection.Accept(this);
+                        break;
+                    }
+                }
             }
+
 
             public void VisitThisReference(CodeThisReferenceExpression t)
             {
@@ -406,12 +435,15 @@ namespace Pytocs.Core.Translate
 
             public void VisitUnary(CodeUnaryOperatorExpression u)
             {
-                throw new NotImplementedException();
+                u.Expression.Accept(this);
             }
 
             public void VisitValueTuple(CodeValueTupleExpression codeValueTupleExpression)
             {
-                throw new NotImplementedException();
+                foreach (var v in codeValueTupleExpression.Expressions)
+                {
+                    v.Accept(this);
+                }
             }
 
             public void VisitVariableReference(CodeVariableReferenceExpression var)

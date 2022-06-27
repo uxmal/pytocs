@@ -513,7 +513,7 @@ class TestClass:
             Assert.Equal(sExp, XlatModule(pySrc));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Func_Default_Args))]
         public void Func_Default_Args()
         {
             var pySrc =
@@ -550,6 +550,42 @@ class TestClass:
             a = ""a"";
             b = ""b"";
             c = ""c"";
+        }
+    }
+}
+";
+            Assert.Equal(sExp, XlatModule(pySrc));
+        }
+
+        [Fact(DisplayName = nameof(Module_non_assignments))]
+        public void Module_non_assignments()
+        {
+            var pySrc = @"
+num = 8 
+
+# To take the input from the user
+#num = float(input('Enter a number: '))
+
+num_sqrt = num ** 0.5
+print('The square root of %0.3f is %0.3f'%(num ,num_sqrt))
+";
+            var sExp =
+@"namespace test {
+    
+    using System;
+    
+    public static class module {
+        
+        public static int num;
+        
+        public static double num_sqrt;
+        
+        static module() {
+            num = 8;
+            // To take the input from the user
+            //num = float(input('Enter a number: '))
+            num_sqrt = Math.Pow(num, 0.5);
+            Console.WriteLine(String.Format(""The square root of %0.3f is %0.3f"", num, num_sqrt));
         }
     }
 }

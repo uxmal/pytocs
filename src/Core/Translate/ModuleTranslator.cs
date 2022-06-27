@@ -17,6 +17,7 @@
 using Pytocs.Core.CodeModel;
 using Pytocs.Core.Syntax;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 
 namespace Pytocs.Core.Translate
@@ -33,28 +34,100 @@ namespace Pytocs.Core.Translate
 
         public void Translate(IEnumerable<Statement> statements)
         {
-            int c = 0;
-            foreach (var s in statements)
+            var stms = statements.ToList();
+            var fields = AllSimpleAssignments(stms);
+            if (fields is null)
             {
-                if (c == 0 && IsStringStatement(s, out Str lit))
+                int c = 0;
+                foreach (var s in stms)
                 {
-                    GenerateDocComment(lit.s, gen.CurrentNamespace.Comments);
+                    if (c == 0 && IsStringStatement(s, out Str lit))
+                    {
+                        GenerateDocComment(lit.s, gen.CurrentNamespace.Comments);
+                    }
+                    else
+                    {
+                        s.Accept(this);
+                    }
+                    ++c;
                 }
-                else
+                if (gen.Scope.Count > 0)
                 {
-                    s.Accept(this);
+                    // Module-level statements are simulated with a static constructor.
+                    var methodName = gen.CurrentType.Name!;
+                    var parameters = new CodeParameterDeclarationExpression[0];
+                    var static_ctor = gen.StaticMethod(methodName, null, parameters, () => { });
+                    static_ctor.Attributes = MemberAttributes.Static;
+                    static_ctor.Statements.AddRange(gen.Scope);
                 }
-                ++c;
             }
-            if (gen.Scope.Count > 0)
+            else
             {
-                // Module-level statements are simulated with a static constructor.
+                // We have statements other than simple assignments. Generate
+                // definitions for all fields, then put all the code in the constructor.
+                int c = 0;
+                foreach (var s in stms)
+                {
+                    if (c == 0 && IsStringStatement(s, out Str lit))
+                    {
+                        GenerateDocComment(lit.s, gen.CurrentNamespace.Comments);
+                    }
+                    else if (IsAssignment(s, out AssignExp? ass) &&
+                        ass.Dst is Identifier id)
+                    {
+                        var (fieldType, nmspcs) = base.types.TranslateTypeOf(id);
+                        gen.EnsureImports(nmspcs);
+
+                        GenerateField(id.Name, fieldType, null);
+                    }
+                    ++c;
+                }
+
                 var methodName = gen.CurrentType.Name!;
                 var parameters = new CodeParameterDeclarationExpression[0];
-                var static_ctor = gen.StaticMethod(methodName, null, parameters, () => { });
+                this.GenerateFieldForAssignment = false;
+                var static_ctor = gen.StaticMethod(methodName, null, parameters, () => {
+                    foreach (var stm in stms)
+                    {
+                        stm.Accept(this);
+                    }
+                });
                 static_ctor.Attributes = MemberAttributes.Static;
-                static_ctor.Statements.AddRange(gen.Scope);
             }
+        }
+
+        // From a list of Python statements, extract all statements that are simple assignments.
+        // a = b
+        private List<(Identifier, Exp, string?)>? AllSimpleAssignments(List<Statement> stms)
+        {
+            bool sawOnlySimpleAssignments = true;
+            var result = new List<(Identifier, Exp, string?)>();
+            foreach (var stm in stms)
+            {
+                if (stm is SuiteStatement sstm)
+                {
+                    switch (sstm.stmts[0])
+                    {
+                    case ExpStatement estm:
+                        switch (estm.Expression)
+                        {
+                        case AssignExp ass when ass.Dst is Identifier id:
+                            result.Add((id, ass.Src!, ass.Comment));
+                            break;
+                        case AssignExp:
+                            sawOnlySimpleAssignments = false;
+                            break;
+                        case Str:
+                            break;
+                        }
+                        break;
+                    case PrintStatement:
+                        sawOnlySimpleAssignments = false;
+                        break;
+                    }
+                }
+            }
+            return sawOnlySimpleAssignments ? null : result;
         }
 
         public void GenerateDocComment(string text, List<CodeCommentStatement> comments)
@@ -69,9 +142,9 @@ namespace Pytocs.Core.Translate
         {
             lit = null!;
             var strStmt = s as ExpStatement;
-            if (strStmt == null)
+            if (strStmt is null)
             {
-                if (!(s is SuiteStatement suite))
+                if (s is not SuiteStatement suite)
                     return false;
                 strStmt = suite.stmts[0] as ExpStatement;
                 if (strStmt == null)
@@ -79,6 +152,24 @@ namespace Pytocs.Core.Translate
             }
             lit = (strStmt.Expression as Str)!;
             return lit != null;
+        }
+
+        public bool IsAssignment(Statement s, [MaybeNullWhen(false)] out AssignExp ass)
+        {
+            if (s is SuiteStatement ss)
+            {
+                s = ss.stmts[0];
+            }
+            if (s is ExpStatement es && es.Expression is AssignExp a)
+            {
+                ass = a;
+                return true;
+            }
+            else
+            {
+                ass = null;
+                return false;
+            }
         }
 
         protected override CodeMemberField GenerateField(string name, CodeTypeReference fieldType, CodeExpression? value)
