@@ -793,5 +793,18 @@ namespace Pytocs.UnitTests.Translate
             var sExp = "$\"Hello {world}\"";
             Assert.Equal(sExp, Xlat(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Ex_SetInitializer))]
+        public void Ex_SetInitializer()
+        {
+            var pySrc = "{ a, b, c }";
+            var sExp = 
+@"new HashSet {
+    a,
+    b,
+    c
+}";
+            Assert.Equal(sExp, Xlat(pySrc));
+        }
     }
 }

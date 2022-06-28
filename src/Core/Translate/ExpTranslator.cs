@@ -249,6 +249,7 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitArgument(Argument a)
         {
+            var argType = types.TranslateTypeOf(a);
             if (a is ListArgument)
             {
                 return m.Appl(
@@ -398,8 +399,9 @@ namespace Pytocs.Core.Translate
             }
             else
             {
-                var items = s.exps.Select(e => new CodeCollectionInitializer(e.Accept(this)));
-                var init = m.New(m.TypeRef("HashSet"), items.ToArray());
+                var items = s.exps.Select(e => e.Accept(this));
+                var init = m.New(m.TypeRef("HashSet"));
+                init.Initializers.AddRange(items);
                 return init;
             }
         }

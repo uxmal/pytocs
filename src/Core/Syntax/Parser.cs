@@ -2462,7 +2462,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                             setItems.Add(k);
                         }
                     }
-                    return new PySet(setItems, filename, setItems[0].Start, setItems[setItems.Count - 1].End);
+                    return new PySet(setItems, filename, setItems[0].Start, setItems[^1].End);
                 }
             }
         }

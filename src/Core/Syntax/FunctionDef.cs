@@ -100,6 +100,11 @@ namespace Pytocs.Core.Syntax
             this.args = args;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitLambda(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitLambda(this);

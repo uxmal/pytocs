@@ -23,12 +23,15 @@ namespace Pytocs.Core.Syntax
 {
     public abstract class Exp : Node
     {
-        public Exp(string filename, int start, int end) : base(filename, start, end) {
+        public Exp(string filename, int start, int end) : base(filename, start, end) 
+        {
         }
 
         public string? Comment { get; set; }
 
         public abstract T Accept<T>(IExpVisitor<T> v);
+
+        public abstract T Accept<T,C>(IExpVisitor<T, C> v, C context);
 
         public abstract void Accept(IExpVisitor v);
 
@@ -101,6 +104,11 @@ namespace Pytocs.Core.Syntax
     {
         public NoneExp(string filename, int start, int end) : base(filename, start, end) { }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitNoneExp(context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitNoneExp();
@@ -110,6 +118,7 @@ namespace Pytocs.Core.Syntax
         {
             v.VisitNoneExp();
         }
+
 
         public override void Write(TextWriter writer)
         {
@@ -124,6 +133,11 @@ namespace Pytocs.Core.Syntax
         public BooleanLiteral(bool b, string filename, int start, int end) : base(filename, start, end) 
         {
             Value = b;
+        }
+
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitBooleanLiteral(this, context);
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -151,6 +165,11 @@ namespace Pytocs.Core.Syntax
             : base(filename, start, end)
         {
             this.s = str;
+        }
+
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitBytes(this, context);
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -192,6 +211,11 @@ namespace Pytocs.Core.Syntax
             this.s = str;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitStr(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitStr(this);
@@ -223,6 +247,11 @@ namespace Pytocs.Core.Syntax
             this.NumericValue = p;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitIntLiteral(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitIntLiteral(this);
@@ -250,6 +279,11 @@ namespace Pytocs.Core.Syntax
             this.NumericValue = p;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitLongLiteral(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitLongLiteral(this);
@@ -274,6 +308,11 @@ namespace Pytocs.Core.Syntax
         {
             this.Value = value;
             this.NumericValue = p;
+        }
+
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitBigLiteral(this, context);
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -303,6 +342,11 @@ namespace Pytocs.Core.Syntax
 
         public readonly string Value;
         public readonly double NumericValue;
+
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitRealLiteral(this, context);
+        }
 
         public override void Accept(IExpVisitor v)
         {
@@ -338,6 +382,11 @@ namespace Pytocs.Core.Syntax
         public string Value { get; }
         public double NumericValue { get; }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitImaginary(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitImaginary(this);
@@ -366,6 +415,10 @@ namespace Pytocs.Core.Syntax
             this.op = op; this.l = l; this.r = r;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitBinExp(this, context);
+        }
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitBinExp(this);
@@ -399,6 +452,10 @@ namespace Pytocs.Core.Syntax
             this.source = collection;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitDictComprehension(this, context);
+        }
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitDictComprehension(this);
@@ -412,7 +469,6 @@ namespace Pytocs.Core.Syntax
 
     public class DictInitializer : Exp
     {
-
         public DictInitializer(List<KeyValuePair<Exp?, Exp>> keyValues, string filename, int start, int end)
             : base(filename, start, end)
         {
@@ -420,6 +476,12 @@ namespace Pytocs.Core.Syntax
         }
 
         public List<KeyValuePair<Exp?, Exp>> KeyValues { get; }
+
+
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitDictInitializer(this, context);
+        }
 
         public override T Accept<T>(IExpVisitor<T> v)
         {
@@ -464,6 +526,11 @@ namespace Pytocs.Core.Syntax
             this.Iterable = iterable;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitIterableUnpacker(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitIterableUnpacker(this);
@@ -485,6 +552,11 @@ namespace Pytocs.Core.Syntax
     {
         public Ellipsis(string filename, int start, int end) : base(filename, start, end) { }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitEllipsis(this, context);
+        }
+
         public override void Accept(IExpVisitor v)
         {
             v.VisitEllipsis(this);
@@ -505,6 +577,11 @@ namespace Pytocs.Core.Syntax
         {
             this.op = op;
             this.e = exp;
+        }
+
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitUnary(this, context);
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -538,6 +615,11 @@ namespace Pytocs.Core.Syntax
             this.Alternative = alternative;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitTest(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitTest(this);
@@ -564,8 +646,14 @@ namespace Pytocs.Core.Syntax
 
     public class Identifier : Exp
     {
-        public Identifier(string name, string filename, int start, int end) : base(filename, start, end) { base.Name = name; }
+        public Identifier(string name, string filename, int start, int end) : base(filename, start, end) {
+            base.Name = name;
+        }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitIdentifier(this, context);
+        }
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitIdentifier(this);
@@ -598,6 +686,11 @@ namespace Pytocs.Core.Syntax
             this.keywords = keywords;
             this.stargs = stargs;
             this.kwargs = kwargs;
+        }
+
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitApplication(this, context);
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -655,6 +748,11 @@ namespace Pytocs.Core.Syntax
             this.subs = subs;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitArrayRef(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitArrayRef(this);
@@ -688,6 +786,11 @@ namespace Pytocs.Core.Syntax
             this.Lower = start;
             this.Step = end;
             this.Upper = slice;
+        }
+
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitSlice(this, context);
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -735,6 +838,11 @@ namespace Pytocs.Core.Syntax
             FieldName = fieldName; 
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitFieldAccess(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitFieldAccess(this);
@@ -763,6 +871,10 @@ namespace Pytocs.Core.Syntax
             this.exp = exp;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitAwait(this, context);
+        }
         public override void Accept(IExpVisitor v)
         {
             v.VisitAwait(this);
@@ -786,6 +898,11 @@ namespace Pytocs.Core.Syntax
         public readonly Exp? exp;
 
         public YieldExp(Exp? exp, string filename, int start, int end) : base(filename, start, end) { this.exp = exp; }
+
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitYieldExp(this, context);
+        }
 
         public override T Accept<T>(IExpVisitor<T> v)
         {
@@ -813,6 +930,11 @@ namespace Pytocs.Core.Syntax
         public readonly Exp Expression;
 
         public YieldFromExp(Exp exp, string filename, int start, int end) : base(filename, start, end) { this.Expression = exp; }
+
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitYieldFromExp(this, context);
+        }
 
         public override T Accept<T>(IExpVisitor<T> v)
         {
@@ -852,6 +974,11 @@ namespace Pytocs.Core.Syntax
 
         public bool Async { get; set; }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitCompFor(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitCompFor(this);
@@ -888,6 +1015,11 @@ namespace Pytocs.Core.Syntax
             this.test = test;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitCompIf(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitCompIf(this);
@@ -919,6 +1051,11 @@ namespace Pytocs.Core.Syntax
             : base(filename, start, end)
         {
             this.exps = exps;
+        }
+
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitSet(this, context);
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -954,6 +1091,11 @@ namespace Pytocs.Core.Syntax
             this.e = e;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitStarExp(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitStarExp(this);
@@ -978,6 +1120,11 @@ namespace Pytocs.Core.Syntax
         public ExpList(List<Exp> exps, string filename, int start, int end) : base(filename, start, end)
         {
             this.Expressions = exps;
+        }
+
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitExpList(this, context);
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -1028,6 +1175,11 @@ namespace Pytocs.Core.Syntax
             this.elts = elts;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitList(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitList(this);
@@ -1063,6 +1215,11 @@ namespace Pytocs.Core.Syntax
             this.Collection = coll;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitGeneratorExp(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitGeneratorExp(this);
@@ -1083,6 +1240,11 @@ namespace Pytocs.Core.Syntax
         {
             this.Projection = proj;
             this.Collection = coll;
+        }
+
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitListComprehension(this, context);
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -1114,6 +1276,11 @@ namespace Pytocs.Core.Syntax
         {
             this.Projection = proj;
             this.Collection = coll;
+        }
+
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitSetComprehension(this, context);
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -1161,6 +1328,11 @@ namespace Pytocs.Core.Syntax
             this.Annotation = annotation;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitAssignExp(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitAssignExp(this);
@@ -1195,7 +1367,12 @@ namespace Pytocs.Core.Syntax
             this.values = values;
         }
 
-        public List<Exp> values;
+        public List<Exp> values { get; }
+
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitTuple(this, context);
+        }
 
         public override T Accept<T>(IExpVisitor<T> v)
         {
@@ -1221,10 +1398,10 @@ namespace Pytocs.Core.Syntax
         }
     }
 
- /// 
+ /// <summary>
  /// virtual-AST node used to represent virtual source locations for builtins
  /// as external urls.
- /// 
+ /// </sumary>
     public class Url : Exp
     {
         public string url;
@@ -1239,6 +1416,11 @@ namespace Pytocs.Core.Syntax
             writer.Write("<Url:\"{0}\">", url);
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            throw new NotImplementedException();
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             throw new NotImplementedException();
@@ -1250,7 +1432,7 @@ namespace Pytocs.Core.Syntax
         }
     }
 
-    // The "walrus operator"
+    // The := "walrus operator"
     public class AssignmentExp : Exp
     {
         public Identifier Dst;
@@ -1264,13 +1446,9 @@ namespace Pytocs.Core.Syntax
             this.Src = src;
         }
 
-        public override void Write(TextWriter writer)
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
-            Dst.Write(writer);
-            writer.Write(" ");
-            writer.Write(":=");
-            writer.Write(" ");
-            Src.Write(writer);
+            return v.VisitAssignmentExp(this, context);
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -1281,6 +1459,15 @@ namespace Pytocs.Core.Syntax
         public override void Accept(IExpVisitor v)
         {
             v.VisitAssignmentExp(this);
+        }
+
+        public override void Write(TextWriter writer)
+        {
+            Dst.Write(writer);
+            writer.Write(" ");
+            writer.Write(":=");
+            writer.Write(" ");
+            Src.Write(writer);
         }
     }
 }

@@ -107,4 +107,47 @@ namespace Pytocs.Core.Syntax
         T VisitYieldExp(YieldExp yieldExp);
         T VisitYieldFromExp(YieldFromExp yieldExp);
     }
+
+    public interface IExpVisitor<T, C>
+    {
+        T VisitAliasedExp(AliasedExp aliasedExp, C context);
+        T VisitApplication(Application appl, C context);
+        T VisitArrayRef(ArrayRef arrayRef, C context);
+        T VisitAssignExp(AssignExp assignExp, C context);
+        T VisitAssignmentExp(AssignmentExp assignmentExp, C context);
+        T VisitAwait(AwaitExp awaitExp, C context);
+        T VisitBigLiteral(BigLiteral bigLiteral, C context);
+        T VisitBinExp(BinExp bin, C context);
+        T VisitBooleanLiteral(BooleanLiteral b, C context);
+        T VisitBytes(Bytes bytes, C context);
+        T VisitCompFor(CompFor compFor, C context);
+        T VisitCompIf(CompIf compIf, C context);
+        T VisitDictInitializer(DictInitializer di, C context);
+        T VisitDictComprehension(DictComprehension dc, C context);
+        T VisitDottedName(DottedName dottedName, C context);
+        T VisitEllipsis(Ellipsis e, C context);
+        T VisitExpList(ExpList list, C context);
+        T VisitFieldAccess(AttributeAccess acc, C context);
+        T VisitGeneratorExp(GeneratorExp generatorExp, C context);
+        T VisitIdentifier(Identifier id, C context);
+        T VisitImaginary(ImaginaryLiteral im, C context);
+        T VisitIntLiteral(IntLiteral s, C context);
+        T VisitIterableUnpacker(IterableUnpacker unpacker, C context);
+        T VisitLambda(Lambda lambda, C context);
+        T VisitListComprehension(ListComprehension lc, C context);
+        T VisitList(PyList l, C context);
+        T VisitLongLiteral(LongLiteral l, C context);
+        T VisitNoneExp(C context);
+        T VisitRealLiteral(RealLiteral r, C context);
+        T VisitSet(PySet setDisplay, C context);
+        T VisitSetComprehension(SetComprehension setComprehension, C context);
+        T VisitSlice(Slice slice, C context);
+        T VisitStarExp(StarExp starExp, C context);
+        T VisitStr(Str s, C context);
+        T VisitTest(TestExp test, C context);
+        T VisitTuple(PyTuple tuple, C context);
+        T VisitUnary(UnaryExp u, C context);
+        T VisitYieldExp(YieldExp yieldExp, C context);
+        T VisitYieldFromExp(YieldFromExp yieldExp, C context);
+    }
 }

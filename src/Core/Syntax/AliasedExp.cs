@@ -32,6 +32,11 @@ namespace Pytocs.Core.Syntax
             this.alias = alias;
         }
 
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
+        {
+            return v.VisitAliasedExp(this, context);
+        }
+
         public override T Accept<T>(IExpVisitor<T> v)
         {
             return v.VisitAliasedExp(this);

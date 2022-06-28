@@ -31,9 +31,9 @@ namespace Pytocs.Core.Syntax
             this.segs = segs;
         }
 
-        public override void Write(TextWriter writer)
+        public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {
-            writer.Write(string.Join(".", segs.Select(s => s.Name)));
+            return v.VisitDottedName(this, context);
         }
 
         public override T Accept<T>(IExpVisitor<T> v)
@@ -45,5 +45,11 @@ namespace Pytocs.Core.Syntax
         {
             v.VisitDottedName(this);
         }
+
+        public override void Write(TextWriter writer)
+        {
+            writer.Write(string.Join(".", segs.Select(s => s.Name)));
+        }
+
     }
 }
