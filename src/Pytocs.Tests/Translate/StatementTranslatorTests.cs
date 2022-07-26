@@ -1685,5 +1685,19 @@ while chunk := read(256):
 ";
             Assert.Equal(sExp, XlatStmts(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Stmt_Assign_Assign))]
+        public void Stmt_Assign_Assign()
+        {
+            int x;
+            int y;
+            var pySrc = @"
+x = y = fun(z)
+";
+            var sExpected =
+@"x = y = fun(z);
+";
+            Assert.Equal(sExpected, XlatStmts(pySrc));
+        }
     }
 }

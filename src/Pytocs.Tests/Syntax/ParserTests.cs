@@ -1084,5 +1084,17 @@ while chunk := read(256):
 ";
             AssertStmt(sExp, ParseStmt(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Parser_Assign_Assign))]
+        public void Parser_Assign_Assign()
+        {
+            var pySrc = @"
+x = y = z = func(w)
+";
+            var sExpected =
+@"x=y=z=func(w)
+";
+            AssertStmt(sExpected, ParseStmt(pySrc));
+        }
     }
 }

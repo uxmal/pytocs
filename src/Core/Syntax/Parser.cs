@@ -965,16 +965,26 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
             else
             {
-                Exp? rhs = null;
+                var rhsStack = new Stack<Exp>();
                 while (PeekAndDiscard(TokenType.EQ))
                 {
+                    Exp r;
                     if (Peek(TokenType.Yield))
-                        rhs = yield_expr();
+                        r = yield_expr();
                     else
-                        rhs = testlist_star_expr();
+                        r = testlist_star_expr();
+                    rhsStack.Push(r);
                 }
-                if (rhs != null)
-                    lhs = new AssignExp(lhs, Op.Assign, rhs, filename, lhs.Start, rhs.End);
+                if (rhsStack.Count > 0)
+                {
+                    Exp e = rhsStack.Pop();
+                    while (rhsStack.Count > 0)
+                    {
+                        var ee = rhsStack.Pop();
+                        e = new AssignExp(ee, Op.Assign, e, filename, ee.Start, e.End);
+                    }
+                    lhs = new AssignExp(lhs, Op.Assign, e, filename, lhs.Start, e.End);
+                }
             }
             return new ExpStatement(lhs, filename, lhs.Start, lhs.End);
         }
@@ -1044,7 +1054,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         //testlist_star_expr: (test|star_expr) (',' (test|star_expr))* [',']
         public Exp testlist_star_expr()
         {
-            List<Exp> exprs = new List<Exp>();
+            List<Exp> exprs = new();
             bool forceSingletonTuple = false;
             for (; ; )
             {

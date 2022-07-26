@@ -54,6 +54,7 @@ namespace Pytocs.Core.Translate
             { Op.Complement, CodeOperatorType.Complement },
             { Op.IDiv, CodeOperatorType.Div },
             { Op.Xor, CodeOperatorType.BitXor },
+            { Op.Assign, CodeOperatorType.Assign },
             { Op.AugAdd, CodeOperatorType.AddEq },
             { Op.AugSub, CodeOperatorType.SubEq },
             { Op.AugMul, CodeOperatorType.MulEq },

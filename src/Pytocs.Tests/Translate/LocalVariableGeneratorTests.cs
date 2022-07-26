@@ -14,7 +14,6 @@
 //  limitations under the License.
 #endregion
 
-#if DEBUG
 using Xunit;
 using Pytocs.Core.CodeModel;
 using Pytocs.Core.Syntax;
@@ -283,6 +282,25 @@ def foo():
 ";
             Assert.Equal(sExp, XlatMember(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Lv_Assign_Assign))]
+        public void Lv_Assign_Assign()
+        {
+            var pySrc = @"
+def func():
+    x = y = z = other_func(3)
+    yet_another_func(x, y, z)
+";
+            var sExpected =
+@"public static object func() {
+    object z;
+    object y;
+    var x = y = (z = other_func(3));
+    yet_another_func(x, y, z);
+}
+
+";
+            Assert.Equal(sExpected, XlatMember(pySrc));
+        }
     }
 }
-#endif

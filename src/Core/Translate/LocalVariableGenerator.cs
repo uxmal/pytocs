@@ -168,8 +168,8 @@ namespace Pytocs.Core.Translate
                 if (this.globals.Contains(id.Name))
                     return 0;
                 EnsurePath(id);
-                return 0;
             }
+            AnalyzeExp(this.path, ass.Source);
             return 0;
         }
 
