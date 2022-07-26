@@ -6,52 +6,25 @@
     <RootNamespace>Pytocs.Gui</RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Update="**\*.xaml.cs">
-      <DependentUpon>%(Filename)</DependentUpon>
-    </Compile>
-    <EmbeddedResource Include="**\*.xaml">
-      <SubType>Designer</SubType>
-    </EmbeddedResource>
-  </ItemGroup>
-  <ItemGroup>
-    <None Remove="MainWindow.xaml" />
-    <None Remove="FolderConverterTab.xaml" />
-    <None Remove="SnippetConverterTab.xaml" />
-  </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Avalonia" Version="0.10.6" />
-    <PackageReference Include="Avalonia.Desktop" Version="0.10.6" />
-    <PackageReference Include="TextCopy" Version="4.3.1" />
+    <PackageReference Include="Avalonia" Version="0.10.17" />
+    <PackageReference Include="Avalonia.Desktop" Version="0.10.17" />
+    <PackageReference Include="Avalonia.ReactiveUI" Version="0.10.14" />
+    <PackageReference Include="TextCopy" Version="6.1.0" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Core\Core.csproj" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Update="FolderConverterTab.xaml.cs">
-      <DependentUpon>FolderConverterTab.xaml</DependentUpon>
-    </Compile>
     <Compile Update="Resources.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Update="SnippetConverterTab.xaml.cs">
-      <DependentUpon>SnippetConverterTab.xaml</DependentUpon>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Update="MainWindow.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </EmbeddedResource>
-    <EmbeddedResource Update="FolderConverterTab.xaml">
-      <Generator>MSBuild:Compile</Generator>
-    </EmbeddedResource>
     <EmbeddedResource Update="Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-    <EmbeddedResource Update="SnippetConverterTab.xaml">
-      <Generator>MSBuild:Compile</Generator>
     </EmbeddedResource>
   </ItemGroup>
 </Project>
