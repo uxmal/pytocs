@@ -27,20 +27,14 @@ after_build:
         mkdir $env:artifacts_dir;
         ;
         <# zip pytocs.exe, append version and short hash #>;
-        "[after_build] compressing pytocs.exe (.NET Framework)...";
+        "[after_build] compressing pytocs.exe (.NET 6.0)...";
         cp -r ./assets/cli-full ./src/Cli/bin/$env:CONFIGURATION/net6.0/.;
         7z a $env:artifacts_dir/pytocs-cli-net6.0-$versionCli-$shortHash.zip ./src/Cli/bin/$env:CONFIGURATION/net6.0/.;
-        "[after_build] compressing pytocs.dll (.NET Core)...";
-        cp -r ./assets/cli-core ./src/Cli/bin/$env:CONFIGURATION/netcoreapp2.1/.;
-        7z a $env:artifacts_dir/pytocs-cli-netcore21-$versionCli-$shortHash.zip ./src/Cli/bin/$env:CONFIGURATION/netcoreapp2.1/.;
         ;
         <# zip Pytocs.Gui.exe, append version and short hash #>;
-        "[after_build] compressing Pytocs.Gui (.NET Framework)...";
+        "[after_build] compressing Pytocs.Gui (.NET 6.0)...";
         cp -r ./assets/gui-full ./src/Gui/bin/$env:CONFIGURATION/net6.0/.;
         7z a $env:artifacts_dir/pytocs-gui-net6.0-$versionGui-$shortHash.zip ./src/Gui/bin/$env:CONFIGURATION/net6.0/.;
-        "[after_build] compressing Pytocs.Gui (.NET Core)...";
-        cp -r ./assets/gui-core ./src/Gui/bin/$env:CONFIGURATION/netcoreapp2.1/.;
-        7z a $env:artifacts_dir/pytocs-gui-netcore21-$versionGui-$shortHash.zip ./src/Gui/bin/$env:CONFIGURATION/netcoreapp2.1/.;
         ;
 
 test_script:
