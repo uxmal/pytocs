@@ -57,11 +57,10 @@ namespace Pytocs.Gui
 
         private async void BrowseSource_Click(object sender, RoutedEventArgs e)
         {
-
-            if (Avalonia.Application.Current.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+            if (this.VisualRoot is not Window window)
                 return;
             var dialog = new OpenFolderDialog();
-            var result = await dialog.ShowAsync(desktop.MainWindow);
+            var result = await dialog.ShowAsync(window);
 
             if (!string.IsNullOrWhiteSpace(result))
             {
@@ -71,11 +70,11 @@ namespace Pytocs.Gui
 
         private async void BrowseTarget_Click(object sender, RoutedEventArgs e)
         {
-            if (Avalonia.Application.Current.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+            if (this.VisualRoot is not Window window)
                 return;
 
             var dialog = new OpenFolderDialog();
-            var result = await dialog.ShowAsync(desktop.MainWindow);
+            var result = await dialog.ShowAsync(window);
 
             if (!string.IsNullOrWhiteSpace(result))
             {
