@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2018 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -19,6 +19,7 @@ using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Interactivity;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
@@ -53,10 +54,14 @@ namespace Pytocs.Gui
             AvaloniaXamlLoader.Load(this);
         }
 
+
         private async void BrowseSource_Click(object sender, RoutedEventArgs e)
         {
+
+            if (Avalonia.Application.Current.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+                return;
             var dialog = new OpenFolderDialog();
-            var result = await dialog.ShowAsync(null);
+            var result = await dialog.ShowAsync(desktop.MainWindow);
 
             if (!string.IsNullOrWhiteSpace(result))
             {
@@ -66,8 +71,11 @@ namespace Pytocs.Gui
 
         private async void BrowseTarget_Click(object sender, RoutedEventArgs e)
         {
+            if (Avalonia.Application.Current.ApplicationLifetime is not IClassicDesktopStyleApplicationLifetime desktop)
+                return;
+
             var dialog = new OpenFolderDialog();
-            var result = await dialog.ShowAsync((Window) this.Parent);
+            var result = await dialog.ShowAsync(desktop.MainWindow);
 
             if (!string.IsNullOrWhiteSpace(result))
             {
