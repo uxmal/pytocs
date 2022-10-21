@@ -3,7 +3,7 @@ version: 1.2.0.{build}
 init: 
   - git config --global core.autocrlf true 
 
-image: Visual Studio 2019
+image: Visual Studio 2022
 platform: Any CPU
 
 configuration: Debug
@@ -22,22 +22,22 @@ before_build:
 after_build:
   - ps : >-
         $shortHash = $env:APPVEYOR_REPO_COMMIT.Substring(0, 10);
-        $versionCli = ls ./src/Cli/bin/$env:CONFIGURATION/net5.0/pytocs.exe | % VersionInfo | % ProductVersion;
-        $versionGui = ls ./src/Gui/bin/$env:CONFIGURATION/net5.0/Pytocs.Gui.exe | % VersionInfo | % ProductVersion;
+        $versionCli = ls ./src/Cli/bin/$env:CONFIGURATION/net6.0/pytocs.exe | % VersionInfo | % ProductVersion;
+        $versionGui = ls ./src/Gui/bin/$env:CONFIGURATION/net6.0/Pytocs.Gui.exe | % VersionInfo | % ProductVersion;
         mkdir $env:artifacts_dir;
         ;
         <# zip pytocs.exe, append version and short hash #>;
         "[after_build] compressing pytocs.exe (.NET Framework)...";
-        cp -r ./assets/cli-full ./src/Cli/bin/$env:CONFIGURATION/net5.0/.;
-        7z a $env:artifacts_dir/pytocs-cli-net5.0-$versionCli-$shortHash.zip ./src/Cli/bin/$env:CONFIGURATION/net5.0/.;
+        cp -r ./assets/cli-full ./src/Cli/bin/$env:CONFIGURATION/net6.0/.;
+        7z a $env:artifacts_dir/pytocs-cli-net6.0-$versionCli-$shortHash.zip ./src/Cli/bin/$env:CONFIGURATION/net6.0/.;
         "[after_build] compressing pytocs.dll (.NET Core)...";
         cp -r ./assets/cli-core ./src/Cli/bin/$env:CONFIGURATION/netcoreapp2.1/.;
         7z a $env:artifacts_dir/pytocs-cli-netcore21-$versionCli-$shortHash.zip ./src/Cli/bin/$env:CONFIGURATION/netcoreapp2.1/.;
         ;
         <# zip Pytocs.Gui.exe, append version and short hash #>;
         "[after_build] compressing Pytocs.Gui (.NET Framework)...";
-        cp -r ./assets/gui-full ./src/Gui/bin/$env:CONFIGURATION/net5.0/.;
-        7z a $env:artifacts_dir/pytocs-gui-net5.0-$versionGui-$shortHash.zip ./src/Gui/bin/$env:CONFIGURATION/net5.0/.;
+        cp -r ./assets/gui-full ./src/Gui/bin/$env:CONFIGURATION/net6.0/.;
+        7z a $env:artifacts_dir/pytocs-gui-net6.0-$versionGui-$shortHash.zip ./src/Gui/bin/$env:CONFIGURATION/net6.0/.;
         "[after_build] compressing Pytocs.Gui (.NET Core)...";
         cp -r ./assets/gui-core ./src/Gui/bin/$env:CONFIGURATION/netcoreapp2.1/.;
         7z a $env:artifacts_dir/pytocs-gui-netcore21-$versionGui-$shortHash.zip ./src/Gui/bin/$env:CONFIGURATION/netcoreapp2.1/.;
@@ -46,7 +46,7 @@ after_build:
 test_script:
   - cmd: dir /s .\src\Core\bin\%CONFIGURATION%
   - cmd: 'dotnet test ./src/Pytocs.Tests/UnitTests.csproj'
- # - cmd: '%xunit20%\xunit.console ./src/Pytocs.Tests/bin/%CONFIGURATION%/net5.0/Pytocs.UnitTests.dll -appveyor'
+ # - cmd: '%xunit20%\xunit.console ./src/Pytocs.Tests/bin/%CONFIGURATION%/net6.0/Pytocs.UnitTests.dll -appveyor'
  # - cmd: python ./subjects/regressionTests.py --check-output --configuration=%CONFIGURATION%
 
 artifacts:
