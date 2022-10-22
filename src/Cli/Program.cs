@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2021 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,17 +14,14 @@
 //  limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Pytocs.Core;
 using Pytocs.Core.Translate;
 using Pytocs.Core.TypeInference;
-using Pytocs.Core.Types;
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 
 namespace Pytocs.Cli
 {
@@ -39,6 +36,11 @@ namespace Pytocs.Cli
                 var xlator = new Translator("", "module_name", fs, logger);
                 xlator.Translate("-", Console.In, Console.Out);
                 Console.Out.Flush();
+                return;
+            }
+            if (args[0] == "-v")
+            {
+                WriteVersion();
                 return;
             }
 
@@ -102,5 +104,20 @@ namespace Pytocs.Cli
                 }
             }
         }
+
+        private static void WriteVersion()
+        {
+            var x = typeof(Program).Assembly.GetCustomAttributes(typeof(AssemblyFileVersionAttribute))
+                .Cast<AssemblyFileVersionAttribute>()
+                .FirstOrDefault();
+            if (x is null)
+            {
+                Console.WriteLine("Unknown version");
+            }
+            else
+            {
+                Console.WriteLine("Pytocs command line tool, version {0}", x.Version);
+            }
         }
+    }
 }

@@ -5,6 +5,7 @@
     <OutputType>exe</OutputType>
     <AssemblyName>pytocs</AssemblyName>
     <RootNamespace>Pytocs.Cli</RootNamespace>
+	<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
   <ItemGroup>
