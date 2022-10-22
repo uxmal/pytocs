@@ -101,9 +101,9 @@ namespace Pytocs.Core.Types
 
         private IterableType Register(IterableType iterableType)
         {
-            iterableType.Names.AddSuper(analyzer.Builtins.BaseIterable.Names);
-            iterableType.Names.Path = analyzer.Builtins.BaseIterable.Names.Path;
+            iterableType.Scope.AddSuperClass(analyzer.Builtins.BaseIterable.Scope);
+            iterableType.Scope.Path = analyzer.Builtins.BaseIterable.Scope.Path;
             return iterableType;
-    }
+        }
     }
 }

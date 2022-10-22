@@ -344,12 +344,14 @@ namespace Pytocs.Core.TypeInference
 
         public DataType? LookupTypeByName(string typeName)
         {
-            if (this.DataTypes.TryGetValue(typeName, out DataType dt))
-                return dt;
-            if (this.Parent != null)
-                return Parent.LookupTypeByName(typeName);
-            else
-                return null;
+            NameScope? scope = this;
+            while (scope is { })
+            {
+                if (scope.DataTypes.TryGetValue(typeName, out DataType? dt))
+                    return dt;
+                scope = scope.Parent;
+            }
+            return null;
         }
 
         /// <summary>

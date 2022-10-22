@@ -35,7 +35,7 @@ namespace Pytocs.Core.Types
             this.Class = null;
         }
 
-        public FunType(FunctionDef func, NameScope env)
+        public FunType(FunctionDef func, NameScope? env)
         {
             this.Definition = func;
             this.scope = env;

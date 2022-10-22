@@ -417,9 +417,10 @@ namespace Pytocs.Core.Translate
                 return false;
             if (rev is CodePrimitiveExpression p)
             {
-                if (p.Value is bool)
+                object? value = p.Value;
+                if (value is bool)
                 {
-                    return (bool)p.Value;
+                    return (bool) value;
                 }
             }
             return false;

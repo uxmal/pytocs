@@ -84,7 +84,7 @@ namespace Pytocs.Core.Translate
         private IEnumerable<CodeMemberField> GenerateFields(ClassDef c)
         {
             var ct = types.TypeOf(c.name);
-            var fields = ct.Names.table.Where(m => IsField(m.Value))
+            var fields = ct.Scope.table.Where(m => IsField(m.Value))
                 .OrderBy(f => f.Key);
             foreach (var field in fields)
             {

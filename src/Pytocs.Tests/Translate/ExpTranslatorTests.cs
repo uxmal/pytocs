@@ -239,7 +239,7 @@ namespace Pytocs.UnitTests.Translate
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Ex_CompFor))]
         public void Ex_CompFor()
         {
             var pySrc = "sum(int2byte(b) for b in bytelist)";
@@ -257,11 +257,14 @@ namespace Pytocs.UnitTests.Translate
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Ex_Regression1))]
         public void Ex_Regression1()
         {
             var pySrc = "((a, s) for a in stackframe.alocs.values() for s in a._segment_list)";
-            string sExp = "stackframe.alocs.values().SelectMany(a => a._segment_list, (a,s) => Tuple.Create(a, s)).Select(a => Tuple.Create(a, s))";
+            string sExp =
+@"from a in stackframe.alocs.values()
+    from s in a._segment_list
+    select (a, s)";
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
@@ -306,19 +309,11 @@ namespace Pytocs.UnitTests.Translate
         {
             var pySrc = "{(a.addr,b.addr) for a,b in fdiff.block_matches}";
             var sExp =
-@"(from _tup_1 in fdiff.block_matches.Chop((a,b) => (a, b))
+@"(from _tup_1 in fdiff.block_matches
     let a = _tup_1.Item1
     let b = _tup_1.Item2
     select (a.addr, b.addr)).ToHashSet()";
 
-            Assert.Equal(sExp, Xlat(pySrc));
-        }
-
-        [Fact]
-        public void Ex_SetComprehension3()
-        {
-            var pySrc = "{(a.addr ,b.addr) for a,b in fdiff.block_matches}";
-            var sExp = "fdiff.block_matches.Chop((a,b) => Tuple.Create(a.addr, b.addr)).ToHashSet()";
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
@@ -637,15 +632,17 @@ namespace Pytocs.UnitTests.Translate
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Ex_NestedForIfComprehensions))]
         public void Ex_NestedForIfComprehensions()
         {
             var pySrc = "[state for (stash, states) in self.simgr.stashes.items() if (stash != 'pruned') for state in states ]";
-            var sExp = "this.simgr.stashes.items()" +
-                ".Where(Tuple.Create(stash, states) => stash != \"pruned\")" +
-                ".SelectMany((stash,states) => state)" +
-                ".Select(Tuple.Create(stash, states) => state)" +
-                ".ToList()";
+            var sExp =
+@"(from _tup_1 in this.simgr.stashes.items()
+    let stash = _tup_1.Item1
+    let states = _tup_1.Item2
+    where stash != ""pruned""
+    from state in states
+    select state).ToList()";
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
@@ -706,7 +703,7 @@ namespace Pytocs.UnitTests.Translate
         {
             var pySrc = "[state for (stash, states) in self.simgr.stashes.items() if stash != 'pruned' for state in states]";
             var sExp =
-@"(from _tup_1 in this.simgr.stashes.items().Chop((stash,states) => (stash, states))
+@"(from _tup_1 in this.simgr.stashes.items()
     let stash = _tup_1.Item1
     let states = _tup_1.Item2
     where stash != ""pruned""
@@ -716,16 +713,15 @@ namespace Pytocs.UnitTests.Translate
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        //$TODO: this is not strictly correct, but at least it doesn't crash anymore
         [Fact(DisplayName = nameof(Ex_nested_for_comprehension))]
         public void Ex_nested_for_comprehension()
         {
             var pySrc = "((a, b) for a,b in list for a,b in (a,b)))";
             var sExp =
-@"from _tup_1 in list.Chop((a,b) => (a, b))
+@"from _tup_1 in list
     let a = _tup_1.Item1
     let b = _tup_1.Item2
-    from _tup_2 in (a, b).Chop((a,b) => (a, b))
+    from _tup_2 in (a, b)
     let a = _tup_2.Item1
     let b = _tup_2.Item2
     select (a, b)";

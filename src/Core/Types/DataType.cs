@@ -35,7 +35,7 @@ namespace Pytocs.Core.Types
 
         public NameScope Scope { get; set; }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             return object.ReferenceEquals(this, obj);
         }

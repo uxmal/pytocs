@@ -55,13 +55,13 @@ namespace Pytocs.UnitTests.TypeInference
                 int i;
                 for (i = 0; i < Math.Min(aExp.Length, aActual.Length); ++i)
                 {
-                    Assert.Equal(aExp[i], aActual[i]);
+                    Assert.Equal($"{i}:{aExp[i]}", $"{i}:{aActual[i]}");
                 }
                 Assert.False(i < aExp.Length, $"Fewer than the expected {aExp.Length} lines.");
                 Assert.True(i > aExp.Length, $"More than the expected {aExp.Length} lines.");
                 Assert.Equal(sExp, BindingsToString());
-                }
             }
+        }
 
         [Fact]
         public void TypeAn_Empty()
@@ -437,7 +437,7 @@ class Derived(Base):
             ExpectBindings(sExp);
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(TypeAn_call_Ctor))]
         public void TypeAn_call_Ctor()
         {
             fs.Dir("foo")
@@ -456,7 +456,9 @@ class Derived(Base):
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])
 (binding:kind=CLASS:node=Foo:type=<Foo>:qname=.foo.test.Foo:refs=[Foo])
 (binding:kind=CONSTRUCTOR:node=__init__:type=(Foo, str) -> None:qname=.foo.test.Foo.__init__:refs=[])
+(binding:kind=PARAMETER:node=self:type=<Foo>:qname=.foo.test.Foo.__init__.self:refs=[])
 (binding:kind=METHOD:node=bar:type=Foo -> Foo:qname=.foo.test.Foo.bar:refs=[])
+(binding:kind=PARAMETER:node=self:type=<Foo>:qname=.foo.test.Foo.bar.self:refs=[])
 (binding:kind=PARAMETER:node=self:type=Foo:qname=.foo.test.Foo.__init__.self:refs=[])
 (binding:kind=PARAMETER:node=name:type=str:qname=.foo.test.Foo.__init__.name:refs=[name])
 (binding:kind=PARAMETER:node=self:type=Foo:qname=.foo.test.Foo.bar.self:refs=[])

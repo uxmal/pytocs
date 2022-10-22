@@ -1,5 +1,5 @@
 #region License
-//  Copyright 2015 John Källén
+//  Copyright 2015-2022 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -53,8 +53,6 @@ namespace Pytocs.Core.TypeInference
             return new Url(REFERENCE_URL + path);
         }
 
-
-
         public static Url newDataModelUrl(string path)
         {
             return new Url(DATAMODEL_URL + path);
@@ -75,6 +73,8 @@ namespace Pytocs.Core.TypeInference
         public InstanceType BaseListInst;
         public ClassType BaseArray;
         public ClassType BaseDict;
+        public ClassType BaseIterable;
+        public ClassType BaseStr;
         public ClassType BaseTuple;
         public ClassType BaseModule;
         public ClassType BaseFile;
@@ -89,7 +89,7 @@ namespace Pytocs.Core.TypeInference
         public ClassType Datetime_time;
         public ClassType Datetime_timedelta;
         public ClassType Datetime_tzinfo;
-        public InstanceType Time_struct_time;
+        public InstanceType? Time_struct_time;
 
 
 
@@ -115,16 +115,34 @@ namespace Pytocs.Core.TypeInference
             return newClass(name, table, null);
         }
 
-        ClassType newClass(string name, NameScope table,
-                           ClassType superClass, params ClassType[] moreSupers)
+        private ClassType newGenericClass(
+            string name,
+            int arity,
+            NameScope scope,
+            params ClassType[] superClasses)
         {
-            var path = table.ExtendPath(analyzer, name);
-            ClassType t = new ClassType(name, table, path, superClass);
-            foreach (ClassType c in moreSupers)
+            var path = scope.ExtendPath(analyzer, name);
+            var cls = ClassType.CreateUnboundGeneric(name, arity, scope, path);
+            foreach (ClassType super in superClasses)
             {
-                t.AddSuper(c);
+                cls.AddSuper(super);
             }
-            return t;
+            return cls;
+        }
+
+        private ClassType newClass(
+            string name,
+            NameScope scope,
+            ClassType? superClass, 
+            params ClassType[] moreSupers)
+        {
+            var path = scope.ExtendPath(analyzer, name);
+            var cls = new ClassType(name, scope, path, superClass);
+            foreach (ClassType super in moreSupers)
+            {
+                cls.AddSuper(super);
+            }
+            return cls;
         }
 
         ModuleType newModule(string name)
@@ -193,11 +211,10 @@ namespace Pytocs.Core.TypeInference
                 outer.modules[name] = this;
             }
 
-            /**
-             * Lazily load the module.
-             */
-
-            public ModuleType getModule()
+            /// <summary>
+            /// Lazily load the module.
+            /// </summary>
+            public ModuleType? getModule()
             {
                 if (module == null)
                 {
@@ -346,11 +363,13 @@ namespace Pytocs.Core.TypeInference
             objectType = newClass("object", bt);
             BaseType = newClass("type", bt, objectType);
             BaseTuple = newClass("tuple", bt, objectType);
-            BaseList = newClass("list", bt, objectType);
+            BaseList = newGenericClass("list", 1, bt, objectType);
             BaseListInst = new InstanceType(BaseList);
             BaseArray = newClass("array", bt);
             BaseDict = newClass("dict", bt, objectType);
+            BaseIterable = newClass("iter", bt, objectType);
             ClassType numClass = newClass("int", bt, objectType);
+            BaseStr = newClass("str", bt, objectType);
             BaseModule = newClass("module", bt);
             BaseFile = newClass("file", bt, objectType);
             BaseFileInst = new InstanceType(BaseFile);
@@ -366,6 +385,7 @@ namespace Pytocs.Core.TypeInference
             buildArrayType();
             buildListType();
             buildDictType();
+            buildBoolType();
             buildNumTypes();
             buildStrType();
             buildModuleType();
@@ -541,15 +561,18 @@ namespace Pytocs.Core.TypeInference
             {
                 BaseList.Scope.AddExpressionBinding(analyzer, m, newLibUrl("stdtypes"), newFunc(DataType.Int), BindingKind.METHOD).IsBuiltin = true;
             }
+            analyzer.GlobalTable.DataTypes.Add("List", newList());
         }
-
-
 
         Url numUrl()
         {
             return newLibUrl("stdtypes", "typesnumeric");
         }
 
+        private void buildBoolType()
+        {
+            analyzer.GlobalTable.DataTypes.Add("bool", DataType.Bool);
+        }
 
         void buildNumTypes()
         {
@@ -569,6 +592,9 @@ namespace Pytocs.Core.TypeInference
             {
                 bft.AddExpressionBinding(analyzer, m, numUrl(), newFunc(DataType.Float), BindingKind.METHOD).IsBuiltin = true;
             }
+            analyzer.GlobalTable.DataTypes.Add("float", DataType.Float);
+
+
             NameScope bnt = DataType.Int.Scope;
             string[] num_methods_num = {
                 "__abs__", "__add__", "__and__",
@@ -592,6 +618,7 @@ namespace Pytocs.Core.TypeInference
             bnt.AddExpressionBinding(analyzer, "__getnewargs__", numUrl(), newFunc(newTuple(DataType.Int)), BindingKind.METHOD).IsBuiltin = true;
             bnt.AddExpressionBinding(analyzer, "hex", numUrl(), newFunc(DataType.Str), BindingKind.METHOD).IsBuiltin = true;
             bnt.AddExpressionBinding(analyzer, "conjugate", numUrl(), newFunc(DataType.Complex), BindingKind.METHOD).IsBuiltin = true;
+            analyzer.GlobalTable.DataTypes.Add("int", DataType.Int);
 
             NameScope bct = DataType.Complex.Scope;
             string[] complex_methods = {
@@ -617,6 +644,8 @@ namespace Pytocs.Core.TypeInference
             bct.AddExpressionBinding(analyzer, "__getnewargs__", numUrl(), newFunc(newTuple(DataType.Complex)), BindingKind.METHOD).IsBuiltin = true;
             bct.AddExpressionBinding(analyzer, "imag", numUrl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
             bct.AddExpressionBinding(analyzer, "real", numUrl(), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
+            analyzer.GlobalTable.DataTypes.Add("complex", DataType.Complex);
+
         }
 
 
@@ -659,6 +688,8 @@ namespace Pytocs.Core.TypeInference
             }
             DataType.Str.Scope.AddExpressionBinding(analyzer, "partition", newLibUrl("stdtypes"),
                     newFunc(newTuple(DataType.Str)), BindingKind.METHOD).IsBuiltin = true;
+
+            analyzer.GlobalTable.DataTypes.Add("str", DataType.Str);
         }
 
 

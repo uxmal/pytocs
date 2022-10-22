@@ -1,5 +1,5 @@
 #region License
-//  Copyright 2015-2021 John Källén
+//  Copyright 2015-2022 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -23,8 +23,8 @@ namespace Pytocs.Core.Types
 {
     public class ClassType : DataType
     {
-        public string name;
-        public InstanceType? instance;
+        private DataType[]? genericArguments;
+
 
         public ClassType(string name, NameScope? parent, string? path)
         {
@@ -48,6 +48,18 @@ namespace Pytocs.Core.Types
                 AddSuper(superClass);
             }
         }
+
+        public static ClassType CreateUnboundGeneric(string name, int arity, NameScope parent, string? path)
+        {
+            var ct = new ClassType(name, parent, path);
+            ct.genericArguments = new DataType[arity];
+            return ct;
+        }
+
+        public string name;
+        public InstanceType? instance;
+        public bool IsClosedGenericType { get; set; }
+
 
         public override T Accept<T>(IDataTypeVisitor<T> visitor)
         {
@@ -78,7 +90,7 @@ namespace Pytocs.Core.Types
             return instance;
         }
 
-        public override bool Equals(object other)
+        public override bool Equals(object? other)
         {
             return object.ReferenceEquals(this, other);
         }
@@ -90,7 +102,19 @@ namespace Pytocs.Core.Types
 
         public override DataType MakeGenericType(params DataType[] typeArguments)
         {
-            throw new NotImplementedException();
-    }
+            if (genericArguments is null)
+                throw new InvalidOperationException("This class is not generic.");
+            if (IsClosedGenericType)
+                throw new InvalidOperationException("This generic class has been closed.");
+            if (genericArguments.Length != typeArguments.Length)
+                throw new ArgumentException(
+                    $"Expected {genericArguments.Length} type arguments, but got {typeArguments.Length}.",
+                    nameof(typeArguments));
+            var ctClosed = new ClassType(this.name, Scope.Parent, this.Scope.Path);
+            //$REVIEW: assume we own typeArguments. Otherwise we may need to copy.
+            ctClosed.genericArguments = genericArguments;
+            ctClosed.IsClosedGenericType = true;
+            return ctClosed;
+        }
     }
 }

@@ -95,19 +95,9 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitCompFor(CompFor compFor)
         {
-            var v = compFor.variable.Accept(this);
-            var c = Translate(v, compFor);
-            if (!IsIdentityProjection(compFor, compFor.projection))
-            {
-                var mr = m.MethodRef(c, "Select");
-                var s = m.Appl(mr, new CodeExpression[] {
-                m.Lambda(
-                    new CodeExpression[] { v },
-                    compFor.projection.Accept(this))
-                });
-                c = s;
-            }
-            return c;
+            var p = compFor.projection.Accept(this);
+            var cf = TranslateToLinq(p, compFor);
+            return cf;
         }
 
         public CodeExpression VisitCompIf(CompIf i)
@@ -167,13 +157,13 @@ namespace Pytocs.Core.Translate
                 m.EnsureImports(nm);
                 var e = m.New(csClass, args);
                 return e;
-                }
+            }
             if (fn is CodeVariableReferenceExpression id)
-                {
+            {
                 var e = intrinsic.MaybeTranslate(id.Name, appl, args);
                 if (e != null)
                     return e;
-                }
+            }
             else
             {
                 if (fn is CodeFieldReferenceExpression field)
@@ -414,7 +404,7 @@ namespace Pytocs.Core.Translate
             {
             m.EnsureImport(TypeReferenceTranslator.LinqNamespace);
             var compFor = (CompFor) sc.Collection;
-            var v = sc.Projection.Accept(this);
+            var v = compFor.projection.Accept(this);
             var c = TranslateToLinq(v, compFor);
                 return m.Appl(
                     m.MethodRef(
@@ -575,7 +565,7 @@ namespace Pytocs.Core.Translate
         {
             m.EnsureImport(TypeReferenceTranslator.LinqNamespace);
             var compFor = (CompFor) lc.Collection;
-            var v = lc.Projection.Accept(this);
+            var v = compFor.projection.Accept(this);
             var c = TranslateToLinq(v, compFor);
             return m.Appl(
                 m.MethodRef(
@@ -585,11 +575,12 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitIterableUnpacker(IterableUnpacker unpacker)
         {
-            var compFor = (CompFor)lc.Collection;
-            var v = compFor.variable.Accept(this);
-            var c = lc.Collection.Accept(this);
-            var l = m.ApplyMethod(c, "ToList");
-            return l;
+            throw new NotImplementedException();
+            //var compFor = (CompFor)lc.Collection;
+            //var v = compFor.variable.Accept(this);
+            //var c = lc.Collection.Accept(this);
+            //var l = m.ApplyMethod(c, "ToList");
+            //return l;
         }
 
         public CodeExpression VisitLambda(Lambda l)
@@ -614,7 +605,7 @@ namespace Pytocs.Core.Translate
                     queryClauses.Add(m.Where(e));
                 }
                 else if (iter is CompFor join)
-            {
+                {
                     e = join.collection.Accept(this);
                     From(join.variable, e, queryClauses);
                 }
@@ -630,43 +621,39 @@ namespace Pytocs.Core.Translate
             switch (variable)
             {
             case Identifier id:
-            {
-                var f = m.From(id.Accept(this), collection);
-                queryClauses.Add(f);
-                break;
-        }
+                {
+                    var f = m.From(id.Accept(this), collection);
+                    queryClauses.Add(f);
+                    break;
+                }
             case ExpList expList:
-            {
-                var vars = expList.Expressions.Select(v => v.Accept(this)).ToArray();
-                var type = MakeTupleType(expList.Expressions);
-                var it = gensym.GenSymAutomatic("_tup_", type, false);
-                var f = m.From(it, m.ApplyMethod(collection, "Chop",
-                    m.Lambda(vars,
-                    MakeTupleCreate(vars))));
-                queryClauses.Add(f);
-                for (int i = 0; i < vars.Length; ++i)
                 {
-                    var l = m.Let(vars[i], m.Access(it, $"Item{i + 1}"));
-                    queryClauses.Add(l);
+                    var vars = expList.Expressions.Select(v => v.Accept(this)).ToArray();
+                    var type = MakeTupleType(expList.Expressions);
+                    var it = gensym.GenSymAutomatic("_tup_", type, false);
+                    var f = m.From(it, collection);
+                    queryClauses.Add(f);
+                    for (int i = 0; i < vars.Length; ++i)
+                    {
+                        var l = m.Let(vars[i], m.Access(it, $"Item{i + 1}"));
+                        queryClauses.Add(l);
+                    }
+                    break;
                 }
-                break;
-            }
             case PyTuple tuple:
-            {
-                var vars = tuple.values.Select(v => v.Accept(this)).ToArray();
-                var type = MakeTupleType(tuple.values);
-                var it = gensym.GenSymAutomatic("_tup_", type, false);
-                var f = m.From(it, m.ApplyMethod(collection, "Chop",
-                    m.Lambda(vars,
-                    MakeTupleCreate(vars))));
-                queryClauses.Add(f);
-                for (int i = 0; i < vars.Length; ++i)
                 {
-                    var l = m.Let(vars[i], m.Access(it, $"Item{i + 1}"));
-                    queryClauses.Add(l);
+                    var vars = tuple.values.Select(v => v.Accept(this)).ToArray();
+                    var type = MakeTupleType(tuple.values);
+                    var it = gensym.GenSymAutomatic("_tup_", type, false);
+                    var f = m.From(it, collection);
+                    queryClauses.Add(f);
+                    for (int i = 0; i < vars.Length; ++i)
+                    {
+                        var l = m.Let(vars[i], m.Access(it, $"Item{i + 1}"));
+                        queryClauses.Add(l);
+                    }
+                    break;
                 }
-                break;
-            }
             default:
                 throw new NotImplementedException(variable.GetType().Name);
             }

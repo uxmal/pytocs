@@ -968,8 +968,9 @@ namespace Pytocs.Core.Syntax
         public Exp collection;
         public Exp projection;
 
-        public CompFor(Exp variable, Exp collection, string filename, int start, int end) : base(filename, start, end)
+        public CompFor(Exp projection, Exp variable, Exp collection, string filename, int start, int end) : base(filename, start, end)
         {
+            this.projection = projection;
             this.variable = variable;
             this.collection = collection;
         }

@@ -75,7 +75,7 @@ namespace Pytocs.Core.TypeInference
                     if (a.Src != null)
                     {
                         DataType valueType = a.Src!.Accept(this);
-            scope.BindByScope(analyzer, a.Dst, valueType);
+                        scope.BindByScope(analyzer, a.Dst, valueType);
                     }
                 }
             }
@@ -163,7 +163,7 @@ namespace Pytocs.Core.TypeInference
             {
                 analyzer.AddProblem(a.FieldName, "attribute not found in type: " + targetType);
                 DataType t = DataType.Unknown;
-                t.Names.Path = targetType.Scope.ExtendPath(analyzer, a.FieldName.Name);
+                t.Scope.Path = targetType.Scope.ExtendPath(analyzer, a.FieldName.Name);
                 return t;
             }
             else
@@ -678,7 +678,7 @@ namespace Pytocs.Core.TypeInference
             scope.Bind(analyzer, c.name, classType, BindingKind.CLASS);
             if (c.body != null)
             {
-                var xform = new TypeCollector(classType.Names, this.analyzer);
+                var xform = new TypeCollector(classType.Scope, this.analyzer);
                 c.body.Accept(xform);
             }
             return DataType.Cont;
@@ -851,7 +851,7 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitFunctionDef(FunctionDef f, bool isAsync)
         {
-            NameScope env = scope.Forwarding;
+            NameScope? env = scope.Forwarding;
             FunType fun = new FunType(f, env);
             fun.Scope.Parent = this.scope;
             fun.Scope.Path = scope.ExtendPath(analyzer, f.name.Name);
@@ -876,10 +876,10 @@ namespace Pytocs.Core.TypeInference
             var firstArgType = FirstArgumentType(f, fun, ct);
             if (firstArgType != null)
             {
-                fun.Names.Bind(analyzer, f.parameters[0].Id!, firstArgType, BindingKind.PARAMETER);
+                fun.Scope.Bind(analyzer, f.parameters[0].Id!, firstArgType, BindingKind.PARAMETER);
             }
 
-            f.body.Accept(new TypeCollector(fun.Names, this.analyzer));
+            f.body.Accept(new TypeCollector(fun.Scope, this.analyzer));
             return DataType.Cont;
         }
 
@@ -1044,7 +1044,7 @@ namespace Pytocs.Core.TypeInference
                 foreach (var a in i.AliasedNames)
                 {
                     var idFirst = a.orig.segs[0];
-                    var bs = dtModule.Scope.LookupBindingsOf(first.Name);
+                    var bs = dtModule.Scope.LookupBindingsOf(idFirst.Name);
                     if (bs != null)
                     {
                         if (a.alias != null)
@@ -1218,7 +1218,7 @@ namespace Pytocs.Core.TypeInference
             scope.AddModuleBinding(analyzer, analyzer.GetModuleQname(m.Filename!), m, mt, BindingKind.MODULE);
             if (m.Body != null)
             {
-                m.Body.Accept(new TypeCollector(mt.Names, this.analyzer));
+                m.Body.Accept(new TypeCollector(mt.Scope, this.analyzer));
             }
             return mt;
         }
@@ -1576,9 +1576,9 @@ namespace Pytocs.Core.TypeInference
         /// <summary>
         /// Resolves each element, and constructs a result list.
         /// </summary>
-        private List<DataType?>? ResolveList(IEnumerable<Exp?> nodes)
+        private List<DataType?>? ResolveList(IEnumerable<Exp?>? nodes)
         {
-            if (nodes == null)
+            if (nodes is null)
             {
                 return null;
             }
@@ -1611,7 +1611,9 @@ namespace Pytocs.Core.TypeInference
         /// </summary>
         private DataType TranslateAnnotation(Exp exp, NameScope scope)
         {
-            if (exp is ArrayRef aref)
+            switch (exp)
+            {
+            case ArrayRef aref:
             {
                 // Generic types are expressed like: GenericType[TypeArg1,TypeArg2,...]
                 var dts = new List<DataType>();
@@ -1620,7 +1622,7 @@ namespace Pytocs.Core.TypeInference
                     if (sub.Lower != null)
                     {
                         dts.Add(TranslateAnnotation(sub.Lower, scope));
-    }
+                    }
                     else
                     {
                         dts.Add(DataType.Unknown);
@@ -1634,7 +1636,7 @@ namespace Pytocs.Core.TypeInference
                 }
                 return genericType.MakeGenericType(dts.ToArray());
             }
-            if (exp is Identifier id)
+            case Identifier id:
             {
                 var dt = scope.LookupTypeByName(id.Name);
                 if (dt is null)
@@ -1644,8 +1646,10 @@ namespace Pytocs.Core.TypeInference
                 }
                 return dt;
             }
-            analyzer.AddProblem(exp, string.Format(Resources2.ErrUnknownTypeInTypeAnnotation, exp));
-            return DataType.Unknown;
+            default:
+                analyzer.AddProblem(exp, string.Format(Resources2.ErrUnknownTypeInTypeAnnotation, exp));
+                return DataType.Unknown;
+            }
         }
     }
 

@@ -77,7 +77,7 @@ namespace Pytocs.Core.Types
             return new TupleType(positional.ToArray());
         }
 
-        public override bool Equals(object other)
+        public override bool Equals(object? other)
         {
             var dtOther = other as DataType;
             if (dtOther == null)

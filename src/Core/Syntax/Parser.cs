@@ -2210,11 +2210,11 @@ eval_input: testlist NEWLINE* ENDMARKER
             Exp e2;
             if (Peek(TokenType.For))
             {
-                e2 = comp_for();
+                e2 = comp_for(e!);
                 if (tuple)
                     return new GeneratorExp(e!, e2, filename, e!.Start, e2.End);
                 else
-                    return new ListComprehension(e!, e2, filename, e!.Start, e2.End);
+                    return new ListComprehension(e2, filename, e!.Start, e2.End);
             }
             else
             {
@@ -2605,13 +2605,13 @@ eval_input: testlist NEWLINE* ENDMARKER
         public CompFor comp_for(Exp projection)
         {
             bool async = PeekAndDiscard(TokenType.Async);
-            var compFor = sync_comp_for();
+            var compFor = sync_comp_for(projection);
             compFor.Async = async;
             return compFor;
         }
 
         //sync_comp_for: 'for' exprlist 'in' or_test [comp_iter]
-        public CompFor sync_comp_for()
+        public CompFor sync_comp_for(Exp projection)
         {
             var start = Expect(TokenType.For).Start;
             var exprs = exprlist();
@@ -2624,11 +2624,8 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 next = comp_iter();
             }
-            return new CompFor(filename, (projection != null? projection.Start : start), (next ?? collection).End)
+            return new CompFor(projection, exprs, collection, filename, (projection != null? projection.Start : start), (next ?? collection).End)
             {
-                variable = exprs,
-                projection = projection,
-                collection = collection,
                 next = next,
             };
         }
