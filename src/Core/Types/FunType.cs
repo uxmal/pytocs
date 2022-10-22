@@ -41,7 +41,7 @@ namespace Pytocs.Core.Types
             this.scope = env;
         }
 
-        public FunType(Lambda lambda, NameScope env)
+        public FunType(Lambda lambda, NameScope? env)
         {
             this.Lambda = lambda;
             this.scope = env;
@@ -104,7 +104,7 @@ namespace Pytocs.Core.Types
             this.defaultTypes = defaultTypes;
         }
 
-        public override bool Equals(object other)
+        public override bool Equals(object? other)
         {
             if (other is FunType fo)
             {

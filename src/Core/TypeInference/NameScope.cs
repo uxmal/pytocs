@@ -27,23 +27,13 @@ namespace Pytocs.Core.TypeInference
     /// </summary>
     public class NameScope
     {
-        public enum StateType
-        {
-            CLASS,
-            INSTANCE,
-            FUNCTION,
-            MODULE,
-            GLOBAL,
-            SCOPE
-        }
-
         public IDictionary<string, ISet<Binding>> table = new Dictionary<string, ISet<Binding>>(0);
         public IDictionary<string, DataType> DataTypes { get; } = new Dictionary<string, DataType>(); 
         public NameScope? Parent { get; set; }      // all are non-null except global table
         public NameScope? Forwarding { get; set; }  // link to the closest non-class scope, for lifting functions out
         private List<NameScope>? superClasses;
         public ISet<string>? globalNames;
-        public StateType stateType { get; set; }
+        public NameScopeType stateType { get; set; }
         public string Path { get; set; }
 
         /// <summary>
@@ -51,13 +41,13 @@ namespace Pytocs.Core.TypeInference
         /// </summary>
         public DataType? DataType { get; set; }
 
-        public NameScope(NameScope? parent, StateType type)
+        public NameScope(NameScope? parent, NameScopeType type)
         {
             this.Parent = parent;
             this.stateType = type;
             this.Path = "";
 
-            if (type == StateType.CLASS)
+            if (type == NameScopeType.CLASS)
             {
                 this.Forwarding = parent?.Forwarding;
             }
@@ -314,7 +304,7 @@ namespace Pytocs.Core.TypeInference
         /// </summary>
         public DataType? LookupTypeOf(string name)
         {
-            ISet<Binding> bs = LookupBindingsOf(name);
+            ISet<Binding>? bs = LookupBindingsOf(name);
             if (bs is null)
             {
                 return null;
@@ -332,7 +322,7 @@ namespace Pytocs.Core.TypeInference
         public DataType? LookupAttributeType(string attr)
         {
             ISet<Binding>? bs = LookupAttribute(attr);
-            if (bs == null)
+            if (bs is null)
             {
                 return null;
             }
@@ -371,7 +361,7 @@ namespace Pytocs.Core.TypeInference
         /// <summary>
         /// Find a symbol table of a certain type in the enclosing scopes.
         /// </summary>
-        public NameScope? GetClosestStateOfType(StateType type)
+        public NameScope? GetClosestStateOfType(NameScopeType type)
         {
             if (stateType == type)
             {
@@ -392,7 +382,7 @@ namespace Pytocs.Core.TypeInference
          */
         public NameScope GetGlobalTable()
         {
-            NameScope? result = GetClosestStateOfType(StateType.MODULE);
+            NameScope? result = GetClosestStateOfType(NameScopeType.MODULE);
             Debug.Assert(result != null, "Couldn't find global table.");
             return result;
         }
@@ -501,12 +491,12 @@ namespace Pytocs.Core.TypeInference
         public void BindByScope(Analyzer analyzer, Exp target, DataType rvalue)
         {
             BindingKind kind;
-            if (this.stateType == NameScope.StateType.FUNCTION)
+            if (this.stateType == NameScopeType.FUNCTION)
             {
                 kind = BindingKind.VARIABLE;
             }
-            else if (this.stateType == NameScope.StateType.CLASS ||
-                  this.stateType == NameScope.StateType.INSTANCE)
+            else if (this.stateType == NameScopeType.CLASS ||
+                  this.stateType == NameScopeType.INSTANCE)
             {
                 kind = BindingKind.ATTRIBUTE;
             }
@@ -686,5 +676,15 @@ namespace Pytocs.Core.TypeInference
         {
             return n.Accept(new TypeCollector(s, analyzer));
         }
+    }
+
+    public enum NameScopeType
+    {
+        CLASS,
+        INSTANCE,
+        FUNCTION,
+        MODULE,
+        GLOBAL,
+        SCOPE
     }
 }

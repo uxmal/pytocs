@@ -40,11 +40,11 @@ namespace Pytocs.Core.TypeInference
         /// </summary>
         Dictionary<Node,List<Binding>> References { get; }
 
-        Binding GetBindingOf(Node node);
+        Binding? GetBindingOf(Node node);
 
 
 
-        DataType LoadModule(List<Name> name, NameScope state);
+        DataType? LoadModule(List<Name> name, NameScope state);
         Module GetAstForFile(string file);
         string GetModuleQname(string file);
 
@@ -111,7 +111,7 @@ namespace Pytocs.Core.TypeInference
             this.FileSystem = fs;
             this.logger = logger;
             this.TypeFactory = new DataTypeFactory(this);
-            this.GlobalTable = new NameScope(null, NameScope.StateType.GLOBAL);
+            this.GlobalTable = new NameScope(null, NameScopeType.GLOBAL);
             this.Resolved = new HashSet<Name>();
             this.Unresolved = new HashSet<Name>();
             this.References = new Dictionary<Node, List<Binding>>();
@@ -140,7 +140,7 @@ namespace Pytocs.Core.TypeInference
         public Builtins Builtins { get; private set; }
         public Dictionary<Node, List<Binding>> References { get; private set; }
 
-        public NameScope ModuleScope = new NameScope(null, NameScope.StateType.GLOBAL);
+        public NameScope ModuleScope = new NameScope(null, NameScopeType.GLOBAL);
 
         /// <summary>
         /// Loads a file and performs type analysis on it.
@@ -160,7 +160,7 @@ namespace Pytocs.Core.TypeInference
 
         public bool HasOption(string option)
         {
-            if (options.TryGetValue(option, out object op) && (bool) op)
+            if (options.TryGetValue(option, out object? op) && (bool) op)
                 return true;
             else
                 return false;
@@ -292,7 +292,7 @@ namespace Pytocs.Core.TypeInference
 
         ModuleType? GetCachedModule(string file)
         {
-            DataType t = ModuleScope.LookupTypeOf(GetModuleQname(file));
+            DataType? t = ModuleScope.LookupTypeOf(GetModuleQname(file));
             switch (t)
             {
             case UnionType ut:
@@ -319,12 +319,14 @@ namespace Pytocs.Core.TypeInference
             {
                 file = file.Substring(0, file.Length - suffix.Length);
             }
+            if (file is null)
+                return "";
             return file.Replace(".", "%20").Replace('/', '.').Replace('\\', '.');
         }
 
-        public Binding GetBindingOf(Node node)
+        public Binding? GetBindingOf(Node node)
         {
-            return bindingMap.TryGetValue(node, out Binding b)
+            return bindingMap.TryGetValue(node, out Binding? b)
                 ? b
                 : null;
             }
@@ -480,7 +482,7 @@ namespace Pytocs.Core.TypeInference
         }
 
         /// <summary>
-        /// Returns the syntax tree for {@code file}. <p>
+        /// Returns the syntax tree for <paramref name="file"/>.
         /// </summary>
         public Module? GetAstForFile(string file)
         {

@@ -815,12 +815,12 @@ namespace Pytocs.Core.Translate
                 var elemType = m.TypeRef(typeof(object));
                 if (ContainsStarExp(tuple.values))
                 {
-                    return ExpandIterableExpanders("TupleUtils",tuple.values, elemType);
-            }
+                    return ExpandIterableExpanders("TupleUtils", tuple.values, elemType);
+                }
                 else
                 {
                     return MakeTupleCreate(tuple.values.Select(v => v.Accept(this)).ToArray());
-        }
+                }
             }
         }
 
@@ -854,16 +854,11 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitDictComprehension(DictComprehension dc)
         {
-            //{ k:copy.copy(v) for k, v in path.info.iteritems() }
-            //string sExp = "path.info.iteritems.ToDictionary(k => k, v => copy.copy(v))";
-
             var list = dc.source.collection.Accept(this);
             switch (dc.source.variable)
             {
             case ExpList varList:
                 {
-                    //if (varList.Expressions.Count != 2)
-                    //    throw new InvalidOperationException("Variable list should contain one or two variables.");
                     var args = varList.Expressions.Select((e, i) => (e, string.Format($"Item{i + 1}")))
                         .ToDictionary(d => d.Item1, d => d.Item2);
                     var tpl = gensym.GenSymAutomatic("_tup_", null!, false);
@@ -920,6 +915,5 @@ namespace Pytocs.Core.Translate
             }
             throw new NotImplementedException();
         }
-
     }
 }

@@ -18,6 +18,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using NameScope = Pytocs.Core.TypeInference.NameScope;
+using NameScopeType = Pytocs.Core.TypeInference.NameScopeType;
 using TypeStack = Pytocs.Core.TypeInference.TypeStack;
 
 namespace Pytocs.Core.Types
@@ -28,9 +29,9 @@ namespace Pytocs.Core.Types
 
         protected static TypeStack typeStack = new TypeStack();
 
-        protected DataType(NameScope.StateType scopeType = NameScope.StateType.SCOPE)
+        protected DataType(NameScopeType scopeType = NameScopeType.SCOPE)
         {
-            this.Scope = new NameScope(null, NameScope.StateType.SCOPE);
+            this.Scope = new NameScope(null, NameScopeType.SCOPE);
         }
 
         public NameScope Scope { get; set; }

@@ -79,7 +79,7 @@ namespace Pytocs.Core.Translate
 
         public LocalSymbol EnsureLocalVariable(string name, CodeTypeReference type, bool parameter)
         {
-            if (!autos.TryGetValue(name, out LocalSymbol local))
+            if (!autos.TryGetValue(name, out LocalSymbol? local))
             {
                 local = new LocalSymbol(name, type, parameter);
                 autos.Add(name, local);

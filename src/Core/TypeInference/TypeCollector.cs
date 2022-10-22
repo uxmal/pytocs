@@ -58,7 +58,7 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitAssignExp(AssignExp a)
         {
-            if (scope.stateType == NameScope.StateType.CLASS &&
+            if (scope.stateType == NameScopeType.CLASS &&
                 a.Dst is Identifier id)
             {
                 if (id.Name == "__slots__")
@@ -366,7 +366,7 @@ namespace Pytocs.Core.TypeInference
 
             BindMethodAttrs(analyzer, func);
 
-            var funcTable = new NameScope(func.scope, NameScope.StateType.FUNCTION);
+            var funcTable = new NameScope(func.scope, NameScopeType.FUNCTION);
             if (func.Scope.Parent != null)
             {
                 funcTable.Path = func.Scope.Parent.ExtendPath(analyzer, func.Definition.name.Name);
@@ -835,7 +835,7 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitLambda(Lambda lambda)
         {
-            NameScope env = scope.Forwarding;
+            NameScope? env = scope.Forwarding;
             var fun = new FunType(lambda, env);
             fun.Scope.Parent = this.scope;
             fun.Scope.Path = scope.ExtendPath(analyzer, "{lambda}");
@@ -885,7 +885,7 @@ namespace Pytocs.Core.TypeInference
 
         private BindingKind DetermineFunctionKind(FunctionDef f)
         {
-            if (scope.stateType == NameScope.StateType.CLASS)
+            if (scope.stateType == NameScopeType.CLASS)
             {
                 if ("__init__" == f.name.Name)
                 {

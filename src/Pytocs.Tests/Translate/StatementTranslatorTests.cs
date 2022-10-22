@@ -1693,8 +1693,6 @@ while chunk := read(256):
         [Fact(DisplayName = nameof(Stmt_Assign_Assign))]
         public void Stmt_Assign_Assign()
         {
-            int x;
-            int y;
             var pySrc = @"
 x = y = fun(z)
 ";

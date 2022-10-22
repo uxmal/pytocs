@@ -153,14 +153,16 @@ namespace Pytocs.Core.TypeInference
         /// <summary>
         /// Bindings can be sorted by their location for outlining purposes.
         /// </summary>
-        public int CompareTo(Binding that)
+        public int CompareTo(Binding? that)
         {
+            if (that is null)
+                return 1;
             return start - that.start;
         }
 
         public override string ToString()
         {
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             sb.Append("(binding");
             sb.Append(":kind=").Append(Kind);
             sb.Append(":node=").Append(Node);
@@ -188,9 +190,9 @@ namespace Pytocs.Core.TypeInference
             return sb.ToString();
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            if (!(obj is Binding b))
+            if (obj is not Binding b)
                 return false;
 
             return (Object.ReferenceEquals(Node, b.Node) &&

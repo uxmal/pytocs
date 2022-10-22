@@ -18,6 +18,7 @@ using Pytocs.Core.Syntax;
 using System;
 using System.Collections.Generic;
 using NameScope = Pytocs.Core.TypeInference.NameScope;
+using NameScopeType = Pytocs.Core.TypeInference.NameScopeType;
 
 namespace Pytocs.Core.Types
 {
@@ -29,10 +30,10 @@ namespace Pytocs.Core.Types
         public ClassType(string name, NameScope? parent, string? path)
         {
             this.name = name;
-            this.Scope = new NameScope(parent, NameScope.StateType.CLASS) { DataType = this };
+            this.Scope = new NameScope(parent, NameScopeType.CLASS) { DataType = this };
             if (parent != null)
             {
-                Scope.Path = path;
+                Scope.Path = path ?? "";
             }
             else
             {

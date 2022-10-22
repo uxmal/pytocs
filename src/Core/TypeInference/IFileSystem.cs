@@ -32,7 +32,7 @@ namespace Pytocs.Core.TypeInference
         string CombinePath(string dir, string file);
         bool DirectoryExists(string filePath);
         bool FileExists(string filePath);
-        string GetDirectoryName(string filePath);
+        string? GetDirectoryName(string filePath);
         string getFileHash(string path);
         string [] GetFileSystemEntries(string file_or_dir);
         string GetTempPath();
@@ -110,7 +110,7 @@ namespace Pytocs.Core.TypeInference
             return Directory.GetFiles(directory, searchPattern, options);
         }
 
-        public string GetDirectoryName(string filePath) { return Path.GetDirectoryName(filePath); }
+        public string? GetDirectoryName(string filePath) { return Path.GetDirectoryName(filePath); }
         public string GetFileName(string filePath) { return Path.GetFileName(filePath); }
         public string GetFileNameWithoutExtension(string filePath) { return Path.GetFileNameWithoutExtension(filePath); }
 
@@ -129,9 +129,9 @@ namespace Pytocs.Core.TypeInference
 
         public static string getContentHash(byte[] fileContents)
         {
-            HashAlgorithm algorithm = new SHA1Managed();
+            HashAlgorithm algorithm = HashAlgorithm.Create("SHA1")!;
             byte[] messageDigest = algorithm.ComputeHash(fileContents);
-            StringBuilder sb = new StringBuilder();
+            var sb = new StringBuilder();
             foreach (byte aMessageDigest in messageDigest)
             {
                 sb.Append(string.Format("{0:X2}", 0xFF & aMessageDigest));

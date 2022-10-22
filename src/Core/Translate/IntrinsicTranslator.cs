@@ -388,7 +388,7 @@ namespace Pytocs.Core.Translate
                 }
                 else
                 {
-                    var cast = m.Cast(new CodeTypeReference(args[0].ToString()), m.This());
+                    var cast = m.Cast(new CodeTypeReference(args[0].ToString()!), m.This());
                     return cast;
                 }
             }

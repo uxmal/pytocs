@@ -16,13 +16,9 @@
 
 using Pytocs.Core.CodeModel;
 using Pytocs.Core.Syntax;
-using Pytocs.Core.TypeInference;
 using Pytocs.Core.Types;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Pytocs.Core.Translate
 {
@@ -33,7 +29,6 @@ namespace Pytocs.Core.Translate
     {
         private readonly ClassDef? classDef;
         protected readonly FunctionDef f;
-        protected Analyzer analyzer;
         protected readonly string? fnName;
         protected readonly List<Parameter> args;
         private readonly bool isStatic;
@@ -59,7 +54,6 @@ namespace Pytocs.Core.Translate
             this.classDef = classDef;
             this.f = f;
             this.fnName = fnName;
-            this.analyzer = null; //$TODO lookup types.
             this.args = args;
             this.isStatic = isStatic;
             this.isAsync = isAsync;

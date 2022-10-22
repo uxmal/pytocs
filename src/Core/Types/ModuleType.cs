@@ -16,6 +16,7 @@
 
 using System;
 using NameScope = Pytocs.Core.TypeInference.NameScope;
+using NameScopeType = Pytocs.Core.TypeInference.NameScopeType;
 
 namespace Pytocs.Core.Types
 {
@@ -29,7 +30,7 @@ namespace Pytocs.Core.Types
             this.name = name;
             this.file = file;  // null for builtin modules
             this.qname = qName;
-            this.Scope = new NameScope(parent, NameScope.StateType.MODULE);
+            this.Scope = new NameScope(parent, NameScopeType.MODULE);
             Scope.Path = qname;
             Scope.DataType = this;
         }
@@ -49,7 +50,7 @@ namespace Pytocs.Core.Types
             return GetType().Name.GetHashCode();
         }
 
-        public override bool Equals(object other)
+        public override bool Equals(object? other)
         {
             if (other is ModuleType co)
             {
@@ -64,6 +65,6 @@ namespace Pytocs.Core.Types
         public override DataType MakeGenericType(params DataType[] typeArguments)
         {
             throw new InvalidOperationException("ModuleType cannot be generic.");
-    }
+        }
     }
 }

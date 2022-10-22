@@ -348,11 +348,13 @@ namespace Pytocs.Core.TypeInference
         /// </summary>
         private IDictionary<string, NativeModule> modules = new Dictionary<string, NativeModule>();
 
+#nullable disable
         public Builtins(AnalyzerImpl analyzer)
         {
             this.analyzer = analyzer;
             buildTypes();
         }
+#nullable enable
 
 
         private void buildTypes()
@@ -897,7 +899,7 @@ namespace Pytocs.Core.TypeInference
                     addClass(f, newDataModelUrl("org/yinwang/pysonar/types"),
                             outer.newClass(f, outer.analyzer.GlobalTable, outer.objectType));
                 }
-                outer.BaseException = (ClassType) table.LookupTypeOf("BaseException");
+                outer.BaseException = (ClassType) table.LookupTypeOf("BaseException")!;
 
                 foreach (string f in new[] { "True", "False" })
                 {
