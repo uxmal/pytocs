@@ -698,7 +698,7 @@ namespace Pytocs.UnitTests.Translate
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(Ex_ListComprehension_Alternating_fors))]
         public void Ex_ListComprehension_Alternating_fors()
         {
             var pySrc = "[state for (stash, states) in self.simgr.stashes.items() if stash != 'pruned' for state in states]";
@@ -816,6 +816,19 @@ namespace Pytocs.UnitTests.Translate
         {
             var pySrc = "f'Hello {world}'";
             var sExp = "$\"Hello {world}\"";
+            Assert.Equal(sExp, Xlat(pySrc));
+        }
+
+        [Fact(DisplayName = nameof(Ex_DictComprehension))]
+        public void Ex_DictComprehension()
+        {
+            var pySrc = "{va: size for (va, size, fva) in vw.getFunctionBlocks(funcva)}";
+            var sExp =
+@"(from _tup_1 in vw.getFunctionBlocks(funcva)
+    let va = _tup_1.Item1
+    let size = _tup_1.Item2
+    let fva = _tup_1.Item3
+    select (va, size)).ToDictionary(_de_1 => _de_1.Item1, _de_1 => _de_1.Item2)";
             Assert.Equal(sExp, Xlat(pySrc));
         }
 

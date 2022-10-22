@@ -502,7 +502,7 @@ namespace Pytocs.Core.Translate
             if (binL.Right is not CodeVariableReferenceExpression variable)
             {
                 // Python https://docs.python.org/3/reference/expressions.html#comparisons
-                // Stats that the second expression in a comparison chain is only evaluated once.
+                // States that the second expression in a comparison chain is only evaluated once.
                 variable = gensym.GenSymLocal("_tmp_", m.TypeRef(typeof(object)));
                 m.Assign(variable, binL.Right);
                 binL = m.BinOp(binL.Left, binL.Operator, variable);
@@ -511,7 +511,7 @@ namespace Pytocs.Core.Translate
             return m.BinOp(binL, CodeOperatorType.LogAnd, newR);
         }
 
-        private bool IsComparison(CodeBinaryOperatorExpression bin)
+        private static bool IsComparison(CodeBinaryOperatorExpression bin)
         {
             return comparisons.Contains(bin.Operator);
         }
@@ -622,8 +622,7 @@ namespace Pytocs.Core.Translate
             {
             case Identifier id:
                 {
-                    var f = m.From(id.Accept(this), collection);
-                    queryClauses.Add(f);
+                queryClauses.Add(m.From(id.Accept(this), collection));
                     break;
                 }
             case ExpList expList:
@@ -631,13 +630,8 @@ namespace Pytocs.Core.Translate
                     var vars = expList.Expressions.Select(v => v.Accept(this)).ToArray();
                     var type = MakeTupleType(expList.Expressions);
                     var it = gensym.GenSymAutomatic("_tup_", type, false);
-                    var f = m.From(it, collection);
-                    queryClauses.Add(f);
-                    for (int i = 0; i < vars.Length; ++i)
-                    {
-                        var l = m.Let(vars[i], m.Access(it, $"Item{i + 1}"));
-                        queryClauses.Add(l);
-                    }
+                queryClauses.Add(m.From(it, collection));
+                AddTupleItemsToQueryClauses(it, vars, queryClauses);
                     break;
                 }
             case PyTuple tuple:
@@ -645,13 +639,8 @@ namespace Pytocs.Core.Translate
                     var vars = tuple.values.Select(v => v.Accept(this)).ToArray();
                     var type = MakeTupleType(tuple.values);
                     var it = gensym.GenSymAutomatic("_tup_", type, false);
-                    var f = m.From(it, collection);
-                    queryClauses.Add(f);
-                    for (int i = 0; i < vars.Length; ++i)
-                    {
-                        var l = m.Let(vars[i], m.Access(it, $"Item{i + 1}"));
-                        queryClauses.Add(l);
-                    }
+                queryClauses.Add(m.From(it, collection));
+                AddTupleItemsToQueryClauses(it, vars, queryClauses);
                     break;
                 }
             default:
@@ -659,7 +648,22 @@ namespace Pytocs.Core.Translate
             }
         }
 
-        private CodeTypeReference MakeTupleType(List<Exp> expressions)
+        private void AddTupleItemsToQueryClauses(
+            CodeVariableReferenceExpression tuple, 
+            CodeExpression[] vars, 
+            List<CodeQueryClause> queryClauses)
+        {
+            for (int i = 0; i < vars.Length; ++i)
+            {
+                var l = m.Let(vars[i], m.Access(tuple, $"Item{i + 1}"));
+                queryClauses.Add(l);
+            }
+        }
+
+        private CodeTypeReference MakeTupleType(params Exp[] expressions)
+            => MakeTupleType(expressions);
+
+        private CodeTypeReference MakeTupleType(IEnumerable<Exp> expressions)
         {
             //$TODO: make an effort to make this correct.
             return new CodeTypeReference(typeof(object));
@@ -859,8 +863,8 @@ namespace Pytocs.Core.Translate
             {
             case ExpList varList:
                 {
-                    var args = varList.Expressions.Select((e, i) => (e, string.Format($"Item{i + 1}")))
-                        .ToDictionary(d => d.Item1, d => d.Item2);
+                    var args = varList.Expressions.Select((e, i) => (e, $"Item{i + 1}"))
+                        .ToDictionary(d => d.e, d => d.Item2);
                     var tpl = gensym.GenSymAutomatic("_tup_", null!, false);
 
                     gensym.PushIdMappings(varList.Expressions.ToDictionary(e => e.ToString(), e => m.Access(tpl, args[e])));
@@ -886,13 +890,21 @@ namespace Pytocs.Core.Translate
                 }
             case PyTuple tuple:
                 {
+                    var csTuple = tuple.Accept(this);
                     if (tuple.values.Count != 2)
                     {
                         //TODO: tuples, especially nested tuples, are hard.
-                        return m.Prim("!!!{" +
-                            dc.key.Accept(this) +
-                            ": " +
-                            dc.value.Accept(this));
+                        //$TODO: should use type knowledge about the tuple.
+                        var k = dc.key.Accept(this);
+                        var v = dc.value.Accept(this);
+
+                        var c = TranslateToLinq(m.ValueTuple(k, v), dc.source);
+                        var type = MakeTupleType(tuple.values);
+                        var e = gensym.GenSymAutomatic("_de_", null!, false);
+                        return m.Appl(
+                            m.MethodRef(c, "ToDictionary"),
+                            m.Lambda(new CodeExpression[] { e }, m.Access(e, "Item1")),
+                            m.Lambda(new CodeExpression[] { e }, m.Access(e, "Item2")));
                     }
 
                     var enumvar = gensym.GenSymAutomatic("_de", null!, false);

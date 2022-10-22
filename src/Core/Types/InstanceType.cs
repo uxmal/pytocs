@@ -16,6 +16,7 @@
 
 using System.Collections.Generic;
 using NameScope = Pytocs.Core.TypeInference.NameScope;
+using NameScopeType = Pytocs.Core.TypeInference.NameScopeType;
 
 namespace Pytocs.Core.Types
 {
