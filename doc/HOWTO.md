@@ -11,24 +11,22 @@ You can either download either an official release, a continuous integration (CI
 ### Downloading a CI build
 The `pytocs` project uses AppVeyor as its CI provider: it can be found at https://ci.appveyor.com/project/uxmal/pytocs. Every time a change set is pushed to the GitHub git repository, AppVeyor clones it and rebuilds the project. The resulting outputs are cached in what AppVeyor calls `Artifacts`. The most recent build artifacts can be downloaded from https://ci.appveyor.com/project/uxmal/pytocs/build/artifacts. The CI build artifacts are four ZIP files, whose exact names will be different each time AppVeyor rebuilds:
 ```
-bin\pytocs-gui-netcore21-1.0.0-cb66aa9200.zip
-bin\pytocs-gui-net471-1.0.0-cb66aa9200.zip
-bin\pytocs-cli-netcore21-1.0.0-cb66aa9200.zip
-bin\pytocs-cli-net471-1.0.0-cb66aa9200.zip
+bin\pytocs-cli-net6.0-2.0.0.0-4f21223b4c.zip
+bin\pytocs-gui-net6.0-1.0.0-4f21223b4c.zip
 ```
-The ZIP files are named by client type (GUI or command line interface) and by platform (.NET Core or .NET Framework). Download the appropriate ZIP file, unpack it with an appropriate unzip tool, and copy the unpacked files somewhere on your `PATH`. Alternatively, extend your `PATH` environment variable to include the directory you unpacked the files to.
+The ZIP files are named by client type, GUI or command line interface. Download the appropriate ZIP file, unpack it with an appropriate unzip tool, and copy the unpacked files somewhere on your `PATH`. Alternatively, extend your `PATH` environment variable to include the directory you unpacked the files to.
 
 ### Compiling from the command line
 To compile pytocs, you will need to have `git` and either Visual Studio or the .NET SDK installed. To obtain the `pytocs` source, clone the git repository on GitHub from the command line:
 ```
 c:\projects> git clone https://github.com/uxmal/pytocs
 ```
-Then compile the solution, which is located in the `src` directory. If you build for .NET Framework, you need `msbuild`:
+Then compile the solution, which is located in the `src` directory. If you prefer `msbuild`:
 ```
 c:\projects> cd pytocs\src
 c:\projects\pytocs\src> msbuild
 ```
-If you build for .NET Core, use the `dotnet build` command:
+If you prefer building with the .NET SDK, use the `dotnet build` command:
 ```
 c:\projects> cd pytocs\src
 c:\projects\pytocs\src> dotnet build
@@ -40,13 +38,13 @@ If you use Visual Studio you can clone the `pytocs` solution from https://github
 
 ## Running pytocs
 
-Before running `pytocs`, you need one or more Python source files, perhaps located in a directory `c:\python\projects`:
+Before running `pytocs`, you need one or more Python source files, perhaps located in a directory `c:\example\projects`:
 ```
-c:\python\projects> dir
+c:\example\projects> dir
  Volume in drive C is HAXX
  Volume Serial Number is 4242-4242
 
- Directory of c:\python\projects
+ Directory of c:\example\projects
 
 02/18/2019  12:33 AM    <DIR>          .
 02/18/2019  12:33 AM    <DIR>          ..
@@ -59,12 +57,12 @@ The command line tool currently supports the following modes of operation.
 
 Translate a single Python file:
 ```
-c:\python\projects> pytocs test.py
-c:\python\projects> dir test.py*
+c:\example\projects> pytocs test.py
+c:\example\projects> dir test.py*
  Volume in drive C is HAXX
  Volume Serial Number is 4242-4242
 
- Directory of c:\python\projects
+ Directory of c:\example\projects
 
 02/18/2019  12:32 AM                29 test.py
 02/18/2019  12:57 AM               115 test.py.cs
@@ -74,12 +72,12 @@ Notice how the translated C# file is written into the same directory as the Pyth
 
 Translate a directory of Python files (recursively):
 ```
-c:\python\projects> pytocs -r c:\python\projects
-c:\python\projects> dir *.py*
+c:\example\projects> pytocs -r c:\example\projects
+c:\example\projects> dir *.py*
  Volume in drive C is HAXX
  Volume Serial Number is 4242-4242
 
- Directory of c:\python\projects
+ Directory of c:\example\projects
 
 02/18/2019  12:32 AM                29 test.py
 02/18/2019  12:57 AM               115 test.py.cs
@@ -90,10 +88,10 @@ c:\python\projects> dir *.py*
 The `-r` (recursive) flag instructs `pytocs` to treat all files in the specified directory as well as any subdirectories.
 
 ## How to use Pytocs
-Since Python and C# have fundamental differences that make it very difficult if not impossible to provide a fully automatic translation service, human post processing will likely always be needed to massage the code `pytocs` outputs into compileable C# code. When the source Python is under active development or maintenance, any changes to the output of `pytocs` will be overwritten next time the tool is run. Thus it becomes important to use a workflow to track the upstream changes and apply them to the translated C# code.
+Since Python and C# have fundamental differences that make it impossible to provide a fully automatic translation service, human post processing will likely always be needed to "massage" the code `pytocs` outputs into compileable C# code. When the source Python is under active development or maintenance, any changes to the output of `pytocs` will be overwritten next time the tool is run. Thus it becomes important to use a workflow to track the upstream changes and apply them to the translated C# code.
 
 ### Suggested git workflow
-Assume there is a git repository containing Python source code, cloned on your computer. (The following examples assume you're using `git` as your source control system; similar workflows can be used for Mercurial, SVN, or any other SCC that supports branching). Assume further that the Python code is in the `master` branch.
+Assume there is a git repository containing Python source code, cloned on your computer. (The following examples assume you're using `git` as your source control system; similar workflows can be used for Mercurial, SVN, or any other SCC that supports branching). Assume further that the Python code is in the `master` branch; your repo may have different naming conventions.
 
 ```
 master 
