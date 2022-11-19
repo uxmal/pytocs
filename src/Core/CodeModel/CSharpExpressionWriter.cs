@@ -53,6 +53,7 @@ namespace Pytocs.Core.CodeModel
         private static Precedence operatorPrecedence(CodeOperatorType op) => op switch
         {
             CodeOperatorType.Complement => Precedence.Unary,
+            CodeOperatorType.Index => Precedence.Unary,
             CodeOperatorType.Not => Precedence.Unary,
             CodeOperatorType.Times => Precedence.Multiplicative,
             CodeOperatorType.Divide => Precedence.Multiplicative,
@@ -227,6 +228,7 @@ namespace Pytocs.Core.CodeModel
             {
             default: throw new NotImplementedException("Op: " + codeOperatorType);
             case CodeOperatorType.Complement: return "~";
+            case CodeOperatorType.Index: return "^";
 
             case CodeOperatorType.Mod: return "%";
 
@@ -536,7 +538,7 @@ namespace Pytocs.Core.CodeModel
                 WriteStringLiteral(s);
                 break;
             case int _:
-                writer.Write(p.Value.ToString());
+                writer.Write(p.Value.ToString()!);
                 break;
             case long l:
                 writer.Write("{0}L", l);

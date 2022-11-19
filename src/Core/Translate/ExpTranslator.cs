@@ -229,7 +229,16 @@ namespace Pytocs.Core.Translate
                             "{0}:{1}:{2}",
                             s.Lower, s.Upper, s.Stride));
                     if (s.Lower != null)
-                        return s.Lower.Accept(this);
+                    {
+                        var e = s.Lower.Accept(this);
+                        if (e is CodeUnaryOperatorExpression u &&
+                            u.Operator == CodeOperatorType.Sub && 
+                            u.Expression is CodeNumericLiteral)
+                        {
+                            return new CodeUnaryOperatorExpression(CodeOperatorType.Index, u.Expression);
+                        }
+                        return e;
+                    }
                     else if (s.Upper != null)
                         return s.Upper.Accept(this);
                     else if (s.Stride != null)

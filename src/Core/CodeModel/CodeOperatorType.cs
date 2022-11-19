@@ -30,6 +30,7 @@ namespace Pytocs.Core.CodeModel
         Divide,
         IdentityEquality,
         IdentityInequality,
+        Index,
         Eq,     // :=
         Equal,
         NotEqual,

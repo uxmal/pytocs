@@ -120,7 +120,14 @@ namespace Pytocs.UnitTests.Translate
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
+        [Fact(DisplayName = nameof(ExNegativeSubscript))]
+        public void ExNegativeSubscript()
+        {
+            Assert.Equal("x[^1]", Xlat("x[-1]"));
+        }
+
         [Fact]
+
         public void ExListCompIf()
         {
             string pySrc = "[int(x) for x in s if x > 10]";
