@@ -12,7 +12,7 @@
 		<ReleaseDir>$(MainReleaseDir)\bin</ReleaseDir>
 
 		<!-- Build Folder -->
-		<OutDir>src\Cli\bin\Release</OutDir>
+		<OutDir>src\Cli\bin\Release\net6.0</OutDir>
 
 	</PropertyGroup>
 
@@ -40,6 +40,7 @@
 
 	<!-- copy files to release folder -->
 	<Target Name="CopyRelease">
+	 	<Message Importance="high" Text="********* YOYOYOY" />
 		<MakeDir Directories="$(ReleaseDir)"/>
 		<ItemGroup>
 			<ReleaseFiles
