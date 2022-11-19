@@ -386,7 +386,7 @@ else:
 	self.func = func
 ";
             var sExp =
-@"if (func == null) {
+@"if (func is null) {
     this.func = term => true;
 } else {
     this.func = func;
@@ -405,7 +405,7 @@ else:
 	self.func = func
 ";
             var sExp =
-@"if (func == null) {
+@"if (func is null) {
     this.func = (a,b) => true;
 } else {
     this.func = func;
@@ -1021,7 +1021,7 @@ yx = _tup_1.Item1;
             var sExp =
 @"foreach (var _tmp_1 in targets) {
     this.target_addr = _tmp_1;
-    if (this.target_addr == null) {
+    if (this.target_addr is null) {
         addr_strs.append(""default"");
     } else {
         addr_strs.append(String.Format(""%#x"", target_addr));
@@ -1069,7 +1069,7 @@ c.de = ""f"";
 ";
             var sExp =
 @"foreach (var (exit_stmt_id, target_addr) in targets) {
-    if (target_addr == null) {
+    if (target_addr is null) {
         addr_strs.append(""default"");
     } else {
         addr_strs.append(String.Format(""%#x"", target_addr));

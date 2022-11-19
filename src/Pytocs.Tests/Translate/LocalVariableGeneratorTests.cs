@@ -215,7 +215,7 @@ namespace Pytocs.UnitTests.Translate
 
             var sExp =
 @"public static object foo(object frog) {
-    if (frog == null) {
+    if (frog is null) {
         frog = ""default"";
     }
     bar(frog);

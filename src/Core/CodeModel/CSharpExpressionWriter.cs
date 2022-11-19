@@ -72,6 +72,7 @@ namespace Pytocs.Core.CodeModel
             CodeOperatorType.IdentityEquality => Precedence.Equality,
             CodeOperatorType.IdentityInequality => Precedence.Equality,
             CodeOperatorType.Is => Precedence.Equality,
+            CodeOperatorType.IsNot => Precedence.Equality,
             CodeOperatorType.BitAnd => Precedence.BinAnd,
             CodeOperatorType.BitXor => Precedence.BitXor,
             CodeOperatorType.BitOr => Precedence.BitOr,
@@ -242,6 +243,7 @@ namespace Pytocs.Core.CodeModel
             case CodeOperatorType.IdentityInequality: return "!=";
             case CodeOperatorType.NotEqual: return "!=";
             case CodeOperatorType.Is: return "is";
+            case CodeOperatorType.IsNot: return "is not";
 
             case CodeOperatorType.BitAnd: return "&";
             case CodeOperatorType.BitOr: return "|";

@@ -455,7 +455,7 @@ namespace Pytocs.Core.Translate
             case Op.Is:
                 if (bin.Right is NoneExp)
                 {
-                    return m.BinOp(l, CodeOperatorType.IdentityEquality, r);
+                    return m.BinOp(l, CodeOperatorType.Is, r);
                 }
                 else
                 {
@@ -467,7 +467,14 @@ namespace Pytocs.Core.Translate
                         r);
                 }
             case Op.IsNot:
-                return m.BinOp(l, CodeOperatorType.IdentityInequality, r);
+                if (bin.Right is NoneExp)
+                {
+                    return m.BinOp(l, CodeOperatorType.IsNot, r);
+                }
+                else
+                {
+                    return m.BinOp(l, CodeOperatorType.IdentityInequality, r);
+                }
             case Op.In:
                 return m.Appl(
                     m.MethodRef(r, "Contains"),

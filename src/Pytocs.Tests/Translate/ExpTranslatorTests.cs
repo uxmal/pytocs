@@ -68,13 +68,13 @@ namespace Pytocs.UnitTests.Translate
         [Fact]
         public void ExIsNone()
         {
-            Assert.Equal("a == null", Xlat("a is None"));
+            Assert.Equal("a is null", Xlat("a is None"));
         }
 
         [Fact]
         public void ExIsNotNone()
         {
-            Assert.Equal("a != null", Xlat("a is not None"));
+            Assert.Equal("a is not null", Xlat("a is not None"));
         }
 
         [Fact]

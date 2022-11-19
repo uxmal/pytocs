@@ -59,6 +59,7 @@ namespace Pytocs.Core.CodeModel
         BitXor,
         Conditional,
         Is,
+        IsNot,
         ShlEq,
         ShrEq,
         XorEq,
