@@ -4,6 +4,9 @@
     <TargetFrameworks>net6.0</TargetFrameworks>
     <AssemblyName>Pytocs.Gui</AssemblyName>
     <RootNamespace>Pytocs.Gui</RootNamespace>
+    <Version>2.0.0</Version>
+    <AssemblyVersion>2.0.0.0</AssemblyVersion>
+    <FileVersion>2.0.0.0</FileVersion>
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="Avalonia" Version="0.10.17" />
