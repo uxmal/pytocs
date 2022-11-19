@@ -52,6 +52,7 @@ namespace Pytocs.Core.CodeModel
             "operator",
             "out",
             "override",
+            "params",
             "ref",
             "readonly",
             "sizeof",
