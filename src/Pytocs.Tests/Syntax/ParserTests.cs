@@ -1107,5 +1107,24 @@ x = y = z = func(w)
 ";
             AssertStmt(sExpected, ParseStmt(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Parser_Github_89))]
+        public void Parser_Github_89()
+        {
+            var pySrc = @"
+def device_readstb(self, flags, io_timeout):
+    if self.srq_active:
+        stb |= 0b_0100_0000
+    return error, stb
+";
+            var sExpected =
+@"def device_readstb(self,flags,io_timeout):
+    if self.srq_active:
+        stb |= 0b_0100_0000
+    
+    return error,stb
+";
+            AssertStmt(sExpected, ParseStmt(pySrc));
+        }
     }
 }

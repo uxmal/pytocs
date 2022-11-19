@@ -1371,9 +1371,9 @@ namespace Pytocs.Core.Syntax
             writer.Write(base.OpToString(Operator));
             if (Src != null)
             {
-            Src.Write(writer);
+                Src.Write(writer);
+            }
         }
-    }
     }
 
     public class PyTuple : Exp

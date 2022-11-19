@@ -23,6 +23,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Pytocs.Core.Syntax;
+using System.ComponentModel.DataAnnotations;
 
 namespace Pytocs.UnitTests.Syntax
 {
@@ -44,8 +45,8 @@ namespace Pytocs.UnitTests.Syntax
 
         private Token LexMore()
         {
-            if (lexer == null)
-                throw new InvalidOperationException("Must call Lex() first.");
+            if (lexer is null)
+                throw new InvalidOperationException("You must call Lex() first.");
             return lexer.Get();
         }
 
@@ -171,8 +172,8 @@ namespace Pytocs.UnitTests.Syntax
             Assert.Equal(0xed, (int)Lex("0xed").NumericValue);
             Assert.Equal(10, (long)Lex("0o12").NumericValue);
             Assert.Equal(13, (long)Lex("0O15").NumericValue);
-            Assert.Equal(0xA, (long)Lex("0b1010").NumericValue);
-            Assert.Equal(0B1010, (long)Lex("0B1010").NumericValue);
+            Assert.Equal(0xA, (int)Lex("0b1_010").NumericValue);
+            Assert.Equal(0B1010, (int)Lex("0B1010").NumericValue);
         }
 
         private string LexString(string pyStr)
@@ -503,6 +504,16 @@ namespace Pytocs.UnitTests.Syntax
         {
             var tok = Lex(":=");
             Assert.Equal(TokenType.COLONEQ, tok.Type);
+        }
+
+        [Fact(DisplayName = nameof(Lex_Github_89))]
+        public void Lex_Github_89()
+        {
+            var tok = Lex("0b_0100_0000");
+            Assert.Equal(TokenType.INTEGER, tok.Type);
+            Assert.Equal("0b_0100_0000", tok.Value);
+            tok = LexMore();
+            Assert.Equal(TokenType.EOF, tok.Type);
         }
     }
 }

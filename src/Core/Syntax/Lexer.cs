@@ -705,11 +705,14 @@ namespace Pytocs.Core.Syntax
                     {
                     case '0':
                     case '1':
+                    case '_':
                         Accum(ch, State.Binary);
                         break;
                     case 'L':
                     case 'l':
-                        return EatChToken(TokenType.LONGINTEGER, ConvertBinaryToInt(sb.ToString()));
+                        Advance();
+                        st = State.Base;
+                        return BinaryInteger(sb.ToString());
                     default:
                         return BinaryInteger(sb.ToString());
                     }
@@ -1024,7 +1027,11 @@ namespace Pytocs.Core.Syntax
         // Python and C# binary literals look the same.
         private Token BinaryInteger(string lexeme)
         {
-            return Token(TokenType.INTEGER, lexeme, (long)ConvertBinaryToInt(lexeme.Substring(2)));
+            var (value, digits) = ConvertBinaryToInt(lexeme, 2);
+            if (digits < 32)
+                return Token(TokenType.INTEGER, lexeme, (int) value);
+            else
+                return Token(TokenType.LONGINTEGER, lexeme, value);
         }
 
         private Token LongInteger()
@@ -1074,14 +1081,20 @@ namespace Pytocs.Core.Syntax
             return e;
         }
 
-        private long ConvertBinaryToInt(string binaryString)
+        private (long, int) ConvertBinaryToInt(string binaryString, int i)
         {
             long n = 0;
-            foreach (var ch in binaryString)
+            int digits = 0;
+            for (; i < binaryString.Length; ++i)
             {
-                n = (n << 1) | (ch == '1' ? 1L : 0L);
+                int ch = binaryString[i];
+                if (ch != '_')
+                {
+                    n = (n << 1) | (ch == '1' ? 1L : 0L);
+                    ++digits;
+                }
             }
-            return n;
+            return (n, digits);
         }
 
         private bool IsLogicalNewLine()
