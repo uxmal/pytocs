@@ -751,6 +751,14 @@ namespace Pytocs.UnitTests.Translate
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
+        [Fact(DisplayName = nameof(Ex_str_parameterless))]
+        public void Ex_str_parameterless()
+        {
+            var pySrc = "str()";
+            var sExp = @"String.Empty";
+            Assert.Equal(sExp, Xlat(pySrc));
+        }
+
         [Fact(DisplayName = nameof(Ex_issue_57))]
         public void Ex_issue_57()
         {
@@ -851,5 +859,6 @@ namespace Pytocs.UnitTests.Translate
 }";
             Assert.Equal(sExp, Xlat(pySrc));
         }
+
     }
 }

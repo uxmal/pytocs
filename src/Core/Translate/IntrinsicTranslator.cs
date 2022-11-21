@@ -346,6 +346,8 @@ namespace Pytocs.Core.Translate
         {
             switch (args.Length)
             {
+            case 0:
+                return m.Access(m.TypeRefExpr("String"), "Empty");
             case 1:
                 return m.ApplyMethod(args[0], "ToString");
             case 2:
