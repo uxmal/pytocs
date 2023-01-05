@@ -394,7 +394,7 @@ namespace Pytocs.UnitTests.Translate
         public void Ex_Regression5()
         {
             var pySrc = "round(float( float(count) / float(self.insn_count)), 3) >= .67";
-            var sExp = "round(float(float(count) / float(this.insn_count)), 3) >= 0.67";
+            var sExp = "round(Convert.ToDouble(Convert.ToDouble(count) / Convert.ToDouble(this.insn_count)), 3) >= 0.67";
             Assert.Equal(sExp, Xlat(pySrc));
         }
 

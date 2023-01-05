@@ -746,6 +746,8 @@ namespace Pytocs.Core.CodeModel
         {
             { "int", "int" },
             { "long", "long" },
+            { "float", "float" },
+            { "double", "double" },
             { "System.Boolean", "bool" },
             { "System.Double", "double" },
             { "System.Int32", "int" },

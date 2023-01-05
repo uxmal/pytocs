@@ -288,7 +288,7 @@ namespace Pytocs.Core.Translate
             return null;
         }
 
-        CodeExpression? Translate_float(Application appl, CodeExpression[] args)
+        CodeExpression Translate_float(Application appl, CodeExpression[] args)
         {
             if (args[0] is CodePrimitiveExpression c && c.Value is Str str)
             {
@@ -304,7 +304,8 @@ namespace Pytocs.Core.Translate
                     return m.Access(m.TypeRefExpr("double"), "NegativeInfinity");
                 }
             }
-            return null;
+            m.EnsureImport("System");
+            return m.ApplyMethod(m.TypeRefExpr("Convert"), "ToDouble", args[0]);
         }
 
         CodeExpression Translate_sorted(Application appl, CodeExpression[] args)
