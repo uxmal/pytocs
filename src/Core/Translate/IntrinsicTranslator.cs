@@ -83,10 +83,10 @@ namespace Pytocs.Core.Translate
             }
             else
             {
-                types = new List<Exp> { appl.Args[1].DefaultValue };
+                types = new List<Exp> { appl.Args[1].DefaultValue! };
             }
 
-            var exp = appl.Args[0].DefaultValue.Accept(expTranslator);
+            var exp = appl.Args[0].DefaultValue!.Accept(expTranslator);
             return types.
                 Select(t => m.BinOp(
                     exp,

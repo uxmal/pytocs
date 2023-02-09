@@ -245,9 +245,9 @@ namespace Pytocs.Core.Translate
             }
         }
 
-        private string GenerateBaseClassName(Exp exp)
+        private string GenerateBaseClassName(Exp? exp)
         {
-            return exp.ToString();
+            return exp?.ToString() ?? "";
         }
 
         public void VisitExec(ExecStatement e)

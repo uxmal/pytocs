@@ -32,7 +32,7 @@ namespace Pytocs.Core.Types
             return visitor.VisitSymbol(this);
         }
 
-        public override bool Equals(object other)
+        public override bool Equals(object? other)
         {
             if (other is SymbolType that)
             {

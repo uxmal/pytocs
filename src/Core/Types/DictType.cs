@@ -52,7 +52,7 @@ namespace Pytocs.Core.Types
             return new TupleType(ret.ToArray());
         }
 
-        public override bool Equals(object other)
+        public override bool Equals(object? other)
         {
             if (!(other is DataType dtOther))
                 return false;

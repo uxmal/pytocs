@@ -981,9 +981,9 @@ namespace Pytocs.Core.Syntax
     {
         public Exp variable;
         public Exp collection;
-        public Exp projection;
+        public Exp? projection;
 
-        public CompFor(Exp projection, Exp variable, Exp collection, string filename, int start, int end) : base(filename, start, end)
+        public CompFor(Exp? projection, Exp variable, Exp collection, string filename, int start, int end) : base(filename, start, end)
         {
             this.projection = projection;
             this.variable = variable;
@@ -1331,7 +1331,7 @@ namespace Pytocs.Core.Syntax
             this.Annotation = null;
         }
 
-        public AssignExp(Exp lhs, Exp annotation, Op op, Exp? rhs, string filename, int start, int end)
+        public AssignExp(Exp lhs, Exp annotation, Op op, Exp rhs, string filename, int start, int end)
             : base(filename, start, end)
         {
             this.Dst = lhs;

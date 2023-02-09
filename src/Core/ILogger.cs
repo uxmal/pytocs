@@ -58,7 +58,7 @@ namespace Pytocs.Core
 
     public class ConsoleLogger : ILogger
     {
-        public void Error(Exception ex, string format, params object[] args)
+        public void Error(Exception? ex, string format, params object[] args)
         {
             Console.Error.Write("Error: ");
             Console.Error.WriteLine(format, args);
@@ -103,7 +103,7 @@ namespace Pytocs.Core
             Write(TraceEventType.Error, string.Format(format, args));
         }
 
-        public void Error(Exception ex, string format, params object[] args)
+        public void Error(Exception? ex, string format, params object[] args)
         {
             var sb = new StringBuilder();
             sb.AppendFormat(format, args);

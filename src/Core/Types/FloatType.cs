@@ -25,7 +25,7 @@ namespace Pytocs.Core.Types
             return visitor.VisitFloat(this);
         }
 
-        public override bool Equals(object other)
+        public override bool Equals(object? other)
         {
             return other is FloatType;
         }

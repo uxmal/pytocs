@@ -430,9 +430,9 @@ namespace Pytocs.Core.TypeInference
             return ExtendPath(this.Path, name); 
         }
 
-        public string ExtendPath(string path, string name)
+        public string ExtendPath(string? path, string name)
         {
-            if (path == "")
+            if (string.IsNullOrEmpty(path))
             {
                 return name;
             }

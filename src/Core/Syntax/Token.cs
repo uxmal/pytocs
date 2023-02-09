@@ -43,13 +43,9 @@ namespace Pytocs.Core.Syntax
             this.End = end;
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
-            if (obj != null && obj is Token that)
-            {
-                return this == that;
-            }
-            return false;
+            return obj is Token that && this == that;
         }
 
         public override int GetHashCode()

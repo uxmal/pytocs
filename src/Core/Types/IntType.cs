@@ -25,7 +25,7 @@ namespace Pytocs.Core.Types
             return visitor.VisitInt(this);
         }
 
-        public override bool Equals(object other)
+        public override bool Equals(object? other)
         {
             return other is IntType;
         }

@@ -378,7 +378,9 @@ namespace Pytocs.Core.TypeInference
 
             DataType fromType = BindParameters(
                 call, func.Definition, funcTable, 
-                func.Definition.parameters, func.Definition.vararg, func.Definition.kwarg,
+                func.Definition.parameters,
+                func.Definition.vararg,
+                func.Definition.kwarg,
                 pTypes, func.DefaultTypes, hash, kw, star);
 
             if (func.arrows.TryGetValue(fromType, out var cachedTo))
@@ -477,7 +479,7 @@ namespace Pytocs.Core.TypeInference
             Identifier? rest,
             Identifier? restKw,
             List<DataType>? pTypes,
-            List<DataType?>? dTypes,
+            List<DataType>? dTypes,
             IDictionary<string, DataType>? hash,
             DataType? kw,
             DataType? star)

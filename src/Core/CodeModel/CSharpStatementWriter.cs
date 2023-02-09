@@ -125,7 +125,7 @@ namespace Pytocs.Core.CodeModel
         { 
             expWriter.VisitTypeReference(fn.ReturnType);
             writer.Write(' ');
-            writer.Write(fn.Name);
+            writer.Write(fn.Name ?? "");
             CSharpTypeWriter.WriteMethodParameters(fn.Parameters, writer);
             WriteStatements(fn.Statements);
             writer.WriteLine();

@@ -201,7 +201,7 @@ namespace Pytocs.Core.TypeInference
         {
             protected Builtins outer;
             protected string name;
-            protected ModuleType module;
+            protected ModuleType? module;
             protected NameScope table;  // the module's symbol table
 
             protected NativeModule(Builtins outer, string name)
@@ -216,7 +216,7 @@ namespace Pytocs.Core.TypeInference
             /// </summary>
             public ModuleType? getModule()
             {
-                if (module == null)
+                if (module is null)
                 {
                     createModuleType();
                     initBindings();
@@ -228,7 +228,7 @@ namespace Pytocs.Core.TypeInference
 
             protected void createModuleType()
             {
-                if (module == null)
+                if (module is null)
                 {
                     module = outer.newModule(name);
                     table = module.Scope;
@@ -452,7 +452,7 @@ namespace Pytocs.Core.TypeInference
          * Loads (if necessary) and returns the specified built-in module.
          */
 
-        public ModuleType get(string name)
+        public ModuleType? get(string name)
         {
             if (!name.Contains("."))
             {  // unqualified
@@ -460,15 +460,15 @@ namespace Pytocs.Core.TypeInference
             }
 
             string[] mods = name.Split('\\', '.');
-            DataType type = getModule(mods[0]);
-            if (type == null)
+            DataType? type = getModule(mods[0]);
+            if (type is null)
             {
                 return null;
             }
             for (int i = 1; i < mods.Length; i++)
             {
                 type = type.Scope.LookupTypeOf(mods[i]);
-                if (!(type is ModuleType))
+                if (type is not ModuleType)
                 {
                     return null;
                 }
@@ -476,7 +476,7 @@ namespace Pytocs.Core.TypeInference
             return (ModuleType) type;
         }
 
-        private ModuleType getModule(string name)
+        private ModuleType? getModule(string name)
         {
             if (!modules.TryGetValue(name, out var wrap))
                 return null;
@@ -832,7 +832,7 @@ namespace Pytocs.Core.TypeInference
 
             public override void initBindings()
             {
-                outer.analyzer.ModuleScope.AddExpressionBinding(outer.analyzer, name, liburl(), module, BindingKind.MODULE).IsBuiltin = true;
+                outer.analyzer.ModuleScope.AddExpressionBinding(outer.analyzer, name, liburl(), module!, BindingKind.MODULE).IsBuiltin = true;
                 table.AddSuperClass(outer.BaseModule.Scope);
 
                 addClass("None", newLibUrl("constants"), DataType.None);
@@ -910,7 +910,7 @@ namespace Pytocs.Core.TypeInference
                 addFunction("open", newTutUrl("inputoutput.html#reading-and-writing-files"), outer.BaseFileInst);
                 addFunction("__import__", newLibUrl("functions"), outer.newModule("<?>"));
 
-                outer.analyzer.GlobalTable.AddExpressionBinding(outer.analyzer, "__builtins__", liburl(), module, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                outer.analyzer.GlobalTable.AddExpressionBinding(outer.analyzer, "__builtins__", liburl(), module!, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 outer.analyzer.GlobalTable.AddAllBindings(table);
             }
         }
@@ -1486,7 +1486,7 @@ namespace Pytocs.Core.TypeInference
 
             public override void initBindings()
             {
-                ModuleType builtins = outer.get("__builtin__");
+                ModuleType? builtins = outer.get("__builtin__");
                 foreach (string s in builtin_exception_types)
                 {
                     //                Binding b = builtins.getTable().lookup(s);
