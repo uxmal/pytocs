@@ -1,19 +1,32 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+#region License
+//  Copyright 2023 ToolGood
+// 
+//  Licensed under the Apache License, Version 2.0 (the "License");
+//  you may not use this file except in compliance with the License.
+//  You may obtain a copy of the License at
+// 
+//      http://www.apache.org/licenses/LICENSE-2.0
+// 
+//  Unless required by applicable law or agreed to in writing, software
+//  distributed under the License is distributed on an "AS IS" BASIS,
+//  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+//  See the License for the specific language governing permissions and
+//  limitations under the License.
+#endregion
+using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 
 namespace TorchCs
 {
     public class TorchUtil
     {
+        private const int MAX_LAYER = 5; // Number of times code contains code 
+
         public static void ReplaceFolder(string folder)
         {
             var files = Directory.GetFiles(folder, "*.cs", SearchOption.AllDirectories);
-            foreach (var file in files)
-            {
+            foreach (var file in files) {
                 var text = File.ReadAllText(file);
                 File.WriteAllText(file, ReplaceCodes(text));
             }
@@ -26,11 +39,17 @@ namespace TorchCs
 
         public static string ReplaceCodes(string text)
         {
+            text = Regex.Replace(text, @"object (\w+ = ""\w+""[,;)])", "string $1");
+            text = Regex.Replace(text, @"object (\w+ = \d+[,;)])", "int $1");
+            text = Regex.Replace(text, @"object (\w+ = \d+\.\d+[,;)])", "double $1");
+
             text = replaceNamespace(text);
             text = replaceConstructor(text);
             text = replaceFieldType(text);
             text = replaceMethodParameterName(text);
+            text = replaceMethodParamenterType(text);
             text = replaceMathMethod(text);
+            text = replaceStringToEnum(text);
 
             text = replaceForwardMethod(text);
             text = replaceCallForwardMethod(text);
@@ -38,38 +57,55 @@ namespace TorchCs
             text = replaceListSlice(text);
 
             text = replaceTensorList(text);
+            text = replaceIsType(text);
 
-            #region other
-            text = text.Replace("using (var torch.no_grad()) {", "using (var _temp= torch.no_grad()) {");
-            text = Regex.Replace(text, @"\bos\.makedirs\(", "Directory.CreateDirectory(");
-            text = Regex.Replace(text, @"\bos\.path\.join\(", "Path.Combine(");
+            text = replaceStringToNetstandard(text);
 
-            #endregion
+            text = text.Replace("using (var torch.no_grad())", "using (var _no_grad= torch.no_grad())");
+            text = text.Replace("using (var torch.cuda.amp.autocast())", "using (var _autocast= torch.cuda.amp.autocast())");
+
+            text = Regex.Replace(text, @"\bnp\.inf\b", "np.Inf");
+            text = text.Replace("time.time()", "DateTime.Now");
+
 
             return text;
         }
-        #region replaceNamespace
-        static string replaceNamespace(string text)
+
+        public static void CreateNetstandardCode(string folder)
+        {
+            Assembly myAssem = Assembly.GetExecutingAssembly();
+            var manifestResourceStream = myAssem.GetManifestResourceStream("TorchCs.Resources.netstandard.cs");
+            if (manifestResourceStream == null) { return; }
+
+            manifestResourceStream.Position = 0;
+            using (StreamReader reader = new StreamReader(manifestResourceStream, Encoding.UTF8)) {
+                var str = reader.ReadToEnd();
+                File.WriteAllText(Path.Combine(folder, "netstandard.cs"), str);
+            }
+        }
+
+        private static string replaceNamespace(string text)
         {
             text = text.Replace("using np = numpy;", "using NumpyDotNet;");
             text = text.Replace("using torch;", "using static TorchSharp.torch;\r\nusing torch = TorchSharp.torch;\r\nusing TorchSharp.Modules;");
             text = text.Replace("using nn = torch.nn;", "using nn = TorchSharp.torch.nn;");
             text = text.Replace("using F = torch.nn.functional;", "using F = TorchSharp.torch.nn.functional;");
+            text = text.Replace("using optim = torch.optim;", "using optim = TorchSharp.torch.optim;");
+            text = text.Replace("using DataLoader = torch.utils.data.DataLoader;", "using DataLoader = TorchSharp.torch.utils.data.DataLoader;");
 
             text = text.Replace("using math;", "");
             text = text.Replace("using os;", "");
+            text = text.Replace("using time;", "");
+            text = text.Replace("using warnings;", "");
+
             return text;
         }
-        #endregion
 
-        #region replaceConstructor
-        static string replaceConstructor(string text)
+        private static string replaceConstructor(string text)
         {
             var ms = Regex.Matches(text, @"public class (\S+)[\s \t]*: nn.Module");
-            if (ms.Count > 0)
-            {
-                foreach (Match item in ms)
-                {
+            if (ms.Count > 0) {
+                foreach (Match item in ms) {
                     var name = item.Groups[1].Value.Trim();
                     text = Regex.Replace(text, $@"(public {name}\([^)]*\))", $"$1:base(\"{name}\")");
                     text = text.Replace($":base(\"{name}\"):base(\"{name}\")", $":base(\"{name}\")");
@@ -77,27 +113,21 @@ namespace TorchCs
             }
             return text;
         }
-        #endregion
 
-        #region replaceFieldType
-        static string replaceFieldType(string text)
+        private static string replaceFieldType(string text)
         {
             var nnType = typeof(TorchSharp.torch.nn);
             var nnMethods = nnType.GetMethods(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
-            foreach (var method in nnMethods)
-            {
+            foreach (var method in nnMethods) {
                 var fieldType = method.ReturnType.Name;
                 var methodName = method.Name;
-                if (methodName == "ModuleDict" || methodName == "ModuleList")
-                {
+                if (methodName == "ModuleDict" || methodName == "ModuleList") {
                     continue;
                 }
                 var r = $@"this\.(\S+) = nn\.{methodName}\(";
                 var ms = Regex.Matches(text, r);
-                if (ms.Count > 0)
-                {
-                    foreach (Match m in ms)
-                    {
+                if (ms.Count > 0) {
+                    foreach (Match m in ms) {
                         var name = m.Groups[1].Value;
                         text = text.Replace($"public object {name};", $"public {fieldType} {name};");
                         text = text.Replace($"public void {name};", $"public {fieldType} {name};");
@@ -106,37 +136,31 @@ namespace TorchCs
                 }
             }
             text = replaceFieldType3(text);
+
+            text = Regex.Replace(text, @"public object (\w+)_len;", "public int $1_len;");
             return text;
         }
 
-        static string replaceFieldType3(string text)
+        private static string replaceFieldType3(string text)
         {
             var ms = Regex.Matches(text, @"public (object|void) (\S+);");
-            if (ms.Count > 0)
-            {
-                foreach (Match m in ms)
-                {
+            if (ms.Count > 0) {
+                foreach (Match m in ms) {
                     var name = m.Groups[2].Value;
-                    if (text.Contains($"this.{name} = {name};"))
-                    {
-                        if (text.Contains($"int {name} ="))
-                        {
+                    if (text.Contains($"this.{name} = {name};")) {
+                        if (text.Contains($"int {name} =")) {
                             text = text.Replace($"public object {name};", $"public int {name};");
                             text = text.Replace($"public void {name};", $"public int {name};");
-                        } else if (text.Contains($"long {name} ="))
-                        {
+                        } else if (text.Contains($"long {name} =")) {
                             text = text.Replace($"public object {name};", $"public long {name};");
                             text = text.Replace($"public void {name};", $"public long {name};");
-                        } else if (text.Contains($"doulbe {name} ="))
-                        {
+                        } else if (text.Contains($"doulbe {name} =")) {
                             text = text.Replace($"public object {name};", $"public doulbe {name};");
                             text = text.Replace($"public void {name};", $"public doulbe {name};");
-                        } else if (text.Contains($"string {name} ="))
-                        {
+                        } else if (text.Contains($"string {name} =")) {
                             text = text.Replace($"public object {name};", $"public string {name};");
                             text = text.Replace($"public void {name};", $"public string {name};");
-                        } else if (text.Contains($"bool {name} ="))
-                        {
+                        } else if (text.Contains($"bool {name} =")) {
                             text = text.Replace($"public object {name};", $"public bool {name};");
                             text = text.Replace($"public void {name};", $"public bool {name};");
                         }
@@ -146,10 +170,7 @@ namespace TorchCs
             return text;
         }
 
-        #endregion
-
-        #region replaceMethodParameterName
-        static string replaceMethodParameterName(string text)
+        private static string replaceMethodParameterName(string text)
         {
             var nnType = typeof(TorchSharp.torch.nn);
             var nnMethods = nnType.GetMethods(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
@@ -163,28 +184,21 @@ namespace TorchCs
                 {"hasBias" ,"bias"},
             };
 
-            foreach (var methodInfo in nnMethods)
-            {
+            foreach (var methodInfo in nnMethods) {
                 var ps = methodInfo.GetParameters();
-                foreach (var p in ps)
-                {
+                foreach (var p in ps) {
                     text = replaceMethodParameterName(text, "nn." + methodInfo.Name, getPythonParameterName(p.Name), p.Name);
-                    if (parameters.ContainsKey(p.Name))
-                    {
+                    if (parameters.ContainsKey(p.Name)) {
                         text = replaceMethodParameterName(text, "nn." + methodInfo.Name, parameters[p.Name], p.Name);
                     }
                 }
             }
-            foreach (var methodInfo in torchMethods)
-            {
+            foreach (var methodInfo in torchMethods) {
                 var ps = methodInfo.GetParameters();
-                foreach (var p in ps)
-                {
-                    for (int i = 0; i < 5; i++)
-                    {
+                foreach (var p in ps) {
+                    for (int i = 0; i < MAX_LAYER; i++) {
                         text = replaceMethodParameterName(text, "torch." + methodInfo.Name, getPythonParameterName(p.Name), p.Name);
-                        if (parameters.ContainsKey(p.Name))
-                        {
+                        if (parameters.ContainsKey(p.Name)) {
                             text = replaceMethodParameterName(text, "torch." + methodInfo.Name, parameters[p.Name], p.Name);
                         }
                     }
@@ -193,46 +207,86 @@ namespace TorchCs
             return text;
         }
 
-        static string replaceMethodParameterName(string text, string methodName, string oldName, string newName)
+        private static string replaceMethodParameterName(string text, string methodName, string oldName, string newName)
         {
             if (oldName == newName) { return text; }
-
-            var r = $"({methodName}\\([^;]*?){oldName}:";
+            var r = $"({methodName}\\([^;]*?)\\b{oldName}:";
             return Regex.Replace(text, r, new MatchEvaluator((m) => {
                 return m.Groups[1].Value + newName + ":";
             }));
         }
-        static string getPythonParameterName(string text)
+        private static string getPythonParameterName(string text)
         {
             StringBuilder stringBuilder = new StringBuilder();
 
-            for (int i = 0; i < text.Length; i++)
-            {
+            for (int i = 0; i < text.Length; i++) {
                 var c = text[i];
-                if (i == 0)
-                {
+                if (i == 0) {
                     stringBuilder.Append(char.ToLower(c));
-                } else if (c >= 'A' && c <= 'Z')
-                {
+                } else if (c >= 'A' && c <= 'Z') {
                     stringBuilder.Append('_');
                     stringBuilder.Append(char.ToLower(c));
-                } else
-                {
+                } else {
                     stringBuilder.Append(c);
                 }
             }
             return stringBuilder.ToString();
         }
 
-        #endregion
 
-        #region replaceMathMethod
-        static string replaceMathMethod(string text)
+        private static string replaceMethodParamenterType(string text)
+        {
+            var tensorType = typeof(TorchSharp.torch.Tensor);
+            var fields = tensorType.GetFields();
+            HashSet<string> names = new HashSet<string>();
+
+            foreach (var field in fields) {
+                var ms2 = Regex.Matches(text, @"\b(\w+)\." + field.Name + "\\b");
+                foreach (Match m in ms2) {
+                    names.Add(m.Groups[1].Value);
+                }
+            }
+            var properties = tensorType.GetProperties();
+            foreach (var property in properties) {
+                var ms2 = Regex.Matches(text, @"\b(\w+)\." + property.Name + "\\b");
+                foreach (Match m in ms2) {
+                    names.Add(m.Groups[1].Value);
+                }
+            }
+            var methodInfos = tensorType.GetMethods(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var method in methodInfos) {
+                var ms2 = Regex.Matches(text, @"\b(\w+)\." + method.Name + "\\(");
+                foreach (Match m in ms2) {
+                    names.Add(m.Groups[1].Value);
+                }
+            }
+            var ms = Regex.Matches(text, @"\b(\w+) = torch\.");
+            foreach (Match m in ms) {
+                names.Add(m.Groups[1].Value);
+            }
+            foreach (var name in names) {
+                text = text.Replace("object " + name + ",", "Tensor " + name + ",");
+                text = text.Replace("void " + name + ",", "Tensor " + name + ",");
+                text = text.Replace("object " + name + ";", "Tensor " + name + ";");
+                text = text.Replace("void " + name + ";", "Tensor " + name + ";");
+                text = text.Replace("object " + name + ")", "Tensor " + name + ")");
+                text = text.Replace("void " + name + ")", "Tensor " + name + ")");
+            }
+
+            text = Regex.Replace(text, @"(object|void) (\w+_len[,;)])", "int $2");
+            text = Regex.Replace(text, @"(object|void) (\w+_in[,;)])", "int $2");
+            text = Regex.Replace(text, @"(object|void) (\w+_model[,;)])", "int $2");
+            text = Regex.Replace(text, @"(object|void) (\w+_out[,;)])", "int $2");
+
+            return text;
+        }
+
+
+        private static string replaceMathMethod(string text)
         {
             var mathType = typeof(Math);
             var mathMethods = mathType.GetMethods(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
-            foreach (var methodInfo in mathMethods)
-            {
+            foreach (var methodInfo in mathMethods) {
                 var name = methodInfo.Name;
                 var nameL = name.ToLower();
                 text = Regex.Replace(text, @$"\bmath\.{nameL}\(", $"Math.{name}(");
@@ -240,12 +294,9 @@ namespace TorchCs
             return text;
         }
 
-        #endregion
-
-        #region replaceForwardMethod
-        static string replaceForwardMethod(string text)
+        private static string replaceForwardMethod(string text)
         {
-            text = text.Replace(" Tuple<object, object> forward(", " (Tensor, Tensor) forward(");
+            text = text.Replace(" Tuple<object, object>", " (Tensor, Tensor)");
             text = text.Replace(" Tuple<object, void> forward(", " (Tensor, Tensor) forward(");
             text = text.Replace(" object[] forward(", " (Tensor, Tensor) forward(");
             text = text.Replace(" Tuple<object, List<object>> forward(", " (Tensor, List<Tensor>) forward(");
@@ -256,11 +307,10 @@ namespace TorchCs
             text = text.Replace(" forward(object queries, object keys, object values", " forward(Tensor queries, Tensor keys, Tensor values");
             return text;
         }
-        #endregion
 
-        #region replaceCallForwardMethod
-        static string replaceCallForwardMethod(string text)
+        private static string replaceCallForwardMethod(string text)
         {
+            text = Regex.Replace(text, @"\bthis\.inner_attention\(", "this.inner_attention.forward(");
             text = Regex.Replace(text, @"\bthis\.dropout\(", "this.dropout.forward(");
             text = Regex.Replace(text, @"\bthis\.attention\(", "this.attention.forward(");
             text = Regex.Replace(text, @"\bthis\.self_attention\(", "this.self_attention.forward(");
@@ -318,10 +368,8 @@ namespace TorchCs
             text = Regex.Replace(text, @"\bthis\.attn\(", "this.attn.forward(");
             return text;
         }
-        #endregion
 
-        #region replaceTensorList
-        static string replaceTensorList(string text)
+        private static string replaceTensorList(string text)
         {
             text = text.Replace(" torch.cat(new List<object>", " torch.cat(new List<Tensor>");
             text = text.Replace(" torch.ones(new List<object>", " torch.ones(new List<Tensor>");
@@ -331,52 +379,39 @@ namespace TorchCs
             text = text.Replace("attns.append(attn);", "attns.Add(attn);");
             return text;
         }
-        #endregion
 
-        #region replaceListSlice
-        static string replaceListSlice(string text)
+        private static string replaceListSlice(string text)
         {
             text = Regex.Replace(text, @"\[([^\[\]]*?)\]", new MatchEvaluator(m => {
-                if (m.Groups[1].Value.Contains(":") == false)
-                {
+                if (m.Groups[1].Value.Contains(":") == false) {
                     return m.Value;
                 }
                 var strs = m.Groups[1].Value.Split(',');
                 List<string> list = new List<string>();
-                foreach (var str in strs)
-                {
-                    if (str.Trim() == "\":\"")
-                    {
+                foreach (var str in strs) {
+                    if (str.Trim() == "\":\"") {
                         list.Add("TensorIndex.Ellipsis");
-                    } else if (str.Trim() == "")
-                    {
+                    } else if (str.Trim() == "") {
                         list.Add("TensorIndex.Null");
-                    } else if (str.Contains(":"))
-                    {
+                    } else if (str.Contains(":")) {
                         var ss = str.Trim().Split(':');
                         string r = "TensorIndex.Slice(";
-                        for (int i = 0; i < ss.Length; i++)
-                        {
+                        for (int i = 0; i < ss.Length; i++) {
                             var s = ss[i];
                             if (i > 0) { r += ","; }
-                            if (s.Trim() == "")
-                            {
+                            if (s.Trim() == "") {
                                 r += "null";
-                            } else
-                            {
-                                if (s.StartsWith("self."))
-                                {
+                            } else {
+                                if (s.StartsWith("self.")) {
                                     r += s.Replace("self.", "this.");
-                                } else
-                                {
+                                } else {
                                     r += s;
                                 }
                             }
                         }
                         r += ")";
                         list.Add(r);
-                    } else
-                    {
+                    } else {
                         list.Add(str);
                     }
                 }
@@ -384,7 +419,62 @@ namespace TorchCs
             }));
             return text;
         }
-        #endregion
+
+        private static string replaceIsType(string text)
+        {
+            var nnType = typeof(TorchSharp.torch.nn);
+            var nnMethods = nnType.GetMethods(System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public);
+            foreach (var method in nnMethods) {
+                var fieldType = method.ReturnType.Name;
+                var methodName = method.Name;
+                if (methodName == "ModuleDict" || methodName == "ModuleList") {
+                    continue;
+                }
+                text = text.Replace($" is nn.{methodName}", $" is {methodName}");
+            }
+            return text;
+        }
+
+
+        private static string replaceStringToEnum(string text)
+        {
+            text = Regex.Replace(text, @"\bpaddingMode: ""zeros""", "paddingMode: TorchSharp.PaddingModes.Zeros");
+            text = Regex.Replace(text, @"\bpaddingMode: ""reflect""", "paddingMode: TorchSharp.PaddingModes.Reflect");
+            text = Regex.Replace(text, @"\bpaddingMode: ""replicate""", "paddingMode: TorchSharp.PaddingModes.Replicate");
+            text = Regex.Replace(text, @"\bpaddingMode: ""circular""", "paddingMode: TorchSharp.PaddingModes.Circular");
+            text = Regex.Replace(text, @"\bpaddingMode: ""constant""", "paddingMode: TorchSharp.PaddingModes.Constant");
+
+            text = Regex.Replace(text, @"\breduction: ""none""", "reduction: Reduction.None");
+            text = Regex.Replace(text, @"\breduction: ""mean""", "reduction: Reduction.Mean");
+            text = Regex.Replace(text, @"\breduction: ""sum""", "reduction: Reduction.Sum");
+
+            text = Regex.Replace(text, @"\bnonLinearity: ""relu""", "nonLinearity: NonLinearities.ReLU");
+            text = Regex.Replace(text, @"\bnonLinearity: ""tanh""", "nonLinearity: NonLinearities.Tanh");
+
+            text = Regex.Replace(text, @"\bactivation: ""relu""", "activation: Activations.ReLU");
+            text = Regex.Replace(text, @"\bactivation: ""gelu""", "activation: Activations.GELU");
+
+            text = Regex.Replace(text, @"\bmode: ""nearest""", "mode: UpsampleMode.Nearest");
+            text = Regex.Replace(text, @"\bmode: ""linear""", "mode: UpsampleMode.Linear");
+            text = Regex.Replace(text, @"\bmode: ""bilinear""", "mode: UpsampleMode.Bilinear");
+            text = Regex.Replace(text, @"\bmode: ""bicubic""", "mode: UpsampleMode.Bicubic");
+            text = Regex.Replace(text, @"\bmode: ""trilinear""", "mode: UpsampleMode.Trilinear");
+
+            return text;
+        }
+
+
+        private static string replaceStringToNetstandard(string text)
+        {
+            text = Regex.Replace(text, @" zip\(", " TorchEnumerable.zip(");
+
+            text = Regex.Replace(text, @"(\([A-Za-z_0-9]+,[A-Za-z_0-9 ]+\) = \w+\.shape);", "var $1.ToLong2();");
+            text = Regex.Replace(text, @"(\([A-Za-z_0-9]+,[A-Za-z_0-9 ]+,[A-Za-z_0-9 ]+\) = \w+\.shape);", "var $1.ToLong3();");
+            text = Regex.Replace(text, @"(\([A-Za-z_0-9]+,[A-Za-z_0-9 ]+,[A-Za-z_0-9 ]+,[A-Za-z_0-9 ]+\) = \w+\.shape);", "var $1.ToLong4();");
+
+            return text;
+        }
+
 
 
     }
