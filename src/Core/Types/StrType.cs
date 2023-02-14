@@ -32,7 +32,7 @@ namespace Pytocs.Core.Types
             return visitor.VisitStr(this);
         }
 
-        public override bool Equals(object other)
+        public override bool Equals(object? other)
         {
             return (other is StrType);
         }

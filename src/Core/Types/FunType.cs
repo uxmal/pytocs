@@ -98,7 +98,7 @@ namespace Pytocs.Core.Types
             }
         }
 
-        public void SetDefaultTypes(List<DataType?>? defaultTypes)
+        public void SetDefaultTypes(List<DataType>? defaultTypes)
         {
             this.DefaultTypes = defaultTypes;
         }

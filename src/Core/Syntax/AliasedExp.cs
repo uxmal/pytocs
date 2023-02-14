@@ -29,8 +29,8 @@ namespace Pytocs.Core.Syntax
             this.Alias = alias;
         }
 
-        public Exp Exp { get; }
-        public Identifier Alias { get; }
+        public Exp? Exp { get; }
+        public Identifier? Alias { get; }
 
         public override T Accept<T, C>(IExpVisitor<T, C> v, C context)
         {

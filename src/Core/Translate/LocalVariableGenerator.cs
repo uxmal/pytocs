@@ -73,10 +73,10 @@ namespace Pytocs.Core.Translate
             }
         }
 
-        private void AnalyzeExp(List<CodeStatement> basePath, CodeExpression exp)
+        private void AnalyzeExp(List<CodeStatement> basePath, CodeExpression? exp)
         {
             var visitor = new ExpLocalVarGenerator(this);
-            exp.Accept(visitor);
+            exp?.Accept(visitor);
         }
 
         private void Generate()
@@ -265,8 +265,10 @@ namespace Pytocs.Core.Translate
 
         internal class IdCmp : IEqualityComparer<CodeVariableReferenceExpression>
         {
-            public bool Equals(CodeVariableReferenceExpression x, CodeVariableReferenceExpression y)
+            public bool Equals(CodeVariableReferenceExpression? x, CodeVariableReferenceExpression? y)
             {
+                if (x is null || y is null)
+                    return (x is null && y is null);
                 return x.Name == y.Name;
             }
 
@@ -365,7 +367,7 @@ namespace Pytocs.Core.Translate
 
             public void VisitLambda(CodeLambdaExpression l)
             {
-                l.Body.Accept(this);
+                l.Body?.Accept(this);
             }
 
             public void VisitMethodReference(CodeMethodReferenceExpression m)

@@ -173,7 +173,9 @@ namespace Pytocs.Core.Translate
             }
             else
             {
-                var (dtParam, ns)= types.TranslateTypeOf(ta.Id!);
+                var (dtParam, ns) = types.TranslateTypeOf(ta.Id!);
+                if (dtParam.TypeName == "void")
+                    _ = this; //$DEBUG
                 gen.EnsureImports(ns);
                 parameterType = dtParam;
             }

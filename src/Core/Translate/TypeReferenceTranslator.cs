@@ -34,6 +34,7 @@ namespace Pytocs.Core.Translate
         public const string SystemNamespace = "System";
         public const string GenericCollectionNamespace = "System.Collections.Generic";
         public const string LinqNamespace = "System.Linq";
+        public const string NumericNamespace = "System.Numeric";
         public const string TasksNamespace = "System.Threading.Tasks";
 
         private readonly Dictionary<Node, DataType> types;
@@ -114,7 +115,7 @@ namespace Pytocs.Core.Translate
             case ComplexType _:
                 return (
                     new CodeTypeReference("Complex"),
-                    new HashSet<string> { "System.Numeric" });
+                    new HashSet<string> { NumericNamespace });
             case StrType _:
                 return (
                     new CodeTypeReference(typeof(string)),
@@ -275,7 +276,8 @@ namespace Pytocs.Core.Translate
 
         private static readonly Dictionary<string, (string, string?)> DefaultClassTranslations = new Dictionary<string, (string, string?)>
         {
-            { "None", ("void", null) },
+            { "None", ("object", null) },
+            { "Unit", ("void", null) },
             { "NotImplementedError", (nameof(NotImplementedException), SystemNamespace) }
         };
     }

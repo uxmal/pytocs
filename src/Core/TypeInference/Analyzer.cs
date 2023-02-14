@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2021 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -309,8 +309,10 @@ namespace Pytocs.Core.TypeInference
         /// </summary>
         /// <param name="file"></param>
         /// <returns>The qualified name.</returns>
-        public string GetModuleQname(string file)
+        public string GetModuleQname(string? file)
         {
+            if (file is null)
+                return "";
             if (file.EndsWith("__init__.py"))
             {
                 file = FileSystem.GetDirectoryName(file);

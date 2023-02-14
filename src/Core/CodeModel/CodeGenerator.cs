@@ -323,7 +323,7 @@ namespace Pytocs.Core.CodeModel
             var oldStatements = CurrentStatements;
             var oldComments = CurrentComments;
             SetCurrentFunction(fn);
-            Scope = fn.Statements;
+            Scope = fn.Statements!;
             body();
             Scope = old;
             CurrentMember = oldMethod;

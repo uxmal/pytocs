@@ -813,7 +813,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             {
                 init = test();
             }
-            return new VarArg { Name = id, Test = init };
+            return new VarArg(id, init);
         }
 
         //vfpdef: NAME
@@ -2496,7 +2496,7 @@ eval_input: testlist NEWLINE* ENDMARKER
                 if (Peek(TokenType.For))
                 {
                     var f = comp_for(k);
-                    return new SetComprehension(f, filename, k.Start, k.End);
+                    return new SetComprehension(f, filename, k!.Start, k.End);
                 }
                 else if (PeekAndDiscard(TokenType.OP_STARSTAR))
                 {
@@ -2637,7 +2637,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         }
 
         // comp_for: ['async'] sync_comp_for
-        public CompFor comp_for(Exp projection)
+        public CompFor comp_for(Exp? projection)
         {
             bool async = PeekAndDiscard(TokenType.Async);
             var compFor = sync_comp_for(projection);
@@ -2646,7 +2646,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         }
 
         //sync_comp_for: 'for' exprlist 'in' or_test [comp_iter]
-        public CompFor sync_comp_for(Exp projection)
+        public CompFor sync_comp_for(Exp? projection)
         {
             var start = Expect(TokenType.For).Start;
             var exprs = exprlist();

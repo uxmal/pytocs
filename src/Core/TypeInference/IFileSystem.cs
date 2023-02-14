@@ -39,7 +39,7 @@ namespace Pytocs.Core.TypeInference
         string GetFileName(string path);
         string makePathString(params string[] files);
         byte[] ReadFileBytes(string path);
-        string ReadFile(string path);
+        string? ReadFile(string path);
         string GetFullPath(string file);
         void WriteFile(string path, string contents);
         void DeleteFile(string path);

@@ -207,11 +207,11 @@ namespace Pytocs.Core.Syntax
         {
             string lexeme;
             this.sb.Clear();
-            State oldState = (State)(-1);
+            State oldState = (State) (-1);
             for (; ; )
             {
                 int c = rdr.Peek();
-                char ch = (char)c;
+                char ch = (char) c;
                 switch (st)
                 {
                 case State.Start:
@@ -513,7 +513,7 @@ namespace Pytocs.Core.Syntax
                             Accum(ch, State.Decimal);
                             break;
                         }
-                        return Token(TokenType.INTEGER, sb.ToString(), (object)0);
+                        return Token(TokenType.INTEGER, sb.ToString(), (object) 0);
                     }
                     break;
                 case State.Decimal:
@@ -541,7 +541,7 @@ namespace Pytocs.Core.Syntax
                             Accum(ch, State.Decimal);
                             break;
                         }
-                        lexeme =  sb.ToString();
+                        lexeme = sb.ToString();
                         var sNumber = sb.Replace("_", "").ToString();
                         if (int.TryParse(sNumber, NumberStyles.Any, CultureInfo.InvariantCulture, out var num))
                         {
@@ -646,7 +646,7 @@ namespace Pytocs.Core.Syntax
                     case 'l':
                         Advance();
                         lexeme = sb.ToString();
-                        var sNumber = sb.Replace("_", "").ToString(2, sb.Length-2);
+                        var sNumber = sb.Replace("_", "").ToString(2, sb.Length - 2);
                         if (long.TryParse(sNumber, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var l))
                         {
                             return Token(TokenType.LONGINTEGER, lexeme, l);
@@ -661,7 +661,7 @@ namespace Pytocs.Core.Syntax
                         }
                     default:
                         lexeme = sb.ToString();
-                        sNumber = sb.Replace("_", "").ToString(2, sb.Length-2);
+                        sNumber = sb.Replace("_", "").ToString(2, sb.Length - 2);
                         if (int.TryParse(sNumber, NumberStyles.HexNumber, CultureInfo.InvariantCulture, out var num))
                         {
                             return Token(TokenType.INTEGER, lexeme, num);
@@ -957,7 +957,7 @@ namespace Pytocs.Core.Syntax
                         Advance();
                         if (--hexDigits == 0)
                         {
-                            sb.Append((char)charConst);
+                            sb.Append((char) charConst);
                             st = oldState;
                         }
                         break;
@@ -971,7 +971,7 @@ namespace Pytocs.Core.Syntax
                         Advance();
                         if (--hexDigits == 0)
                         {
-                            sb.Append((char)charConst);
+                            sb.Append((char) charConst);
                             st = oldState;
                         }
                         break;
@@ -985,7 +985,7 @@ namespace Pytocs.Core.Syntax
                         Advance();
                         if (--hexDigits == 0)
                         {
-                            sb.Append((char)charConst);
+                            sb.Append((char) charConst);
                             st = oldState;
                         }
                         break;
@@ -1014,14 +1014,14 @@ namespace Pytocs.Core.Syntax
                 case State.Colon:
                     switch (ch)
                     {
-                    case '=': return EatChToken(TokenType.COLONEQ); break;
-                default:
+                    case '=': return EatChToken(TokenType.COLONEQ);
+                    default:
                         return Token(TokenType.COLON);
-                }
+                    }
                 default:
                     throw Error(string.Format(Resources.ErrUnhandledState, st));
+                }
             }
-        }
         }
 
         // Python and C# binary literals look the same.

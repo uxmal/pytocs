@@ -3,7 +3,12 @@
     "Cli": {
       "commandName": "Project",
       "commandLineArgs": "-r .",
-      "workingDirectory": "D:\\dev\\uxmal\\rev\\py\\angr\\angr"
+      "workingDirectory": "d:\\dev\\uxmal\\pytocs\\PyHiSLIP"
+    },
+    "wasm": {
+      "commandName": "Project",
+      "commandLineArgs": "-r .",
+      "workingDirectory": "d:\\dev\\uxmal\\rev\\py\\wasm\\wasm"
     }
   }
 }

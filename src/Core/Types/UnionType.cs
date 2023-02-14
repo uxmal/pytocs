@@ -68,7 +68,7 @@ namespace Pytocs.Core.Types
                 types.Remove(t2);
                 return UnionType.CreateUnion(types);
             }
-            else if (t1 != DataType.Cont && t1 == t2)
+            else if (t1 != DataType.Unit && t1 == t2)
             {
                 return DataType.Unknown;
             }

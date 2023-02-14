@@ -29,7 +29,7 @@ namespace Pytocs.Core.CodeModel
             TypeArguments = new List<CodeTypeReference>();
             if (type.IsGenericType)
             {
-                TypeName = type.FullName.Remove(type.FullName.IndexOf('`'));
+                TypeName = type.FullName!.Remove(type.FullName.IndexOf('`'));
                 TypeArguments = type.GetGenericArguments()
                     .Select(tArg => new CodeTypeReference(tArg))
                     .ToList();

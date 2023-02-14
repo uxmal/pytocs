@@ -95,7 +95,7 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitCompFor(CompFor compFor)
         {
-            var p = compFor.projection.Accept(this);
+            var p = compFor.projection?.Accept(this);
             var cf = TranslateToLinq(p, compFor);
             return cf;
         }
@@ -257,7 +257,7 @@ namespace Pytocs.Core.Translate
             {
                 return m.Appl(
                     new CodeVariableReferenceExpression("__flatten___"),
-                    new CodeNamedArgument(a.Name.Accept(this), null));
+                    new CodeNamedArgument(a.Name!.Accept(this), null));
             }
             if (a.Name == null)
             {
@@ -413,7 +413,7 @@ namespace Pytocs.Core.Translate
             {
             m.EnsureImport(TypeReferenceTranslator.LinqNamespace);
             var compFor = (CompFor) sc.Collection;
-            var v = compFor.projection.Accept(this);
+            var v = compFor.projection?.Accept(this);
             var c = TranslateToLinq(v, compFor);
                 return m.Appl(
                     m.MethodRef(
@@ -581,7 +581,7 @@ namespace Pytocs.Core.Translate
         {
             m.EnsureImport(TypeReferenceTranslator.LinqNamespace);
             var compFor = (CompFor) lc.Collection;
-            var v = compFor.projection.Accept(this);
+            var v = compFor.projection!.Accept(this);
             var c = TranslateToLinq(v, compFor);
             return m.Appl(m.MethodRef(c, "ToList"));
         }
@@ -604,7 +604,7 @@ namespace Pytocs.Core.Translate
             return e;
         }
 
-        private CodeExpression TranslateToLinq(CodeExpression projection, CompFor compFor)
+        private CodeExpression TranslateToLinq(CodeExpression? projection, CompFor compFor)
         {
             var e = compFor.collection.Accept(this);
             var queryClauses = new List<CodeQueryClause>();
@@ -624,7 +624,7 @@ namespace Pytocs.Core.Translate
                 }
                 iter = iter.next;
             }
-            queryClauses.Add(m.Select(projection));
+            queryClauses.Add(m.Select(projection!));
             return m.Query(queryClauses.ToArray());
         }
 

@@ -80,7 +80,7 @@ namespace Pytocs.Core.Types
         }
 
         public static readonly InstanceType Unknown = new InstanceType(new ClassType("?", null, null));
-        public static readonly InstanceType Cont = new InstanceType(new ClassType("None", null, null));
+        public static readonly InstanceType Unit = new InstanceType(new ClassType("Unit", null, null));
         public static readonly InstanceType None = new InstanceType(new ClassType("None", null, null));
         public static readonly StrType Str = new StrType(null);
         public static readonly IntType Int = new IntType();

@@ -162,7 +162,7 @@ def crunk(a):
             Assert.Equal(sExp, BindingsToString());
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(TypeAn_FwdReference))]
         public void TypeAn_FwdReference()
         {
             fs.Dir("foo")
@@ -186,8 +186,8 @@ foo('Hello')
             an.Finish();
             var sExp =
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
-@"(binding:kind=FUNCTION:node=foo:type=str -> None:qname=.foo.test.foo:refs=[foo])" + nl +
-@"(binding:kind=FUNCTION:node=bar:type=str -> None:qname=.foo.test.bar:refs=[bar])" + nl +
+@"(binding:kind=FUNCTION:node=foo:type=str -> Unit:qname=.foo.test.foo:refs=[foo])" + nl +
+@"(binding:kind=FUNCTION:node=bar:type=str -> Unit:qname=.foo.test.bar:refs=[bar])" + nl +
 @"(binding:kind=PARAMETER:node=x:type=str:qname=.foo.test.foo.x:refs=[x,x])" + nl +
 @"(binding:kind=PARAMETER:node=y:type=str:qname=.foo.test.bar.y:refs=[y])" + nl;
 
@@ -196,7 +196,7 @@ foo('Hello')
             Assert.Equal(sExp, BindingsToString());
         }
 
-        [Fact]
+        [Fact(DisplayName = "TypeAn_Attribute")]
         public void TypeAn_Attribute()
         {
             fs.Dir("foo")
@@ -219,9 +219,9 @@ f.foo()
             var sExp =
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
 @"(binding:kind=CLASS:node=Foo:type=<Foo>:qname=.foo.test.Foo:refs=[Foo])" + nl +
-@"(binding:kind=METHOD:node=foo:type=Foo -> None:qname=.foo.test.Foo.foo:refs=[f.foo])" + nl +
+@"(binding:kind=METHOD:node=foo:type=Foo -> Unit:qname=.foo.test.Foo.foo:refs=[f.foo])" + nl +
 @"(binding:kind=PARAMETER:node=self:type=<Foo>:qname=.foo.test.Foo.foo.self:refs=[self])" + nl +
-@"(binding:kind=METHOD:node=bar:type=(Foo, ?) -> None:qname=.foo.test.Foo.bar:refs=[])" + nl +
+@"(binding:kind=METHOD:node=bar:type=(Foo, ?) -> Unit:qname=.foo.test.Foo.bar:refs=[])" + nl +
 @"(binding:kind=PARAMETER:node=self:type=<Foo>:qname=.foo.test.Foo.bar.self:refs=[])" + nl +
 @"(binding:kind=SCOPE:node=f:type=Foo:qname=.foo.test.f:refs=[f])" + nl +
 @"(binding:kind=PARAMETER:node=self:type=Foo:qname=.foo.test.Foo.foo.self:refs=[self])" + nl +
@@ -233,7 +233,7 @@ f.foo()
             Assert.Equal(sExp, BindingsToString());
         }
 
-        [Fact]
+        [Fact(DisplayName = "TypeAn_LocalVar")]
         public void TypeAn_LocalVar()
         {
             fs.Dir("foo")
@@ -249,7 +249,7 @@ def bar():
             var sExp =
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
 @"(binding:kind=SCOPE:node=x:type=str:qname=.foo.test.x:refs=[])" + nl +
-@"(binding:kind=FUNCTION:node=bar:type=() -> None:qname=.foo.test.bar:refs=[])" + nl +
+@"(binding:kind=FUNCTION:node=bar:type=() -> Unit:qname=.foo.test.bar:refs=[])" + nl +
 @"(binding:kind=SCOPE:node=x:type=int:qname=.foo.test.bar.x:refs=[x])" + nl +
 @"(binding:kind=VARIABLE:node=x:type=int:qname=.foo.test.bar.x:refs=[x])" + nl;
             Console.Write(BindingsToString());
@@ -276,7 +276,7 @@ def bar(point):
             Assert.Equal(sExp, BindingsToString());
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(TypeAn_Dirs))]
         public void TypeAn_Dirs()
         {
             fs.Dir("sys_q")
@@ -303,13 +303,13 @@ def mane_lupe(phile):
 @"(binding:kind=MODULE:node=(module:\sys_q\parsing\__init__.py):type=:qname=:refs=[])" + nl +
 @"(binding:kind=MODULE:node=(module:\sys_q\parsing\parser.py):type=parser:qname=.sys_q.parsing.parser:refs=[])" + nl +
 @"(binding:kind=CLASS:node=Parser:type=<Parser>:qname=.sys_q.parsing.parser.Parser:refs=[Parser,Parser])" + nl +
-@"(binding:kind=METHOD:node=parse:type=(Parser, ?) -> None:qname=.sys_q.parsing.parser.Parser.parse:refs=[p.parse])" + nl +
+@"(binding:kind=METHOD:node=parse:type=(Parser, ?) -> Unit:qname=.sys_q.parsing.parser.Parser.parse:refs=[p.parse])" + nl +
 @"(binding:kind=PARAMETER:node=self:type=<Parser>:qname=.sys_q.parsing.parser.Parser.parse.self:refs=[])" + nl +
 
 @"(binding:kind=MODULE:node=(module:\sys_q\main.py):type=main:qname=.sys_q.main:refs=[])" + nl +
 @"(binding:kind=VARIABLE:node=parsing:type=:qname=:refs=[])" + nl +
 @"(binding:kind=VARIABLE:node=parser:type=parser:qname=.sys_q.parsing.parser:refs=[])" + nl +
-@"(binding:kind=FUNCTION:node=mane_lupe:type=? -> None:qname=.sys_q.main.mane_lupe:refs=[])" + nl +
+@"(binding:kind=FUNCTION:node=mane_lupe:type=? -> Unit:qname=.sys_q.main.mane_lupe:refs=[])" + nl +
 @"(binding:kind=SCOPE:node=p:type=Parser:qname=.sys_q.main.mane_lupe.p:refs=[p])" + nl +
 @"(binding:kind=PARAMETER:node=self:type=Parser:qname=.sys_q.parsing.parser.Parser.parse.self:refs=[])" + nl +
 @"(binding:kind=PARAMETER:node=phile:type=?:qname=.sys_q.parsing.parser.Parser.parse.phile:refs=[])" + nl +
@@ -318,7 +318,7 @@ def mane_lupe(phile):
             ExpectBindings(sExp);
         }
 
-        [Fact]
+        [Fact(DisplayName = nameof(TypeAn_class_instance_creation))]
         public void TypeAn_class_instance_creation()
         {
             fs.Dir("foo")
@@ -339,10 +339,10 @@ def bar():
             var sExp =
 @"(binding:kind=MODULE:node=(module:\foo\cls.py):type=cls:qname=.foo.cls:refs=[])" + nl +
 @"(binding:kind=CLASS:node=Cls:type=<Cls>:qname=.foo.cls.Cls:refs=[])" + nl +
-@"(binding:kind=METHOD:node=echo:type=(Cls, ?) -> None:qname=.foo.cls.Cls.echo:refs=[])" + nl +
+@"(binding:kind=METHOD:node=echo:type=(Cls, ?) -> Unit:qname=.foo.cls.Cls.echo:refs=[])" + nl +
 @"(binding:kind=PARAMETER:node=self:type=<Cls>:qname=.foo.cls.Cls.echo.self:refs=[])" + nl +
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
-@"(binding:kind=FUNCTION:node=bar:type=() -> None:qname=.foo.test.bar:refs=[])" + nl +
+@"(binding:kind=FUNCTION:node=bar:type=() -> Unit:qname=.foo.test.bar:refs=[])" + nl +
 @"(binding:kind=SCOPE:node=c:type=?:qname=.foo.test.bar.c:refs=[c])" + nl +
 @"(binding:kind=PARAMETER:node=self:type=Cls:qname=.foo.cls.Cls.echo.self:refs=[])" + nl +
 @"(binding:kind=PARAMETER:node=s:type=?:qname=.foo.cls.Cls.echo.s:refs=[s])" + nl +
@@ -351,7 +351,7 @@ def bar():
             ExpectBindings(sExp);
         }
 
-        [Fact]
+        [Fact(DisplayName = "TypeAn_Array_Ref")]
         public void TypeAn_Array_Ref()
         {
             fs.Dir("foo")
@@ -366,7 +366,7 @@ def bar():
             an.Finish();
             var sExp =
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
-@"(binding:kind=FUNCTION:node=bar:type=() -> None:qname=.foo.test.bar:refs=[])" + nl +
+@"(binding:kind=FUNCTION:node=bar:type=() -> Unit:qname=.foo.test.bar:refs=[])" + nl +
 @"(binding:kind=SCOPE:node=s:type=[str]:qname=.foo.test.bar.s:refs=[s])" + nl +
 @"(binding:kind=VARIABLE:node=s:type=[str]:qname=.foo.test.bar.s:refs=[s])" + nl;
 
@@ -394,7 +394,7 @@ def bar():
         }
 
 
-        [Fact]
+        [Fact(DisplayName = nameof(TypeAn_Inherit_field))]
         public void TypeAn_Inherit_field()
         {
             fs.Dir("foo")
@@ -412,9 +412,9 @@ class Derived(Base):
             var sExp =
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
 @"(binding:kind=CLASS:node=Base:type=<Base>:qname=.foo.test.Base:refs=[Base])" + nl +
-@"(binding:kind=CONSTRUCTOR:node=__init__:type=() -> None:qname=.foo.test.Base.__init__:refs=[])" + nl +
+@"(binding:kind=CONSTRUCTOR:node=__init__:type=() -> Unit:qname=.foo.test.Base.__init__:refs=[])" + nl +
 @"(binding:kind=CLASS:node=Derived:type=<Derived>:qname=.foo.test.Derived:refs=[])" + nl +
-@"(binding:kind=METHOD:node=foo:type=() -> None:qname=.foo.test.Derived.foo:refs=[])" + nl;
+@"(binding:kind=METHOD:node=foo:type=() -> Unit:qname=.foo.test.Derived.foo:refs=[])" + nl;
 
             ExpectBindings(sExp);
         }
@@ -455,7 +455,7 @@ class Derived(Base):
             #region Expected 
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])
 (binding:kind=CLASS:node=Foo:type=<Foo>:qname=.foo.test.Foo:refs=[Foo])
-(binding:kind=CONSTRUCTOR:node=__init__:type=(Foo, str) -> None:qname=.foo.test.Foo.__init__:refs=[])
+(binding:kind=CONSTRUCTOR:node=__init__:type=(Foo, str) -> Unit:qname=.foo.test.Foo.__init__:refs=[])
 (binding:kind=PARAMETER:node=self:type=<Foo>:qname=.foo.test.Foo.__init__.self:refs=[])
 (binding:kind=METHOD:node=bar:type=Foo -> Foo:qname=.foo.test.Foo.bar:refs=[])
 (binding:kind=PARAMETER:node=self:type=<Foo>:qname=.foo.test.Foo.bar.self:refs=[])
@@ -500,7 +500,7 @@ y = make('bar')
             an.Finish();
             var sExp =
 @"(binding:kind=MODULE:node=(module:\foo\test.py):type=test:qname=.foo.test:refs=[])" + nl +
-@"(binding:kind=FUNCTION:node=foo:type=? -> None:qname=.foo.test.foo:refs=[])" + nl +
+@"(binding:kind=FUNCTION:node=foo:type=? -> Unit:qname=.foo.test.foo:refs=[])" + nl +
 @"(binding:kind=PARAMETER:node=s:type=?:qname=.foo.test.foo.s:refs=[s])" + nl;
             ExpectBindings(sExp);
         }

@@ -53,7 +53,7 @@ namespace Pytocs.Core.TypeInference
             {
                 a.Message.Accept(this);
             }
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         public DataType VisitAssignExp(AssignExp a)
@@ -87,7 +87,7 @@ namespace Pytocs.Core.TypeInference
                     scope.BindByScope(analyzer, a.Dst, valueType);
                 }
             }
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         public DataType VisitAssignmentExp(AssignmentExp e)
@@ -209,10 +209,10 @@ namespace Pytocs.Core.TypeInference
                 if (!returned)
                 {
                     retType = UnionType.Union(retType, t);
-                    if (!UnionType.Contains(t, DataType.Cont))
+                    if (!UnionType.Contains(t, DataType.Unit))
                     {
                         returned = true;
-                        retType = UnionType.Remove(retType, DataType.Cont);
+                        retType = UnionType.Remove(retType, DataType.Unit);
                     }
                 }
             }
@@ -378,7 +378,9 @@ namespace Pytocs.Core.TypeInference
 
             DataType fromType = BindParameters(
                 call, func.Definition, funcTable, 
-                func.Definition.parameters, func.Definition.vararg, func.Definition.kwarg,
+                func.Definition.parameters,
+                func.Definition.vararg,
+                func.Definition.kwarg,
                 pTypes, func.DefaultTypes, hash, kw, star);
 
             if (func.arrows.TryGetValue(fromType, out var cachedTo))
@@ -405,7 +407,7 @@ namespace Pytocs.Core.TypeInference
                     }
                 }
 
-                toType = UnionType.Remove(toType, DataType.Cont);
+                toType = UnionType.Remove(toType, DataType.Unit);
                 func.AddMapping(fromType, toType);
                 func.SelfType = null;
                 return toType;
@@ -477,7 +479,7 @@ namespace Pytocs.Core.TypeInference
             Identifier? rest,
             Identifier? restKw,
             List<DataType>? pTypes,
-            List<DataType?>? dTypes,
+            List<DataType>? dTypes,
             IDictionary<string, DataType>? hash,
             DataType? kw,
             DataType? star)
@@ -589,7 +591,7 @@ namespace Pytocs.Core.TypeInference
             {
                 foreach (DataType t in ut.types)
                 {
-                    if (t == DataType.None || t == DataType.Cont)
+                    if (t == DataType.None || t == DataType.Unit)
                     {
                         hasNone = true;
                     }
@@ -682,12 +684,12 @@ namespace Pytocs.Core.TypeInference
                 var xform = new TypeCollector(classType.Scope, this.analyzer);
                 c.body.Accept(xform);
             }
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         public DataType VisitComment(CommentStatement c)
         {
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         public DataType VisitImaginary(ImaginaryLiteral c)
@@ -716,7 +718,7 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitContinue(ContinueStatement c)
         {
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         public DataType VisitDel(DelStatement d)
@@ -729,7 +731,7 @@ namespace Pytocs.Core.TypeInference
                     scope.Remove(id.Name);
                 }
             }
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         public DataType VisitDictInitializer(DictInitializer d)
@@ -776,7 +778,7 @@ namespace Pytocs.Core.TypeInference
             {
                 e.Locals.Accept(this);
             }
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         public DataType VisitExp(ExpStatement e)
@@ -785,7 +787,7 @@ namespace Pytocs.Core.TypeInference
             {
                 e.Expression.Accept(this);
             }
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         public DataType VisitExpList(ExpList list)
@@ -881,7 +883,7 @@ namespace Pytocs.Core.TypeInference
             }
 
             f.body.Accept(new TypeCollector(fun.Scope, this.analyzer));
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         private BindingKind DetermineFunctionKind(FunctionDef f)
@@ -906,13 +908,13 @@ namespace Pytocs.Core.TypeInference
         public DataType VisitGlobal(GlobalStatement g)
         {
             // Do nothing here because global names are processed by VisitSuite
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         public DataType VisitNonLocal(NonlocalStatement non)
         {
             // Do nothing here because global names are processed by VisitSuite
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         public DataType VisitHandler(ExceptHandler h)
@@ -951,7 +953,7 @@ namespace Pytocs.Core.TypeInference
             }
             else
             {
-                type1 = DataType.Cont;
+                type1 = DataType.Unit;
             }
 
             if (i.Else != null)
@@ -960,11 +962,11 @@ namespace Pytocs.Core.TypeInference
             }
             else
             {
-                type2 = DataType.Cont;
+                type2 = DataType.Unit;
             }
 
-            bool cont1 = UnionType.Contains(type1, DataType.Cont);
-            bool cont2 = UnionType.Contains(type2, DataType.Cont);
+            bool cont1 = UnionType.Contains(type1, DataType.Unit);
+            bool cont2 = UnionType.Contains(type2, DataType.Unit);
 
             // Decide which branch affects the downstream state
             if (cont1 && cont2)
@@ -994,7 +996,7 @@ namespace Pytocs.Core.TypeInference
             }
             else
             {
-                type1 = DataType.Cont;
+                type1 = DataType.Unit;
             }
             if (i.Alternative != null)
             {
@@ -1002,7 +1004,7 @@ namespace Pytocs.Core.TypeInference
             }
             else
             {
-                type2 = DataType.Cont;
+                type2 = DataType.Unit;
             }
             return UnionType.Union(type1, type2);
         }
@@ -1021,14 +1023,14 @@ namespace Pytocs.Core.TypeInference
                     scope.AddExpressionBinding(analyzer, a.Alias.Name, a.Alias, mod, BindingKind.VARIABLE);
                 }
             }
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         public DataType VisitFrom(FromStatement i)
         {
             if (i.DottedName == null)
             {
-                return DataType.Cont;
+                return DataType.Unit;
             }
 
             var dtModule = analyzer.LoadModule(i.DottedName.segs, scope);
@@ -1080,7 +1082,7 @@ namespace Pytocs.Core.TypeInference
                     }
                 }
             }
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         /// <summary>
@@ -1258,7 +1260,7 @@ namespace Pytocs.Core.TypeInference
 
         public DataType VisitPass(PassStatement p)
         {
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         public DataType VisitPrint(PrintStatement p)
@@ -1271,7 +1273,7 @@ namespace Pytocs.Core.TypeInference
             {
                 ResolveList(p.Args.Select(a => a.DefaultValue!));
             }
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         public DataType VisitRaise(RaiseStatement r)
@@ -1288,7 +1290,7 @@ namespace Pytocs.Core.TypeInference
             {
                 r.Traceback.Accept(this);
             }
-            return DataType.Cont;
+            return DataType.Unit;
         }
 
         public DataType VisitRealLiteral(RealLiteral r)
