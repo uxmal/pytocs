@@ -167,7 +167,13 @@ namespace TorchCs
             }
             text = replaceFieldType3(text);
 
-            text = Regex.Replace(text, @"public object (\w+)_len;", "public int $1_len;");
+            text = Regex.Replace(text, @"public (object|void) (\w+_len;)", "public int $2");
+            text = Regex.Replace(text, @"public (object|void) (\w+_in;)", "public int $2");
+            text = Regex.Replace(text, @"public (object|void) (\w+_model;)", "public int $2");
+            text = Regex.Replace(text, @"public (object|void) (\w+_out;)", "public int $2");
+            text = Regex.Replace(text, @"public (object|void) (\w+_channels;)", "public int $2");
+            text = Regex.Replace(text, @"public (object|void) (num_\w+;)", "public int $2");
+
             return text;
         }
 
@@ -315,6 +321,9 @@ namespace TorchCs
             text = Regex.Replace(text, @"(object|void) (\w+_in[,;)])", "int $2");
             text = Regex.Replace(text, @"(object|void) (\w+_model[,;)])", "int $2");
             text = Regex.Replace(text, @"(object|void) (\w+_out[,;)])", "int $2");
+            text = Regex.Replace(text, @"(object|void) (\w+_channels[,;)])", "int $2");
+            text = Regex.Replace(text, @"(object|void) (num_\w+[,;)])", "int $2");
+
 
             return text;
         }
@@ -545,6 +554,10 @@ namespace TorchCs
             text = Regex.Replace(text, @"(\([A-Za-z_0-9]+,[A-Za-z_0-9 ]+\) = \w+\.shape);", "var $1.ToLong2();");
             text = Regex.Replace(text, @"(\([A-Za-z_0-9]+,[A-Za-z_0-9 ]+,[A-Za-z_0-9 ]+\) = \w+\.shape);", "var $1.ToLong3();");
             text = Regex.Replace(text, @"(\([A-Za-z_0-9]+,[A-Za-z_0-9 ]+,[A-Za-z_0-9 ]+,[A-Za-z_0-9 ]+\) = \w+\.shape);", "var $1.ToLong4();");
+
+            text = Regex.Replace(text, @"(\([A-Za-z_0-9]+,[A-Za-z_0-9 ]+\) = \w+\.size\(\));", "var $1.ToLong2();");
+            text = Regex.Replace(text, @"(\([A-Za-z_0-9]+,[A-Za-z_0-9 ]+,[A-Za-z_0-9 ]+\) = \w+\.size\(\));", "var $1.ToLong3();");
+            text = Regex.Replace(text, @"(\([A-Za-z_0-9]+,[A-Za-z_0-9 ]+,[A-Za-z_0-9 ]+,[A-Za-z_0-9 ]+\) = \w+\.size\(\));", "var $1.ToLong4();");
 
             return text;
         }
