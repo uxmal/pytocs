@@ -227,19 +227,21 @@ namespace TorchCs
             foreach (var methodInfo in nnMethods) {
                 var ps = methodInfo.GetParameters();
                 foreach (var p in ps) {
-                    text = replaceMethodParameterName(text, "nn." + methodInfo.Name, getPythonParameterName(p.Name), p.Name);
-                    if (parameters.ContainsKey(p.Name)) {
-                        text = replaceMethodParameterName(text, "nn." + methodInfo.Name, parameters[p.Name], p.Name);
+                    var paramName = p.Name!;
+                    text = replaceMethodParameterName(text, "nn." + methodInfo.Name, getPythonParameterName(paramName), paramName);
+                    if (parameters.ContainsKey(paramName)) {
+                        text = replaceMethodParameterName(text, "nn." + methodInfo.Name, parameters[paramName], paramName);
                     }
                 }
             }
             foreach (var methodInfo in torchMethods) {
                 var ps = methodInfo.GetParameters();
                 foreach (var p in ps) {
+                    var paramName = p.Name!;
                     for (int i = 0; i < MAX_LAYER; i++) {
-                        text = replaceMethodParameterName(text, "torch." + methodInfo.Name, getPythonParameterName(p.Name), p.Name);
-                        if (parameters.ContainsKey(p.Name)) {
-                            text = replaceMethodParameterName(text, "torch." + methodInfo.Name, parameters[p.Name], p.Name);
+                        text = replaceMethodParameterName(text, "torch." + methodInfo.Name, getPythonParameterName(paramName), paramName);
+                        if (parameters.ContainsKey(paramName)) {
+                            text = replaceMethodParameterName(text, "torch." + methodInfo.Name, parameters[paramName], paramName);
                         }
                     }
                 }
