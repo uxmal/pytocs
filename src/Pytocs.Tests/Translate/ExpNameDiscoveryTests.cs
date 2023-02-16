@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2021 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -42,7 +42,7 @@ namespace Pytocs.UnitTests.Translate
             var lexer =  new Lexer("foo.py", new StringReader(pyExp));
             var parser = new Parser("foo.py", lexer);
             var exp = parser.test();
-            exp.Accept(new ExpNameDiscovery(syms));
+            exp?.Accept(new ExpNameDiscovery(syms));
         }
 
         [Fact]

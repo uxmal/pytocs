@@ -52,8 +52,6 @@ namespace Pytocs.Core.TypeInference
 
     public class FileSystem : IFileSystem
     {
-        public string DirectorySeparatorChar { get { return new string(Path.DirectorySeparatorChar, 1); } }
-
         public void CreateDirectory(string directory) { Directory.CreateDirectory(directory); }
 
         public TextReader CreateStreamReader(string filename) { return new StreamReader(filename); }

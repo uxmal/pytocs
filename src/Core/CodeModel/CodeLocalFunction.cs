@@ -33,7 +33,7 @@ namespace Pytocs.Core.CodeModel
 
         public bool IsAsync { get; set; }
         public CodeTypeReference? ReturnType { get; set; }
-        public string Name { get; set; }
+        public string? Name { get; set; }
 
         public List<CodeParameterDeclarationExpression> Parameters { get; }
         public List<CodeStatement> Statements { get; }

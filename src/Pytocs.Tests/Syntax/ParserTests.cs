@@ -41,7 +41,7 @@ namespace Pytocs.UnitTests.Syntax
         {
             var lex = Lex(input);
             var par = new Parser("foo.py", lex);
-            return par.test();
+            return par.test()!;
         }
 
         private List<Statement> ParseStmt(string input)
@@ -87,7 +87,7 @@ namespace Pytocs.UnitTests.Syntax
         public void Parse_DottedName()
         {
             var parser = new Parser("foo.py", Lex("foo.bar.baz,"));
-            var exp = parser.expr();
+            var exp = parser.expr()!;
             AssertExp("foo.bar.baz", exp);
         }
 

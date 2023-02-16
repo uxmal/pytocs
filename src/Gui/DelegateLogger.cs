@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2021 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -43,11 +43,12 @@ namespace Pytocs.Gui
         {
             var sb = new StringBuilder();
             sb.AppendFormat(format, args);
-            while (ex != null)
+            Exception? e = ex;
+            while (e != null)
             {
                 sb.Append(" ");
-                sb.Append(ex.Message);
-                ex = ex.InnerException;
+                sb.Append(e.Message);
+                e = e.InnerException;
             }
             Write(TraceLevel.Error, sb.ToString());
         }

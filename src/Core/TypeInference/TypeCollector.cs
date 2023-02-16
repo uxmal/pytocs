@@ -842,7 +842,7 @@ namespace Pytocs.Core.TypeInference
             var fun = new FunType(lambda, env);
             fun.Scope.Parent = this.scope;
             fun.Scope.Path = scope.ExtendPath(analyzer, "{lambda}");
-            fun.SetDefaultTypes(ResolveList(lambda.args.Select(p => p.Test!)));
+            fun.SetDefaultTypes(ResolveList(lambda.args.Select(p => p.Test!))!);
             analyzer.AddUncalled(fun);
             return fun;
         }
@@ -860,7 +860,7 @@ namespace Pytocs.Core.TypeInference
             fun.Scope.Path = scope.ExtendPath(analyzer, f.name.Name);
             fun.SetDefaultTypes(ResolveList(f.parameters
                 .Where(p => p.Test != null)
-                .Select(p => p.Test!)));
+                .Select(p => p.Test!))!);
             if (isAsync)
             {
                 fun = fun.MakeAwaitable();

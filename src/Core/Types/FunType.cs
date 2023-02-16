@@ -105,14 +105,10 @@ namespace Pytocs.Core.Types
 
         public override bool Equals(object? other)
         {
-            if (other is FunType fo)
-            {
-                return fo.Scope.Path.Equals(Scope.Path) || object.ReferenceEquals(this , other);
-            }
-            else
-            {
-                return false;
-            }
+            return 
+                (other is FunType fo) &&
+                fo.Scope.Path is { } && fo.Scope.Path.Equals(Scope.Path) ||
+                    object.ReferenceEquals(this , other);
         }
 
         public override int GetHashCode()

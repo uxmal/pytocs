@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2021 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -27,7 +27,7 @@ namespace Pytocs.UnitTests
     public class FakeFileSystem : IFileSystem
     {
         private readonly FakeDirectory root;
-        private FakeDirectory dir;
+        private FakeDirectory? dir;
 
         public FakeFileSystem()
         {
@@ -37,12 +37,12 @@ namespace Pytocs.UnitTests
 
         public class Entry 
         {
-            public FakeDirectory Parent;
+            public FakeDirectory? Parent;
         }
 
         public class FakeFile : Entry
         {
-            public string Contents;
+            public string? Contents;
         }
 
         public class FakeDirectory : Entry
@@ -52,7 +52,7 @@ namespace Pytocs.UnitTests
 
         public FakeFileSystem File(string name, params string[] lines)
         {
-            dir.Entries[name] = new FakeFile
+            dir!.Entries[name] = new FakeFile
             {
                 Contents = string.Join("\r\n", lines),
                 Parent = dir
@@ -66,14 +66,14 @@ namespace Pytocs.UnitTests
             {
                 Parent = dir
             };
-            dir.Entries[name] = d;
+            dir!.Entries[name] = d;
             dir = d;
             return this;
         }
 
         public FakeFileSystem End()
         {
-            dir = dir.Parent;
+            dir = dir!.Parent;
             return this;
         }
 
@@ -82,13 +82,12 @@ namespace Pytocs.UnitTests
             get { return "\\"; }
         }
 
-        private FakeDirectory Traverse(IEnumerable<string> segs)
+        private FakeDirectory? Traverse(IEnumerable<string> segs)
         {
             var d = root;
             foreach (var seg in segs)
             {
-                Entry e;
-                if (!d.Entries.TryGetValue(seg, out e))
+                if (!d.Entries.TryGetValue(seg, out Entry? e))
                     return null;
                 d = (FakeDirectory) e;
             }
@@ -101,8 +100,7 @@ namespace Pytocs.UnitTests
             var d = root;
             foreach (var seg in segs)
             {
-                Entry e;
-                if (!d.Entries.TryGetValue(seg, out e))
+                if (!d.Entries.TryGetValue(seg, out var e))
                 {
                     var dNew = new FakeDirectory
                     {
@@ -121,25 +119,25 @@ namespace Pytocs.UnitTests
         public TextReader CreateStreamReader(string path)
         {
             var segs = path.Split(new[] { this.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
-            FakeDirectory d = Traverse(segs.Take(segs.Length - 1));
+            FakeDirectory? d = Traverse(segs.Take(segs.Length - 1));
             Debug.Assert(d != null, path);
             Debug.Assert(d.Entries != null, "d.entries");
             Debug.Assert(segs != null, "segs");
-            return new StringReader(((FakeFile)d.Entries[segs.Last()]).Contents);
+            return new StringReader(((FakeFile)d.Entries[segs.Last()]).Contents ??"");
         }
 
         public void DeleteFile(string path)
         {
             var segs = path.Split(new[] { this.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
-            FakeDirectory d = Traverse(segs.Take(segs.Length - 1));
-            d.Entries.Remove(segs.Last());
+            FakeDirectory? d = Traverse(segs.Take(segs.Length - 1));
+            d?.Entries.Remove(segs.Last());
         }
 
         public void DeleteDirectory(string path)
         {
             var segs = path.Split(new[] { this.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
-            FakeDirectory d = Traverse(segs.Take(segs.Length - 1));
-            d.Entries.Remove(segs.Last());
+            FakeDirectory? d = Traverse(segs.Take(segs.Length - 1));
+            d?.Entries.Remove(segs.Last());
         }
 
         public string CombinePath(string dir, string file)
@@ -150,11 +148,10 @@ namespace Pytocs.UnitTests
         public bool DirectoryExists(string path)
         {
             var segs = path.Split(new[] { this.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
-            FakeDirectory d = Traverse(segs.Take(segs.Length - 1));
-            if (d == null)
+            FakeDirectory? d = Traverse(segs.Take(segs.Length - 1));
+            if (d is null)
                 return false;
-            Entry e;
-            if (!d.Entries.TryGetValue(segs.Last(), out e))
+            if (!d.Entries.TryGetValue(segs.Last(), out var e))
                 return false;
             return e is FakeDirectory;
         }
@@ -162,11 +159,10 @@ namespace Pytocs.UnitTests
         public bool FileExists(string path)
         {
             var segs = path.Split(new[] { this.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
-            FakeDirectory d = Traverse(segs.Take(segs.Length - 1));
-            if (d == null)
+            FakeDirectory? d = Traverse(segs.Take(segs.Length - 1));
+            if (d is null)
                 return false;
-            Entry e;
-            if (!d.Entries.TryGetValue(segs.Last(), out e))
+            if (!d.Entries.TryGetValue(segs.Last(), out var e))
                 return false;
             return e is FakeFile;
         }
@@ -198,6 +194,8 @@ namespace Pytocs.UnitTests
         {
             var segs = path.Split(new[] { this.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
             var d = Traverse(segs);
+            if (d is null)
+                return Array.Empty<string>();
             return d.Entries.Keys
                 .Select(name => path + DirectorySeparatorChar + name)
                 .ToArray();
@@ -238,8 +236,8 @@ namespace Pytocs.UnitTests
         public string ReadFile(string path)
         {
             var segs = path.Split(new[] { this.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
-            FakeDirectory d = Traverse(segs.Take(segs.Length - 1));
-            return ((FakeFile) d.Entries[segs.Last()]).Contents;
+            FakeDirectory? d = Traverse(segs.Take(segs.Length - 1));
+            return ((FakeFile) d?.Entries[segs.Last()]!).Contents ?? "";
         }
 
         public string GetFullPath(string file)
@@ -250,8 +248,8 @@ namespace Pytocs.UnitTests
         public void WriteFile(string path, string contents)
         {
             var segs = path.Split(new[] { this.DirectorySeparatorChar }, StringSplitOptions.RemoveEmptyEntries);
-            FakeDirectory d = Traverse(segs.Take(segs.Length - 1));
-            ((FakeFile) d.Entries[segs.Last()]).Contents = contents;
+            FakeDirectory? d = Traverse(segs.Take(segs.Length - 1));
+            ((FakeFile) d?.Entries[segs.Last()]!).Contents = contents;
         }
 
         public TextWriter CreateStreamWriter(Stream stm, Encoding encoding)

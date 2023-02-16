@@ -21,7 +21,7 @@ namespace Pytocs.Core.CodeModel
     public interface ICodeFunction
     {
         bool IsAsync { get; set; }
-        string Name { get; set; }
+        string? Name { get; set; }
         CodeTypeReference? ReturnType { get; set; }
         List<CodeStatement>? Statements { get; }
         List<CodeCommentStatement>? Comments { get; }

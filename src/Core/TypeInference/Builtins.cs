@@ -208,6 +208,7 @@ namespace Pytocs.Core.TypeInference
             {
                 this.outer = outer;
                 this.name = name;
+                this.table = default!;
                 outer.modules[name] = this;
             }
 
@@ -1349,7 +1350,7 @@ namespace Pytocs.Core.TypeInference
                 dtable.AddExpressionBinding(outer.analyzer, "day", dtUrl("date"), DataType.Int, BindingKind.ATTRIBUTE).IsBuiltin = true;
 
                 dtable.AddExpressionBinding(outer.analyzer, "replace", dtUrl("date"), outer.newFunc(date), BindingKind.METHOD).IsBuiltin = true;
-                dtable.AddExpressionBinding(outer.analyzer, "timetuple", dtUrl("date"), outer.newFunc(outer.Time_struct_time), BindingKind.METHOD).IsBuiltin = true;
+                dtable.AddExpressionBinding(outer.analyzer, "timetuple", dtUrl("date"), outer.newFunc(outer.Time_struct_time!), BindingKind.METHOD).IsBuiltin = true;
 
                 foreach (string n in new[] { "toordinal", "weekday", "isoweekday" })
                 {
@@ -1413,7 +1414,7 @@ namespace Pytocs.Core.TypeInference
                     dttable.AddExpressionBinding(outer.analyzer, y, dtUrl("datetime"), outer.newFunc(datetime), BindingKind.METHOD).IsBuiltin = true;
                 }
 
-                dttable.AddExpressionBinding(outer.analyzer, "utctimetuple", dtUrl("datetime"), outer.newFunc(outer.Time_struct_time), BindingKind.METHOD).IsBuiltin = true;
+                dttable.AddExpressionBinding(outer.analyzer, "utctimetuple", dtUrl("datetime"), outer.newFunc(outer.Time_struct_time!), BindingKind.METHOD).IsBuiltin = true;
             }
         }
 
@@ -2074,7 +2075,7 @@ namespace Pytocs.Core.TypeInference
                     ospath.AddExpressionBinding(outer.analyzer, s, newLibUrl("os.path", s), DataType.Str, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 }
 
-                ospath.AddExpressionBinding(outer.analyzer, "os", liburl(), this.module, BindingKind.ATTRIBUTE).IsBuiltin = true;
+                ospath.AddExpressionBinding(outer.analyzer, "os", liburl(), this.module!, BindingKind.ATTRIBUTE).IsBuiltin = true;
                 ospath.AddExpressionBinding(outer.analyzer, "stat", newLibUrl("stat"),
                     // moduleTable.lookupLocal("stat").getType(),
                         outer.newModule("<stat-fixme>"), BindingKind.ATTRIBUTE);

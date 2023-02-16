@@ -88,7 +88,7 @@ namespace Pytocs.Gui
 
             var (sourceFolder, targetFolder) = GetValidConversionFolders();
 
-            if (sourceFolder == null)
+            if (sourceFolder == null || targetFolder == null)
             {
                 ConvertButton.IsEnabled = true;
                 return;
@@ -101,7 +101,7 @@ namespace Pytocs.Gui
             ConvertButton.IsEnabled = true;
         }
 
-        private (string sourceFolder, string targetFolder) GetValidConversionFolders()
+        private (string? sourceFolder, string? targetFolder) GetValidConversionFolders()
         {
             if (string.IsNullOrWhiteSpace(SourceFolderBox.Text))
             {

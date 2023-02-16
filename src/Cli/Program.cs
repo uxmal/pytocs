@@ -72,6 +72,11 @@ namespace Pytocs.Cli
                              fs,
                              logger);
                         var module = typeAnalysis.GetAstForFile(path);
+                        if (module is null)
+                        {
+                            logger.Error("Unable to load {0}.", path);
+                            continue;
+                        }
                         xlator.TranslateModuleStatements(
                             module.Body.Statements,
                             types,
@@ -97,6 +102,11 @@ namespace Pytocs.Cli
                         fs,
                          logger);
                     var module = typeAnalysis.GetAstForFile(path);
+                    if (module is null)
+                    {
+                        logger.Error("Unable to load {0}.", path);
+                        continue;
+                    }
                     xlator.TranslateModuleStatements(
                         module.Body.Statements,
                         types,

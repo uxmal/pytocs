@@ -27,6 +27,7 @@ namespace pytocs.runtime
     public class DictionaryUtils
     {
         public static Dictionary<K, V> Unpack<K, V>(params object [] items)
+            where K : notnull
         {
             var result = new Dictionary<K, V>();
             foreach (var oItem in items)
@@ -40,15 +41,15 @@ namespace pytocs.runtime
                 var vf = t.GetField("Item2");
                 if (kf != null && vf != null)
                 {
-                    var key = (K)kf.GetValue(oItem);
-                    var value = (V)vf.GetValue(oItem);
+                    var key = (K)kf.GetValue(oItem)!;
+                    var value = (V)vf.GetValue(oItem)!;
                     result[key] = value;
                 }
                 else if (oItem is IDictionary dict)
                 {
                     foreach (DictionaryEntry de in dict)
                     {
-                        result[(K)de.Key] = (V)de.Value;
+                        result[(K)de.Key] = (V)de.Value!;
                     }
                 }
             }

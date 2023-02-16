@@ -51,7 +51,7 @@ namespace pytocs.runtime
                     throw new ArgumentException($"Unsupported format character '{ch}'.");
                 }
             }
-            return (T)Activator.CreateInstance(typeof(T), oTuple.ToArray());
+            return (T)Activator.CreateInstance(typeof(T), oTuple.ToArray())!;
         }
 
         private static int Count(int n)

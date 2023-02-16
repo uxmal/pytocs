@@ -38,7 +38,7 @@ namespace Pytocs.UnitTests.Translate
             var rdr = new StringReader(pyExp);
             var lex = new Lexer("foo.py", rdr);
             var par = new Parser("foo.py", lex);
-            var exp = par.test();
+            var exp = par.test()!;
             Debug.Print("{0}", exp);
             var sym = new SymbolGenerator();
             var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());

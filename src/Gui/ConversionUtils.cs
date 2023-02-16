@@ -50,10 +50,15 @@ namespace Pytocs.Gui
                             fs,
                             logger);
                         var module = typeAnalysis.GetAstForFile(path);
+                        if (module is null)
+                        {
+                            logger.Error("Unable to load {0}.", path);
+                            continue;
+                        }
 
                         var relativePath = MakeRelative(sourcePath, path);
                         var targetFilePath = Path.ChangeExtension(MakeAbsolute(targetPath, relativePath), ".py.cs");
-                        var targetFileDirectory = Path.GetDirectoryName(targetFilePath);
+                        var targetFileDirectory = Path.GetDirectoryName(targetFilePath)!;
 
                         if (!Directory.Exists(targetFileDirectory))
                         {

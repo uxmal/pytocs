@@ -434,7 +434,7 @@ namespace Pytocs.Core.TypeInference
             }
 
             // set new CWD and save the old one on stack
-            string oldcwd = cwd;
+            string oldcwd = cwd!;
             SetWorkingDirectory(FileSystem.GetDirectoryName(path));
 
             PushImportStack(path);
@@ -863,7 +863,7 @@ namespace Pytocs.Core.TypeInference
             string name = FileSystem.GetFileName(f);
             if (name == "__init__.py")
             {
-                return FileSystem.GetDirectoryName(f);
+                return FileSystem.GetDirectoryName(f) ?? "";
             }
             else if (name.EndsWith(suffix))
             {

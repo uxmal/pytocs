@@ -976,7 +976,8 @@ eval_input: testlist NEWLINE* ENDMARKER
             if (Peek(TokenType.COLON))
             {
                 var (a, i) = annasign();
-                var ass = new AssignExp(lhs, a, Op.Assign, i, filename, lhs.Start, (i ?? a).End);
+                //$TODO: distinguish declarations from assignments.
+                var ass = new AssignExp(lhs, a, Op.Assign, i!, filename, lhs.Start, (i ?? a).End);
                 lhs = ass;
             }
             if (Peek(augassign_set))

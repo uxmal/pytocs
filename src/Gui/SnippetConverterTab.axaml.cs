@@ -49,7 +49,7 @@ namespace Pytocs.Gui
         {
             try
             {
-                var xlator = new Translator("", "Program", null, new ConsoleLogger());
+                var xlator = new Translator("", "Program", new FileSystem(), new ConsoleLogger());
                 CSharpEditor.Text = xlator.TranslateSnippet(PythonEditor.Text);
             }
             catch (Exception ex)
@@ -64,10 +64,11 @@ namespace Pytocs.Gui
         private async void InsertFile_Click(object sender, RoutedEventArgs e)
         {
             var dialog = new OpenFileDialog();
-
-            var fileName = (await dialog.ShowAsync(null)).FirstOrDefault();
-
-            if (fileName != null)
+            var files = await dialog.ShowAsync((Window) VisualRoot!);
+            if (files is null || files.Length == 0)
+                return;
+            var fileName = files[0];
+            if (fileName is not null)
             {
                 PythonEditor.Text = File.ReadAllText(fileName);
             }
@@ -87,7 +88,7 @@ namespace Pytocs.Gui
         {
             var dialog = new SaveFileDialog();
 
-            var fileName = await dialog.ShowAsync(null);
+            var fileName = await dialog.ShowAsync((Window)VisualRoot!);
 
             if (fileName != null)
             {

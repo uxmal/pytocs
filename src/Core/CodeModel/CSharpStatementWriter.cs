@@ -123,7 +123,7 @@ namespace Pytocs.Core.CodeModel
 
         public int VisitLocalFunction(CodeLocalFunction fn)
         { 
-            expWriter.VisitTypeReference(fn.ReturnType);
+            expWriter.VisitTypeReference(fn.ReturnType ?? new CodeTypeReference(typeof(object)));
             writer.Write(' ');
             writer.Write(fn.Name ?? "");
             CSharpTypeWriter.WriteMethodParameters(fn.Parameters, writer);

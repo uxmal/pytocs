@@ -33,7 +33,7 @@ namespace Pytocs.UnitTests.Syntax
 
         public LexerTests()
         {
-            lexer = null;
+            lexer = default!;
         }
 
         private Token Lex(string str)
@@ -165,20 +165,20 @@ namespace Pytocs.UnitTests.Syntax
         [Fact]
         public void LexInt()
         {
-            Assert.Equal(0, (int)Lex("0").NumericValue);
-            Assert.Equal(1, (int)Lex("1").NumericValue);
-            Assert.Equal(30, (int)Lex("30").NumericValue);
-            Assert.Equal(0xF, (int)Lex("0xF").NumericValue);
-            Assert.Equal(0xed, (int)Lex("0xed").NumericValue);
-            Assert.Equal(10, (long)Lex("0o12").NumericValue);
-            Assert.Equal(13, (long)Lex("0O15").NumericValue);
-            Assert.Equal(0xA, (int)Lex("0b1_010").NumericValue);
-            Assert.Equal(0B1010, (int)Lex("0B1010").NumericValue);
+            Assert.Equal(0, (int)Lex("0").NumericValue!);
+            Assert.Equal(1, (int)Lex("1").NumericValue!);
+            Assert.Equal(30, (int)Lex("30").NumericValue!);
+            Assert.Equal(0xF, (int)Lex("0xF").NumericValue!);
+            Assert.Equal(0xed, (int)Lex("0xed").NumericValue!);
+            Assert.Equal(10, (long)Lex("0o12").NumericValue!);
+            Assert.Equal(13, (long)Lex("0O15").NumericValue!);
+            Assert.Equal(0xA, (int)Lex("0b1_010").NumericValue!);
+            Assert.Equal(0B1010, (int)Lex("0B1010").NumericValue!);
         }
 
         private string LexString(string pyStr)
         {
-            return ((Str)Lex(pyStr).Value).Value;
+            return ((Str)Lex(pyStr).Value!).Value;
         }
 
         [Fact]
@@ -273,7 +273,7 @@ namespace Pytocs.UnitTests.Syntax
         {
             var token = Lex("0.1");
             Assert.Equal(TokenType.REAL, token.Type);
-            Assert.Equal(0.1, token.NumericValue);
+            Assert.Equal(0.1, token.NumericValue!);
         }
 
         [Fact]
@@ -281,7 +281,7 @@ namespace Pytocs.UnitTests.Syntax
         {
             var token = Lex("u'foo'");
             Assert.Equal(TokenType.STRING, token.Type);
-            Assert.Equal("foo", ((Str)token.Value).Value);
+            Assert.Equal("foo", ((Str)token.Value!).Value);
         }
 
         [Fact]
@@ -289,7 +289,7 @@ namespace Pytocs.UnitTests.Syntax
         {
             var token = Lex("u'\u00e9'");
             Assert.Equal(TokenType.STRING, token.Type);
-            Assert.Equal("é", ((Str)token.Value).Value);
+            Assert.Equal("é", ((Str)token.Value!).Value);
         }
 
         [Fact]
@@ -348,7 +348,7 @@ namespace Pytocs.UnitTests.Syntax
         {
             var t = Lex("b'\x00'");
             Assert.Equal(TokenType.STRING, t.Type);
-            Assert.Equal("\x00", ((Bytes)t.Value).s);
+            Assert.Equal("\x00", ((Bytes)t.Value!).s);
         }
 
         [Fact]
@@ -405,7 +405,7 @@ namespace Pytocs.UnitTests.Syntax
         public void Lex_FString()
         {
             var tok = Lex("f'Message: {msg}'");
-            var str = (Str)tok.Value;
+            var str = (Str)tok.Value!;
             Assert.True(str.Format);
         }
 
@@ -413,7 +413,7 @@ namespace Pytocs.UnitTests.Syntax
         public void Lex_Float_ScientificNotation()
         {
             var tok = Lex("1E-5");
-            var str = (double)tok.NumericValue;
+            var str = (double)tok.NumericValue!;
             Assert.Equal("1E-05", str.ToString());
         }
 
@@ -421,7 +421,7 @@ namespace Pytocs.UnitTests.Syntax
         public void Lex_Float_ScientificNotation_Zero()
         {
             var tok = Lex("0E0");
-            var str = (double)tok.NumericValue;
+            var str = (double)tok.NumericValue!;
             Assert.Equal("0", str.ToString());
         }
 
@@ -430,7 +430,7 @@ namespace Pytocs.UnitTests.Syntax
         {
             var tok = Lex("1e300000");
             Assert.Equal(TokenType.REAL, tok.Type);
-            Assert.Equal(double.PositiveInfinity, (double)tok.NumericValue);
+            Assert.Equal(double.PositiveInfinity, (double)tok.NumericValue!);
         }
 
         [Fact]
@@ -438,8 +438,8 @@ namespace Pytocs.UnitTests.Syntax
         {
             var tok = Lex("3j");
             Assert.Equal(TokenType.IMAG, tok.Type);
-            Assert.Equal("3", (string)tok.Value);
-            Assert.Equal(3.0, (double)tok.NumericValue);
+            Assert.Equal("3", (string)tok.Value!);
+            Assert.Equal(3.0, (double)tok.NumericValue!);
         }
 
         [Fact]
@@ -448,43 +448,43 @@ namespace Pytocs.UnitTests.Syntax
             var tok = Lex("3_000");
             Assert.Equal(TokenType.INTEGER, tok.Type);
             Assert.Equal("3_000", tok.Value);
-            Assert.Equal(3000, tok.NumericValue);
+            Assert.Equal(3000, tok.NumericValue!);
         }
 
         [Fact]
         public void Lex_RawString_QuotedString()
         {
             var tok = Lex(@"r'\''");
-            Assert.Equal(@"r""\'""", tok.Value.ToString());
+            Assert.Equal(@"r""\'""", tok.Value!.ToString());
         }
 
         [Fact]
         public void Lex_BinaryRawString()
         {
             var tok = Lex("br'foo'");
-            Assert.Equal("br\"foo\"", tok.Value.ToString());
+            Assert.Equal("br\"foo\"", tok.Value!.ToString());
         }
 
         [Fact]
         public void Lex_BinaryRawString_rb()
         {
             var tok = Lex("rb'foo'");
-            Assert.Equal("br\"foo\"", tok.Value.ToString());
+            Assert.Equal("br\"foo\"", tok.Value!.ToString());
         }
 
         [Fact]
         public void Lex_integer_literal()
         {
             var tok = Lex("2_147_483_648");
-            Assert.Equal("2_147_483_648", tok.Value.ToString());
-            Assert.Equal("2147483648", tok.NumericValue.ToString());
+            Assert.Equal("2_147_483_648", tok.Value!.ToString());
+            Assert.Equal("2147483648", tok.NumericValue!.ToString());
         }
 
         [Fact]
         public void Lex_regression1()
         {
             var tok = Lex("bridge");
-            Assert.Equal("bridge", tok.Value.ToString());
+            Assert.Equal("bridge", tok.Value!.ToString());
         }
 
         [Fact]
