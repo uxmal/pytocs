@@ -24,47 +24,47 @@ namespace System
             return String.Format(str, strings);
         }
 
-
         public static string[] split(this string str, string splitStr)
         {
             return str.Split(splitStr);
         }
 
-
         public static ICollection<T1> keys<T1, T2>(this IDictionary<T1, T2> dict)
         {
             return dict.Keys;
         }
-
+        /// <summary>
+        ///  Simplify code, similar to python syntax 
+        ///  python code : B, L = queries.shape
+        ///  csharp code : var (B, L) = queries.shape.ToLong2();
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
         public static (long, long) ToLong2(this long[] array)
         {
             return (array[0], array[1]);
         }
+        /// <summary>
+        ///  Simplify code, similar to python syntax 
+        ///  python code : B, L, _ = queries.shape
+        ///  csharp code : var (B, L, _) = queries.shape.ToLong3();
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
         public static (long, long, long) ToLong3(this long[] array)
         {
             return (array[0], array[1], array[2]);
         }
+        /// <summary>
+        ///  Simplify code, similar to python syntax 
+        ///  python code : B, L, _, _ = queries.shape
+        ///  csharp code : var (B, L, _, _) = queries.shape.ToLong4();
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
         public static (long, long, long, long) ToLong4(this long[] array)
         {
             return (array[0], array[1], array[2], array[3]);
-        }
-
-
-        public static long[] ToArray(this (long, long, long, long) temp)
-        {
-            return new long[] { temp.Item1, temp.Item2, temp.Item3, temp.Item4 };
-        }
-        public static long[] ToArray(this (long, long, long) temp)
-        {
-            return new long[] { temp.Item1, temp.Item2, temp.Item3 };
-        }
-        public static long[] ToArray(this (long, long) temp)
-        {
-            return new long[] { temp.Item1, temp.Item2 };
-        }
-        public static long[] ToArray(this long temp)
-        {
-            return new long[] { temp };
         }
 
     }
@@ -132,73 +132,15 @@ namespace System
 
         public class path
         {
-            internal const char DirectorySeparatorChar = '\\'; // Windows implementation
-            internal const char AltDirectorySeparatorChar = '/';
-            internal const string DirectorySeparatorCharAsString = "\\";
-
-            public static string join(string path1, string path2)
+            public static string join(params string[] paths)
             {
-                if (path1 is null || path1.Length == 0)
-                    return path2;
-                if (path2 is null || path2.Length == 0)
-                    return path1;
-
-                bool hasSeparator = IsDirectorySeparator(path1[path1.Length - 1]) || IsDirectorySeparator(path2[0]);
-                return hasSeparator ? string.Concat(path1, path2) : string.Concat(path1, DirectorySeparatorCharAsString, path2);
+                var ps = paths.ToList();
+                ps.RemoveAll(q => q == null);
+                return Path.Combine(ps.ToArray());
             }
-
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            internal static bool IsDirectorySeparator(char c) => c == DirectorySeparatorChar || c == AltDirectorySeparatorChar;
-
-            public static string join(string path1, string path2, string path3)
-            {
-                if (path1 is null || path1.Length == 0)
-                    return join(path2, path3);
-
-                if (path2 is null || path2.Length == 0)
-                    return join(path1, path3);
-
-                if (path3 is null || path3.Length == 0)
-                    return join(path1, path2);
-
-                bool firstHasSeparator = IsDirectorySeparator(path1[path1.Length - 1]) || IsDirectorySeparator(path2[0]);
-                bool secondHasSeparator = IsDirectorySeparator(path2[path2.Length - 1]) || IsDirectorySeparator(path3[0]);
-                return path1 + (firstHasSeparator ? "" : DirectorySeparatorCharAsString) + path2 + (secondHasSeparator ? "" : DirectorySeparatorCharAsString) + path3;
-            }
-
-            public static string join(string path1, string path2, string path3, string path4)
-            {
-                if (path1 is null || path1.Length == 0)
-                    return join(path2, path3, path4);
-
-                if (path2 is null || path2.Length == 0)
-                    return join(path1, path3, path4);
-
-                if (path3 is null || path3.Length == 0)
-                    return join(path1, path2, path4);
-
-                if (path4 is null || path4.Length == 0)
-                    return join(path1, path2, path3);
-
-                bool firstHasSeparator = IsDirectorySeparator(path1[path1.Length - 1]) || IsDirectorySeparator(path2[0]);
-                bool secondHasSeparator = IsDirectorySeparator(path2[path2.Length - 1]) || IsDirectorySeparator(path3[0]);
-                bool thirdHasSeparator = IsDirectorySeparator(path3[path3.Length - 1]) || IsDirectorySeparator(path4[0]);
-
-                return path1 + (firstHasSeparator ? "" : DirectorySeparatorCharAsString) +
-                    path2 + (secondHasSeparator ? "" : DirectorySeparatorCharAsString) +
-                    path3 + (thirdHasSeparator ? "" : DirectorySeparatorCharAsString) +
-                    path4;
-            }
-
             public static bool exists(string path)
             {
-                if (File.Exists(path)) {
-                    return true;
-                }
-                if (Directory.Exists(path)) {
-                    return true;
-                }
-                return false;
+                return File.Exists(path) || Directory.Exists(path);
             }
         }
     }

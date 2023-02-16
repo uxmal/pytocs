@@ -23,20 +23,32 @@ namespace TorchCs
     {
         private const int MAX_LAYER = 5; // Number of times code contains code 
 
+        /// <summary>
+        ///  Convert all *.py.cs files in the folder ,Replace grammar rules
+        /// </summary>
+        /// <param name="folder"></param>
         public static void ReplaceFolder(string folder)
         {
-            var files = Directory.GetFiles(folder, "*.cs", SearchOption.AllDirectories);
+            var files = Directory.GetFiles(folder, "*.py.cs", SearchOption.AllDirectories);
             foreach (var file in files) {
                 var text = File.ReadAllText(file);
                 File.WriteAllText(file, ReplaceCodes(text));
             }
         }
+        /// <summary>
+        /// Convert file, Replace grammar rules
+        /// </summary>
+        /// <param name="file"></param>
         public static void ReplaceFile(string file)
         {
             var text = File.ReadAllText(file);
             File.WriteAllText(file, ReplaceCodes(text));
         }
-
+        /// <summary>
+        /// Convert code, Replace grammar rules
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         public static string ReplaceCodes(string text)
         {
             text = Regex.Replace(text, @"object (\w+ = ""\w+""[,;)])", "string $1");
@@ -70,7 +82,10 @@ namespace TorchCs
 
             return text;
         }
-
+        /// <summary>
+        /// Create netstandard.cs file.
+        /// </summary>
+        /// <param name="folder"></param>
         public static void CreateNetstandardCode(string folder)
         {
             Assembly myAssem = Assembly.GetExecutingAssembly();
@@ -84,6 +99,11 @@ namespace TorchCs
             }
         }
 
+        /// <summary>
+        /// Replace namespace grammar rules
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         private static string replaceNamespace(string text)
         {
             text = text.Replace("using np = numpy;", "using NumpyDotNet;");
@@ -101,6 +121,11 @@ namespace TorchCs
             return text;
         }
 
+        /// <summary>
+        /// Replace constructor grammar rules
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         private static string replaceConstructor(string text)
         {
             var ms = Regex.Matches(text, @"public class (\S+)[\s \t]*: nn.Module");
@@ -114,6 +139,11 @@ namespace TorchCs
             return text;
         }
 
+        /// <summary>
+        /// Replace field type
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         private static string replaceFieldType(string text)
         {
             var nnType = typeof(TorchSharp.torch.nn);
@@ -169,7 +199,11 @@ namespace TorchCs
             }
             return text;
         }
-
+        /// <summary>
+        /// Replace Method Parameter Name
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         private static string replaceMethodParameterName(string text)
         {
             var nnType = typeof(TorchSharp.torch.nn);
@@ -233,7 +267,11 @@ namespace TorchCs
             return stringBuilder.ToString();
         }
 
-
+        /// <summary>
+        /// Replace Method Parameter Type
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         private static string replaceMethodParamenterType(string text)
         {
             var tensorType = typeof(TorchSharp.torch.Tensor);
@@ -281,7 +319,12 @@ namespace TorchCs
             return text;
         }
 
-
+        /// <summary>
+        /// Replace Math Method
+        /// Convert 'math.log'(python) to 'Math.Log'(C#)
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         private static string replaceMathMethod(string text)
         {
             var mathType = typeof(Math);
@@ -293,7 +336,11 @@ namespace TorchCs
             }
             return text;
         }
-
+        /// <summary>
+        /// Replace forward method's return type and forward method's parameter type
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         private static string replaceForwardMethod(string text)
         {
             text = text.Replace(" Tuple<object, object>", " (Tensor, Tensor)");
@@ -307,7 +354,11 @@ namespace TorchCs
             text = text.Replace(" forward(object queries, object keys, object values", " forward(Tensor queries, Tensor keys, Tensor values");
             return text;
         }
-
+        /// <summary>
+        /// Replace common forward method calls
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         private static string replaceCallForwardMethod(string text)
         {
             text = Regex.Replace(text, @"\bthis\.inner_attention\(", "this.inner_attention.forward(");
@@ -369,6 +420,11 @@ namespace TorchCs
             return text;
         }
 
+        /// <summary>
+        /// Replace common Tensor list
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         private static string replaceTensorList(string text)
         {
             text = text.Replace(" torch.cat(new List<object>", " torch.cat(new List<Tensor>");
@@ -379,7 +435,11 @@ namespace TorchCs
             text = text.Replace("attns.append(attn);", "attns.Add(attn);");
             return text;
         }
-
+        /// <summary>
+        /// Convert python's [:,:,:] syntax
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         private static string replaceListSlice(string text)
         {
             text = Regex.Replace(text, @"\[([^\[\]]*?)\]", new MatchEvaluator(m => {
@@ -420,6 +480,11 @@ namespace TorchCs
             return text;
         }
 
+        /// <summary>
+        /// Convert  'xx is nn.Conv1d' to 'xx is Conv1d'
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         private static string replaceIsType(string text)
         {
             var nnType = typeof(TorchSharp.torch.nn);
@@ -435,7 +500,12 @@ namespace TorchCs
             return text;
         }
 
-
+        /// <summary>
+        /// Replace String To Enum
+        /// example: Convert 'paddingMode: "zeros"' to 'paddingMode: TorchSharp.PaddingModes.Zeros'
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         private static string replaceStringToEnum(string text)
         {
             text = Regex.Replace(text, @"\bpaddingMode: ""zeros""", "paddingMode: TorchSharp.PaddingModes.Zeros");
@@ -463,7 +533,11 @@ namespace TorchCs
             return text;
         }
 
-
+        /// <summary>
+        ///  Convert to the syntax style of netstandard.cs 
+        /// </summary>
+        /// <param name="text"></param>
+        /// <returns></returns>
         private static string replaceStringToNetstandard(string text)
         {
             text = Regex.Replace(text, @" zip\(", " TorchEnumerable.zip(");
