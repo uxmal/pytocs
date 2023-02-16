@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2021 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -44,6 +44,7 @@ namespace Pytocs.Core.Syntax
         Div,
         IDiv,
         Mod,
+        MatMul,
         Complement,
         AugAdd,
         AugSub,
@@ -57,6 +58,7 @@ namespace Pytocs.Core.Syntax
         AugShr,
         AugExp,
         AugIDiv,
+        AugMatMul,
         Not,
         Exp,
         Assign,

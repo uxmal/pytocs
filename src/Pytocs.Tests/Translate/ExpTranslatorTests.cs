@@ -860,5 +860,12 @@ namespace Pytocs.UnitTests.Translate
             Assert.Equal(sExp, Xlat(pySrc));
         }
 
+        [Fact(DisplayName = nameof(Ex_MatrixMultiplication))]
+        public void Ex_MatrixMultiplication()
+        {
+            var pySrc = "a @ b";
+            var sExp = "a.@__matmul__(b)";
+            Assert.Equal(sExp, Xlat(pySrc));
+        }
     }
 }

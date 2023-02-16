@@ -201,6 +201,7 @@ namespace Pytocs.Core.Syntax
             BinaryStringPrefix,
             FormatStringPrefix,
             BinaryRawStringPrefix,
+            At,
         }
 
         private Token GetToken()
@@ -281,6 +282,7 @@ namespace Pytocs.Core.Syntax
                     case '~': return Token(TokenType.OP_TILDE);
                     case '=': st = State.Eq; break;
                     case '!': st = State.Bang; break;
+                    case '@': st = State.At; break;
                     case '(': ++nestedParens; return Token(TokenType.LPAREN);
                     case '[': ++nestedBrackets; return Token(TokenType.LBRACKET);
                     case '{': ++nestedBraces; return Token(TokenType.LBRACE);
@@ -291,7 +293,6 @@ namespace Pytocs.Core.Syntax
                     case ':': st = State.Colon; break;
                     case '.': st = State.Dot; break;
                     case ';': return Token(TokenType.SEMI);
-                    case '@': return Token(TokenType.AT);
                     case '0': sb.Append(ch); st = State.Zero; break;
                     case '1':
                     case '2':
@@ -480,6 +481,12 @@ namespace Pytocs.Core.Syntax
                     {
                     case '=': return EatChToken(TokenType.XOREQ);
                     default: return Token(TokenType.OP_CARET);
+                    }
+                case State.At:
+                    switch (ch)
+                    {
+                    case '=': return EatChToken(TokenType.ATEQ);
+                    default: return Token(TokenType.AT);
                     }
                 case State.Zero:
                     switch (ch)

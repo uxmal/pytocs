@@ -134,6 +134,7 @@ namespace Pytocs.Core.Syntax
         DIVEQ,
         IDIVEQ,
         MODEQ,
+        ATEQ,
 
         ANDEQ,
         OREQ,

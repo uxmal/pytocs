@@ -283,10 +283,14 @@ namespace Pytocs.Core.Translate
 
         public CodeExpression VisitAssignExp(AssignExp e)
         {
-            return m.BinOp(
-                e.Dst.Accept(this),
-                mppyoptocsop[e.Operator],
-                e.Src!.Accept(this));
+            var d = e.Dst.Accept(this);
+            var s = e.Src.Accept(this);
+            if (e.Operator == Op.AugMatMul)
+            {
+                return m.AssignExp(d, 
+                    m.ApplyMethod(d, "__imatmul__", s));
+            }
+            return m.BinOp(d, mppyoptocsop[e.Operator], s);
         }
 
         public CodeExpression VisitAssignmentExp(AssignmentExp e)
@@ -507,8 +511,15 @@ namespace Pytocs.Core.Translate
                 if (l is CodeBinaryOperatorExpression binL && IsComparison(binL))
                 {
                     return FuseComparisons(binL, bin.Operator, r);
-            }
+                }
                 break;
+                // C# has no standard matrix multiplication library,
+                // so we emit a function call and let postprocessors 
+                // clean it up.
+            case Op.MatMul:
+                return m.Appl(m.MethodRef(l, "__matmul__"), r);
+            case Op.AugMatMul:
+                return m.Appl(m.MethodRef(l, "__imatmul__"), r);
             }
             return m.BinOp(l, mppyoptocsop[bin.Operator], r);
         }

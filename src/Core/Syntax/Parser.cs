@@ -831,7 +831,7 @@ eval_input: testlist NEWLINE* ENDMARKER
         private readonly static HashSet<TokenType> augassign_set = new HashSet<TokenType>() {
             TokenType.ADDEQ, TokenType.SUBEQ, TokenType.MULEQ, TokenType.DIVEQ, TokenType.MODEQ,
             TokenType.ANDEQ, TokenType.OREQ, TokenType.XOREQ, TokenType.SHLEQ, TokenType.SHREQ,
-            TokenType.EXPEQ, TokenType.IDIVEQ
+            TokenType.EXPEQ, TokenType.IDIVEQ, TokenType.ATEQ
         };
 
         private readonly static HashSet<TokenType> stmt_follow = new HashSet<TokenType>() {
@@ -1135,6 +1135,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             case TokenType.SHREQ: return Op.AugShr;
             case TokenType.EXPEQ: return Op.AugExp;
             case TokenType.IDIVEQ: return Op.AugIDiv;
+            case TokenType.ATEQ: return Op.AugMatMul;
             default: throw Unexpected();
             }
         }
@@ -2027,7 +2028,7 @@ eval_input: testlist NEWLINE* ENDMARKER
             }
         }
 
-        //term: factor (('*'|'/'|'%'|'//') factor)*
+        //term: factor (('*'|'/'|'%'|'//'|'@') factor)*
         public Exp? term()
         {
             var e = factor();
@@ -2042,11 +2043,12 @@ eval_input: testlist NEWLINE* ENDMARKER
                 case TokenType.OP_SLASH: op = Op.Div; break;
                 case TokenType.OP_SLASHSLASH: op = Op.IDiv; break;
                 case TokenType.OP_PERCENT: op = Op.Mod; break;
+                case TokenType.AT: op = Op.MatMul; break;
                 default: return e;
                 }
                 lexer.Get();
                 var r = factor();
-                if (r == null)
+                if (r is null)
                     throw Unexpected();
                 e = new BinExp(op, e, r, filename, e.Start, r.End);
             }

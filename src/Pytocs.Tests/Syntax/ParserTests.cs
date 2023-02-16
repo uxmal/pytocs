@@ -1126,5 +1126,22 @@ def device_readstb(self, flags, io_timeout):
 ";
             AssertStmt(sExpected, ParseStmt(pySrc));
         }
+
+        [Fact(DisplayName = nameof(Parser_matmul))]
+        public void Parser_matmul()
+        {
+            var pySrc = @"a @ b";
+            AssertExp("(a @ b)", ParseExp(pySrc));
+        }
+
+        [Fact(DisplayName = nameof(Parser_aug_matmul))]
+        public void Parser_aug_matmul()
+        {
+            var pySrc = @"a @= b";
+            var sExpected =
+                @"a @= b
+";
+            AssertStmt(sExpected, ParseStmt(pySrc));
+        }
     }
 }

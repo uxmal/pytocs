@@ -1701,5 +1701,16 @@ x = y = fun(z)
 ";
             Assert.Equal(sExpected, XlatStmts(pySrc));
         }
+
+
+        [Fact(DisplayName = nameof(Stmt_AugmentedMatrixMultiplication))]
+        public void Stmt_AugmentedMatrixMultiplication()
+        {
+            var pySrc = "a @= b";
+            var sExpected =
+@"a = a.@__imatmul__(b);
+";
+            Assert.Equal(sExpected, XlatStmts(pySrc));
+        }
     }
 }
