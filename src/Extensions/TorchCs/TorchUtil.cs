@@ -13,9 +13,11 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 #endregion
+using System;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
 
 namespace TorchCs
 {
@@ -51,9 +53,10 @@ namespace TorchCs
         /// <returns></returns>
         public static string ReplaceCodes(string text)
         {
-            text = Regex.Replace(text, @"object (\w+ = ""\w+""[,;)])", "string $1");
-            text = Regex.Replace(text, @"object (\w+ = \d+[,;)])", "int $1");
-            text = Regex.Replace(text, @"object (\w+ = \d+\.\d+[,;)])", "double $1");
+            text = Regex.Replace(text, @"(object|void) (\w+ = ""\S+?""[,;)])", "string $2");
+            text = Regex.Replace(text, @"(object|void) (\w+ = \d+[,;)])", "int $2");
+            text = Regex.Replace(text, @"(object|void) (\w+ = \d+\.\d+[,;)])", "double $2");
+            text = Regex.Replace(text, @"(object|void) (\w+ = (true|false)[,;)])", "bool $2");
 
             text = replaceNamespace(text);
             text = replaceConstructor(text);
@@ -172,6 +175,8 @@ namespace TorchCs
             text = Regex.Replace(text, @"public (object|void) (\w+_model;)", "public int $2");
             text = Regex.Replace(text, @"public (object|void) (\w+_out;)", "public int $2");
             text = Regex.Replace(text, @"public (object|void) (\w+_channels;)", "public int $2");
+            text = Regex.Replace(text, @"public (object|void) (\w+_size;)", "public int $2");
+            text = Regex.Replace(text, @"public (object|void) (\w+_dims;)", "public int $2");
             text = Regex.Replace(text, @"public (object|void) (num_\w+;)", "public int $2");
 
             return text;
@@ -324,6 +329,8 @@ namespace TorchCs
             text = Regex.Replace(text, @"(object|void) (\w+_model[,;)])", "int $2");
             text = Regex.Replace(text, @"(object|void) (\w+_out[,;)])", "int $2");
             text = Regex.Replace(text, @"(object|void) (\w+_channels[,;)])", "int $2");
+            text = Regex.Replace(text, @"(object|void) (\w+_size[,;)])", "int $2");
+            text = Regex.Replace(text, @"(object|void) (\w+_dims[,;)])", "int $2");
             text = Regex.Replace(text, @"(object|void) (num_\w+[,;)])", "int $2");
 
 
@@ -345,6 +352,10 @@ namespace TorchCs
                 var nameL = name.ToLower();
                 text = Regex.Replace(text, @$"\bmath\.{nameL}\(", $"Math.{name}(");
             }
+            text = Regex.Replace(text, @"\bmath\.pi\b", "Math.PI");
+            text = Regex.Replace(text, @"\bmath\.e\b", "Math.E");
+            text = Regex.Replace(text, @"\bmath\.tau\b", "Math.Tau");
+            text = Regex.Replace(text, @"\bmath\.inf\b", "double.PositiveInfinity");
             return text;
         }
         /// <summary>
