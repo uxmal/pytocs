@@ -58,6 +58,8 @@ namespace TorchCs
             text = Regex.Replace(text, @"(object|void) (\w+ = \d+\.\d+[,;)])", "double $2");
             text = Regex.Replace(text, @"(object|void) (\w+ = (true|false)[,;)])", "bool $2");
 
+            text = Regex.Replace(text, @"(([a-zA-Z_0-9]+) = \2 \|\| (.*?;))", "$2 = $2 ?? $3 //$1");
+
             text = replaceNamespace(text);
             text = replaceConstructor(text);
             text = replaceFieldType(text);
@@ -178,7 +180,12 @@ namespace TorchCs
             text = Regex.Replace(text, @"public (object|void) (\w+_size;)", "public int $2");
             text = Regex.Replace(text, @"public (object|void) (\w+_dims;)", "public int $2");
             text = Regex.Replace(text, @"public (object|void) (num_\w+;)", "public int $2");
+            text = Regex.Replace(text, @"public (object|void) channels;", "public int channels;");
 
+
+            text = Regex.Replace(text, @"public (object|void) (\w+_path;)", "public string $2");
+            text = Regex.Replace(text, @"public (object|void) (\w+_name;)", "public string $2");
+            
             return text;
         }
 
@@ -332,7 +339,10 @@ namespace TorchCs
             text = Regex.Replace(text, @"(object|void) (\w+_size[,;)])", "int $2");
             text = Regex.Replace(text, @"(object|void) (\w+_dims[,;)])", "int $2");
             text = Regex.Replace(text, @"(object|void) (num_\w+[,;)])", "int $2");
+            text = Regex.Replace(text, @"(object|void) (channels[,;)])", "int $2");
 
+            text = Regex.Replace(text, @"(object|void) (\w+_path[,;)])", "string $2");
+            text = Regex.Replace(text, @"(object|void) (\w+_name[,;)])", "string $2");
 
             return text;
         }
