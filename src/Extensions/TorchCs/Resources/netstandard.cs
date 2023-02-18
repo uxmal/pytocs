@@ -311,7 +311,7 @@ namespace System
 
             public static string[] split(string path)
             {
-                var index = Math.Max(path.IndexOf('/'), path.IndexOf('\\'));
+                var index = Math.Max(path.LastIndexOf('/'), path.LastIndexOf('\\'));
                 var s = path.Substring(0, index);
                 var s2 = path.Substring(index + 1);
                 return new string[] { s, s2 };
