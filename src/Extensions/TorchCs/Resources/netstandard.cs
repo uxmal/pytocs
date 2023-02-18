@@ -26,9 +26,9 @@ namespace System
             return String.Format(str, strings);
         }
 
-        public static string[] split(this string str, string splitStr)
+        public static List<string> split(this string str, string splitStr)
         {
-            return str.Split(splitStr);
+            return str.Split(splitStr).ToList();
         }
         public static string upper(this string str)
         {
@@ -109,6 +109,10 @@ namespace System
         }
 
 
+        public static void append<T>(this ICollection<T> list, T obj)
+        {
+            list.Add(obj);
+        }
 
         public static ICollection<T1> keys<T1, T2>(this IDictionary<T1, T2> dict)
         {
@@ -202,6 +206,7 @@ namespace System
                 }
             }
         }
+
     }
 
     public static class os

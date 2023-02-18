@@ -84,6 +84,9 @@ namespace TorchCs
             text = Regex.Replace(text, @"\bnp\.inf\b", "np.Inf");
             text = text.Replace("time.time()", "DateTime.Now");
 
+            //Tenser.requires_grad
+            text = text.Replace(".require_grad = true;", ".requires_grad = true;");
+            text = text.Replace(".require_grad = false;", ".requires_grad = false;");
 
             return text;
         }
@@ -185,7 +188,7 @@ namespace TorchCs
 
             text = Regex.Replace(text, @"public (object|void) (\w+_path;)", "public string $2");
             text = Regex.Replace(text, @"public (object|void) (\w+_name;)", "public string $2");
-            
+
             return text;
         }
 
@@ -196,22 +199,25 @@ namespace TorchCs
                 foreach (Match m in ms) {
                     var name = m.Groups[2].Value;
                     if (text.Contains($"this.{name} = {name};")) {
-                        if (text.Contains($"int {name} =")) {
+                        if (Regex.IsMatch(text, @$"int {name}\b")) {
                             text = text.Replace($"public object {name};", $"public int {name};");
                             text = text.Replace($"public void {name};", $"public int {name};");
-                        } else if (text.Contains($"long {name} =")) {
+                        } else if (Regex.IsMatch(text, @$"long {name}\b")) {
                             text = text.Replace($"public object {name};", $"public long {name};");
                             text = text.Replace($"public void {name};", $"public long {name};");
-                        } else if (text.Contains($"doulbe {name} =")) {
+                        } else if (Regex.IsMatch(text, @$"doulbe {name}\b")) {
                             text = text.Replace($"public object {name};", $"public doulbe {name};");
                             text = text.Replace($"public void {name};", $"public doulbe {name};");
-                        } else if (text.Contains($"string {name} =")) {
+                        } else if (Regex.IsMatch(text, @$"string {name}\b")) {
                             text = text.Replace($"public object {name};", $"public string {name};");
                             text = text.Replace($"public void {name};", $"public string {name};");
-                        } else if (text.Contains($"bool {name} =")) {
+                        } else if (Regex.IsMatch(text, @$"bool {name}\b")) {
                             text = text.Replace($"public object {name};", $"public bool {name};");
                             text = text.Replace($"public void {name};", $"public bool {name};");
                         }
+                    } else if (text.Contains($"if (this.{name})") || text.Contains($"if (!this.{name})") || text.Contains($"if (this.{name} == true)") || text.Contains($"if (this.{name} == false)")) {
+                        text = text.Replace($"public object {name};", $"public bool {name};");
+                        text = text.Replace($"public void {name};", $"public bool {name};");
                     }
                 }
             }
@@ -459,12 +465,13 @@ namespace TorchCs
         /// <returns></returns>
         private static string replaceTensorList(string text)
         {
-            text = text.Replace(" torch.cat(new List<object>", " torch.cat(new List<Tensor>");
-            text = text.Replace(" torch.ones(new List<object>", " torch.ones(new List<Tensor>");
-            text = text.Replace(" torch.zeros(new List<object>", " torch.zeros(new List<Tensor>");
+            text = text.Replace("torch.cat(new List<object>", "torch.cat(new List<Tensor>");
+            text = text.Replace("torch.ones(new List<object>", "torch.ones(new long[]");
+            text = text.Replace("torch.ones(new List<int>", "torch.ones(new long[]");
+            text = text.Replace("torch.zeros(new List<object>", "torch.zeros(new long[]");
+            text = text.Replace("torch.zeros(new List<int>", "torch.zeros(new long[]");
 
-            text = text.Replace("var attns = new List<object>();", "var attns = new List<Tensor>();");
-            text = text.Replace("attns.append(attn);", "attns.Add(attn);");
+            text = text.Replace("new List<object>();", "new List<Tensor>();");
             return text;
         }
         /// <summary>
