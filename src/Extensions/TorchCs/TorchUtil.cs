@@ -53,12 +53,16 @@ namespace TorchCs
         /// <returns></returns>
         public static string ReplaceCodes(string text)
         {
+            // replace 'self' to 'this'
+            text = Regex.Replace(text, @"\bself\.", "this.");
+            // replace field type
             text = Regex.Replace(text, @"(object|void) (\w+ = ""\S+?""[,;)])", "string $2");
             text = Regex.Replace(text, @"(object|void) (\w+ = \d+[,;)])", "int $2");
             text = Regex.Replace(text, @"(object|void) (\w+ = \d+\.\d+[,;)])", "double $2");
             text = Regex.Replace(text, @"(object|void) (\w+ = (true|false)[,;)])", "bool $2");
-
+            // replace 'd_keys = d_keys or (d_model//n_heads)' to 'd_keys = d_keys ?? d_model / n_heads;'
             text = Regex.Replace(text, @"(([a-zA-Z_0-9]+) = \2 \|\| (.*?;))", "$2 = $2 ?? $3 //$1");
+
 
             text = replaceNamespace(text);
             text = replaceConstructor(text);
@@ -84,7 +88,7 @@ namespace TorchCs
             text = Regex.Replace(text, @"\bnp\.inf\b", "np.Inf");
             text = text.Replace("time.time()", "DateTime.Now");
 
-            //Tenser.requires_grad
+            // replace Tenser.requires_grad
             text = text.Replace(".require_grad = true;", ".requires_grad = true;");
             text = text.Replace(".require_grad = false;", ".requires_grad = false;");
 
@@ -501,11 +505,7 @@ namespace TorchCs
                             if (s.Trim() == "") {
                                 r += "null";
                             } else {
-                                if (s.StartsWith("self.")) {
-                                    r += s.Replace("self.", "this.");
-                                } else {
-                                    r += s;
-                                }
+                                r += s;
                             }
                         }
                         r += ")";
