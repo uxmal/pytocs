@@ -222,7 +222,20 @@ namespace TorchCs
                     } else if (text.Contains($"if (this.{name})") || text.Contains($"if (!this.{name})") || text.Contains($"if (this.{name} == true)") || text.Contains($"if (this.{name} == false)")) {
                         text = text.Replace($"public object {name};", $"public bool {name};");
                         text = text.Replace($"public void {name};", $"public bool {name};");
+                    } else if (text.Contains($"this.{name} = false") || text.Contains($"this.{name} = true")) {
+                        text = text.Replace($"public object {name};", $"public bool {name};");
+                        text = text.Replace($"public void {name};", $"public bool {name};");
+                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|\+=) """) || Regex.IsMatch(text, $@"this\.{name}\.(startswith|endswith|upper|lower|replace|strip|lstrip|rstrip)\(")) {
+                        text = text.Replace($"public object {name};", $"public string {name};");
+                        text = text.Replace($"public void {name};", $"public string {name};");
+                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+\.\d+")) {
+                        text = text.Replace($"public object {name};", $"public doulbe {name};");
+                        text = text.Replace($"public void {name};", $"public doulbe {name};");
+                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+")) {
+                        text = text.Replace($"public object {name};", $"public int {name};");
+                        text = text.Replace($"public void {name};", $"public int {name};");
                     }
+
                 }
             }
             return text;
