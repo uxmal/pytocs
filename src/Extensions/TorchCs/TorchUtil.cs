@@ -18,6 +18,7 @@ using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using TorchSharp;
 
 namespace TorchCs
 {
@@ -71,7 +72,8 @@ namespace TorchCs
             text = replaceMethodParamenterType(text);
             text = replaceMathMethod(text);
             text = replaceStringToEnum(text);
-
+            text = replaceMethodAlias(text);
+            
             text = replaceForwardMethod(text);
             text = replaceCallForwardMethod(text);
 
@@ -370,6 +372,13 @@ namespace TorchCs
             return text;
         }
 
+        private static string replaceMethodAlias(string text)
+        {
+            text = text.Replace("torch.concat(", "torch.cat("); // alias
+            return text;
+        }
+
+
         /// <summary>
         /// Replace Math Method
         /// Convert 'math.log'(python) to 'Math.Log'(C#)
@@ -482,6 +491,8 @@ namespace TorchCs
         /// <returns></returns>
         private static string replaceTensorList(string text)
         {
+            text = text.Replace("torch.cat(new List<object>", "torch.cat(new List<Tensor>");
+
             text = text.Replace("torch.cat(new List<object>", "torch.cat(new List<Tensor>");
             text = text.Replace("torch.ones(new List<object>", "torch.ones(new long[]");
             text = text.Replace("torch.ones(new List<int>", "torch.ones(new long[]");
