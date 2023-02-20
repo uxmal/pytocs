@@ -31,7 +31,7 @@ namespace Pytocs.Core
         private readonly string rootDirectory;
         private readonly string pattern;
 
-        public DirectoryWalker(IFileSystem fs, string directory, string pattern) 
+        public DirectoryWalker(IFileSystem fs, string directory, string pattern)
         {
             this.fs = fs;
             this.rootDirectory = directory;
@@ -82,20 +82,6 @@ namespace Pytocs.Core
                 state.Namespace.Length > 0 ? "{0}.{1}" : "{1}",
                 state.Namespace,
                 dirname);
-        }
-
-        public void ProcessDirectoryFiles(EnumerationState state)
-        {
-            foreach (var file in fs.GetFiles(state.DirectoryName, "*.py", SearchOption.TopDirectoryOnly))
-            {
-                Debug.Print($" ======== {file} ==");
-                var xlator = new Translator(
-                    state.Namespace, 
-                    fs.GetFileNameWithoutExtension(file),
-                    fs,
-                    new ConsoleLogger());
-                xlator.TranslateFile(file, file + ".cs");
-            }
         }
     }
 }

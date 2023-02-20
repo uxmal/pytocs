@@ -14,16 +14,14 @@
 //  limitations under the License.
 #endregion
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Pytocs.Core.Syntax;
 using Pytocs.Core.Types;
-using Name = Pytocs.Core.Syntax.Identifier;
+using System;
+using System.Collections.Generic;
 using System.Diagnostics;
-using Pytocs.Core;
+using System.Linq;
+using System.Text;
+using Name = Pytocs.Core.Syntax.Identifier;
 
 namespace Pytocs.Core.TypeInference
 {
@@ -94,7 +92,7 @@ namespace Pytocs.Core.TypeInference
         private readonly HashSet<string> failedToParse = new HashSet<string>();
         private readonly string suffix;
         private readonly DateTime startTime;
-        private readonly Dictionary<string, object> options;
+        private readonly IDictionary<string, object> options;
         private readonly string cacheDir;
 
         private IProgress? loadingProgress;
@@ -106,7 +104,11 @@ namespace Pytocs.Core.TypeInference
         {
         }
 
-        public AnalyzerImpl(IFileSystem fs, ILogger logger, Dictionary<string, object> options, DateTime startTime)
+        public AnalyzerImpl(
+            IFileSystem fs,
+            ILogger logger,
+            IDictionary<string, object> options,
+            DateTime startTime)
         {
             this.FileSystem = fs;
             this.logger = logger;
@@ -160,10 +162,9 @@ namespace Pytocs.Core.TypeInference
 
         public bool HasOption(string option)
         {
-            if (options.TryGetValue(option, out object? op) && (bool) op)
-                return true;
-            else
-                return false;
+            return options.TryGetValue(option, out object? op) &&
+                op is bool bop &&
+                bop;
         }
 
 
@@ -727,7 +728,7 @@ namespace Pytocs.Core.TypeInference
 
         public void msg(string m, params object[] args)
         {
-            if (!HasOption("quiet"))
+            if (!HasOption("--quiet"))
             {
                 Debug.Print(m, args);
                 Console.WriteLine(m, args);
@@ -736,7 +737,7 @@ namespace Pytocs.Core.TypeInference
 
         public void msg_(string m, params object[] args)
         {
-            if (!HasOption("quiet"))
+            if (!HasOption("--quiet"))
             {
                 Console.Write(string.Format(m, args));
             }

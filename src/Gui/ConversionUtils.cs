@@ -32,7 +32,7 @@ namespace Pytocs.Gui
             try
             {
                 var fs = new FileSystem();
-                var options = new Dictionary<string, object>();
+                var options = new Dictionary<string, object> { { "--quiet", true } };
                 var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
                 typeAnalysis.Analyze(sourcePath);
                 typeAnalysis.Finish();
@@ -47,6 +47,7 @@ namespace Pytocs.Gui
                         var xlator = new Translator(
                             state.Namespace,
                             fs.GetFileNameWithoutExtension(file),
+                            new List<IPostProcessor>(), //$TODO: extend GUI to add post-processors.
                             fs,
                             logger);
                         var module = typeAnalysis.GetAstForFile(path);

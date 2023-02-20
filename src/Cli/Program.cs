@@ -25,32 +25,45 @@ using System.Reflection;
 
 namespace Pytocs.Cli
 {
-    class Program
+    public class Program
     {
-        static void Main(string[] args)
+        private const string usage = 
+@"Usage:
+  pytocs [options]
+
+Options:
+  -v, --version                 Print version.
+  -r, --recursive DIRECTORY     Transpile all the files in the directory and
+                                all its subdirectories [default: .]
+  -p, --post-process PPLIST     Post process the output using one or more
+                                post-processor(s), separated by commas.
+  -q, --quiet                   Run with reduced output.
+";
+        public static void Main(string[] argv)
         {
             var fs = new FileSystem();
             var logger = new ConsoleLogger();
-            if (args.Length == 0)
-            {
-                var xlator = new Translator("", "module_name", fs, logger);
-                xlator.Translate("-", Console.In, Console.Out);
-                Console.Out.Flush();
-                return;
-            }
-            if (args[0] == "-v")
+            var options = ParseOptions(argv);
+            if (options.ContainsKey("--version"))
             {
                 WriteVersion();
                 return;
             }
-
-            var options = new Dictionary<string, object>();
-            var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
-            if (args[0].ToLower() == "-r")
+            if (!options.ContainsKey("--python-file") &&
+                !options.ContainsKey("--recursive"))
             {
-                var startDir = args.Length == 2
-                    ? args[1]
-                    : Directory.GetCurrentDirectory();
+                var xlator = new Translator("", "module_name", new(), fs, logger);
+                xlator.Translate("-", Console.In, Console.Out);
+                Console.Out.Flush();
+                return;
+            }
+            var postProcessors = LoadPostProcessors(options, logger);
+            var typeAnalysis = new AnalyzerImpl(fs, logger, options, DateTime.Now);
+            if (options.TryGetValue("--recursive", out var oStartDir))
+            {
+                var startDir = (string) oStartDir;
+                if (startDir == "." || startDir == "./" || startDir == ".\\")
+                    startDir = Directory.GetCurrentDirectory();
                 typeAnalysis.Analyze(startDir);
                 typeAnalysis.Finish();
                 var types = new TypeReferenceTranslator(typeAnalysis.BuildTypeDictionary());
@@ -69,6 +82,7 @@ namespace Pytocs.Cli
                         var xlator = new Translator(
                              state.Namespace,
                              fs.GetFileNameWithoutExtension(file),
+                             postProcessors,
                              fs,
                              logger);
                         var module = typeAnalysis.GetAstForFile(path);
@@ -86,20 +100,25 @@ namespace Pytocs.Cli
             }
             else
             {
-                foreach (var file in args)
+                if (!options.TryGetValue("<files>", out var oFiles) ||
+                    oFiles is not List<string> files)
+                    return;
+
+                foreach (var file in files)
                 {
                     typeAnalysis.LoadFileRecursive(file);
                 }
                 typeAnalysis.Finish();
                 var types = new TypeReferenceTranslator(
                     typeAnalysis.BuildTypeDictionary());
-                foreach (var file in args)
+                foreach (var file in files)
                 {
                     var path = fs.GetFullPath(file);
                     var xlator = new Translator(
                         "",
                          fs.GetFileNameWithoutExtension(file),
-                        fs,
+                         postProcessors,
+                         fs,
                          logger);
                     var module = typeAnalysis.GetAstForFile(path);
                     if (module is null)
@@ -113,6 +132,72 @@ namespace Pytocs.Cli
                         Path.ChangeExtension(path, ".py.cs"));
                 }
             }
+        }
+
+        private static IDictionary<string,object> ParseOptions(string[] args)
+        {
+            var result = new Dictionary<string, object>();
+            var files = new List<string>();
+            for (int i = 0; i < args.Length; ++i)
+            {
+                var arg = args[i];
+                if (!arg.StartsWith('-'))
+                {
+                    files = args.Skip(i).ToList();
+                    break;
+                }
+                switch (arg)
+                {
+                case "-v":
+                case "--version":
+                    result["--version"] = true;
+                    break;
+                case "-q":
+                case "--quiet":
+                    result["--quiet"] = true;
+                    break;
+                case "-r":
+                case "--recursive":
+                    var dirname = ".";
+                    if (i < args.Length - 1)
+                    {
+                        if (!args[i + 1].StartsWith('-'))
+                        {
+                            ++i;
+                            dirname = args[i];
+                        }
+                        break;
+                    }
+                    result["--recursive"] = dirname;
+                    break;
+                }
+            }
+            result["<files>"] = files;
+            return result;
+        }
+
+        private static List<IPostProcessor> LoadPostProcessors(
+            IDictionary<string, object> options,
+            ILogger logger)
+        {
+            var result = new List<IPostProcessor>();
+            if (!options.TryGetValue("--post-process", out var oPostProcessors))
+                return result;
+
+            foreach (string ppTypeName in ((string) oPostProcessors).Split(","))
+            {
+                var typeName = ppTypeName.Trim();
+                try
+                {
+                    Type type = Type.GetType(typeName, true)!;
+                    result.Add((IPostProcessor) Activator.CreateInstance(type)!);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, $"Couldn't load postprocessor {typeName}.");
+                }
+            }
+            return result;
         }
 
         private static void WriteVersion()

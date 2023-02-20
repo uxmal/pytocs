@@ -29,6 +29,16 @@ namespace Pytocs.Core.CodeModel
             FalseStatements = new List<CodeStatement>();
         }
 
+        public CodeConditionStatement(
+            CodeExpression condition,
+            List<CodeStatement> trueStms,
+            List<CodeStatement> falseStms)
+        {
+            this.Condition = condition;
+            this.TrueStatements = trueStms;
+            this.FalseStatements = falseStms;
+        }
+
         public CodeExpression? Condition { get; set; }
         public List<CodeStatement> TrueStatements { get; private set; }
         public List<CodeStatement> FalseStatements { get; private set; }
