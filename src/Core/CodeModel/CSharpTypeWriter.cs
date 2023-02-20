@@ -225,6 +225,54 @@ namespace Pytocs.Core.CodeModel
                 writer.WriteLine(stm.Comment);
             }
             RenderTypeMemberAttributes(type.Attributes);
+            if (type.IsClass)
+            {
+                RenderClass(type, expWriter);
+            }
+            else if (type.IsEnum)
+            {
+                RenderEnum(type, expWriter);
+            }
+            else
+                throw new NotImplementedException();
+            this.type = oldType;
+            return 0;
+        }
+
+        private void RenderEnum(CodeTypeDeclaration type, CSharpExpressionWriter expWriter)
+        {
+            writer.Write("enum");
+            writer.Write(" ");
+            writer.WriteName(type.Name!);
+            writer.Write(" ");
+            writer.Write("{");
+            writer.WriteLine();
+            ++writer.IndentLevel;
+            bool sep = true;
+            foreach (var m in type.Members)
+            {
+                if (sep) writer.WriteLine();
+                sep = true;
+                if (m is CodeMemberField f)
+                {
+                    writer.Write(f.FieldName!);
+                    writer.Write(" = ");
+                    f.InitExpression?.Accept(expWriter);
+                    writer.Write(",");
+                    writer.WriteLine();
+                }
+                else
+                {
+                    m.Accept(this);
+                }
+            }
+            --writer.IndentLevel;
+            writer.Write("}");
+            writer.WriteLine();
+        }
+
+        private void RenderClass(CodeTypeDeclaration type, CSharpExpressionWriter expWriter)
+        {
             writer.Write("class");
             writer.Write(" ");
             writer.WriteName(type.Name!);
@@ -257,8 +305,6 @@ namespace Pytocs.Core.CodeModel
             --writer.IndentLevel;
             writer.Write("}");
             writer.WriteLine();
-            this.type = oldType;
-            return 0;
         }
 
         private void RenderMethodAttributes(CodeMemberMethod method)

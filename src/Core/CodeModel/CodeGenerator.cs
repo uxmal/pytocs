@@ -83,6 +83,28 @@ namespace Pytocs.Core.CodeModel
             return clause;
         }
 
+        public CodeTypeDeclaration Enum(
+            string name,
+            Func<IEnumerable<CodeMemberField>> valueGenerator)
+        {
+            var c = new CodeTypeDeclaration
+            {
+                IsEnum = true,
+                Name = name,
+            };
+            // classes in __init__ files go directly into the namespace.
+            if (this.isInit)
+            {
+                CurrentNamespace.Types.Add(c);
+            }
+            else
+            {
+                AddMemberWithComments(c);
+            }
+            c.Members.AddRange(valueGenerator());
+            return c;
+        }
+
         public CodeTypeDeclaration Class(
             string name, 
             IEnumerable<string> baseClasses, 
@@ -694,6 +716,14 @@ namespace Pytocs.Core.CodeModel
         public CodeExpression This()
         {
             return new CodeThisReferenceExpression();
+        }
+
+        public CodeMemberField EnumValue(string name, CodeExpression value)
+        {
+            return new CodeMemberField(typeof(object), name)
+            {
+                InitExpression = value
+            };
         }
     }
 }
