@@ -62,7 +62,7 @@ namespace TorchCs
             text = Regex.Replace(text, @"(object|void) (\w+ = \d+\.\d+[,;)])", "double $2");
             text = Regex.Replace(text, @"(object|void) (\w+ = (true|false)[,;)])", "bool $2");
             // replace 'd_keys = d_keys or (d_model//n_heads)' to 'd_keys = d_keys ?? d_model / n_heads;'
-            text = Regex.Replace(text, @"(([a-zA-Z_0-9]+) = \2 \|\| (.*?;))", "$2 = $2 ?? $3 //$1");
+            text = Regex.Replace(text, @"([a-zA-Z_0-9]+) = (\1 \|\| (.*?;))", "$1 = $1 ?? $3 //$2");
 
 
             text = replaceNamespace(text);
@@ -73,7 +73,7 @@ namespace TorchCs
             text = replaceMathMethod(text);
             text = replaceStringToEnum(text);
             text = replaceMethodAlias(text);
-            
+
             text = replaceForwardMethod(text);
             text = replaceCallForwardMethod(text);
 
@@ -375,6 +375,42 @@ namespace TorchCs
         private static string replaceMethodAlias(string text)
         {
             text = text.Replace("torch.concat(", "torch.cat("); // alias
+            Dictionary<string, string> convertDict = new Dictionary<string, string>() {
+                {"F.alpha_dropout","nn.AlphaDropout()" },
+                {"F.celu","nn.CELU()" },
+                {"F.dropout","nn.Dropout()" },
+                {"F.elu","nn.ELU()" },
+                {"F.feature_alpha_dropout","nn.FeatureAlphaDropout()" },
+                {"F.gelu","nn.GELU()" },
+                {"F.glu","nn.GLU()" },
+                {"F.Hardshrink","nn.Hardshrink()" },
+                {"F.hardsigmoid","nn.Hardsigmoid()" },
+                {"F.hardswish","nn.Hardswish()" },
+                {"F.Hardtanh","nn.Hardtanh()" },
+                {"F.leaky_relu","nn.LeakyReLU()" },
+                {"F.Mish","nn.Mish()" },
+                {"F.relu","nn.ReLU()" },
+                {"F.relu6","nn.ReLU6()" },
+                {"F.rrelu","nn.RReLU()" },
+                {"F.selu","nn.SELU()" },
+                {"F.Sigmoid","nn.Sigmoid()" },
+                {"F.SiLU","nn.SiLU()" },
+                {"F.softplus","nn.Softplus()" },
+                {"F.Softshrink","nn.Softshrink()" },
+                {"F.Softsign","nn.Softsign()" },
+                {"F.softmax2d","nn.Softmax2d()" },
+                {"F.tanh","nn.Tanh()" },
+                {"F.Tanhshrink","nn.Tanhshrink()" },
+            };
+            text = Regex.Replace(text, @"== (.*?) \? ((F\.\w+?) : (F\.\w+?);)", new MatchEvaluator(m => {
+                var t = m.Groups[1].Value;
+                var name1 = m.Groups[3].Value;
+                var name2 = m.Groups[4].Value;
+                if (convertDict.ContainsKey(name1)) { name1 = convertDict[name1]; }
+                if (convertDict.ContainsKey(name2)) { name2 = convertDict[name2]; }
+                return $"== {t} ? {name1} : {name2};//{m.Groups[2].Value}";
+            }));
+
             return text;
         }
 
