@@ -48,7 +48,7 @@ namespace Pytocs.UnitTests.Translate
             var stm = par.Parse().ToList();
             var unt = new CodeCompileUnit();
             var gen = new CodeGenerator(unt, "test", Path.GetFileNameWithoutExtension(filename));
-            var opt = new Dictionary<string, object> { { "quiet", true } };
+            var opt = new Dictionary<string, object> { { "--quiet", true } };
             var ana = new AnalyzerImpl(fs, logger, opt, DateTime.Now);
             var mod = new Module(
                 "module",
@@ -591,6 +591,45 @@ print('The square root of %0.3f is %0.3f' % (num, num_sqrt))
 }
 ";
             Assert.Equal(sExp, XlatModule(pySrc));
+        }
+
+
+        [Fact(DisplayName = nameof(Module_Enum))]
+        public void Module_Enum()
+        {
+            var pySrc = @"
+class JobType(Enum):
+    """"""
+    This is a comment
+    """"""
+
+    NORMAL = 0
+    FAST = 1
+    SLOW = 2
+    DATAREF_HINTS = 4
+";
+            var sExpected =
+@"namespace test {
+    
+    public static class module {
+        
+        // 
+        //     This is a comment
+        //     
+        public enum JobType {
+            
+            NORMAL = 0,
+            
+            FAST = 1,
+            
+            SLOW = 2,
+            
+            DATAREF_HINTS = 4,
+        }
+    }
+}
+";
+            Assert.Equal(sExpected, XlatModule(pySrc));
         }
     }
 }

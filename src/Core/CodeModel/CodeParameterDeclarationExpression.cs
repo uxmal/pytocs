@@ -39,7 +39,17 @@ namespace Pytocs.Core.CodeModel
             this.ParameterName = name;
         }
 
-        public CodeParameterDeclarationExpression(Type type, string name, CodeExpression defaultValue) : this(type, name)
+        public CodeParameterDeclarationExpression(Type type, string name, CodeExpression defaultValue) 
+            : this(type, name)
+        {
+            this.DefaultValue = defaultValue;
+        }
+
+        public CodeParameterDeclarationExpression(
+            CodeTypeReference type, 
+            string name,
+            CodeExpression defaultValue) :
+            this(type, name)
         {
             this.DefaultValue = defaultValue;
         }

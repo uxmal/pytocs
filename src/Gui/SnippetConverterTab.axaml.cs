@@ -15,6 +15,7 @@
 #endregion
 
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Avalonia.Controls;
@@ -49,7 +50,8 @@ namespace Pytocs.Gui
         {
             try
             {
-                var xlator = new Translator("", "Program", new FileSystem(), new ConsoleLogger());
+                var postProcessors = new List<IPostProcessor>();
+                var xlator = new Translator("", "Program", postProcessors, new FileSystem(), new ConsoleLogger());
                 CSharpEditor.Text = xlator.TranslateSnippet(PythonEditor.Text);
             }
             catch (Exception ex)

@@ -1,4 +1,4 @@
-﻿#region License
+#region License
 //  Copyright 2015-2021 John Källén
 // 
 //  Licensed under the Apache License, Version 2.0 (the "License");
@@ -33,6 +33,16 @@ namespace Pytocs.Core.CodeModel
             TryStatements = new List<CodeStatement>();
             CatchClauses = new List<CodeCatchClause>();
             FinallyStatements = new List<CodeStatement>();
+        }
+
+        public CodeTryCatchFinallyStatement(
+            List<CodeStatement> tryStms,
+            List<CodeCatchClause> catchClauses,
+            List<CodeStatement> finallyStatements)
+        {
+            this.TryStatements = tryStms;
+            this.CatchClauses = catchClauses;
+            this.FinallyStatements = finallyStatements;
         }
 
         public override T Accept<T>(ICodeStatementVisitor<T> visitor)

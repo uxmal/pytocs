@@ -68,17 +68,47 @@ namespace Pytocs.Core.Translate
             var gensym = new SymbolGenerator();
             var stmtXlt = new StatementTranslator(c, types, gen, gensym, new HashSet<string>());
             stmtXlt.properties = FindProperties(c.body.Statements);
-            var csClass = gen.Class(
-                c.name.Name, 
-                baseClasses, 
-                () => GenerateFields(c),
-                () => c.body.Accept(stmtXlt));
-            csClass.Comments.AddRange(comments);
+            CodeTypeDeclaration csType;
+            if (IsEnumDeclaration(c))
+            {
+                csType = gen.Enum(
+                    c.name.Name,
+                    () => GenerateEnumValues(c));
+            }
+            else
+            {
+                csType = gen.Class(
+                    c.name.Name,
+                    baseClasses,
+                    () => GenerateFields(c),
+                    () => c.body.Accept(stmtXlt));
+            }
+            csType.Comments.AddRange(comments);
             if (customAttrs != null)
             {
-                csClass.CustomAttributes.AddRange(customAttrs);
+                csType.CustomAttributes.AddRange(customAttrs);
                 customAttrs = null;
             }
+        }
+
+        private IEnumerable<CodeMemberField> GenerateEnumValues(ClassDef c)
+        {
+            foreach (var stm in c.body.Statements.OfType<SuiteStatement>()
+                .Select(s => s.Statements[0])
+                .OfType<ExpStatement>()
+                .Select(es => es.Expression)
+                .OfType<AssignExp>())
+            {
+                if (stm.Dst is Identifier id)
+                {
+                    yield return gen.EnumValue(id.Name, stm.Src.Accept(xlat));
+                }
+            }
+        }
+
+        private bool IsEnumDeclaration(ClassDef c)
+        {
+            return c.args.Count == 1 && c.args[0].DefaultValue?.ToString() == "Enum";
         }
 
         private IEnumerable<CodeMemberField> GenerateFields(ClassDef c)

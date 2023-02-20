@@ -36,13 +36,20 @@ namespace Pytocs.Core
     {
         private readonly string nmspace;
         private readonly string moduleName;
+        private List<IPostProcessor> postProcessors;
         private readonly IFileSystem fs;
         private readonly ILogger logger;
 
-        public Translator(string nmspace, string moduleName, IFileSystem fs, ILogger logger)
+        public Translator(
+            string nmspace,
+            string moduleName,
+            List<IPostProcessor> postProcessors,
+            IFileSystem fs,
+            ILogger logger)
         {
             this.nmspace = nmspace;
             this.moduleName = moduleName;
+            this.postProcessors = postProcessors;
             this.fs = fs;
             this.logger = logger;
         }
@@ -54,10 +61,10 @@ namespace Pytocs.Core
             {
                 var lex = new Lexer(filename, input);
                 var flt = new CommentFilter(lex);
-            var par = new Parser(filename, flt, true, logger);
+                var par = new Parser(filename, flt, true, logger);
                 var stm = par.Parse();
-            var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
-            TranslateModuleStatements(stm, types, output);
+                var types = new TypeReferenceTranslator(new Dictionary<Node, DataType>());
+                TranslateModuleStatements(stm, types, output);
             }
             catch (Exception ex)
             {
@@ -97,22 +104,39 @@ namespace Pytocs.Core
 
         public void TranslateModuleStatements(
             IEnumerable<Statement> stm,
-            TypeReferenceTranslator types, 
+            TypeReferenceTranslator types,
             TextWriter output)
         {
             try
             {
-            var unt = new CodeCompileUnit();
-            var gen = new CodeGenerator(unt, nmspace, Path.GetFileNameWithoutExtension(moduleName));
+                var unt = new CodeCompileUnit();
+                var gen = new CodeGenerator(unt, nmspace, Path.GetFileNameWithoutExtension(moduleName));
                 var xlt = new ModuleTranslator(types, gen);
-            xlt.Translate(stm);
-            var pvd = new CSharpCodeProvider();
-            pvd.GenerateCodeFromCompileUnit(unt, output, new CodeGeneratorOptions { });
-        }
+                xlt.Translate(stm);
+                unt = PostProcess(unt);
+                var pvd = new CSharpCodeProvider();
+                pvd.GenerateCodeFromCompileUnit(unt, output, new CodeGeneratorOptions { });
+            }
             catch (NodeException nex)
             {
                 logger.Error($"{nex.Node.Filename}({nex.Node.Start}): {nex.Message}");
             }
+        }
+
+        private CodeCompileUnit PostProcess(CodeCompileUnit unt)
+        {
+            foreach (var postProcessor in this.postProcessors)
+            {
+                try
+                {
+                    unt = postProcessor.PostProcess(unt);
+                }
+                catch (Exception ex)
+                {
+                    logger.Error(ex, $"An error occurred during post-processing with {postProcessor.GetType().Name}. Post-processing will stop.");
+                }
+            }
+            return unt;
         }
 
         public void TranslateFile(string inputFileName, string outputFileName)
@@ -157,7 +181,7 @@ namespace Pytocs.Core
             {
                 Translate("Program", reader, writer);
                 writer.Flush();
-    }
+            }
 
             return stringBuilder.ToString();
         }

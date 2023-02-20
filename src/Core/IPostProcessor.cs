@@ -14,36 +14,17 @@
 //  limitations under the License.
 #endregion
 
-using Pytocs.Core.Syntax;
+using Pytocs.Core.CodeModel;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Pytocs.Core.CodeModel
+namespace Pytocs.Core
 {
-    public class CodeUsingStatement : CodeStatement
+    public interface IPostProcessor
     {
-        public CodeUsingStatement()
-        {
-            Initializers = new List<CodeStatement>();
-            Statements = new List<CodeStatement>();
-        }
-
-        public CodeUsingStatement(List<CodeStatement> initializers, List<CodeStatement> statements)
-        {
-            this.Initializers = initializers;
-            this.Statements = statements;
-        }
-
-        public override T Accept<T>(ICodeStatementVisitor<T> visitor)
-        {
-            return visitor.VisitUsing(this);
-        }
-
-        public List<CodeStatement> Initializers { get; private set; }
-        public List<CodeStatement> Statements { get; private set; }
-
+        CodeCompileUnit PostProcess(CodeCompileUnit unit);
     }
 }
