@@ -14,6 +14,8 @@
 //  limitations under the License.
 #endregion
 using System.Runtime.CompilerServices;
+using System.Security.Cryptography;
+using static TorchSharp.torch;
 
 namespace System
 {
@@ -24,9 +26,92 @@ namespace System
             return String.Format(str, strings);
         }
 
-        public static string[] split(this string str, string splitStr)
+        public static List<string> split(this string str, string splitStr)
         {
-            return str.Split(splitStr);
+            return str.Split(splitStr).ToList();
+        }
+        public static string upper(this string str)
+        {
+            return str.ToUpper();
+        }
+        public static string lower(this string str)
+        {
+            return str.ToLower();
+        }
+
+        public static bool startswith(this string str, string s)
+        {
+            return str.StartsWith(s);
+        }
+        public static bool endswith(this string str, string s)
+        {
+            return str.EndsWith(s);
+        }
+        public static int find(this string str, string s, int start = 0)
+        {
+            return str.IndexOf(s, start);
+        }
+        public static int find(this string str, string s, int start, int end)
+        {
+            return str.IndexOf(s, start, end - start + 1);
+        }
+        public static int rfind(this string str, string s, int start = 0)
+        {
+            return str.LastIndexOf(s, start);
+        }
+        public static int rfind(this string str, string s, int start, int end)
+        {
+            return str.LastIndexOf(s, start, end - start + 1);
+        }
+        public static int index(this string str, string s, int start = 0)
+        {
+            var index = str.IndexOf(s, start);
+            if (index == -1) throw new Exception("not find");
+            return index;
+        }
+        public static int index(this string str, string s, int start, int end)
+        {
+            var index = str.IndexOf(s, start, end - start + 1);
+            if (index == -1) throw new Exception("not find");
+            return index;
+        }
+        public static int rindex(this string str, string s, int start = 0)
+        {
+            var index = str.LastIndexOf(s, start);
+            if (index == -1) throw new Exception("not find");
+            return index;
+        }
+        public static int rindex(this string str, string s, int start, int end)
+        {
+            var index = str.LastIndexOf(s, start, end - start + 1);
+            if (index == -1) throw new Exception("not find");
+            return index;
+        }
+        public static string replace(this string str, string oldStr, string newStr)
+        {
+            return str.Replace(oldStr, newStr);
+        }
+        public static string join(this string str, string[] objs)
+        {
+            return String.Join(str, objs);
+        }
+        public static string strip(this string str)
+        {
+            return str.Trim();
+        }
+        public static string lstrip(this string str)
+        {
+            return str.TrimStart();
+        }
+        public static string rstrip(this string str)
+        {
+            return str.TrimEnd();
+        }
+
+
+        public static void append<T>(this ICollection<T> list, T obj)
+        {
+            list.Add(obj);
         }
 
         public static ICollection<T1> keys<T1, T2>(this IDictionary<T1, T2> dict)
@@ -121,6 +206,7 @@ namespace System
                 }
             }
         }
+
     }
 
     public static class os
@@ -129,6 +215,61 @@ namespace System
         {
             Directory.CreateDirectory(path);
         }
+        public static void mkdir(string path)
+        {
+            Directory.CreateDirectory(path);
+        }
+
+        public static void rename(string oldPath, string newPath)
+        {
+            File.Move(oldPath, newPath);
+        }
+        public static void renames(string oldFolder, string newFolder)
+        {
+            Directory.Move(oldFolder, newFolder);
+        }
+        public static void remove(string path)
+        {
+            File.Delete(path);
+        }
+        public static void removedirs(string path)
+        {
+            Directory.Delete(path, true);
+        }
+
+        // chroot
+        public static void chdir(string path)
+        {
+            Directory.SetCurrentDirectory(path);
+        }
+        public static string getcwd()
+        {
+            return Directory.GetCurrentDirectory();
+        }
+
+        public static void rmdir(string path)
+        {
+            Directory.Delete(path, true);
+        }
+        public static string tmpnam()
+        {
+            return Path.GetTempFileName();
+        }
+        public static string[] listdir(string path)
+        {
+            var fs = Directory.GetFiles(path);
+            var dirs = Directory.GetDirectories(path);
+
+            List<string> result = new List<string>();
+            foreach (var f in fs) {
+                result.Add(Path.GetFileName(f));
+            }
+            foreach (var dir in dirs) {
+                result.Add(Path.GetFileName(dir));
+            }
+            return result.ToArray();
+        }
+
 
         public class path
         {
@@ -142,6 +283,57 @@ namespace System
             {
                 return File.Exists(path) || Directory.Exists(path);
             }
+            public static bool isfile(string path)
+            {
+                return File.Exists(path);
+            }
+            public static bool isdir(string path)
+            {
+                return Directory.Exists(path);
+            }
+            public static string basename(string path)
+            {
+                return Path.GetFileName(path);
+            }
+            public static string abspath(string path)
+            {
+                return Path.GetFullPath(path);
+            }
+
+            public static string? dirname(string path)
+            {
+                return Path.GetDirectoryName(path);
+            }
+            public static long getsize(string path)
+            {
+                return new FileInfo(path).Length;
+            }
+
+            public static string[] split(string path)
+            {
+                var index = Math.Max(path.LastIndexOf('/'), path.LastIndexOf('\\'));
+                var s = path.Substring(0, index);
+                var s2 = path.Substring(index + 1);
+                return new string[] { s, s2 };
+            }
+            public static DateTime getmtime(string path)
+            {
+                return new FileInfo(path).LastWriteTime;
+            }
+            public static DateTime getctime(string path)
+            {
+                return new FileInfo(path).CreationTime;
+            }
         }
     }
+    public static class time
+    {
+        public static void sleep(int s)
+        {
+            Thread.Sleep(s * 1000);
+        }
+    }
+
+
+
 }

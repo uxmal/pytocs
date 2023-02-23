@@ -13,9 +13,12 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 #endregion
+using System;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Xml.Linq;
+using TorchSharp;
 
 namespace TorchCs
 {
@@ -51,9 +54,16 @@ namespace TorchCs
         /// <returns></returns>
         public static string ReplaceCodes(string text)
         {
-            text = Regex.Replace(text, @"object (\w+ = ""\w+""[,;)])", "string $1");
-            text = Regex.Replace(text, @"object (\w+ = \d+[,;)])", "int $1");
-            text = Regex.Replace(text, @"object (\w+ = \d+\.\d+[,;)])", "double $1");
+            // replace 'self' to 'this'
+            text = Regex.Replace(text, @"\bself\.", "this.");
+            // replace field type
+            text = Regex.Replace(text, @"(object|void) (\w+ = ""\S+?""[,;)])", "string $2");
+            text = Regex.Replace(text, @"(object|void) (\w+ = \d+[,;)])", "int $2");
+            text = Regex.Replace(text, @"(object|void) (\w+ = \d+\.\d+[,;)])", "double $2");
+            text = Regex.Replace(text, @"(object|void) (\w+ = (true|false)[,;)])", "bool $2");
+            // replace 'd_keys = d_keys or (d_model//n_heads)' to 'd_keys = d_keys ?? d_model / n_heads;'
+            text = Regex.Replace(text, @"([a-zA-Z_0-9]+) = (\1 \|\| (.*?;))", "$1 = $1 ?? $3 //$2");
+
 
             text = replaceNamespace(text);
             text = replaceConstructor(text);
@@ -62,6 +72,7 @@ namespace TorchCs
             text = replaceMethodParamenterType(text);
             text = replaceMathMethod(text);
             text = replaceStringToEnum(text);
+            text = replaceMethodAlias(text);
 
             text = replaceForwardMethod(text);
             text = replaceCallForwardMethod(text);
@@ -79,6 +90,9 @@ namespace TorchCs
             text = Regex.Replace(text, @"\bnp\.inf\b", "np.Inf");
             text = text.Replace("time.time()", "DateTime.Now");
 
+            // replace Tenser.requires_grad
+            text = text.Replace(".require_grad = true;", ".requires_grad = true;");
+            text = text.Replace(".require_grad = false;", ".requires_grad = false;");
 
             return text;
         }
@@ -172,7 +186,14 @@ namespace TorchCs
             text = Regex.Replace(text, @"public (object|void) (\w+_model;)", "public int $2");
             text = Regex.Replace(text, @"public (object|void) (\w+_out;)", "public int $2");
             text = Regex.Replace(text, @"public (object|void) (\w+_channels;)", "public int $2");
+            text = Regex.Replace(text, @"public (object|void) (\w+_size;)", "public int $2");
+            text = Regex.Replace(text, @"public (object|void) (\w+_dims;)", "public int $2");
             text = Regex.Replace(text, @"public (object|void) (num_\w+;)", "public int $2");
+            text = Regex.Replace(text, @"public (object|void) channels;", "public int channels;");
+
+
+            text = Regex.Replace(text, @"public (object|void) (\w+_path;)", "public string $2");
+            text = Regex.Replace(text, @"public (object|void) (\w+_name;)", "public string $2");
 
             return text;
         }
@@ -184,23 +205,39 @@ namespace TorchCs
                 foreach (Match m in ms) {
                     var name = m.Groups[2].Value;
                     if (text.Contains($"this.{name} = {name};")) {
-                        if (text.Contains($"int {name} =")) {
+                        if (Regex.IsMatch(text, @$"int {name}\b")) {
                             text = text.Replace($"public object {name};", $"public int {name};");
                             text = text.Replace($"public void {name};", $"public int {name};");
-                        } else if (text.Contains($"long {name} =")) {
+                        } else if (Regex.IsMatch(text, @$"long {name}\b")) {
                             text = text.Replace($"public object {name};", $"public long {name};");
                             text = text.Replace($"public void {name};", $"public long {name};");
-                        } else if (text.Contains($"doulbe {name} =")) {
+                        } else if (Regex.IsMatch(text, @$"doulbe {name}\b")) {
                             text = text.Replace($"public object {name};", $"public doulbe {name};");
                             text = text.Replace($"public void {name};", $"public doulbe {name};");
-                        } else if (text.Contains($"string {name} =")) {
+                        } else if (Regex.IsMatch(text, @$"string {name}\b")) {
                             text = text.Replace($"public object {name};", $"public string {name};");
                             text = text.Replace($"public void {name};", $"public string {name};");
-                        } else if (text.Contains($"bool {name} =")) {
+                        } else if (Regex.IsMatch(text, @$"bool {name}\b")) {
                             text = text.Replace($"public object {name};", $"public bool {name};");
                             text = text.Replace($"public void {name};", $"public bool {name};");
                         }
+                    } else if (text.Contains($"if (this.{name})") || text.Contains($"if (!this.{name})") || text.Contains($"if (this.{name} == true)") || text.Contains($"if (this.{name} == false)")) {
+                        text = text.Replace($"public object {name};", $"public bool {name};");
+                        text = text.Replace($"public void {name};", $"public bool {name};");
+                    } else if (text.Contains($"this.{name} = false") || text.Contains($"this.{name} = true")) {
+                        text = text.Replace($"public object {name};", $"public bool {name};");
+                        text = text.Replace($"public void {name};", $"public bool {name};");
+                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|\+=) """) || Regex.IsMatch(text, $@"this\.{name}\.(startswith|endswith|upper|lower|replace|strip|lstrip|rstrip)\(")) {
+                        text = text.Replace($"public object {name};", $"public string {name};");
+                        text = text.Replace($"public void {name};", $"public string {name};");
+                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+\.\d+")) {
+                        text = text.Replace($"public object {name};", $"public doulbe {name};");
+                        text = text.Replace($"public void {name};", $"public doulbe {name};");
+                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+")) {
+                        text = text.Replace($"public object {name};", $"public int {name};");
+                        text = text.Replace($"public void {name};", $"public int {name};");
                     }
+
                 }
             }
             return text;
@@ -324,11 +361,59 @@ namespace TorchCs
             text = Regex.Replace(text, @"(object|void) (\w+_model[,;)])", "int $2");
             text = Regex.Replace(text, @"(object|void) (\w+_out[,;)])", "int $2");
             text = Regex.Replace(text, @"(object|void) (\w+_channels[,;)])", "int $2");
+            text = Regex.Replace(text, @"(object|void) (\w+_size[,;)])", "int $2");
+            text = Regex.Replace(text, @"(object|void) (\w+_dims[,;)])", "int $2");
             text = Regex.Replace(text, @"(object|void) (num_\w+[,;)])", "int $2");
+            text = Regex.Replace(text, @"(object|void) (channels[,;)])", "int $2");
 
+            text = Regex.Replace(text, @"(object|void) (\w+_path[,;)])", "string $2");
+            text = Regex.Replace(text, @"(object|void) (\w+_name[,;)])", "string $2");
 
             return text;
         }
+
+        private static string replaceMethodAlias(string text)
+        {
+            text = text.Replace("torch.concat(", "torch.cat("); // alias
+            Dictionary<string, string> convertDict = new Dictionary<string, string>() {
+                {"F.alpha_dropout","nn.AlphaDropout()" },
+                {"F.celu","nn.CELU()" },
+                {"F.dropout","nn.Dropout()" },
+                {"F.elu","nn.ELU()" },
+                {"F.feature_alpha_dropout","nn.FeatureAlphaDropout()" },
+                {"F.gelu","nn.GELU()" },
+                {"F.glu","nn.GLU()" },
+                {"F.Hardshrink","nn.Hardshrink()" },
+                {"F.hardsigmoid","nn.Hardsigmoid()" },
+                {"F.hardswish","nn.Hardswish()" },
+                {"F.Hardtanh","nn.Hardtanh()" },
+                {"F.leaky_relu","nn.LeakyReLU()" },
+                {"F.Mish","nn.Mish()" },
+                {"F.relu","nn.ReLU()" },
+                {"F.relu6","nn.ReLU6()" },
+                {"F.rrelu","nn.RReLU()" },
+                {"F.selu","nn.SELU()" },
+                {"F.Sigmoid","nn.Sigmoid()" },
+                {"F.SiLU","nn.SiLU()" },
+                {"F.softplus","nn.Softplus()" },
+                {"F.Softshrink","nn.Softshrink()" },
+                {"F.Softsign","nn.Softsign()" },
+                {"F.softmax2d","nn.Softmax2d()" },
+                {"F.tanh","nn.Tanh()" },
+                {"F.Tanhshrink","nn.Tanhshrink()" },
+            };
+            text = Regex.Replace(text, @"== (.*?) \? ((F\.\w+?) : (F\.\w+?);)", new MatchEvaluator(m => {
+                var t = m.Groups[1].Value;
+                var name1 = m.Groups[3].Value;
+                var name2 = m.Groups[4].Value;
+                if (convertDict.ContainsKey(name1)) { name1 = convertDict[name1]; }
+                if (convertDict.ContainsKey(name2)) { name2 = convertDict[name2]; }
+                return $"== {t} ? {name1} : {name2};//{m.Groups[2].Value}";
+            }));
+
+            return text;
+        }
+
 
         /// <summary>
         /// Replace Math Method
@@ -345,6 +430,10 @@ namespace TorchCs
                 var nameL = name.ToLower();
                 text = Regex.Replace(text, @$"\bmath\.{nameL}\(", $"Math.{name}(");
             }
+            text = Regex.Replace(text, @"\bmath\.pi\b", "Math.PI");
+            text = Regex.Replace(text, @"\bmath\.e\b", "Math.E");
+            text = Regex.Replace(text, @"\bmath\.tau\b", "Math.Tau");
+            text = Regex.Replace(text, @"\bmath\.inf\b", "double.PositiveInfinity");
             return text;
         }
         /// <summary>
@@ -438,12 +527,15 @@ namespace TorchCs
         /// <returns></returns>
         private static string replaceTensorList(string text)
         {
-            text = text.Replace(" torch.cat(new List<object>", " torch.cat(new List<Tensor>");
-            text = text.Replace(" torch.ones(new List<object>", " torch.ones(new List<Tensor>");
-            text = text.Replace(" torch.zeros(new List<object>", " torch.zeros(new List<Tensor>");
+            text = text.Replace("torch.cat(new List<object>", "torch.cat(new List<Tensor>");
 
-            text = text.Replace("var attns = new List<object>();", "var attns = new List<Tensor>();");
-            text = text.Replace("attns.append(attn);", "attns.Add(attn);");
+            text = text.Replace("torch.cat(new List<object>", "torch.cat(new List<Tensor>");
+            text = text.Replace("torch.ones(new List<object>", "torch.ones(new long[]");
+            text = text.Replace("torch.ones(new List<int>", "torch.ones(new long[]");
+            text = text.Replace("torch.zeros(new List<object>", "torch.zeros(new long[]");
+            text = text.Replace("torch.zeros(new List<int>", "torch.zeros(new long[]");
+
+            text = text.Replace("new List<object>();", "new List<Tensor>();");
             return text;
         }
         /// <summary>
@@ -473,11 +565,7 @@ namespace TorchCs
                             if (s.Trim() == "") {
                                 r += "null";
                             } else {
-                                if (s.StartsWith("self.")) {
-                                    r += s.Replace("self.", "this.");
-                                } else {
-                                    r += s;
-                                }
+                                r += s;
                             }
                         }
                         r += ")";
