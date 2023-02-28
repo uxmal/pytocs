@@ -57,10 +57,10 @@ namespace TorchCs
             // replace 'self' to 'this'
             text = Regex.Replace(text, @"\bself\.", "this.");
             // replace field type
-            text = Regex.Replace(text, @"(object|void) (\w+ = ""\S+?""[,;)])", "string $2");
-            text = Regex.Replace(text, @"(object|void) (\w+ = \d+[,;)])", "int $2");
-            text = Regex.Replace(text, @"(object|void) (\w+ = \d+\.\d+[,;)])", "double $2");
-            text = Regex.Replace(text, @"(object|void) (\w+ = (true|false)[,;)])", "bool $2");
+            text = Regex.Replace(text, @"(object|void|bool|int|double|string) (\w+ = ""\S+?""[,;)])", "string $2");
+            text = Regex.Replace(text, @"(object|void|bool|int|double|string) (\w+ = \d+[,;)])", "int $2");
+            text = Regex.Replace(text, @"(object|void|bool|int|double|string) (\w+ = \d+\.\d+[,;)])", "double $2");
+            text = Regex.Replace(text, @"(object|void|bool|int|double|string) (\w+ = (true|false)[,;)])", "bool $2");
             // replace 'd_keys = d_keys or (d_model//n_heads)' to 'd_keys = d_keys ?? d_model / n_heads;'
             text = Regex.Replace(text, @"([a-zA-Z_0-9]+) = (\1 \|\| (.*?;))", "$1 = $1 ?? $3 //$2");
 
@@ -127,6 +127,7 @@ namespace TorchCs
             text = text.Replace("using optim = torch.optim;", "using optim = TorchSharp.torch.optim;");
             text = text.Replace("using DataLoader = torch.utils.data.DataLoader;", "using DataLoader = TorchSharp.torch.utils.data.DataLoader;");
 
+            text = text.Replace("using sys;", "");
             text = text.Replace("using math;", "");
             text = text.Replace("using os;", "");
             text = text.Replace("using time;", "");
@@ -170,15 +171,21 @@ namespace TorchCs
                 }
                 var r = $@"this\.(\S+) = nn\.{methodName}\(";
                 var ms = Regex.Matches(text, r);
-                if (ms.Count > 0) {
-                    foreach (Match m in ms) {
-                        var name = m.Groups[1].Value;
-                        text = text.Replace($"public object {name};", $"public {fieldType} {name};");
-                        text = text.Replace($"public void {name};", $"public {fieldType} {name};");
-                        text = Regex.Replace(text, @$"\bthis\.{name}\(", $"this.{name}.forward(");
-                    }
+                foreach (Match m in ms) {
+                    var name = m.Groups[1].Value;
+                    text = text.Replace($"public object {name};", $"public {fieldType} {name};");
+                    text = text.Replace($"public void {name};", $"public {fieldType} {name};");
+                    text = Regex.Replace(text, @$"\bthis\.{name}\(", $"this.{name}.forward(");
                 }
             }
+            var ms2 = Regex.Matches(text, @"this\.(\S+) = new ([a-zA-Z_][a-zA-Z0-9_]+)\(");
+            foreach (Match m2 in ms2) {
+                var name = m2.Groups[1].Value;
+                var typeName = m2.Groups[2].Value;
+                text = text.Replace($"public object {name};", $"public {typeName} {name};");
+                text = text.Replace($"public void {name};", $"public {typeName} {name};");
+            }
+
             text = replaceFieldType3(text);
 
             text = Regex.Replace(text, @"public (object|void) (\w+_len;)", "public int $2");
