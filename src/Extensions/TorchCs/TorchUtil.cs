@@ -553,11 +553,12 @@ namespace TorchCs
         /// <returns></returns>
         private static string replaceListSlice(string text)
         {
-            text = Regex.Replace(text, @"\[([^\[\]]*?)\]", new MatchEvaluator(m => {
+            text = Regex.Replace(text, @"\[(((?<BR>\[)|(?<-BR>\])|[^\[\]])+)\]", new MatchEvaluator(m => {
                 if (m.Groups[1].Value.Contains(":") == false) {
                     return m.Value;
                 }
-                var strs = m.Groups[1].Value.Split(',');
+                var ts = replaceListSlice(m.Groups[1].Value); // recurrence , exclude nesting
+                var strs = ts.Split(',');
                 List<string> list = new List<string>();
                 foreach (var str in strs) {
                     if (str.Trim() == "\":\"") {
