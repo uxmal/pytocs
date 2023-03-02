@@ -1,10 +1,7 @@
 using System.Text.RegularExpressions;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace TorchCs
 {
-
-
     public class ClassFile
     {
         public string FileName { get; set; }
@@ -227,9 +224,11 @@ namespace TorchCs
                     field1.NewType = "int";
                 } else if (Regex.IsMatch(code, $@"this\.{name}\[[^\]]*?TensorIndex\.")) {
                     field1.NewType = "Tensor";
-                } else if (field1.Type == "object" && Regex.IsMatch(name, "^(channels|index|(num_|n_).*|.*(_len|_in|_model|_out|_channels|_size|_dims|_count|_index))$")) {
+                } else if (field1.Type == "object" && Regex.IsMatch(name, "^(dropout)$")) {
+                    field1.NewType = "double";
+                } else if (field1.Type == "object" && Regex.IsMatch(name, "^(channels|index|length|step|(num_|n_).*|.*(_len|_in|_model|_out|_channels|_size|_dims|_count|_index))$")) {
                     field1.NewType = "int";
-                } else if (field1.Type == "object" && Regex.IsMatch(name, "^.*(_path|_name|_dir)$")) {
+                } else if (field1.Type == "object" && Regex.IsMatch(name, "^(name|.*(_path|_name|_dir))$")) {
                     field1.NewType = "string";
                     //} else if (classMethodParamenter.Type == "object" && Regex.IsMatch(text, $@" [\+\-\*\/] {name}[ ,;)]")) {
                     //    classMethodParamenter.NewType = "double";
@@ -262,9 +261,9 @@ namespace TorchCs
 
     public class ClassMethod
     {
-        private const string methodRegex = @"public (virtual) ([a-zA-Z_][a-zA-Z0-9_]*|Tuple<[a-zA-Z_][a-zA-Z0-9_<>, ]*>|\([^)]+?\)) ([a-zA-Z_][a-zA-Z0-9_]*)\(([^)]*?)\) ?\{(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|[^(){}])+)\}";
+        private const string methodRegex = @"public (virtual) ([a-zA-Z_][a-zA-Z0-9_]*|Tuple<[a-zA-Z_][a-zA-Z0-9_<>, ]*>|\([^)]+?\)) ([a-zA-Z_@][a-zA-Z0-9_]*)\(([^)]*?)\) ?\{(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|[^(){}])+)\}";
         private const string methodRegex2 = @"public (virtual|static) ([a-zA-Z_][a-zA-Z0-9_]*|Tuple<[a-zA-Z_][a-zA-Z0-9_<>, ]*>|\([^)]+?\)) {name}\(([^)]*?)\) ?\{(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|[^(){}])+)\}";
-        private const string methodRegex3 = @"public (static) ([a-zA-Z_][a-zA-Z0-9_]*|Tuple<[a-zA-Z_][a-zA-Z0-9_<>, ]*>|\([^)]+?\)) ([a-zA-Z_][a-zA-Z0-9_]*)\(([^)]*?)\) ?\{(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|[^(){}])+)\}";
+        private const string methodRegex3 = @"public (static) ([a-zA-Z_][a-zA-Z0-9_]*|Tuple<[a-zA-Z_][a-zA-Z0-9_<>, ]*>|\([^)]+?\)) ([a-zA-Z_@][a-zA-Z0-9_]*)\(([^)]*?)\) ?\{(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|[^(){}])+)\}";
         // public static int get_q_k(int input_size, int window_size, object stride, object device)
 
         public string MethodName { get; set; }
@@ -331,6 +330,24 @@ namespace TorchCs
                         NewReturnType = NewReturnType.Substring(0, NewReturnType.Length - 1) + ")";
                         if (IsForwardMethod) {
                             NewReturnType = NewReturnType.Replace("object", "Tensor");
+                            NewReturnType = NewReturnType.Replace("void", "Tensor");
+                        }
+                    } else if (ReturnType == "void") {
+                        var ms = Regex.Matches(bodyCode, "return ([^;]*);");
+                        var max = 0;
+                        foreach (Match item in ms) {
+                            var num = item.Groups[1].Value.Split(',');
+                            max = Math.Max(max, num.Length);
+                        }
+                        if (max == 1) {
+                            NewReturnType = "object";
+                        } else if (max > 1) {
+                            NewReturnType = "(";
+                            for (int i = 0; i < max; i++) {
+                                if (i > 0) { NewReturnType += ","; }
+                                NewReturnType += "object";
+                            }
+                            NewReturnType += ")";
                         }
                     }
                 }
@@ -408,9 +425,11 @@ namespace TorchCs
                     classMethodParamenter.NewType = "Tensor";
                 } else if (Regex.IsMatch(text, $@"(^|[ \t(,;\[]){name}\.{methodRegex}\(")) {
                     classMethodParamenter.NewType = "Tensor";
-                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, "^(channels|index|(num_|n_).*|.*(_len|_in|_model|_out|_channels|_size|_dims|_count|_index))$")) {
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, "^(dropout)$")) {
+                    classMethodParamenter.NewType = "double";
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, "^(channels|index|length|step|(num_|n_).*|.*(_len|_in|_model|_out|_channels|_size|_dims|_count|_index))$")) {
                     classMethodParamenter.NewType = "int";
-                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, "^.*(_path|_name|_dir)$")) {
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, "^(name|.*(_path|_name|_dir))$")) {
                     classMethodParamenter.NewType = "string";
                     //} else if (classMethodParamenter.Type == "object" && Regex.IsMatch(text, $@" [\+\-\*\/] {name}[ ,;)]")) {
                     //    classMethodParamenter.NewType = "double";
