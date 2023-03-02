@@ -19,6 +19,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using TorchSharp;
+using static TorchSharp.torch;
 
 namespace TorchCs
 {
@@ -33,9 +34,18 @@ namespace TorchCs
         public static void ReplaceFolder(string folder)
         {
             var files = Directory.GetFiles(folder, "*.py.cs", SearchOption.AllDirectories);
+            HashSet<string> classNames = new HashSet<string>();
             foreach (var file in files) {
                 var text = File.ReadAllText(file);
-                File.WriteAllText(file, ReplaceCodes(text));
+                getClassName(text, classNames);
+            }
+            classNames.Remove("torch");
+            classNames.Remove("nn");
+            classNames.Remove("F");
+       
+            foreach (var file in files) {
+                var text = File.ReadAllText(file);
+                File.WriteAllText(file, ReplaceCodes(text, classNames));
             }
         }
         /// <summary>
@@ -52,7 +62,7 @@ namespace TorchCs
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        public static string ReplaceCodes(string text)
+        public static string ReplaceCodes(string text, HashSet<string> classNames = null)
         {
             // replace 'self' to 'this'
             text = Regex.Replace(text, @"\bself\.", "this.");
@@ -68,7 +78,7 @@ namespace TorchCs
             text = replaceNamespace(text);
             text = replaceConstructor(text);
             text = replaceListSlice(text);
-
+            text = replaceNewClass(text, classNames);
             //  Replace type by class area and static method area 
             var classInfos = ClassInfo.AnalysisCode(text);
             foreach (var classInfo in classInfos) {
@@ -671,6 +681,37 @@ namespace TorchCs
 
             return text;
         }
+
+
+        private static string replaceNewClass(string text, HashSet<string> classNames)
+        {
+            if (classNames == null) { return text; }
+            const string classRegex = @"using ([a-zA-Z_][a-zA-Z0-9_]*) = ([a-zA-Z_][a-zA-Z0-9_.]*);";
+
+            List<string> names = new List<string>();
+            var ms = Regex.Matches(text, classRegex);
+            foreach (Match m in ms) {
+                if (classNames.Contains(m.Groups[1].Value)) {
+                    names.Add(m.Groups[1].Value);
+                }
+            }
+            if (names.Count == 0) { return text; }
+
+            var namereg = string.Join("|", names);
+            text = Regex.Replace(text, $@"\b({namereg})\(", "new $1(");
+            text = Regex.Replace(text, @"\bnew new ", "new ");
+            return text;
+        }
+
+        private static void getClassName(string text, HashSet<string> classNames)
+        {
+            const string classRegex = @"public class ([a-zA-Z_][a-zA-Z0-9_]*)";
+            var ms = Regex.Matches(text, classRegex);
+            foreach (Match m in ms) {
+                classNames.Add(m.Groups[1].Value);
+            }
+        }
+
 
 
 
