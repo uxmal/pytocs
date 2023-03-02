@@ -329,6 +329,9 @@ namespace TorchCs
                     if (ReturnType.StartsWith("Tuple<")) {
                         NewReturnType = ReturnType.Replace("Tuple<", "(");
                         NewReturnType = NewReturnType.Substring(0, NewReturnType.Length - 1) + ")";
+                        if (IsForwardMethod) {
+                            NewReturnType = NewReturnType.Replace("object", "Tensor");
+                        }
                     }
                 }
                 return $"public {m.Groups[1].Value} {NewReturnType ?? ReturnType} {MethodName}({ParamenterCode}){{{bodyCode}}}";
