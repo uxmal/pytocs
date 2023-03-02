@@ -341,12 +341,17 @@ namespace TorchCs
                             NewReturnType = NewReturnType.Replace("object", "Tensor");
                             NewReturnType = NewReturnType.Replace("void", "Tensor");
                         }
-                    } else if (ReturnType == "void") {
+                    } else if (ReturnType == "void" || ReturnType == "object") {
                         var ms = Regex.Matches(bodyCode, "return ([^;]*);");
                         var max = 0;
                         foreach (Match item in ms) {
-                            var num = item.Groups[1].Value.Split(',');
-                            max = Math.Max(max, num.Length);
+                            if (item.Groups[1].Value.StartsWith('(')) {
+                                var t= item.Groups[1].Value.Substring(1, item.Groups[1].Value.Length-2);
+                                var ms2 = TorchUtil.splitParamenters(t);
+                                max = Math.Max(max, ms2.Count);
+                            } else {
+                                max = Math.Max(max, 1);
+                            }
                         }
                         if (max == 1) {
                             NewReturnType = "object";
@@ -357,6 +362,10 @@ namespace TorchCs
                                 NewReturnType += "object";
                             }
                             NewReturnType += ")";
+                        }
+                        if (IsForwardMethod) {
+                            NewReturnType = (NewReturnType?? ReturnType).Replace("object", "Tensor");
+                            NewReturnType = NewReturnType.Replace("void", "Tensor");
                         }
                     }
                 }

@@ -73,11 +73,7 @@ namespace TorchCs
                 var p = m.Groups[2].Value;
                 var type = FindTypeBy_nn(p, text);
                 if (type != null) { return type; }
-                var ms2 = Regex.Matches(p.Trim(), @"(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|(?<BR3>\[)|(?<-BR3>\])|(?<BR3>\<)|(?<-BR3>\>)|[^\<\>\(\)\{\}\[\]])+?)(,|$)");
-                var ps = new List<string>();
-                foreach (Match m2 in ms2) {
-                    ps.Add(m2.Groups[1].Value.Trim());
-                }
+                var ps = TorchUtil.splitParamenters(p.Trim());
                 if (ps.Contains(text) == false) { continue; }
 
                 var methodName = m.Groups[1].Value;
@@ -107,11 +103,7 @@ namespace TorchCs
                 var p = m.Groups[2].Value;
                 var type = FindTypeBy_nn(p, text);
                 if (type != null) { return type; }
-                var ms2 = Regex.Matches(p.Trim(), @"(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|(?<BR3>\[)|(?<-BR3>\])|(?<BR3>\<)|(?<-BR3>\>)|[^\<\>\(\)\{\}\[\]])+?)(,|$)");
-                var ps = new List<string>();
-                foreach (Match m2 in ms2) {
-                    ps.Add(m2.Groups[1].Value.Trim());
-                }
+                var ps = TorchUtil.splitParamenters(p.Trim());
                 if (ps.Contains(text) == false) { continue; }
 
                 var methodName = m.Groups[1].Value;

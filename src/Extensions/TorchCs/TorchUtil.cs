@@ -42,7 +42,6 @@ namespace TorchCs
             classNames.Remove("torch");
             classNames.Remove("nn");
             classNames.Remove("F");
-       
             foreach (var file in files) {
                 var text = File.ReadAllText(file);
                 File.WriteAllText(file, ReplaceCodes(text, classNames));
@@ -626,7 +625,41 @@ namespace TorchCs
         }
 
 
+        internal static List<string> splitParamenters(string paramenters)
+        {
+            bool inText = false;
+            int bracketLayer = 0;
 
+            List<string> result = new List<string>();
+            var index = 0;
+            string temp = "";
+            while (index < paramenters.Length) {
+                var c = paramenters[index];
+                if (inText) {
+                    temp += c;
+                    if (c == '\\') {
+                        index++;
+                        temp += paramenters[index];
+                    } else if (c == '"') {
+                        inText = false;
+                    }
+                } else if (c == '(' || c == '{' || c == '[' || c == '<') {
+                    bracketLayer++;
+                    temp += c;
+                } else if (c == ')' || c == '}' || c == ']' || c == '>') {
+                    bracketLayer--;
+                    temp += c;
+                } else if (c == ',' && bracketLayer == 0) {
+                    result.Add(temp);
+                    temp = "";
+                } else {
+                    temp += c;
+                }
+                index++;
+            }
+            result.Add(temp);
+            return result;
+        }
 
     }
 }
