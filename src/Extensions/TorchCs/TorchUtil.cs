@@ -65,9 +65,21 @@ namespace TorchCs
             // replace 'd_keys = d_keys or (d_model//n_heads)' to 'd_keys = d_keys ?? d_model / n_heads;'
             text = Regex.Replace(text, @"([a-zA-Z_0-9]+) = (\1 \|\| (.*?;))", "$1 = $1 ?? $3 //$2");
 
-
             text = replaceNamespace(text);
             text = replaceConstructor(text);
+            text = replaceListSlice(text);
+
+            //  Replace type by class area and static method area 
+            var classInfos = ClassInfo.AnalysisCode(text);
+            foreach (var classInfo in classInfos) {
+                text = classInfo.AddNewField(text); // Add missing fields
+                text = classInfo.ReplaceCodes(text);
+            }
+            var sss = ClassMethod.AnalysisCodeForStaticMethod(text);
+            foreach (var item in sss) {
+                text = item.ReplaceCodes(text);
+            }
+
             text = replaceFieldType(text);
             text = replaceMethodParameterName(text);
             text = replaceMethodParamenterType(text);
@@ -78,7 +90,6 @@ namespace TorchCs
             text = replaceForwardMethod(text);
             text = replaceCallForwardMethod(text);
 
-            text = replaceListSlice(text);
 
             text = replaceTensorList(text);
             text = replaceIsType(text);
@@ -212,7 +223,22 @@ namespace TorchCs
             if (ms.Count > 0) {
                 foreach (Match m in ms) {
                     var name = m.Groups[2].Value;
-                    if (text.Contains($"this.{name} = {name};")) {
+                    if (text.Contains($"if (this.{name})") || text.Contains($"if (!this.{name})") || text.Contains($"if (this.{name} == true)") || text.Contains($"if (this.{name} == false)")) {
+                        text = text.Replace($"public object {name};", $"public bool {name};");
+                        text = text.Replace($"public void {name};", $"public bool {name};");
+                    } else if (text.Contains($"this.{name} = false") || text.Contains($"this.{name} = true")) {
+                        text = text.Replace($"public object {name};", $"public bool {name};");
+                        text = text.Replace($"public void {name};", $"public bool {name};");
+                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|\+=) """) || Regex.IsMatch(text, $@"this\.{name}\.(startswith|endswith|upper|lower|replace|strip|lstrip|rstrip)\(")) {
+                        text = text.Replace($"public object {name};", $"public string {name};");
+                        text = text.Replace($"public void {name};", $"public string {name};");
+                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+\.\d+")) {
+                        text = text.Replace($"public object {name};", $"public doulbe {name};");
+                        text = text.Replace($"public void {name};", $"public doulbe {name};");
+                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+")) {
+                        text = text.Replace($"public object {name};", $"public int {name};");
+                        text = text.Replace($"public void {name};", $"public int {name};");
+                    } else if (text.Contains($"this.{name} = {name};")) {
                         if (Regex.IsMatch(text, @$"int {name}\b")) {
                             text = text.Replace($"public object {name};", $"public int {name};");
                             text = text.Replace($"public void {name};", $"public int {name};");
@@ -229,21 +255,6 @@ namespace TorchCs
                             text = text.Replace($"public object {name};", $"public bool {name};");
                             text = text.Replace($"public void {name};", $"public bool {name};");
                         }
-                    } else if (text.Contains($"if (this.{name})") || text.Contains($"if (!this.{name})") || text.Contains($"if (this.{name} == true)") || text.Contains($"if (this.{name} == false)")) {
-                        text = text.Replace($"public object {name};", $"public bool {name};");
-                        text = text.Replace($"public void {name};", $"public bool {name};");
-                    } else if (text.Contains($"this.{name} = false") || text.Contains($"this.{name} = true")) {
-                        text = text.Replace($"public object {name};", $"public bool {name};");
-                        text = text.Replace($"public void {name};", $"public bool {name};");
-                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|\+=) """) || Regex.IsMatch(text, $@"this\.{name}\.(startswith|endswith|upper|lower|replace|strip|lstrip|rstrip)\(")) {
-                        text = text.Replace($"public object {name};", $"public string {name};");
-                        text = text.Replace($"public void {name};", $"public string {name};");
-                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+\.\d+")) {
-                        text = text.Replace($"public object {name};", $"public doulbe {name};");
-                        text = text.Replace($"public void {name};", $"public doulbe {name};");
-                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+")) {
-                        text = text.Replace($"public object {name};", $"public int {name};");
-                        text = text.Replace($"public void {name};", $"public int {name};");
                     }
 
                 }
@@ -457,9 +468,9 @@ namespace TorchCs
             text = text.Replace(" Tuple<object, List<object>> forward(", " (Tensor, List<Tensor>) forward(");
             text = text.Replace(" object forward(", " Tensor forward(");
             text = text.Replace(" void forward(", " Tensor forward(");
-            text = text.Replace(" forward(object x", " forward(Tensor x");
-            text = text.Replace(" forward(object t", " forward(Tensor t");
-            text = text.Replace(" forward(object queries, object keys, object values", " forward(Tensor queries, Tensor keys, Tensor values");
+            //text = text.Replace(" forward(object x", " forward(Tensor x");
+            //text = text.Replace(" forward(object t", " forward(Tensor t");
+            //text = text.Replace(" forward(object queries, object keys, object values", " forward(Tensor queries, Tensor keys, Tensor values");
             return text;
         }
         /// <summary>
