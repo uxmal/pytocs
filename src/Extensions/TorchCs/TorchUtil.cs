@@ -79,6 +79,7 @@ namespace TorchCs
             text = replaceConstructor(text);
             text = replaceListSlice(text);
             text = replaceNewClass(text, classNames);
+            text = replaceMethodParameterName(text);
             //  Replace type by class area and static method area 
             var classInfos = ClassInfo.AnalysisCode(text);
             foreach (var classInfo in classInfos) {
@@ -91,15 +92,10 @@ namespace TorchCs
             }
 
             text = replaceFieldType(text);
-            text = replaceMethodParameterName(text);
             text = replaceMethodParamenterType(text);
             text = replaceMathMethod(text);
             text = replaceStringToEnum(text);
             text = replaceMethodAlias(text);
-
-            text = replaceForwardMethod(text);
-            text = replaceCallForwardMethod(text);
-
 
             text = replaceTensorList(text);
             text = replaceIsType(text);
@@ -463,89 +459,6 @@ namespace TorchCs
             text = Regex.Replace(text, @"\bmath\.e\b", "Math.E");
             text = Regex.Replace(text, @"\bmath\.tau\b", "Math.Tau");
             text = Regex.Replace(text, @"\bmath\.inf\b", "double.PositiveInfinity");
-            return text;
-        }
-        /// <summary>
-        /// Replace forward method's return type and forward method's parameter type
-        /// </summary>
-        /// <param name="text"></param>
-        /// <returns></returns>
-        private static string replaceForwardMethod(string text)
-        {
-            text = text.Replace(" Tuple<object, object>", " (Tensor, Tensor)");
-            text = text.Replace(" Tuple<object, void> forward(", " (Tensor, Tensor) forward(");
-            text = text.Replace(" object[] forward(", " (Tensor, Tensor) forward(");
-            text = text.Replace(" Tuple<object, List<object>> forward(", " (Tensor, List<Tensor>) forward(");
-            text = text.Replace(" object forward(", " Tensor forward(");
-            text = text.Replace(" void forward(", " Tensor forward(");
-            //text = text.Replace(" forward(object x", " forward(Tensor x");
-            //text = text.Replace(" forward(object t", " forward(Tensor t");
-            //text = text.Replace(" forward(object queries, object keys, object values", " forward(Tensor queries, Tensor keys, Tensor values");
-            return text;
-        }
-        /// <summary>
-        /// Replace common forward method calls
-        /// </summary>
-        /// <param name="text"></param>
-        /// <returns></returns>
-        private static string replaceCallForwardMethod(string text)
-        {
-            text = Regex.Replace(text, @"\bthis\.inner_attention\(", "this.inner_attention.forward(");
-            text = Regex.Replace(text, @"\bthis\.dropout\(", "this.dropout.forward(");
-            text = Regex.Replace(text, @"\bthis\.attention\(", "this.attention.forward(");
-            text = Regex.Replace(text, @"\bthis\.self_attention\(", "this.self_attention.forward(");
-            text = Regex.Replace(text, @"\bthis\.cross_attention\(", "this.cross_attention.forward(");
-            text = Regex.Replace(text, @"\bthis\.projection\(", "this.projection.forward(");
-            text = Regex.Replace(text, @"\bthis\.activation\(", "this.activation.forward(");
-            text = Regex.Replace(text, @"\bthis\.norm\(", "this.norm.forward(");
-            text = Regex.Replace(text, @"\bthis\.conv\(", "this.conv.forward(");
-            text = Regex.Replace(text, @"\bthis\.decomp\(", "this.decomp.forward(");
-            text = Regex.Replace(text, @"\bthis\.decomp1\(", "this.decomp1.forward(");
-            text = Regex.Replace(text, @"\bthis\.decomp2\(", "this.decomp2.forward(");
-            text = Regex.Replace(text, @"\bthis\.decomp3\(", "this.decomp3.forward(");
-            text = Regex.Replace(text, @"\bthis\.decomp4\(", "this.decomp4.forward(");
-            text = Regex.Replace(text, @"\bthis\.decomp5\(", "this.decomp5.forward(");
-            text = Regex.Replace(text, @"\bthis\.conv1\(", "this.conv1.forward(");
-            text = Regex.Replace(text, @"\bthis\.conv2\(", "this.conv2.forward(");
-            text = Regex.Replace(text, @"\bthis\.conv3\(", "this.conv3.forward(");
-            text = Regex.Replace(text, @"\bthis\.conv4\(", "this.conv4.forward(");
-            text = Regex.Replace(text, @"\bthis\.conv5\(", "this.conv5.forward(");
-            text = Regex.Replace(text, @"\bthis\.norm1\(", "this.norm1.forward(");
-            text = Regex.Replace(text, @"\bthis\.norm2\(", "this.norm2.forward(");
-            text = Regex.Replace(text, @"\bthis\.norm3\(", "this.norm3.forward(");
-            text = Regex.Replace(text, @"\bthis\.norm4\(", "this.norm4.forward(");
-            text = Regex.Replace(text, @"\bthis\.norm5\(", "this.norm5.forward(");
-
-            text = Regex.Replace(text, @"\bthis\.downConv\(", "this.downConv.forward(");
-            text = Regex.Replace(text, @"\bthis\.maxPool\(", "this.maxPool.forward(");
-            text = Regex.Replace(text, @"\bthis\.avg\(", "this.avg.forward(");
-            text = Regex.Replace(text, @"\bthis\.layernorm\(", "this.layernorm.forward(");
-            text = Regex.Replace(text, @"\bthis\.tokenConv\(", "this.tokenConv.forward(");
-
-            text = Regex.Replace(text, @"\bthis\.embedding\(", "this.embedding.forward(");
-            text = Regex.Replace(text, @"\bthis\.emb\(", "this.emb.forward(");
-            text = Regex.Replace(text, @"\bthis\.embed\(", "this.embed.forward(");
-            text = Regex.Replace(text, @"\bthis\.position_embedding\(", "this.position_embedding.forward(");
-            text = Regex.Replace(text, @"\bthis\.temporal_embedding\(", "this.temporal_embedding.forward(");
-            text = Regex.Replace(text, @"\bthis\.value_embedding\(", "this.value_embedding.forward(");
-
-            text = Regex.Replace(text, @"\bthis\.month_embed\(", "this.month_embed.forward(");
-            text = Regex.Replace(text, @"\bthis\.day_embed\(", "this.day_embed.forward(");
-            text = Regex.Replace(text, @"\bthis\.hour_embed\(", "this.hour_embed.forward(");
-            text = Regex.Replace(text, @"\bthis\.minute_embed\(", "this.minute_embed.forward(");
-            text = Regex.Replace(text, @"\bthis\.weekday_embed\(", "this.weekday_embed.forward(");
-
-            text = Regex.Replace(text, @"\bthis\.enc_embedding\(", "this.enc_embedding.forward(");
-            text = Regex.Replace(text, @"\bthis\.encoder\(", "this.encoder.forward(");
-            text = Regex.Replace(text, @"\bthis\.dec_embedding\(", "this.dec_embedding.forward(");
-            text = Regex.Replace(text, @"\bthis\.decoder\(", "this.decoder.forward(");
-
-            text = Regex.Replace(text, @"\bthis\.query_projection\(", "this.query_projection.forward(");
-            text = Regex.Replace(text, @"\bthis\.key_projection\(", "this.key_projection.forward(");
-            text = Regex.Replace(text, @"\bthis\.value_projection\(", "this.value_projection.forward(");
-            text = Regex.Replace(text, @"\bthis\.out_projection\(", "this.out_projection.forward(");
-
-            text = Regex.Replace(text, @"\bthis\.attn\(", "this.attn.forward(");
             return text;
         }
 

@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace TorchCs
 {
@@ -224,16 +225,24 @@ namespace TorchCs
                     field1.NewType = "int";
                 } else if (Regex.IsMatch(code, $@"this\.{name}\[[^\]]*?TensorIndex\.")) {
                     field1.NewType = "Tensor";
-                } else if (field1.Type == "object" && Regex.IsMatch(name, "^(dropout)$")) {
+                } else if (field1.Type == "object" && Regex.IsMatch(name, "^(dropout|.*_dropout)$")) {
                     field1.NewType = "double";
-                } else if (field1.Type == "object" && Regex.IsMatch(name, "^(channels|index|length|step|(num_|n_).*|.*(_len|_in|_model|_out|_channels|_size|_dims|_count|_index))$")) {
+                } else if (field1.Type == "object" && Regex.IsMatch(name, "^(channels|index|length|step|epoch|(num_|n_).*|.*(_len|_in|_model|_out|_channels|_size|_dims|_count|_index))$")) {
                     field1.NewType = "int";
-                } else if (field1.Type == "object" && Regex.IsMatch(name, "^(name|.*(_path|_name|_dir))$")) {
+                } else if (field1.Type == "object" && Regex.IsMatch(name, "^(name|path|dir|.*(_path|_name|_dir))$")) {
                     field1.NewType = "string";
                     //} else if (classMethodParamenter.Type == "object" && Regex.IsMatch(text, $@" [\+\-\*\/] {name}[ ,;)]")) {
                     //    classMethodParamenter.NewType = "double";
                     //} else if (classMethodParamenter.Type == "object" && Regex.IsMatch(text, $@"[(, ]{name} [\+\-\*\/] ")) {
                     //    classMethodParamenter.NewType = "double";
+                } else {
+                    var type = TorchSharpInfo.Instance.FindTypeBy_nn(code, "this." + field1.FieldName);
+                    if (type == null) {
+                        type = TorchSharpInfo.Instance.FindTypeBy_torch(code, "this." + field1.FieldName);
+                    }
+                    if (type != null) {
+                        field1.NewType = type;
+                    }
                 }
             }
             return classFields;
@@ -388,9 +397,9 @@ namespace TorchCs
                 classMethodParamenter.Type = str.Groups[1].Value.Trim();
                 classMethodParamenter.ParamenterName = str.Groups[2].Value.Trim();
                 var name = classMethodParamenter.ParamenterName;
-                if (name == "inputs") {
+                //if (name == "inputs") {
 
-                }
+                //}
                 if (str.Groups[3].Success) {
                     classMethodParamenter.DefaultValue = str.Groups[4].Value.Trim();
 
@@ -425,17 +434,26 @@ namespace TorchCs
                     classMethodParamenter.NewType = "Tensor";
                 } else if (Regex.IsMatch(text, $@"(^|[ \t(,;\[]){name}\.{methodRegex}\(")) {
                     classMethodParamenter.NewType = "Tensor";
-                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, "^(dropout)$")) {
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, "^(dropout|.*_dropout)$")) {
                     classMethodParamenter.NewType = "double";
-                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, "^(channels|index|length|step|(num_|n_).*|.*(_len|_in|_model|_out|_channels|_size|_dims|_count|_index))$")) {
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, "^(channels|index|length|step|epoch|(num_|n_).*|.*(_len|_in|_model|_out|_channels|_size|_dims|_count|_index))$")) {
                     classMethodParamenter.NewType = "int";
-                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, "^(name|.*(_path|_name|_dir))$")) {
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, "^(name|path|dir|.*(_path|_name|_dir))$")) {
                     classMethodParamenter.NewType = "string";
                     //} else if (classMethodParamenter.Type == "object" && Regex.IsMatch(text, $@" [\+\-\*\/] {name}[ ,;)]")) {
                     //    classMethodParamenter.NewType = "double";
                     //} else if (classMethodParamenter.Type == "object" && Regex.IsMatch(text, $@"[(, ]{name} [\+\-\*\/] ")) {
                     //    classMethodParamenter.NewType = "double";
+                } else {
+                    var type = TorchSharpInfo.Instance.FindTypeBy_nn(text, classMethodParamenter.ParamenterName);
+                    if (type == null) {
+                        type = TorchSharpInfo.Instance.FindTypeBy_torch(text, classMethodParamenter.ParamenterName);
+                    }
+                    if (type != null) {
+                        classMethodParamenter.NewType = type;
+                    }
                 }
+
             }
             return classMethodParamenters;
         }
