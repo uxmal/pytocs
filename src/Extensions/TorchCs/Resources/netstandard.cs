@@ -113,7 +113,10 @@ namespace System
         {
             list.Add(obj);
         }
-
+        public static void remove<T>(this ICollection<T> list, T obj)
+        {
+            list.Remove(obj);
+        }
         public static ICollection<T1> keys<T1, T2>(this IDictionary<T1, T2> dict)
         {
             return dict.Keys;
