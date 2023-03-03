@@ -1,3 +1,4 @@
+using Pytocs.Core.Types;
 using System.Text.RegularExpressions;
 using static System.Net.Mime.MediaTypeNames;
 
@@ -8,8 +9,8 @@ namespace TorchCs
         public string FileName { get; set; }
         public string Code { get; set; }
         public List<ClassInfo> ClassInfos { get; set; }
-
-        public List<ClassMethod> StaticMethods { get; set; }
+        public bool HasChange { get; set; }
+        public bool LastChange { get; set; }
 
         public static List<ClassFile> LoadFiles(string folder)
         {
@@ -21,10 +22,94 @@ namespace TorchCs
                 classFile.FileName = file;
                 classFile.Code = text;
                 classFile.ClassInfos = ClassInfo.AnalysisCode(text);
-                classFile.StaticMethods = ClassMethod.AnalysisCodeForStaticMethod(text);
+                classFile.HasChange = true;
+                classFile.LastChange = true;
+                foreach (var item in classFile.ClassInfos) {
+                    item.File = classFile;
+                }
+                files.Add(classFile);
             }
             return files;
         }
+        public Dictionary<string, ClassInfo> MatchClassInfo(string code, List<ClassInfo> classInfos)
+        {
+            Dictionary<string, ClassInfo> result = new Dictionary<string, ClassInfo>();
+            var match = Regex.Match(code, @"namespace ([a-zA-Z_][a-zA-Z0-9._]*) ");
+            if (match.Success) {
+                var ns = match.Groups[1].Value.Split('.');
+
+                var ms = Regex.Matches(code, @"using ([a-zA-Z_][a-zA-Z0-9_]*) = ([a-zA-Z_][a-zA-Z0-9_.]*);");
+                foreach (Match m in ms) {
+                    var key = m.Groups[1].Value;
+                    var name = m.Groups[2].Value;
+                    var classInfo = classInfos.FirstOrDefault(q => q.FullClassName == name);
+                    if (classInfo != null) {
+                        if (classInfo.File.LastChange) {
+                            result[key] = classInfo;
+                        }
+                        continue;
+                    }
+                    var sp = name.Split(".");
+                    for (int i = 1; i < ns.Length; i++) {
+                        var names = new string[sp.Length + i];
+                        for (int j = 0; j < i; j++) {
+                            names[j] = ns[j];
+                        }
+                        for (int j = 0; j < sp.Length; j++) {
+                            names[j + i] = sp[j];
+                        }
+                        name = string.Join(".", names);
+                        classInfo = classInfos.FirstOrDefault(q => q.FullClassName == name);
+                        if (classInfo != null) {
+                            if (classInfo.File.LastChange) {
+                                result[key] = classInfo;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+            return result;
+        }
+
+        public Dictionary<string, ClassInfo> MatchClassInfo(string code, List<ClassFile> files)
+        {
+            Dictionary<string, ClassInfo> result = new Dictionary<string, ClassInfo>();
+            var match = Regex.Match(code, @"namespace ([a-zA-Z_][a-zA-Z0-9._]*) ");
+            if (match.Success) {
+                var ns = match.Groups[1].Value.Split('.');
+
+                var classInfos = new List<ClassInfo>();
+                foreach (var file in files) { classInfos.AddRange(file.ClassInfos); }
+
+                var ms = Regex.Matches(code, @"using ([a-zA-Z_][a-zA-Z0-9_]*) = ([a-zA-Z_][a-zA-Z0-9_.]*);");
+                foreach (Match m in ms) {
+                    var key = m.Groups[1].Value;
+                    var name = m.Groups[2].Value;
+                    var classInfo = classInfos.FirstOrDefault(q => q.FullClassName == name);
+                    if (classInfo != null) {
+                        result[key] = classInfo;
+                        continue;
+                    }
+                    List<string> names = new List<string>();
+                    names.AddRange(ns);
+                    names.Add("");
+                    names.Add("");
+                    var sp = name.Split(".");
+                    for (int i = 0; i < sp.Length; i++) {
+                        names[names.Count - sp.Length + i] = sp[i];
+                    }
+                    name = string.Join(".", names);
+                    classInfo = classInfos.FirstOrDefault(q => q.FullClassName == name);
+                    if (classInfo != null) {
+                        result[key] = classInfo;
+                    }
+                }
+            }
+            return result;
+        }
+
+
     }
 
 
@@ -33,7 +118,7 @@ namespace TorchCs
         private const string classRegex = @"public class ([a-zA-Z_][a-zA-Z0-9_]*)([\s\S]*?)\{(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|[^(){}])+)\}";
         private const string classRegex2 = @"public class {name}([\s\S]*?)\{(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|[^(){}])+)\}";
 
-        public ClassFile File { get; set; }
+        internal ClassFile File { get; set; }
         public string FullClassName { get; set; }
         public string ClassName { get; set; }
         public bool HasForwardMethod { get; set; }
@@ -60,6 +145,9 @@ namespace TorchCs
                 classInfo.Methods = ClassMethod.AnalysisCode(bodyCode);
                 classInfo.HasForwardMethod = classInfo.Methods.Any(q => q.MethodName == "forward");
 
+                foreach (var item in classInfo.Methods) {
+                    item.ClassInfo = classInfo;
+                }
                 classInfos.Add(classInfo);
             }
             var fclass = classInfos.Where(q => q.HasForwardMethod).Select(q => q.ClassName).ToList();
@@ -87,15 +175,6 @@ namespace TorchCs
             return code;
         }
 
-        public string ReplaceNewConstructor(string code, List<ClassInfo> classInfos)
-        {
-            foreach (var classInfo in classInfos) {
-                code = Regex.Replace(code, $@"\b{classInfo.ClassName}\(", $"new {classInfo.ClassName}(");
-            }
-            code = Regex.Replace(code, @"\bnew new ", "new ");
-            return code;
-        }
-
         public string ReplaceCodes(string code)
         {
             code = Regex.Replace(code, classRegex2.Replace("{name}", ClassName), new MatchEvaluator(m => {
@@ -112,6 +191,38 @@ namespace TorchCs
             }));
             return code;
         }
+        public string ReplaceMethodParamenterType(string code, Dictionary<string, ClassInfo> classInfos)
+        {
+            code = Regex.Replace(code, classRegex2.Replace("{name}", ClassName), new MatchEvaluator(m => {
+                var bodyCode = m.Groups[2].Value;
+                var baseClass = m.Groups[1].Value;
+
+                Dictionary<string, ClassInfo> temp = new Dictionary<string, ClassInfo>();
+                foreach (var field in Fields) {
+                    if (classInfos.ContainsKey(field.NewType ?? field.Type)) {
+                        temp[field.FieldName] = classInfos[field.NewType ?? field.Type];
+                    }
+                }
+                foreach (var method in Methods) {
+                    bodyCode = method.ReplaceMethodParamenterType(bodyCode, temp);
+                }
+                return $"public class {ClassName}{baseClass}{{{bodyCode}}}";
+            }));
+            return code;
+        }
+
+        public string GetMethodParamenterType(string methodName, int paramenterIndex)
+        {
+            var method = Methods.FirstOrDefault(q => q.MethodName == methodName);
+            if (method != null) {
+                if (paramenterIndex < method.Paramenters.Count) {
+                    var p = method.Paramenters[paramenterIndex];
+                    return p.NewType ?? p.Type;
+                }
+            }
+            return null;
+        }
+
         public override string ToString()
         {
             return $"class: {ClassName}";
@@ -274,7 +385,7 @@ namespace TorchCs
         private const string methodRegex2 = @"public (virtual|static) ([a-zA-Z_][a-zA-Z0-9_]*|Tuple<[a-zA-Z_][a-zA-Z0-9_<>, ]*>|\([^)]+?\)) {name}\(([^)]*?)\) ?\{(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|[^(){}])+)\}";
         private const string methodRegex3 = @"public (static) ([a-zA-Z_][a-zA-Z0-9_]*|Tuple<[a-zA-Z_][a-zA-Z0-9_<>, ]*>|\([^)]+?\)) ([a-zA-Z_@][a-zA-Z0-9_]*)\(([^)]*?)\) ?\{(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|[^(){}])+)\}";
         // public static int get_q_k(int input_size, int window_size, object stride, object device)
-
+        internal ClassInfo ClassInfo { get; set; }
         public string MethodName { get; set; }
         public string ReturnType { get; set; }
         public string NewReturnType { get; set; }
@@ -346,7 +457,7 @@ namespace TorchCs
                         var max = 0;
                         foreach (Match item in ms) {
                             if (item.Groups[1].Value.StartsWith('(')) {
-                                var t= item.Groups[1].Value.Substring(1, item.Groups[1].Value.Length-2);
+                                var t = item.Groups[1].Value.Substring(1, item.Groups[1].Value.Length - 2);
                                 var ms2 = TorchUtil.splitParamenters(t);
                                 max = Math.Max(max, ms2.Count);
                             } else {
@@ -364,7 +475,7 @@ namespace TorchCs
                             NewReturnType += ")";
                         }
                         if (IsForwardMethod) {
-                            NewReturnType = (NewReturnType?? ReturnType).Replace("object", "Tensor");
+                            NewReturnType = (NewReturnType ?? ReturnType).Replace("object", "Tensor");
                             NewReturnType = NewReturnType.Replace("void", "Tensor");
                         }
                     }
@@ -373,12 +484,46 @@ namespace TorchCs
             }));
             return code;
         }
+
+        public string ReplaceMethodParamenterType(string code, Dictionary<string, ClassInfo> classInfos)
+        {
+            var paramenters = Paramenters.Where(q => q.NewType == null && q.Type == "object").ToList();
+            if (paramenters.Count == 0) { return code; }
+
+            code = Regex.Replace(code, methodRegex2.Replace("{name}", MethodName), new MatchEvaluator(m1 => {
+                var ParamenterCode = m1.Groups[3].Value;
+                var bodyCode = m1.Groups[4].Value;
+
+                var reg = @"\bthis\.([a-zA-Z_][a-zA-Z_0-9]+)\.([^\(\.]+)\((((?<BR>\()|(?<-BR>\))|[^()])+)\)";
+                var ms = Regex.Matches(bodyCode, reg);
+                foreach (Match m in ms) {
+                    var fieldName = m.Groups[1].Value;
+                    if (classInfos.ContainsKey(fieldName) == false) continue;
+                    var name = m.Groups[2].Value;
+                    var ps = m.Groups[3].Value;
+                    var ps2 = TorchUtil.splitParamenters(ps);
+                    for (int i = paramenters.Count - 1; i >= 0; i--) {
+                        var paramenter = paramenters[i];
+                        var index = ps2.IndexOf(paramenter.ParamenterName);
+                        if (index >= 0) {
+                            var type = classInfos[fieldName].GetMethodParamenterType(name, index);
+                            if (type != null && type != "object") {
+                                paramenter.NewType = type;
+                                ParamenterCode = paramenter.ReplaceCodes(ParamenterCode);
+                                this.ClassInfo.File.HasChange = true;
+                                paramenters.RemoveAt(i);
+                            }
+                        }
+                    }
+                }
+                return $"public {m1.Groups[1].Value} {NewReturnType ?? ReturnType} {MethodName}({ParamenterCode}){{{bodyCode}}}";
+            }));
+            return code;
+        }
+
         public override string ToString()
         {
-            if (NewReturnType != null) {
-                return $"method: {NewReturnType} {MethodName}";
-            }
-            return $"method: {ReturnType} {MethodName}";
+            return $"method: {NewReturnType ?? ReturnType} {MethodName}";
         }
     }
 
@@ -475,10 +620,7 @@ namespace TorchCs
 
         public override string ToString()
         {
-            if (NewType != null) {
-                return $"paramenter: {NewType} {ParamenterName}";
-            }
-            return $"paramenter: {Type} {ParamenterName}";
+            return $"paramenter: {NewType ?? Type} {ParamenterName}";
         }
     }
 
@@ -550,10 +692,7 @@ namespace TorchCs
 
         public override string ToString()
         {
-            if (NewType != null) {
-                return $"variable: {NewType} {VariableName}";
-            }
-            return $"variable: {Type} {VariableName}";
+            return $"variable: {NewType??Type} {VariableName}";
         }
     }
 

@@ -46,6 +46,28 @@ namespace TorchCs
                 var text = File.ReadAllText(file);
                 File.WriteAllText(file, ReplaceCodes(text, classNames));
             }
+
+            var fileInfos = ClassFile.LoadFiles(folder);
+            var classInfos = new List<ClassInfo>();
+            foreach (var file in fileInfos) { classInfos.AddRange(file.ClassInfos); }
+            bool IsChange;
+            do {
+                IsChange = false;
+                foreach (var fileInfo in fileInfos) {
+                    fileInfo.LastChange = fileInfo.HasChange;
+                    fileInfo.HasChange = false;
+                }
+                foreach (var fileInfo in fileInfos) {
+                    var dict = fileInfo.MatchClassInfo(fileInfo.Code, classInfos);
+                    foreach (var classInfo in fileInfo.ClassInfos) {
+                        fileInfo.Code = classInfo.ReplaceMethodParamenterType(fileInfo.Code, dict);
+                    }
+                    if (fileInfo.HasChange) {
+                        File.WriteAllText(fileInfo.FileName, fileInfo.Code);
+                        IsChange = true;
+                    }
+                }
+            } while (IsChange);
         }
         /// <summary>
         /// Convert file, Replace grammar rules
@@ -85,6 +107,7 @@ namespace TorchCs
                 text = classInfo.AddNewField(text); // Add missing fields
                 text = classInfo.ReplaceCodes(text);
             }
+            //  One file is a static class. There are only static methods in the static class, so I will deal with the static methods in the file. 
             var sss = ClassMethod.AnalysisCodeForStaticMethod(text);
             foreach (var item in sss) {
                 text = item.ReplaceCodes(text);
@@ -628,7 +651,7 @@ namespace TorchCs
         internal static List<string> splitParamenters(string paramenters)
         {
             bool inText = false;
-            int bracketLayer = 0;
+            int bracketLayer = 0; // 
 
             List<string> result = new List<string>();
             var index = 0;
@@ -650,14 +673,14 @@ namespace TorchCs
                     bracketLayer--;
                     temp += c;
                 } else if (c == ',' && bracketLayer == 0) {
-                    result.Add(temp);
+                    result.Add(temp.Trim());
                     temp = "";
                 } else {
                     temp += c;
                 }
                 index++;
             }
-            result.Add(temp);
+            result.Add(temp.Trim());
             return result;
         }
 
