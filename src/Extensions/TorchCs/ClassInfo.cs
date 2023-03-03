@@ -330,7 +330,7 @@ namespace TorchCs
                     field1.NewType = "bool";
                 } else if (Regex.IsMatch(code, $@"this\.{name} (=|==|!=|\+=) """) || Regex.IsMatch(code, $@"this\.{name}\.(startswith|endswith|upper|lower|replace|strip|lstrip|rstrip)\(")) {
                     field1.NewType = "string";
-                } else if (Regex.IsMatch(code, $@"this\.{name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+\.\d+")) {
+                } else if (Regex.IsMatch(code, $@"this\.{name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) (\d+\.\d+|\d+(\.\d+)?[Ee])")) {
                     field1.NewType = "double";
                 } else if (Regex.IsMatch(code, $@"this\.{name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+")) {
                     field1.NewType = "int";
@@ -578,7 +578,7 @@ namespace TorchCs
                     classMethodParamenter.NewType = "bool";
                 } else if (Regex.IsMatch(text, $@"(^|[ \t(,;\[]){name} (=|==|!=|\+=) """) || Regex.IsMatch(text, $@"(^|[ \t(,;\[]){name}\.(split|startswith|endswith|upper|lower|replace|strip|lstrip|rstrip)\(")) {
                     classMethodParamenter.NewType = "string";
-                } else if (Regex.IsMatch(text, $@"(^|[ \t(,;\[]){name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+\.\d+")) {
+                } else if (Regex.IsMatch(text, $@"(^|[ \t(,;\[]){name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) (\d+\.\d+|\d+(\.\d+)?[Ee])")) {
                     classMethodParamenter.NewType = "doulbe";
                 } else if (Regex.IsMatch(text, $@"(^|[ \t(,;\[]){name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+")) {
                     classMethodParamenter.NewType = "int";

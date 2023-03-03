@@ -31,7 +31,7 @@ namespace TorchCs
         ///  Convert all *.py.cs files in the folder ,Replace grammar rules
         /// </summary>
         /// <param name="folder"></param>
-        public static void ReplaceFolder(string folder)
+        public static void ReplaceFolder(string folder, bool replaceStringToNetstandard = true)
         {
             var files = Directory.GetFiles(folder, "*.py.cs", SearchOption.AllDirectories);
             HashSet<string> classNames = new HashSet<string>();
@@ -44,7 +44,7 @@ namespace TorchCs
             classNames.Remove("F");
             foreach (var file in files) {
                 var text = File.ReadAllText(file);
-                File.WriteAllText(file, ReplaceCodes(text, classNames));
+                File.WriteAllText(file, ReplaceCodes(text, classNames, replaceStringToNetstandard));
             }
 
             var fileInfos = ClassFile.LoadFiles(folder);
@@ -73,24 +73,24 @@ namespace TorchCs
         /// Convert file, Replace grammar rules
         /// </summary>
         /// <param name="file"></param>
-        public static void ReplaceFile(string file)
+        public static void ReplaceFile(string file, bool replaceStringToNetstandard = false)
         {
             var text = File.ReadAllText(file);
-            File.WriteAllText(file, ReplaceCodes(text));
+            File.WriteAllText(file, ReplaceCodes(text, null, replaceStringToNetstandard));
         }
         /// <summary>
         /// Convert code, Replace grammar rules
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        public static string ReplaceCodes(string text, HashSet<string> classNames = null)
+        public static string ReplaceCodes(string text, HashSet<string> classNames = null, bool replaceToNetstandard = true)
         {
             // replace 'self' to 'this'
             text = Regex.Replace(text, @"\bself\.", "this.");
             // replace field type
             text = Regex.Replace(text, @"(object|void|bool|int|double|string) (\w+ = ""\S+?""[,;)])", "string $2");
             text = Regex.Replace(text, @"(object|void|bool|int|double|string) (\w+ = \d+[,;)])", "int $2");
-            text = Regex.Replace(text, @"(object|void|bool|int|double|string) (\w+ = \d+\.\d+[,;)])", "double $2");
+            text = Regex.Replace(text, @"(object|void|bool|int|double|string) (\w+ = (\d+\.\d+|\d+(\.\d+)?[Ee]-?\d+)[,;)])", "double $2");
             text = Regex.Replace(text, @"(object|void|bool|int|double|string) (\w+ = (true|false)[,;)])", "bool $2");
             text = Regex.Replace(text, @"\bvoid ([a-zA-Z_][a-zA-Z0-9_]*[ ,);])", "object $1");
             // replace 'd_keys = d_keys or (d_model//n_heads)' to 'd_keys = d_keys ?? d_model / n_heads;'
@@ -122,7 +122,9 @@ namespace TorchCs
             text = replaceTensorList(text);
             text = replaceIsType(text);
 
-            text = replaceStringToNetstandard(text);
+            if (replaceToNetstandard) {
+                text = replaceStringToNetstandard(text);
+            }
 
             text = text.Replace("using (var torch.no_grad())", "using (var _no_grad= torch.no_grad())");
             text = text.Replace("using (var torch.cuda.amp.autocast())", "using (var _autocast= torch.cuda.amp.autocast())");
