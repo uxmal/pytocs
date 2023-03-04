@@ -153,18 +153,71 @@ namespace System
             list.RemoveAt(list.Count - 1);
             return last;
         }
-        public static T pop<T>(this IList<T> list)
-        {
-            var last = list[list.Count - 1];
-            list.RemoveAt(list.Count - 1);
-            return last;
-        }
 
 
         public static ICollection<T1> keys<T1, T2>(this IDictionary<T1, T2> dict)
         {
             return dict.Keys;
         }
+        public static ICollection<T2> values<T1, T2>(this IDictionary<T1, T2> dict)
+        {
+            return dict.Values;
+        }
+        public static void clear<T1, T2>(this IDictionary<T1, T2> dict)
+        {
+            dict.Clear();
+        }
+        public static T2 get<T1, T2>(this IDictionary<T1, T2> dict, T1 key)
+        {
+            if (dict.TryGetValue(key, out T2 result)) {
+                return result;
+            }
+            return default(T2);
+        }
+        public static T2 get<T1, T2>(this IDictionary<T1, T2> dict, T1 key, T2 def)
+        {
+            if (dict.TryGetValue(key, out T2 result)) {
+                return result;
+            }
+            return def;
+        }
+        public static bool has_key<T1, T2>(this IDictionary<T1, T2> dict, T1 key)
+        {
+            return (dict.ContainsKey(key));
+        }
+        public static T2 pop<T1, T2>(this IDictionary<T1, T2> dict, T1 key)
+        {
+            if (dict.TryGetValue(key, out T2 result)) {
+                dict.Remove(key);
+                return result;
+            }
+            return default(T2);
+        }
+        public static T2 pop<T1, T2>(this IDictionary<T1, T2> dict, T1 key, T2 def)
+        {
+            if (dict.TryGetValue(key, out T2 result)) {
+                dict.Remove(key);
+                return result;
+            }
+            return def;
+        }
+        public static (T1, T2) popitem<T1, T2>(this IDictionary<T1, T2> dict)
+        {
+            T1 key = default(T1);
+            T2 val = default(T2);
+            foreach (var item in dict) {
+                key = item.Key;
+                val = item.Value;
+            }
+            if (dict.ContainsKey(key)) {
+                dict.Remove(key);
+            }
+            return (key, val);
+        }
+
+
+
+
         /// <summary>
         ///  Simplify code, similar to python syntax 
         ///  python code : B, L = queries.shape
