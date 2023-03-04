@@ -16,6 +16,7 @@
 using System.Runtime.CompilerServices;
 using System.Security.Cryptography;
 using static TorchSharp.torch;
+using System.Linq;
 
 namespace System
 {
@@ -117,6 +118,49 @@ namespace System
         {
             list.Remove(obj);
         }
+        public static void extend<T>(this ICollection<T> list, params T[] objs)
+        {
+            foreach (var obj in objs) {
+                list.Add(obj);
+            }
+        }
+        public static int count<T>(this ICollection<T> list, T obj)
+        {
+            return list.Where(q => q.Equals(obj)).Count();
+        }
+        public static int index<T>(this ICollection<T> list, T obj)
+        {
+            var index = -1;
+            foreach (var item in list) {
+                index++;
+                if (item.Equals(obj)) {
+                    return index;
+                }
+            }
+            return -1;
+        }
+        public static void reverse<T>(this ICollection<T> list)
+        {
+            list = list.Reverse().ToList();
+        }
+        public static void insert<T>(this IList<T> list, int index, T obj)
+        {
+            list.Insert(index, obj);
+        }
+        public static T pop<T>(this IList<T> list)
+        {
+            var last = list[list.Count - 1];
+            list.RemoveAt(list.Count - 1);
+            return last;
+        }
+        public static T pop<T>(this IList<T> list)
+        {
+            var last = list[list.Count - 1];
+            list.RemoveAt(list.Count - 1);
+            return last;
+        }
+
+
         public static ICollection<T1> keys<T1, T2>(this IDictionary<T1, T2> dict)
         {
             return dict.Keys;
