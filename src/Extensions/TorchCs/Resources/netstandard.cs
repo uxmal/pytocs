@@ -109,6 +109,10 @@ namespace System
             return str.TrimEnd();
         }
 
+        public static T copy<T>(this T obj) where T : ICloneable
+        {
+            return (T)obj.Clone();
+        }
 
         public static void append<T>(this ICollection<T> list, T obj)
         {
@@ -152,6 +156,18 @@ namespace System
             var last = list[list.Count - 1];
             list.RemoveAt(list.Count - 1);
             return last;
+        }
+        public static ICollection<T> copy<T>(this ICollection<T> list)
+        {
+            var newObj = new List<T>();
+            newObj.AddRange(list);
+            return newObj;
+        }
+        public static List<T> copy<T>(this List<T> list)
+        {
+            var newObj = new List<T>();
+            newObj.AddRange(list);
+            return newObj;
         }
 
 
@@ -215,6 +231,22 @@ namespace System
             return (key, val);
         }
 
+        public static IDictionary<T1, T2> copy<T1, T2>(this IDictionary<T1, T2> dict)
+        {
+            Dictionary<T1, T2> copy = new Dictionary<T1, T2>();
+            foreach (var item in dict) {
+                copy[item.Key] = item.Value;
+            }
+            return copy;
+        }
+        public static Dictionary<T1, T2> copy<T1, T2>(this Dictionary<T1, T2> dict)
+        {
+            Dictionary<T1, T2> copy = new Dictionary<T1, T2>();
+            foreach (var item in dict) {
+                copy[item.Key] = item.Value;
+            }
+            return copy;
+        }
 
 
 
