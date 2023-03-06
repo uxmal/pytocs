@@ -13,9 +13,7 @@
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
 #endregion
-using Pytocs.Core.Types;
 using System.Text.RegularExpressions;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace TorchCs
 {
@@ -263,8 +261,6 @@ namespace TorchCs
             return classConstructor;
         }
 
-
-
         public string ReplaceCodes(string code)
         {
             code = Regex.Replace(code, constructorRegex.Replace("{name}", ClassName), new MatchEvaluator(m => {
@@ -294,7 +290,7 @@ namespace TorchCs
         {
             List<ClassField> classFields = new List<ClassField>();
             HashSet<string> fields = new HashSet<string>();
-            var ms = Regex.Matches(code, "public ([a-zA-Z_][a-zA-Z0-9_<>]*) ([a-zA-Z_][a-zA-Z0-9_]*);");
+            var ms = Regex.Matches(code, "public ([a-zA-Z_][a-zA-Z0-9_<>]*) ([a-zA-Z_@][a-zA-Z0-9_]*);");
             foreach (Match match in ms) {
                 ClassField field = new ClassField();
                 field.Type = match.Groups[1].Value;
@@ -302,7 +298,15 @@ namespace TorchCs
                 fields.Add(field.FieldName);
                 classFields.Add(field);
             }
-            ms = Regex.Matches(code, @"\bthis\.([a-zA-Z_][a-zA-Z0-9_]*)[ \t\r\n,;)\[]");
+            ms = Regex.Matches(code, "public ([a-zA-Z_][a-zA-Z0-9_<>]*) ([a-zA-Z_@][a-zA-Z0-9_]*) =");
+            foreach (Match match in ms) {
+                ClassField field = new ClassField();
+                field.Type = match.Groups[1].Value;
+                field.FieldName = match.Groups[2].Value;
+                fields.Add(field.FieldName);
+                classFields.Add(field);
+            }
+            ms = Regex.Matches(code, @"\bthis\.([a-zA-Z_@][a-zA-Z0-9_]*)[ \t\r\n,;)\[]");
             foreach (Match m in ms) {
                 if (fields.Add(m.Groups[1].Value)) {
                     ClassField field = new ClassField();
@@ -351,11 +355,19 @@ namespace TorchCs
                     field1.NewType = "int";
                 } else if (Regex.IsMatch(code, $@"this\.{name}\[[^\]]*?TensorIndex\.")) {
                     field1.NewType = "Tensor";
-                } else if (field1.Type == "object" && Regex.IsMatch(name, "^(dropout|.*_dropout)$")) {
+                } else if (field1.Type == "object" && Regex.IsMatch(name, @"^(optimizer|opt|.*(_optimizer|_opt))$")) {
+                    field1.NewType = "OptimizerHelper";
+                } else if (field1.Type == "object" && Regex.IsMatch(name, @"^(scheduler|.*(_scheduler))$")) {
+                    field1.NewType = "LRScheduler";
+                } else if (field1.Type == "object" && Regex.IsMatch(name, @"^(dataset|.*_dataset)$")) {
+                    field1.NewType = "Dataset";
+                } else if (field1.Type == "object" && Regex.IsMatch(name, @"^(dataloader|loader|.*_loader)$")) {
+                    field1.NewType = "DataLoader";
+                } else if (field1.Type == "object" && TorchUtil.isDoubleTypeByName(name)) {
                     field1.NewType = "double";
-                } else if (field1.Type == "object" && Regex.IsMatch(name, "^(channels|index|length|step|epoch|(num_|n_).*|.*(_len|_in|_model|_out|_channels|_size|_dims|_count|_index))$")) {
+                } else if (field1.Type == "object" && TorchUtil.isIntTypeByName(name)) {
                     field1.NewType = "int";
-                } else if (field1.Type == "object" && Regex.IsMatch(name, "^(name|path|dir|.*(_path|_name|_dir))$")) {
+                } else if (field1.Type == "object" && TorchUtil.isStringTypeByName(name)) {
                     field1.NewType = "string";
                     //} else if (classMethodParamenter.Type == "object" && Regex.IsMatch(text, $@" [\+\-\*\/] {name}[ ,;)]")) {
                     //    classMethodParamenter.NewType = "double";
@@ -481,6 +493,21 @@ namespace TorchCs
                         }
                         if (max == 1) {
                             NewReturnType = "object";
+                            var f = ms[0].Value;
+                            if (f.StartsWith("this.")) {
+                                if (fields != null) {
+                                    f = f.Substring(5);
+                                    var p = fields.FirstOrDefault(q => q.FieldName == f);
+                                    if (p != null) {
+                                        NewReturnType = p.NewType ?? p.Type;
+                                    }
+                                }
+                            } else {
+                                var p = Paramenters.FirstOrDefault(q => q.ParamenterName == f);
+                                if (p != null) {
+                                    NewReturnType = p.NewType ?? p.Type;
+                                }
+                            }
                         } else if (max > 1) {
                             NewReturnType = "(";
                             for (int i = 0; i < max; i++) {
@@ -558,7 +585,7 @@ namespace TorchCs
             List<ClassMethodParamenter> classMethodParamenters = new List<ClassMethodParamenter>();
             if (string.IsNullOrEmpty(code)) { return classMethodParamenters; }
 
-            var strs = Regex.Matches(code, "(.*?) ([a-zA-Z_][a-zA-Z_0-9]*)( = ([^,]+))?(,|$)");
+            var strs = Regex.Matches(code, "(.*?) ([a-zA-Z_@][a-zA-Z_0-9]*)( = ([^,]+))?(,|$)");
 
             foreach (Match str in strs) {
                 ClassMethodParamenter classMethodParamenter = new ClassMethodParamenter();
@@ -599,15 +626,29 @@ namespace TorchCs
                     classMethodParamenter.NewType = "int";
                 } else if (Regex.IsMatch(text, $@"(^|[ \t(,;\[]){name}\[[^\]]*?TensorIndex\.")) {
                     classMethodParamenter.NewType = "Tensor";
-                } else if (Regex.IsMatch(text, $@"(^|[ \t(,;\[]){name}\.{fieldsRegex}[ ,;)\[]")) {
-                    classMethodParamenter.NewType = "Tensor";
                 } else if (Regex.IsMatch(text, $@"(^|[ \t(,;\[]){name}\.{methodRegex}\(")) {
                     classMethodParamenter.NewType = "Tensor";
-                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, "^(dropout|.*_dropout)$")) {
+                } else if (Regex.IsMatch(text, $@"(^|[ \t(,;\[]){name}\.{fieldsRegex}[ ,;)\[]")) {
+                    classMethodParamenter.NewType = "Tensor";
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, @"^(label|pred|preds|target|x_enc|x_mark_enc|x_dec|x_mark_dec)$")) {
+                    classMethodParamenter.NewType = "Tensor";
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, @"^(dataset|.*_dataset)$")) {
+                    classMethodParamenter.NewType = "Dataset";
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, @"^(loader|.*_loader)$")) {
+                    classMethodParamenter.NewType = "DataLoader";
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, @"^(optimizer|opt|.*(_optimizer|_opt))$")) {
+                    classMethodParamenter.NewType = "OptimizerHelper";
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, @"^(scheduler|.*(_scheduler))$")) {
+                    classMethodParamenter.NewType = "LRScheduler";
+                } else if (classMethodParamenter.Type == "object" && TorchUtil.isDoubleTypeByName(name)) {
                     classMethodParamenter.NewType = "double";
-                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, "^(channels|index|length|step|epoch|(num_|n_).*|.*(_len|_in|_model|_out|_channels|_size|_dims|_count|_index))$")) {
-                    classMethodParamenter.NewType = "int";
-                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, "^(name|path|dir|.*(_path|_name|_dir))$")) {
+                } else if (classMethodParamenter.Type == "object" && TorchUtil.isIntTypeByName(name)) {
+                    if (classMethodParamenter.DefaultValue == "null") {
+                        classMethodParamenter.NewType = "int?";
+                    } else {
+                        classMethodParamenter.NewType = "int";
+                    }
+                } else if (classMethodParamenter.Type == "object" && TorchUtil.isStringTypeByName(name)) {
                     classMethodParamenter.NewType = "string";
                     //} else if (classMethodParamenter.Type == "object" && Regex.IsMatch(text, $@" [\+\-\*\/] {name}[ ,;)]")) {
                     //    classMethodParamenter.NewType = "double";
@@ -707,7 +748,7 @@ namespace TorchCs
 
         public override string ToString()
         {
-            return $"variable: {NewType??Type} {VariableName}";
+            return $"variable: {NewType ?? Type} {VariableName}";
         }
     }
 

@@ -649,7 +649,6 @@ namespace TorchCs
             }
         }
 
-
         internal static List<string> splitParamenters(string paramenters)
         {
             bool inText = false;
@@ -685,6 +684,59 @@ namespace TorchCs
             result.Add(temp.Trim());
             return result;
         }
+
+        /// <summary>
+        ///  Judge whether it is a Double type according to the parameter name 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        internal static bool isDoubleTypeByName(string name)
+        {
+            if (Regex.IsMatch(name, "^(dropout|lr|lr_step|factor|lr_max|num)$")) {
+                return true;
+            }
+            if (Regex.IsMatch(name, "^.*(_dropout|_factor|_momentum|_lr|_min|_max)$")) {
+                return true;
+            }
+            return false;
+        }
+        /// <summary>
+        /// Judge whether it is a Int type according to the parameter name 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        internal static bool isIntTypeByName(string name)
+        {
+            if (Regex.IsMatch(name, "^(channels|index|length|step|epoch|stride|total_steps|d_k|d_v|d_q)$")) {
+                return true;
+            }
+            if (Regex.IsMatch(name, "^.*(_len|_length|_in|_model|_out|_channels|_size|_dims|_count|_index|_epoch|_num|_side)$")) {
+                return true;
+            }
+            if (Regex.IsMatch(name, "^(num_|n_).*$")) {
+                return true;
+            }
+            if (Regex.IsMatch(name, "^.*(_num_|_len_).*$")) {
+                return true;
+            }
+            return false;
+        }
+        /// <summary>
+        /// Judge whether it is a String type according to the parameter name 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        internal static bool isStringTypeByName(string name)
+        {
+            if (Regex.IsMatch(name, "^(name|path|dir|file|device)$")) {
+                return true;
+            }
+            if (Regex.IsMatch(name, "^.*(_path|_name|_dir|file|_str|_txt)$")) {
+                return true;
+            }
+            return false;
+        }
+
 
     }
 }
