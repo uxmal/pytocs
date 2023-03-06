@@ -95,6 +95,8 @@ namespace TorchCs
             text = Regex.Replace(text, @"\bvoid ([a-zA-Z_][a-zA-Z0-9_]*[ ,);])", "object $1");
             // replace 'd_keys = d_keys or (d_model//n_heads)' to 'd_keys = d_keys ?? d_model / n_heads;'
             text = Regex.Replace(text, @"([a-zA-Z_0-9]+) = (\1 \|\| (.*?;))", "$1 = $1 ?? $3 //$2");
+            // replace throw new ValueError
+            text = text.Replace("throw new ValueError(", "throw new ArgumentException(");
 
             text = replaceNamespace(text);
             text = replaceConstructor(text);
