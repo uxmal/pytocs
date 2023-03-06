@@ -355,13 +355,13 @@ namespace TorchCs
                     field1.NewType = "int";
                 } else if (Regex.IsMatch(code, $@"this\.{name}\[[^\]]*?TensorIndex\.")) {
                     field1.NewType = "Tensor";
-                } else if (field1.Type == "object" && Regex.IsMatch(name, @"^(optimizer|opt|.*(_optimizer|_opt))$")) {
+                } else if (field1.Type == "object" && Regex.IsMatch(name, @"^(optimizer|opt|.*(_optimizer|_opt))$", RegexOptions.IgnoreCase)) {
                     field1.NewType = "OptimizerHelper";
-                } else if (field1.Type == "object" && Regex.IsMatch(name, @"^(scheduler|.*(_scheduler))$")) {
+                } else if (field1.Type == "object" && Regex.IsMatch(name, @"^(scheduler|.*(_scheduler))$", RegexOptions.IgnoreCase)) {
                     field1.NewType = "LRScheduler";
-                } else if (field1.Type == "object" && Regex.IsMatch(name, @"^(dataset|.*_dataset)$")) {
+                } else if (field1.Type == "object" && Regex.IsMatch(name, @"^(dataset|.*_dataset)$", RegexOptions.IgnoreCase)) {
                     field1.NewType = "Dataset";
-                } else if (field1.Type == "object" && Regex.IsMatch(name, @"^(dataloader|loader|.*_loader)$")) {
+                } else if (field1.Type == "object" && Regex.IsMatch(name, @"^(dataloader|loader|.*_loader)$", RegexOptions.IgnoreCase)) {
                     field1.NewType = "DataLoader";
                 } else if (field1.Type == "object" && TorchUtil.isDoubleTypeByName(name)) {
                     field1.NewType = "double";
@@ -630,15 +630,15 @@ namespace TorchCs
                     classMethodParamenter.NewType = "Tensor";
                 } else if (Regex.IsMatch(text, $@"(^|[ \t(,;\[]){name}\.{fieldsRegex}[ ,;)\[]")) {
                     classMethodParamenter.NewType = "Tensor";
-                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, @"^(label|pred|preds|target|x_enc|x_mark_enc|x_dec|x_mark_dec)$")) {
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, @"^(label|pred|preds|target|targets|x_enc|x_mark_enc|x_dec|x_mark_dec)$", RegexOptions.IgnoreCase)) {
                     classMethodParamenter.NewType = "Tensor";
-                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, @"^(dataset|.*_dataset)$")) {
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, @"^(dataset|.*_dataset)$", RegexOptions.IgnoreCase)) {
                     classMethodParamenter.NewType = "Dataset";
-                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, @"^(loader|.*_loader)$")) {
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, @"^(loader|.*_loader)$", RegexOptions.IgnoreCase)) {
                     classMethodParamenter.NewType = "DataLoader";
-                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, @"^(optimizer|opt|.*(_optimizer|_opt))$")) {
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, @"^(optimizer|opt|.*(_optimizer|_opt))$", RegexOptions.IgnoreCase)) {
                     classMethodParamenter.NewType = "OptimizerHelper";
-                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, @"^(scheduler|.*(_scheduler))$")) {
+                } else if (classMethodParamenter.Type == "object" && Regex.IsMatch(name, @"^(scheduler|.*(_scheduler))$", RegexOptions.IgnoreCase)) {
                     classMethodParamenter.NewType = "LRScheduler";
                 } else if (classMethodParamenter.Type == "object" && TorchUtil.isDoubleTypeByName(name)) {
                     classMethodParamenter.NewType = "double";

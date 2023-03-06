@@ -619,11 +619,16 @@ namespace TorchCs
             return text;
         }
 
-
+        /// <summary>
+        ///  Add 'new' word to class initialization 
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="classNames"></param>
+        /// <returns></returns>
         private static string replaceNewClass(string text, HashSet<string> classNames)
         {
             if (classNames == null) { return text; }
-            const string classRegex = @"using ([a-zA-Z_][a-zA-Z0-9_]*) = ([a-zA-Z_][a-zA-Z0-9_.]*);";
+            const string classRegex = @"using ([a-zA-Z_@][a-zA-Z0-9_]*) = ([a-zA-Z_@][a-zA-Z0-9_.@]*);";
 
             List<string> names = new List<string>();
             var ms = Regex.Matches(text, classRegex);
@@ -639,7 +644,11 @@ namespace TorchCs
             text = Regex.Replace(text, @"\bnew new ", "new ");
             return text;
         }
-
+        /// <summary>
+        ///  Get all type names, excluding static classes 
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="classNames"></param>
         private static void getClassName(string text, HashSet<string> classNames)
         {
             const string classRegex = @"public class ([a-zA-Z_][a-zA-Z0-9_]*)";
@@ -648,7 +657,11 @@ namespace TorchCs
                 classNames.Add(m.Groups[1].Value);
             }
         }
-
+        /// <summary>
+        /// Split parameter, applicable to method definition and method call
+        /// </summary>
+        /// <param name="paramenters"></param>
+        /// <returns></returns>
         internal static List<string> splitParamenters(string paramenters)
         {
             bool inText = false;
@@ -692,10 +705,10 @@ namespace TorchCs
         /// <returns></returns>
         internal static bool isDoubleTypeByName(string name)
         {
-            if (Regex.IsMatch(name, "^(dropout|lr|lr_step|factor|lr_max|num)$")) {
+            if (Regex.IsMatch(name, "^(dropout|lr|lr_step|factor|lr_max|num)$", RegexOptions.IgnoreCase)) {
                 return true;
             }
-            if (Regex.IsMatch(name, "^.*(_dropout|_factor|_momentum|_lr|_min|_max)$")) {
+            if (Regex.IsMatch(name, "^.*(_dropout|_factor|_momentum|_lr|_min|_max)$", RegexOptions.IgnoreCase)) {
                 return true;
             }
             return false;
@@ -707,16 +720,16 @@ namespace TorchCs
         /// <returns></returns>
         internal static bool isIntTypeByName(string name)
         {
-            if (Regex.IsMatch(name, "^(channels|index|length|step|epoch|stride|total_steps|d_k|d_v|d_q)$")) {
+            if (Regex.IsMatch(name, "^(channels|index|length|step|epoch|stride|total_steps|d_k|d_v|d_q)$", RegexOptions.IgnoreCase)) {
                 return true;
             }
-            if (Regex.IsMatch(name, "^.*(_len|_length|_in|_model|_out|_channels|_size|_dims|_count|_index|_epoch|_num|_side)$")) {
+            if (Regex.IsMatch(name, "^.*(_len|_length|_in|_model|_out|_channels|_size|_dims|_count|_index|_epoch|_num|_side)$", RegexOptions.IgnoreCase)) {
                 return true;
             }
-            if (Regex.IsMatch(name, "^(num_|n_).*$")) {
+            if (Regex.IsMatch(name, "^(num_|n_).*$", RegexOptions.IgnoreCase)) {
                 return true;
             }
-            if (Regex.IsMatch(name, "^.*(_num_|_len_).*$")) {
+            if (Regex.IsMatch(name, "^.*(_num_|_len_).*$", RegexOptions.IgnoreCase)) {
                 return true;
             }
             return false;
@@ -728,10 +741,10 @@ namespace TorchCs
         /// <returns></returns>
         internal static bool isStringTypeByName(string name)
         {
-            if (Regex.IsMatch(name, "^(name|path|dir|file|device)$")) {
+            if (Regex.IsMatch(name, "^(name|path|dir|file|device)$", RegexOptions.IgnoreCase)) {
                 return true;
             }
-            if (Regex.IsMatch(name, "^.*(_path|_name|_dir|file|_str|_txt)$")) {
+            if (Regex.IsMatch(name, "^.*(_path|_name|_dir|file|_str|_txt)$", RegexOptions.IgnoreCase)) {
                 return true;
             }
             return false;
