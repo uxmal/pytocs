@@ -408,9 +408,9 @@ namespace TorchCs
 
     public class ClassMethod
     {
-        private const string methodRegex = @"public (virtual) ([a-zA-Z_][a-zA-Z0-9_]*|Tuple<[a-zA-Z_][a-zA-Z0-9_<>, ]*>|\([^)]+?\)) ([a-zA-Z_@][a-zA-Z0-9_]*)\(([^)]*?)\) ?\{(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|[^(){}])+)\}";
-        private const string methodRegex2 = @"public (virtual|static) ([a-zA-Z_][a-zA-Z0-9_]*|Tuple<[a-zA-Z_][a-zA-Z0-9_<>, ]*>|\([^)]+?\)) {name}\(([^)]*?)\) ?\{(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|[^(){}])+)\}";
-        private const string methodRegex3 = @"public (static) ([a-zA-Z_][a-zA-Z0-9_]*|Tuple<[a-zA-Z_][a-zA-Z0-9_<>, ]*>|\([^)]+?\)) ([a-zA-Z_@][a-zA-Z0-9_]*)\(([^)]*?)\) ?\{(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|[^(){}])+)\}";
+        private const string methodRegex = @"public (virtual) ([a-zA-Z_][a-zA-Z0-9_\[\]]*|Tuple<[a-zA-Z_][a-zA-Z0-9_<>, ]*>|\([^)]+?\)) ([a-zA-Z_@][a-zA-Z0-9_]*)\(([^)]*?)\) ?\{(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|[^(){}])+)\}";
+        private const string methodRegex2 = @"public (virtual|static) ([a-zA-Z_][a-zA-Z0-9_\[\]]*|Tuple<[a-zA-Z_][a-zA-Z0-9_<>, ]*>|\([^)]+?\)) {name}\(([^)]*?)\) ?\{(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|[^(){}])+)\}";
+        private const string methodRegex3 = @"public (static) ([a-zA-Z_][a-zA-Z0-9_\[\]]*|Tuple<[a-zA-Z_][a-zA-Z0-9_<>, ]*>|\([^)]+?\)) ([a-zA-Z_@][a-zA-Z0-9_]*)\(([^)]*?)\) ?\{(((?<BR>\()|(?<-BR>\))|(?<BR2>\{)|(?<-BR2>\})|[^(){}])+)\}";
         // public static int get_q_k(int input_size, int window_size, object stride, object device)
         internal ClassInfo ClassInfo { get; set; }
         public string MethodName { get; set; }
@@ -479,7 +479,7 @@ namespace TorchCs
                             NewReturnType = NewReturnType.Replace("object", "Tensor");
                             NewReturnType = NewReturnType.Replace("void", "Tensor");
                         }
-                    } else if (ReturnType == "void" || ReturnType == "object") {
+                    } else if (ReturnType == "void" || ReturnType == "object" || ReturnType == "object[]") {
                         var ms = Regex.Matches(bodyCode, "return ([^;]*);");
                         var max = 0;
                         foreach (Match item in ms) {
