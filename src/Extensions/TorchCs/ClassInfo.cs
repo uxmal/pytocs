@@ -290,7 +290,7 @@ namespace TorchCs
         {
             List<ClassField> classFields = new List<ClassField>();
             HashSet<string> fields = new HashSet<string>();
-            var ms = Regex.Matches(code, "public ([a-zA-Z_][a-zA-Z0-9_<>]*) ([a-zA-Z_@][a-zA-Z0-9_]*);");
+            var ms = Regex.Matches(code, @"public ([a-zA-Z_][a-zA-Z0-9_\<\>\[\]\?]*) ([a-zA-Z_@][a-zA-Z0-9_]*);");
             foreach (Match match in ms) {
                 ClassField field = new ClassField();
                 field.Type = match.Groups[1].Value;
@@ -298,7 +298,7 @@ namespace TorchCs
                 fields.Add(field.FieldName);
                 classFields.Add(field);
             }
-            ms = Regex.Matches(code, "public ([a-zA-Z_][a-zA-Z0-9_<>]*) ([a-zA-Z_@][a-zA-Z0-9_]*) =");
+            ms = Regex.Matches(code, @"public ([a-zA-Z_][a-zA-Z0-9_\<\>\[\]\?]*) ([a-zA-Z_@][a-zA-Z0-9_]*) =");
             foreach (Match match in ms) {
                 ClassField field = new ClassField();
                 field.Type = match.Groups[1].Value;
@@ -698,7 +698,7 @@ namespace TorchCs
                 names.Add(paramenter.ParamenterName);
             }
             foreach (var text in texts) {
-                var m = Regex.Match(text, @"\t*([a-zA-Z_][a-zA-Z0-9_]*) ([a-zA-Z_][a-zA-Z0-9_]*) = ");
+                var m = Regex.Match(text, @"^[\t ]*([a-zA-Z_][a-zA-Z0-9_<>\[\]]*) ([a-zA-Z_][a-zA-Z0-9_]*)(;| = )");
                 if (m.Success) {
                     if (names.Add(m.Groups[1].Value)) {
                         ClassMethodVariable classMethodVariable = new ClassMethodVariable();
@@ -709,7 +709,7 @@ namespace TorchCs
                     }
                     continue;
                 }
-                m = Regex.Match(text, @"\t*([a-zA-Z_][a-zA-Z0-9_]*) = ");
+                m = Regex.Match(text, @"^[ \t]*([a-zA-Z_][a-zA-Z0-9_]*) = ");
                 if (m.Success) {
                     if (names.Add(m.Groups[1].Value)) {
                         ClassMethodVariable classMethodVariable = new ClassMethodVariable();
@@ -719,7 +719,7 @@ namespace TorchCs
                     continue;
                 }
 
-                m = Regex.Match(text, @"\t*\(([^)]+)\) = ");
+                m = Regex.Match(text, @"^[ \t]*\(([^)]+)\) = ");
                 if (m.Success) {
                     var str = m.Groups[1].Value;
                     var sp = str.Split(',');
