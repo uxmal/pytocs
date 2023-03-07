@@ -65,7 +65,7 @@ Options:
                 var startDir = (string) oStartDir;
                 if (startDir == "." || startDir == "./" || startDir == ".\\")
                     startDir = Directory.GetCurrentDirectory();
-                startDir=Path.GetFullPath(startDir);
+                startDir = Path.GetFullPath(startDir);
                 typeAnalysis.Analyze(startDir);
                 typeAnalysis.Finish();
                 var types = new TypeReferenceTranslator(typeAnalysis.BuildTypeDictionary());
@@ -74,7 +74,7 @@ Options:
                 //{
                 //    Console.WriteLine("{0}: {1} {2}", de.Key, de.Key.Start, de.Value);
                 //}
-                var outputDir = options.ContainsKey("--output") ? (string)options["--output"] : startDir;
+                var outputDir = options.ContainsKey("--output") ? (string) options["--output"] : startDir;
                 if (outputDir == "." || outputDir == "./" || outputDir == ".\\")
                     outputDir = Directory.GetCurrentDirectory();
                 outputDir = Path.GetFullPath(outputDir);
@@ -169,7 +169,7 @@ Options:
                 case "-r":
                 case "--recursive":
                     var dirname = ".";
-                    if (i < args.Length - 1)
+                    if (i < args.Length)
                     {
                         if (!args[i].StartsWith('-'))
                         {
@@ -181,7 +181,7 @@ Options:
                 case "-o":
                 case "--output":
                     var dirname2 = ".";
-                    if (i < args.Length - 1)
+                    if (i < args.Length)
                     {
                         if (!args[i].StartsWith('-'))
                         {
