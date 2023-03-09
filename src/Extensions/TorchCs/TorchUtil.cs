@@ -523,7 +523,9 @@ namespace TorchCs
                 foreach (var str in strs) {
                     if (str.Trim() == "\":\"") {
                         list.Add("TensorIndex.Colon");
-                    } else if (str.Trim() == "") {
+                    } else if (str.Trim() == "") {  // python code:   torch.arange(B)[:, None, ] == torch.arange(B)[:, None]
+                        //list.Add("");
+                    } else if ( str.Trim() == "null") {
                         list.Add("TensorIndex.Null");
                     } else if (str.Contains(":")) {
                         var ss = str.Trim().Split(':');
