@@ -522,7 +522,7 @@ namespace TorchCs
                 List<string> list = new List<string>();
                 foreach (var str in strs) {
                     if (str.Trim() == "\":\"") {
-                        list.Add("TensorIndex.Ellipsis");
+                        list.Add("TensorIndex.Colon");
                     } else if (str.Trim() == "") {
                         list.Add("TensorIndex.Null");
                     } else if (str.Contains(":")) {
