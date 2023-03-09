@@ -341,6 +341,7 @@ namespace System
 
     }
 
+#pragma warning disable IDE1006 // 命名样式
     public static class os
     {
         public static void makedirs(string path)
@@ -432,10 +433,13 @@ namespace System
                 return Path.GetFullPath(path);
             }
 
+#pragma warning disable CS8632 // 只能在 "#nullable" 注释上下文内的代码中使用可为 null 的引用类型的注释。
             public static string? dirname(string path)
             {
                 return Path.GetDirectoryName(path);
             }
+#pragma warning restore CS8632 // 只能在 "#nullable" 注释上下文内的代码中使用可为 null 的引用类型的注释。
+
             public static long getsize(string path)
             {
                 return new FileInfo(path).Length;
@@ -465,7 +469,7 @@ namespace System
             Thread.Sleep(s * 1000);
         }
     }
-
+#pragma warning restore IDE1006 // 命名样式
 
 
 }

@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="TorchSharp" Version="0.99.2" />
+    <PackageReference Include="TorchSharp" Version="0.99.3" />
   </ItemGroup>
 
   <ItemGroup>
