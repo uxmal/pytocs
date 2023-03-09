@@ -27,7 +27,7 @@ namespace Pytocs.Cli
 {
     public class Program
     {
-        private const string usage = 
+        private const string usage =
 @"Usage:
   pytocs [options]
 
@@ -37,6 +37,7 @@ Options:
                                 all its subdirectories [default: .]
   -p, --post-process PPLIST     Post process the output using one or more
                                 post-processor(s), separated by commas.
+  -o, --output DIRECTORY        Output folder path.
   -q, --quiet                   Run with reduced output.
 ";
         public static void Main(string[] argv)
@@ -64,6 +65,7 @@ Options:
                 var startDir = (string) oStartDir;
                 if (startDir == "." || startDir == "./" || startDir == ".\\")
                     startDir = Directory.GetCurrentDirectory();
+                startDir = Path.GetFullPath(startDir);
                 typeAnalysis.Analyze(startDir);
                 typeAnalysis.Finish();
                 var types = new TypeReferenceTranslator(typeAnalysis.BuildTypeDictionary());
@@ -72,6 +74,10 @@ Options:
                 //{
                 //    Console.WriteLine("{0}: {1} {2}", de.Key, de.Key.Start, de.Value);
                 //}
+                var outputDir = options.ContainsKey("--output") ? (string) options["--output"] : startDir;
+                if (outputDir == "." || outputDir == "./" || outputDir == ".\\")
+                    outputDir = Directory.GetCurrentDirectory();
+                outputDir = Path.GetFullPath(outputDir);
 
                 var walker = new DirectoryWalker(fs, startDir, "*.py");
                 walker.Enumerate(state =>
@@ -91,13 +97,16 @@ Options:
                             logger.Error("Unable to load {0}.", path);
                             continue;
                         }
+                        string outputPath = Path.ChangeExtension(path, ".py.cs").Replace(startDir, outputDir);
+                        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
+
                         xlator.TranslateModuleStatements(
                             module.Body.Statements,
                             types,
-                            Path.ChangeExtension(path, ".py.cs"));
+                            outputPath);
                     }
                 });
-            }
+            } 
             else
             {
                 if (!options.TryGetValue("<files>", out var oFiles) ||
@@ -134,13 +143,14 @@ Options:
             }
         }
 
-        private static IDictionary<string,object> ParseOptions(string[] args)
+        private static IDictionary<string, object> ParseOptions(string[] args)
         {
             var result = new Dictionary<string, object>();
             var files = new List<string>();
-            for (int i = 0; i < args.Length; ++i)
+            int i = 0;
+            while (i < args.Length)
             {
-                var arg = args[i];
+                var arg = args[i++];
                 if (!arg.StartsWith('-'))
                 {
                     files = args.Skip(i).ToList();
@@ -159,16 +169,26 @@ Options:
                 case "-r":
                 case "--recursive":
                     var dirname = ".";
-                    if (i < args.Length - 1)
+                    if (i < args.Length)
                     {
-                        if (!args[i + 1].StartsWith('-'))
+                        if (!args[i].StartsWith('-'))
                         {
-                            ++i;
-                            dirname = args[i];
+                            dirname = args[i++];
                         }
-                        break;
                     }
                     result["--recursive"] = dirname;
+                    break;
+                case "-o":
+                case "--output":
+                    var dirname2 = ".";
+                    if (i < args.Length)
+                    {
+                        if (!args[i].StartsWith('-'))
+                        {
+                            dirname2 = args[i++];
+                        }
+                    }
+                    result["--output"] = dirname2;
                     break;
                 }
             }

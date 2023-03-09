@@ -19,6 +19,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
 using TorchSharp;
+using static TorchSharp.torch;
 
 namespace TorchCs
 {
@@ -30,59 +31,102 @@ namespace TorchCs
         ///  Convert all *.py.cs files in the folder ,Replace grammar rules
         /// </summary>
         /// <param name="folder"></param>
-        public static void ReplaceFolder(string folder)
+        public static void ReplaceFolder(string folder, bool replaceStringToNetstandard = true)
         {
             var files = Directory.GetFiles(folder, "*.py.cs", SearchOption.AllDirectories);
+            HashSet<string> classNames = new HashSet<string>();
             foreach (var file in files) {
                 var text = File.ReadAllText(file);
-                File.WriteAllText(file, ReplaceCodes(text));
+                getClassName(text, classNames);
             }
+            classNames.Remove("torch");
+            classNames.Remove("nn");
+            classNames.Remove("F");
+            foreach (var file in files) {
+                var text = File.ReadAllText(file);
+                File.WriteAllText(file, ReplaceCodes(text, classNames, replaceStringToNetstandard));
+            }
+
+            var fileInfos = ClassFile.LoadFiles(folder);
+            var classInfos = new List<ClassInfo>();
+            foreach (var file in fileInfos) { classInfos.AddRange(file.ClassInfos); }
+            bool IsChange;
+            do {
+                IsChange = false;
+                foreach (var fileInfo in fileInfos) {
+                    fileInfo.LastChange = fileInfo.HasChange;
+                    fileInfo.HasChange = false;
+                }
+                foreach (var fileInfo in fileInfos) {
+                    var dict = fileInfo.MatchClassInfo(fileInfo.Code, classInfos);
+                    foreach (var classInfo in fileInfo.ClassInfos) {
+                        fileInfo.Code = classInfo.ReplaceMethodParamenterType(fileInfo.Code, dict);
+                    }
+                    if (fileInfo.HasChange) {
+                        File.WriteAllText(fileInfo.FileName, fileInfo.Code);
+                        IsChange = true;
+                    }
+                }
+            } while (IsChange);
         }
         /// <summary>
         /// Convert file, Replace grammar rules
         /// </summary>
         /// <param name="file"></param>
-        public static void ReplaceFile(string file)
+        public static void ReplaceFile(string file, bool replaceStringToNetstandard = false)
         {
             var text = File.ReadAllText(file);
-            File.WriteAllText(file, ReplaceCodes(text));
+            File.WriteAllText(file, ReplaceCodes(text, null, replaceStringToNetstandard));
         }
         /// <summary>
         /// Convert code, Replace grammar rules
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        public static string ReplaceCodes(string text)
+        public static string ReplaceCodes(string text, HashSet<string> classNames = null, bool replaceToNetstandard = true)
         {
             // replace 'self' to 'this'
             text = Regex.Replace(text, @"\bself\.", "this.");
             // replace field type
-            text = Regex.Replace(text, @"(object|void) (\w+ = ""\S+?""[,;)])", "string $2");
-            text = Regex.Replace(text, @"(object|void) (\w+ = \d+[,;)])", "int $2");
-            text = Regex.Replace(text, @"(object|void) (\w+ = \d+\.\d+[,;)])", "double $2");
-            text = Regex.Replace(text, @"(object|void) (\w+ = (true|false)[,;)])", "bool $2");
+            text = Regex.Replace(text, @"(object|void|bool|int|double|string) (\w+ = ""\S+?""[,;)])", "string $2");
+            text = Regex.Replace(text, @"(object|void|bool|int|double|string) (\w+ = \d+[,;)])", "int $2");
+            text = Regex.Replace(text, @"(object|void|bool|int|double|string) (\w+ = (\d+\.\d+|\d+(\.\d+)?[Ee]-?\d+)[,;)])", "double $2");
+            text = Regex.Replace(text, @"(object|void|bool|int|double|string) (\w+ = (true|false)[,;)])", "bool $2");
+            text = Regex.Replace(text, @"\bvoid ([a-zA-Z_][a-zA-Z0-9_]*[ ,);])", "object $1");
             // replace 'd_keys = d_keys or (d_model//n_heads)' to 'd_keys = d_keys ?? d_model / n_heads;'
             text = Regex.Replace(text, @"([a-zA-Z_0-9]+) = (\1 \|\| (.*?;))", "$1 = $1 ?? $3 //$2");
-
+            // replace throw new ValueError
+            text = text.Replace("throw new ValueError(", "throw new ArgumentException(");
 
             text = replaceNamespace(text);
             text = replaceConstructor(text);
-            text = replaceFieldType(text);
+            text = replaceListSlice(text);
+            text = replaceNewClass(text, classNames);
             text = replaceMethodParameterName(text);
+            //  Replace type by class area and static method area 
+            var classInfos = ClassInfo.AnalysisCode(text);
+            foreach (var classInfo in classInfos) {
+                text = classInfo.AddNewField(text); // Add missing fields
+                text = classInfo.ReplaceCodes(text);
+            }
+            //  One file is a static class. There are only static methods in the static class, so I will deal with the static methods in the file. 
+            var sss = ClassMethod.AnalysisCodeForStaticMethod(text);
+            foreach (var item in sss) {
+                text = item.ReplaceCodes(text);
+            }
+
+            text = replaceFieldType(text);
             text = replaceMethodParamenterType(text);
             text = replaceMathMethod(text);
             text = replaceStringToEnum(text);
             text = replaceMethodAlias(text);
 
-            text = replaceForwardMethod(text);
-            text = replaceCallForwardMethod(text);
-
-            text = replaceListSlice(text);
-
             text = replaceTensorList(text);
             text = replaceIsType(text);
 
-            text = replaceStringToNetstandard(text);
+            if (replaceToNetstandard) {
+                text = replaceStringToNetstandard(text);
+            }
 
             text = text.Replace("using (var torch.no_grad())", "using (var _no_grad= torch.no_grad())");
             text = text.Replace("using (var torch.cuda.amp.autocast())", "using (var _autocast= torch.cuda.amp.autocast())");
@@ -127,6 +171,7 @@ namespace TorchCs
             text = text.Replace("using optim = torch.optim;", "using optim = TorchSharp.torch.optim;");
             text = text.Replace("using DataLoader = torch.utils.data.DataLoader;", "using DataLoader = TorchSharp.torch.utils.data.DataLoader;");
 
+            text = text.Replace("using sys;", "");
             text = text.Replace("using math;", "");
             text = text.Replace("using os;", "");
             text = text.Replace("using time;", "");
@@ -170,15 +215,21 @@ namespace TorchCs
                 }
                 var r = $@"this\.(\S+) = nn\.{methodName}\(";
                 var ms = Regex.Matches(text, r);
-                if (ms.Count > 0) {
-                    foreach (Match m in ms) {
-                        var name = m.Groups[1].Value;
-                        text = text.Replace($"public object {name};", $"public {fieldType} {name};");
-                        text = text.Replace($"public void {name};", $"public {fieldType} {name};");
-                        text = Regex.Replace(text, @$"\bthis\.{name}\(", $"this.{name}.forward(");
-                    }
+                foreach (Match m in ms) {
+                    var name = m.Groups[1].Value;
+                    text = text.Replace($"public object {name};", $"public {fieldType} {name};");
+                    text = text.Replace($"public void {name};", $"public {fieldType} {name};");
+                    text = Regex.Replace(text, @$"\bthis\.{name}\(", $"this.{name}.forward(");
                 }
             }
+            var ms2 = Regex.Matches(text, @"this\.(\S+) = new ([a-zA-Z_][a-zA-Z0-9_]+)\(");
+            foreach (Match m2 in ms2) {
+                var name = m2.Groups[1].Value;
+                var typeName = m2.Groups[2].Value;
+                text = text.Replace($"public object {name};", $"public {typeName} {name};");
+                text = text.Replace($"public void {name};", $"public {typeName} {name};");
+            }
+
             text = replaceFieldType3(text);
 
             text = Regex.Replace(text, @"public (object|void) (\w+_len;)", "public int $2");
@@ -204,7 +255,22 @@ namespace TorchCs
             if (ms.Count > 0) {
                 foreach (Match m in ms) {
                     var name = m.Groups[2].Value;
-                    if (text.Contains($"this.{name} = {name};")) {
+                    if (text.Contains($"if (this.{name})") || text.Contains($"if (!this.{name})") || text.Contains($"if (this.{name} == true)") || text.Contains($"if (this.{name} == false)")) {
+                        text = text.Replace($"public object {name};", $"public bool {name};");
+                        text = text.Replace($"public void {name};", $"public bool {name};");
+                    } else if (text.Contains($"this.{name} = false") || text.Contains($"this.{name} = true")) {
+                        text = text.Replace($"public object {name};", $"public bool {name};");
+                        text = text.Replace($"public void {name};", $"public bool {name};");
+                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|\+=) """) || Regex.IsMatch(text, $@"this\.{name}\.(startswith|endswith|upper|lower|replace|strip|lstrip|rstrip)\(")) {
+                        text = text.Replace($"public object {name};", $"public string {name};");
+                        text = text.Replace($"public void {name};", $"public string {name};");
+                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+\.\d+")) {
+                        text = text.Replace($"public object {name};", $"public doulbe {name};");
+                        text = text.Replace($"public void {name};", $"public doulbe {name};");
+                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+")) {
+                        text = text.Replace($"public object {name};", $"public int {name};");
+                        text = text.Replace($"public void {name};", $"public int {name};");
+                    } else if (text.Contains($"this.{name} = {name};")) {
                         if (Regex.IsMatch(text, @$"int {name}\b")) {
                             text = text.Replace($"public object {name};", $"public int {name};");
                             text = text.Replace($"public void {name};", $"public int {name};");
@@ -221,21 +287,6 @@ namespace TorchCs
                             text = text.Replace($"public object {name};", $"public bool {name};");
                             text = text.Replace($"public void {name};", $"public bool {name};");
                         }
-                    } else if (text.Contains($"if (this.{name})") || text.Contains($"if (!this.{name})") || text.Contains($"if (this.{name} == true)") || text.Contains($"if (this.{name} == false)")) {
-                        text = text.Replace($"public object {name};", $"public bool {name};");
-                        text = text.Replace($"public void {name};", $"public bool {name};");
-                    } else if (text.Contains($"this.{name} = false") || text.Contains($"this.{name} = true")) {
-                        text = text.Replace($"public object {name};", $"public bool {name};");
-                        text = text.Replace($"public void {name};", $"public bool {name};");
-                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|\+=) """) || Regex.IsMatch(text, $@"this\.{name}\.(startswith|endswith|upper|lower|replace|strip|lstrip|rstrip)\(")) {
-                        text = text.Replace($"public object {name};", $"public string {name};");
-                        text = text.Replace($"public void {name};", $"public string {name};");
-                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+\.\d+")) {
-                        text = text.Replace($"public object {name};", $"public doulbe {name};");
-                        text = text.Replace($"public void {name};", $"public doulbe {name};");
-                    } else if (Regex.IsMatch(text, $@"this\.{name} (=|==|!=|>|<|>=|<=|\+=|\-=|\*=|/=|%=) \d+")) {
-                        text = text.Replace($"public object {name};", $"public int {name};");
-                        text = text.Replace($"public void {name};", $"public int {name};");
                     }
 
                 }
@@ -436,89 +487,6 @@ namespace TorchCs
             text = Regex.Replace(text, @"\bmath\.inf\b", "double.PositiveInfinity");
             return text;
         }
-        /// <summary>
-        /// Replace forward method's return type and forward method's parameter type
-        /// </summary>
-        /// <param name="text"></param>
-        /// <returns></returns>
-        private static string replaceForwardMethod(string text)
-        {
-            text = text.Replace(" Tuple<object, object>", " (Tensor, Tensor)");
-            text = text.Replace(" Tuple<object, void> forward(", " (Tensor, Tensor) forward(");
-            text = text.Replace(" object[] forward(", " (Tensor, Tensor) forward(");
-            text = text.Replace(" Tuple<object, List<object>> forward(", " (Tensor, List<Tensor>) forward(");
-            text = text.Replace(" object forward(", " Tensor forward(");
-            text = text.Replace(" void forward(", " Tensor forward(");
-            text = text.Replace(" forward(object x", " forward(Tensor x");
-            text = text.Replace(" forward(object t", " forward(Tensor t");
-            text = text.Replace(" forward(object queries, object keys, object values", " forward(Tensor queries, Tensor keys, Tensor values");
-            return text;
-        }
-        /// <summary>
-        /// Replace common forward method calls
-        /// </summary>
-        /// <param name="text"></param>
-        /// <returns></returns>
-        private static string replaceCallForwardMethod(string text)
-        {
-            text = Regex.Replace(text, @"\bthis\.inner_attention\(", "this.inner_attention.forward(");
-            text = Regex.Replace(text, @"\bthis\.dropout\(", "this.dropout.forward(");
-            text = Regex.Replace(text, @"\bthis\.attention\(", "this.attention.forward(");
-            text = Regex.Replace(text, @"\bthis\.self_attention\(", "this.self_attention.forward(");
-            text = Regex.Replace(text, @"\bthis\.cross_attention\(", "this.cross_attention.forward(");
-            text = Regex.Replace(text, @"\bthis\.projection\(", "this.projection.forward(");
-            text = Regex.Replace(text, @"\bthis\.activation\(", "this.activation.forward(");
-            text = Regex.Replace(text, @"\bthis\.norm\(", "this.norm.forward(");
-            text = Regex.Replace(text, @"\bthis\.conv\(", "this.conv.forward(");
-            text = Regex.Replace(text, @"\bthis\.decomp\(", "this.decomp.forward(");
-            text = Regex.Replace(text, @"\bthis\.decomp1\(", "this.decomp1.forward(");
-            text = Regex.Replace(text, @"\bthis\.decomp2\(", "this.decomp2.forward(");
-            text = Regex.Replace(text, @"\bthis\.decomp3\(", "this.decomp3.forward(");
-            text = Regex.Replace(text, @"\bthis\.decomp4\(", "this.decomp4.forward(");
-            text = Regex.Replace(text, @"\bthis\.decomp5\(", "this.decomp5.forward(");
-            text = Regex.Replace(text, @"\bthis\.conv1\(", "this.conv1.forward(");
-            text = Regex.Replace(text, @"\bthis\.conv2\(", "this.conv2.forward(");
-            text = Regex.Replace(text, @"\bthis\.conv3\(", "this.conv3.forward(");
-            text = Regex.Replace(text, @"\bthis\.conv4\(", "this.conv4.forward(");
-            text = Regex.Replace(text, @"\bthis\.conv5\(", "this.conv5.forward(");
-            text = Regex.Replace(text, @"\bthis\.norm1\(", "this.norm1.forward(");
-            text = Regex.Replace(text, @"\bthis\.norm2\(", "this.norm2.forward(");
-            text = Regex.Replace(text, @"\bthis\.norm3\(", "this.norm3.forward(");
-            text = Regex.Replace(text, @"\bthis\.norm4\(", "this.norm4.forward(");
-            text = Regex.Replace(text, @"\bthis\.norm5\(", "this.norm5.forward(");
-
-            text = Regex.Replace(text, @"\bthis\.downConv\(", "this.downConv.forward(");
-            text = Regex.Replace(text, @"\bthis\.maxPool\(", "this.maxPool.forward(");
-            text = Regex.Replace(text, @"\bthis\.avg\(", "this.avg.forward(");
-            text = Regex.Replace(text, @"\bthis\.layernorm\(", "this.layernorm.forward(");
-            text = Regex.Replace(text, @"\bthis\.tokenConv\(", "this.tokenConv.forward(");
-
-            text = Regex.Replace(text, @"\bthis\.embedding\(", "this.embedding.forward(");
-            text = Regex.Replace(text, @"\bthis\.emb\(", "this.emb.forward(");
-            text = Regex.Replace(text, @"\bthis\.embed\(", "this.embed.forward(");
-            text = Regex.Replace(text, @"\bthis\.position_embedding\(", "this.position_embedding.forward(");
-            text = Regex.Replace(text, @"\bthis\.temporal_embedding\(", "this.temporal_embedding.forward(");
-            text = Regex.Replace(text, @"\bthis\.value_embedding\(", "this.value_embedding.forward(");
-
-            text = Regex.Replace(text, @"\bthis\.month_embed\(", "this.month_embed.forward(");
-            text = Regex.Replace(text, @"\bthis\.day_embed\(", "this.day_embed.forward(");
-            text = Regex.Replace(text, @"\bthis\.hour_embed\(", "this.hour_embed.forward(");
-            text = Regex.Replace(text, @"\bthis\.minute_embed\(", "this.minute_embed.forward(");
-            text = Regex.Replace(text, @"\bthis\.weekday_embed\(", "this.weekday_embed.forward(");
-
-            text = Regex.Replace(text, @"\bthis\.enc_embedding\(", "this.enc_embedding.forward(");
-            text = Regex.Replace(text, @"\bthis\.encoder\(", "this.encoder.forward(");
-            text = Regex.Replace(text, @"\bthis\.dec_embedding\(", "this.dec_embedding.forward(");
-            text = Regex.Replace(text, @"\bthis\.decoder\(", "this.decoder.forward(");
-
-            text = Regex.Replace(text, @"\bthis\.query_projection\(", "this.query_projection.forward(");
-            text = Regex.Replace(text, @"\bthis\.key_projection\(", "this.key_projection.forward(");
-            text = Regex.Replace(text, @"\bthis\.value_projection\(", "this.value_projection.forward(");
-            text = Regex.Replace(text, @"\bthis\.out_projection\(", "this.out_projection.forward(");
-
-            text = Regex.Replace(text, @"\bthis\.attn\(", "this.attn.forward(");
-            return text;
-        }
 
         /// <summary>
         /// Replace common Tensor list
@@ -545,16 +513,19 @@ namespace TorchCs
         /// <returns></returns>
         private static string replaceListSlice(string text)
         {
-            text = Regex.Replace(text, @"\[([^\[\]]*?)\]", new MatchEvaluator(m => {
+            text = Regex.Replace(text, @"\[(((?<BR>\[)|(?<-BR>\])|[^\[\]])+)\]", new MatchEvaluator(m => {
                 if (m.Groups[1].Value.Contains(":") == false) {
                     return m.Value;
                 }
-                var strs = m.Groups[1].Value.Split(',');
+                var ts = replaceListSlice(m.Groups[1].Value); // recurrence , exclude nesting
+                var strs = ts.Split(',');
                 List<string> list = new List<string>();
                 foreach (var str in strs) {
                     if (str.Trim() == "\":\"") {
-                        list.Add("TensorIndex.Ellipsis");
-                    } else if (str.Trim() == "") {
+                        list.Add("TensorIndex.Colon");
+                    } else if (str.Trim() == "") {  // python code:   torch.arange(B)[:, None, ] == torch.arange(B)[:, None]
+                        //list.Add("");
+                    } else if ( str.Trim() == "null") {
                         list.Add("TensorIndex.Null");
                     } else if (str.Contains(":")) {
                         var ss = str.Trim().Split(':');
@@ -652,6 +623,136 @@ namespace TorchCs
             return text;
         }
 
+        /// <summary>
+        ///  Add 'new' word to class initialization 
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="classNames"></param>
+        /// <returns></returns>
+        private static string replaceNewClass(string text, HashSet<string> classNames)
+        {
+            if (classNames == null) { return text; }
+            const string classRegex = @"using ([a-zA-Z_@][a-zA-Z0-9_]*) = ([a-zA-Z_@][a-zA-Z0-9_.@]*);";
+
+            List<string> names = new List<string>();
+            var ms = Regex.Matches(text, classRegex);
+            foreach (Match m in ms) {
+                if (classNames.Contains(m.Groups[1].Value)) {
+                    names.Add(m.Groups[1].Value);
+                }
+            }
+            if (names.Count == 0) { return text; }
+
+            var namereg = string.Join("|", names);
+            text = Regex.Replace(text, $@"\b({namereg})\(", "new $1(");
+            text = Regex.Replace(text, @"\bnew new ", "new ");
+            return text;
+        }
+        /// <summary>
+        ///  Get all type names, excluding static classes 
+        /// </summary>
+        /// <param name="text"></param>
+        /// <param name="classNames"></param>
+        private static void getClassName(string text, HashSet<string> classNames)
+        {
+            const string classRegex = @"public class ([a-zA-Z_][a-zA-Z0-9_]*)";
+            var ms = Regex.Matches(text, classRegex);
+            foreach (Match m in ms) {
+                classNames.Add(m.Groups[1].Value);
+            }
+        }
+        /// <summary>
+        /// Split parameter, applicable to method definition and method call
+        /// </summary>
+        /// <param name="paramenters"></param>
+        /// <returns></returns>
+        internal static List<string> splitParamenters(string paramenters)
+        {
+            bool inText = false;
+            int bracketLayer = 0; // 
+
+            List<string> result = new List<string>();
+            var index = 0;
+            string temp = "";
+            while (index < paramenters.Length) {
+                var c = paramenters[index];
+                if (inText) {
+                    temp += c;
+                    if (c == '\\') {
+                        index++;
+                        temp += paramenters[index];
+                    } else if (c == '"') {
+                        inText = false;
+                    }
+                } else if (c == '(' || c == '{' || c == '[' || c == '<') {
+                    bracketLayer++;
+                    temp += c;
+                } else if (c == ')' || c == '}' || c == ']' || c == '>') {
+                    bracketLayer--;
+                    temp += c;
+                } else if (c == ',' && bracketLayer == 0) {
+                    result.Add(temp.Trim());
+                    temp = "";
+                } else {
+                    temp += c;
+                }
+                index++;
+            }
+            result.Add(temp.Trim());
+            return result;
+        }
+
+        /// <summary>
+        ///  Judge whether it is a Double type according to the parameter name 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        internal static bool isDoubleTypeByName(string name)
+        {
+            if (Regex.IsMatch(name, "^(dropout|lr|lr_step|factor|lr_max|num)$", RegexOptions.IgnoreCase)) {
+                return true;
+            }
+            if (Regex.IsMatch(name, "^.*(_dropout|_factor|_momentum|_lr|_min|_max)$", RegexOptions.IgnoreCase)) {
+                return true;
+            }
+            return false;
+        }
+        /// <summary>
+        /// Judge whether it is a Int type according to the parameter name 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        internal static bool isIntTypeByName(string name)
+        {
+            if (Regex.IsMatch(name, "^(channels|index|length|step|epoch|stride|total_steps|d_k|d_v|d_q)$", RegexOptions.IgnoreCase)) {
+                return true;
+            }
+            if (Regex.IsMatch(name, "^.*(_len|_length|_in|_model|_out|_channels|_size|_dims|_count|_index|_epoch|_num|_side)$", RegexOptions.IgnoreCase)) {
+                return true;
+            }
+            if (Regex.IsMatch(name, "^(num_|n_).*$", RegexOptions.IgnoreCase)) {
+                return true;
+            }
+            if (Regex.IsMatch(name, "^.*(_num_|_len_).*$", RegexOptions.IgnoreCase)) {
+                return true;
+            }
+            return false;
+        }
+        /// <summary>
+        /// Judge whether it is a String type according to the parameter name 
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        internal static bool isStringTypeByName(string name)
+        {
+            if (Regex.IsMatch(name, "^(name|path|dir|file|device)$", RegexOptions.IgnoreCase)) {
+                return true;
+            }
+            if (Regex.IsMatch(name, "^.*(_path|_name|_dir|file|_str|_txt)$", RegexOptions.IgnoreCase)) {
+                return true;
+            }
+            return false;
+        }
 
 
     }
